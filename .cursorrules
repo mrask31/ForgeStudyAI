@@ -1,0 +1,50 @@
+# FORGESTUDY AI (V2 AGENTIC) - PROJECT RULES
+
+## 1. PROJECT VISION
+ForgeStudy AI is a single-screen "Academic Coach" powered by Agentic RAG.
+- **Core Philosophy:** Build mastery via Socratic loops. Use Agents to "ground" answers in student data (textbooks/syllabuses).
+- **UX Identity:** One vertical "Smart Feed." No dashboards.
+- **Differentiation:** Grade-banded personalities + Background "Vibe Checks" + Syllabus-aware RAG.
+
+## 2. TECH STACK (AGENTIC UPGRADE)
+- **Frontend:** Next.js 14 (App Router - Stable), TypeScript, Tailwind, shadcn/ui.
+- **Backend:** Supabase (Auth, DB, Edge Functions).
+- **Vector DB:** Supabase `pgvector` (via LlamaIndex).
+- **Orchestration:** LlamaIndexTS (for RAG, Tools, and Query Routing).
+- **AI Brain:** OpenAI GPT-4o (Reasoning) + GPT-4o-mini (Vibe Checks/Routing).
+- **Audio/Vision:** Whisper (Voice) + GPT-4o Vision (Math OCR).
+
+## 3. AGENTIC ARCHITECTURE
+The app is no longer a simple chat loop. It uses an **Agentic Orchestrator**:
+1.  **Router Agent:** Decides if the query needs "External Knowledge" (Textbook/Web) or just "Internal Logic" (Socratic Chat).
+2.  **The "Integrity Guard" Tool:** A mandatory output parser. If the Agent generates a direct answer key, this tool INTERCEPTS it and forces a Socratic rewrite.
+3.  **Background "Vibe-Check":** A silent observer agent analyzes the last 5 interactions. If `sentiment < threshold` or `struggle > threshold`, it triggers a state change to "Warm/Builder" tone.
+
+## 4. CORE DATA SCHEMA (RAG ENABLED)
+- **profiles:** `id`, `grade_band`, `interests`, `learning_style`.
+- **documents:** `id`, `owner_id`, `content`, `embedding` (vector), `metadata` (page, source).
+- **sessions:** `id`, `student_id`, `mastery_score` (0-100), `current_tone_state`.
+- **insight_records:** `session_id`, `integrity_pass` (bool), `key_win`, `key_struggle`.
+
+## 5. PEDAGOGY & TOOLS
+### The "Syllabus-Aware" Logic (RAG)
+- If a student uploads a PDF/Image, it is indexed immediately via `pgvector`.
+- **Rule:** When answering a question, the Agent MUST query the Vector Store first.
+- **Metaphor Engine:** If `profiles.interests` exists (e.g., "Basketball"), the Agent retrieves the technical definition from the PDF, then re-writes it using the interest as a metaphor.
+
+### Sticky Features (Grade Banded)
+- **3-5:** Word Forge (Voice) + "Adventure Logic" (Math stories).
+- **6-8:** Study Guide Collector (Pin chats -> RAG generates Quiz).
+- **9-12:** Essay Architect (Structure only, guarded by Integrity Tool).
+
+## 6. CODING STANDARDS
+- **LlamaIndex:** Use `VectorStoreIndex` for all document querying. Use `OpenAI` agent for routing.
+- **State:** Use `useChat` from Vercel AI SDK or LlamaIndex hooks for streaming responses.
+- **Latency Control:** Use GPT-4o-mini for the "Router" and "Vibe Check" to keep speed high. Only use GPT-4o for the final Socratic generation.
+
+## 7. MVP BUILD ORDER (V2)
+1.  **Infrastructure:** Next.js 14 + Supabase + Enable `pgvector`.
+2.  **RAG Pipeline:** Build the PDF Upload -> LlamaIndex Vector Store flow.
+3.  **Chat UI:** Build the One Screen feed.
+4.  **The Agent:** Implement the Router + Integrity Guard.
+5.  **Retention:** Parent Email Cron Jobs.
