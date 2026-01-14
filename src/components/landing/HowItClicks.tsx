@@ -7,10 +7,10 @@ export default function HowItClicks() {
     <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 sm:py-16 md:py-20 bg-gradient-to-br from-slate-50 via-indigo-50/20 to-slate-50">
       <div className="text-center mb-8 sm:mb-12">
         <div className="inline-flex items-center gap-2 px-3 py-1.5 bg-gradient-to-r from-indigo-50 to-purple-50 border border-indigo-200/60 rounded-full text-xs font-semibold text-indigo-700 mb-3 shadow-sm">
-          Here's how ForgeNursing works
+          Here's how ForgeStudy Platform works
         </div>
         <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold bg-gradient-to-r from-slate-900 via-indigo-900 to-slate-900 bg-clip-text text-transparent mb-3 sm:mb-4">
-          <span className="hidden sm:inline">Your Personal Nursing Tutor — In Three Simple Steps</span>
+          <span className="hidden sm:inline">Your AI Study Companion — In Three Simple Steps</span>
           <span className="sm:hidden">3 Simple Steps</span>
         </h2>
       </div>
@@ -68,7 +68,7 @@ export default function HowItClicks() {
             <span className="sm:hidden">Chat</span>
           </h3>
           <p className="text-slate-700 leading-relaxed font-medium hidden sm:block">
-            Ask questions and practice clinical reasoning.
+            Ask questions and get step-by-step guidance.
           </p>
         </div>
 

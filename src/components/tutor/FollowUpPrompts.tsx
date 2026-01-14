@@ -15,7 +15,7 @@ function generateFollowUpPrompts(content: string): string[] {
 
   // STATIC PROMPTS (always available)
   const staticPrompts = [
-    "Give me an NCLEX question based on this material",
+    "Give me a practice question based on this material",
     "Give me a different example"
   ]
 
@@ -81,10 +81,10 @@ function generateFollowUpPrompts(content: string): string[] {
 
   // If no specific context detected, use general adaptive prompts
   if (adaptivePrompts.length === 0) {
-    adaptivePrompts.push("What are the key nursing considerations here?")
+    adaptivePrompts.push("What are the key concepts here?")
     adaptivePrompts.push("Can you break this down into simpler steps?")
     adaptivePrompts.push("What's the most important thing to remember?")
-    adaptivePrompts.push("How would this appear on an NCLEX question?")
+    adaptivePrompts.push("How would this appear on a test question?")
   }
 
   // Combine: 2 static + 2 adaptive (randomly selected from adaptive pool)

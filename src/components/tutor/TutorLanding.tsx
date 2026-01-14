@@ -125,13 +125,13 @@ export default function TutorLanding({
           message += `"${topicSuggestion}"\n\n`
           message += `I can help you:\n`
           message += `  • Understand key concepts from this topic\n`
-          message += `  • Practice NCLEX-style questions\n`
+          message += `  • Practice questions\n`
           message += `  • Review step-by-step explanations\n`
           message += `  • Clarify anything you're unsure about\n\n`
         } else {
           message += `I can help you:\n`
           message += `  • Understand concepts from your materials\n`
-          message += `  • Practice NCLEX-style questions\n`
+          message += `  • Practice questions\n`
           message += `  • Review key topics step-by-step\n`
           message += `  • Clarify anything you're unsure about\n\n`
         }
@@ -157,9 +157,9 @@ export default function TutorLanding({
       return "You can talk about your feelings, stressful days, or meaningful patient experiences."
     }
     if (isGeneralTutor) {
-      return "I can help you with nursing concepts, NCLEX-style questions, clinical scenarios, and study strategies. Ask me anything!"
+      return "I can help you with coursework, practice questions, study strategies, and understanding concepts. Ask me anything!"
     }
-    return "You can ask about class topics, NCLEX-style questions, or real clinical scenarios."
+    return "You can ask about class topics, practice questions, or coursework concepts."
   }
 
   const getHelperText = () => {
@@ -175,19 +175,19 @@ export default function TutorLanding({
         <ul className="space-y-2 text-sm text-slate-700">
           <li className="flex items-start gap-2">
             <span className="text-indigo-600 mt-0.5">•</span>
-            <span><strong>Explain concepts:</strong> Ask me to break down any nursing topic step-by-step</span>
+            <span><strong>Explain concepts:</strong> Ask me to break down any topic step-by-step</span>
           </li>
           <li className="flex items-start gap-2">
             <span className="text-indigo-600 mt-0.5">•</span>
-            <span><strong>Practice questions:</strong> Request NCLEX-style questions on any subject</span>
+            <span><strong>Practice questions:</strong> Request practice questions on any subject</span>
           </li>
           <li className="flex items-start gap-2">
             <span className="text-indigo-600 mt-0.5">•</span>
-            <span><strong>Clinical scenarios:</strong> Work through patient cases and care planning</span>
+            <span><strong>Study strategies:</strong> Get tips on how to study effectively</span>
           </li>
           <li className="flex items-start gap-2">
             <span className="text-indigo-600 mt-0.5">•</span>
-            <span><strong>Study strategies:</strong> Get tips on how to study effectively for nursing school</span>
+            <span><strong>Homework help:</strong> Get guidance on assignments and coursework</span>
           </li>
         </ul>
         <p className="mt-4 text-xs text-slate-600 italic">

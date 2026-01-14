@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
+import AppProviders from "@/components/layout/AppProviders";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -9,8 +10,8 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "ForgeNursing | Clinical Reasoning Tutor",
-  description: "NCLEX preparation and clinical reasoning engine.",
+  title: "ForgeStudy Platform",
+  description: "AI study companion for Grades 3–12",
 };
 
 export default function RootLayout({
@@ -21,7 +22,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={`${inter.variable} antialiased bg-clinical-bg text-clinical-text-primary`}>
-        {children}
+        <AppProviders>{children}</AppProviders>
       </body>
     </html>
   );

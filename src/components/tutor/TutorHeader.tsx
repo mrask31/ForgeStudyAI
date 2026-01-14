@@ -80,7 +80,7 @@ export default function TutorHeader({
   return (
     <>
       <header className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 sm:gap-4 border-b border-slate-200/60 bg-white/80 backdrop-blur-sm px-3 sm:px-4 md:px-6 py-3 sm:py-3.5 rounded-xl shadow-lg shadow-slate-200/50 mb-4 sm:mb-5 w-full overflow-hidden">
-        {/* Left: NCLEX Practice Mode */}
+        {/* Left: Practice Mode */}
         <div className="flex items-center gap-2 flex-shrink-0 min-w-0">
           <button
             onClick={() => onStrictModeChange(!strictMode)}
@@ -96,7 +96,7 @@ export default function TutorHeader({
               <ToggleLeft className="w-5 h-5 text-slate-400 flex-shrink-0" />
             )}
             <span className={`font-medium text-xs sm:text-sm whitespace-nowrap ${strictMode ? 'text-indigo-700 font-semibold' : ''}`}>
-              NCLEX Practice Mode
+              Practice Mode
             </span>
           </button>
           {/* Help tooltip */}
@@ -106,7 +106,7 @@ export default function TutorHeader({
             }`} />
             <div className="absolute top-full left-0 mt-2 w-72 max-w-[calc(100vw-2rem)] p-3 bg-slate-900 text-white text-xs rounded-lg shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 pointer-events-none z-50">
               <div className="absolute top-0 left-4 transform -translate-y-1/2 rotate-45 w-2 h-2 bg-slate-900"></div>
-              <p className="font-semibold mb-1.5 text-white">NCLEX Practice Mode</p>
+              <p className="font-semibold mb-1.5 text-white">Practice Mode</p>
               <p className="text-slate-300 leading-relaxed">
                 When enabled, the tutor will ask you to think through answers first before providing explanations. This simulates exam conditions and helps build your reasoning skills.
               </p>

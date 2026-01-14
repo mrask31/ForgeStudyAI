@@ -39,7 +39,7 @@ function BillingSuccessContent() {
           </div>
           
           <h1 className="text-2xl font-semibold text-slate-900 mb-3">
-            Welcome to ForgeNursing!
+            Welcome to ForgeStudy Platform!
           </h1>
           
           <p className="text-slate-600 mb-6 leading-relaxed">
@@ -72,8 +72,8 @@ function BillingSuccessContent() {
           <div className="mt-8 pt-6 border-t border-slate-200">
             <p className="text-xs text-slate-500">
               Need help? Contact us at{' '}
-              <a href="mailto:support@forgenursing.com" className="text-indigo-600 hover:underline">
-                support@forgenursing.com
+              <a href="mailto:support@forgestudy.com" className="text-indigo-600 hover:underline">
+                support@forgestudy.com
               </a>
             </p>
           </div>

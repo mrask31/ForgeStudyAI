@@ -219,7 +219,7 @@ export default function ChatMessageList({
                     ) : (
                       <>
                         <ClipboardCheck className="w-4 h-4 text-[var(--tutor-text-muted)]" />
-                        <span className="text-xs text-[var(--tutor-text-muted)] font-medium">NCLEX Reasoning (Learning Only)</span>
+                        <span className="text-xs text-[var(--tutor-text-muted)] font-medium">Guided Learning</span>
                       </>
                     )}
                   </div>

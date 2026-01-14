@@ -209,7 +209,7 @@ function TutorPageContent() {
     if (currentModeFromUrl === 'reflections') {
       return "Process your clinical experiences, stress, and growth in a private reflection space."
     }
-    return "Study NCLEX and class topics with step-by-step explanations and practice questions."
+    return "Study class topics with step-by-step explanations and practice questions."
   }
 
   // Effect hooks - all defined before any returns

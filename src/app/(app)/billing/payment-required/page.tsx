@@ -63,7 +63,7 @@ export default function PaymentRequiredPage() {
           </h1>
           
           <p className="text-slate-600 mb-6 leading-relaxed">
-            To access ForgeNursing, please complete your subscription setup. Start your 7-day free trial by adding your payment information.
+            To access ForgeStudy Platform, please complete your subscription setup. Start your 7-day free trial by adding your payment information.
           </p>
 
           <div className="space-y-3">
@@ -89,8 +89,8 @@ export default function PaymentRequiredPage() {
             </p>
             <p className="text-xs text-slate-500">
               Need help? Contact us at{' '}
-              <a href="mailto:support@forgenursing.com" className="text-indigo-600 hover:underline">
-                support@forgenursing.com
+              <a href="mailto:support@forgestudy.com" className="text-indigo-600 hover:underline">
+                support@forgestudy.com
               </a>
             </p>
           </div>

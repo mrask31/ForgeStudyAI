@@ -12,6 +12,14 @@ export async function middleware(request: NextRequest) {
     })
 
     const { pathname } = request.nextUrl
+    const searchParams = request.nextUrl.searchParams
+
+    // If Supabase verification code lands on "/", route it to /auth/callback
+    if (pathname === '/' && searchParams.has('code')) {
+      const callbackUrl = new URL('/auth/callback', request.url)
+      callbackUrl.search = searchParams.toString()
+      return NextResponse.redirect(callbackUrl)
+    }
 
     // Early return for public routes if Supabase is not configured
     // This prevents the entire site from breaking if env vars are missing
@@ -107,9 +115,19 @@ export async function middleware(request: NextRequest) {
     const publicRoutes = ['/', '/login', '/signup', '/auth/callback', '/privacy', '/terms', '/billing/payment-required', '/checkout']
     const isPublicRoute = publicRoutes.includes(pathname) || pathname.startsWith('/auth/')
 
-    // Protected routes
-    const protectedRoutes = ['/clinical-desk', '/tutor', '/binder', '/readiness', '/settings', '/classes']
+    // Protected routes (require authentication)
+    const protectedRoutes = ['/clinical-desk', '/tutor', '/binder', '/readiness', '/settings', '/classes', '/profiles', '/post-login', '/p/', '/elementary', '/middle', '/high']
     const isProtectedRoute = protectedRoutes.some(route => pathname.startsWith(route))
+    
+    // Routes that require auth but bypass subscription check (onboarding/profile management)
+    // Check exact matches first, then prefix matches for /p/ (profile-scoped routes)
+    const isAuthOnlyRoute = pathname === '/profiles' || 
+                           pathname.startsWith('/profiles/') || 
+                           pathname === '/post-login' ||
+                           pathname.startsWith('/p/') ||
+                           pathname === '/elementary' ||
+                           pathname === '/middle' ||
+                           pathname === '/high'
 
     // Allow access to billing pages (success, cancel, payment-required) and checkout
     const billingRoutes = ['/billing', '/checkout']
@@ -123,7 +141,8 @@ export async function middleware(request: NextRequest) {
     }
 
     // Check subscription status for authenticated users accessing protected routes
-    if (user && isProtectedRoute && !isBillingRoute && supabase) {
+    // Skip subscription check for auth-only routes (profiles, post-login, etc.)
+    if (user && isProtectedRoute && !isBillingRoute && !isAuthOnlyRoute && supabase) {
       try {
         // Use service role key to bypass RLS for subscription status check
         // This is safe because we're only reading subscription_status, not sensitive data
@@ -190,72 +209,8 @@ export async function middleware(request: NextRequest) {
     }
 
     // Redirect authenticated users away from auth pages
-    if (user && (pathname === '/login' || pathname === '/signup') && supabase) {
-      try {
-        // Check if they have active subscription before redirecting
-        // Use service role key to bypass RLS for subscription status check
-        const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY
-        let subscriptionStatus: string | undefined
-        let profileError: any = null
-        
-        if (serviceRoleKey) {
-          // Use service role key to bypass RLS
-          const adminClient = createClient(
-            supabaseUrl,
-            serviceRoleKey
-          )
-          const { data: profile, error } = await adminClient
-            .from('profiles')
-            .select('subscription_status')
-            .eq('id', user.id)
-            .single()
-          
-          if (error) {
-            console.error('[Middleware] Error fetching profile with service role:', error)
-            profileError = error
-          } else {
-            subscriptionStatus = profile?.subscription_status
-          }
-        } else {
-          // Fallback to anon key (may be blocked by RLS)
-          const { data: profile, error } = await supabase
-            .from('profiles')
-            .select('subscription_status')
-            .eq('id', user.id)
-            .single()
-          
-          if (error) {
-            console.error('[Middleware] Error fetching profile with anon key:', error)
-            profileError = error
-          } else {
-            subscriptionStatus = profile?.subscription_status
-          }
-        }
-
-        // If we couldn't fetch the profile, default to blocking access (fail secure)
-        if (profileError || subscriptionStatus === undefined) {
-          console.warn('[Middleware] Could not determine subscription status, blocking access', {
-            userId: user.id,
-            error: profileError?.message,
-            hasServiceRoleKey: !!serviceRoleKey
-          })
-          return NextResponse.redirect(new URL('/billing/payment-required', request.url))
-        }
-
-        const hasActiveSubscription = subscriptionStatus === 'active' || subscriptionStatus === 'trialing'
-
-        if (hasActiveSubscription) {
-          return NextResponse.redirect(new URL('/tutor', request.url))
-        } else {
-          // No active subscription, redirect to payment required
-          return NextResponse.redirect(new URL('/billing/payment-required', request.url))
-        }
-      } catch (error) {
-        // If subscription check fails, log error but allow access to prevent site breakage
-        console.error('[Middleware] Error checking subscription status for auth redirect:', error)
-        // Allow them to stay on login/signup page if check fails
-        return response
-      }
+    if (user && (pathname === '/login' || pathname === '/signup')) {
+      return NextResponse.redirect(new URL('/profiles', request.url))
     }
 
     // Add aggressive cache control headers for login, signup, and landing pages to prevent 304 issues

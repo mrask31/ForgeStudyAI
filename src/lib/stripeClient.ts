@@ -1,43 +1,72 @@
 'use client'
 
-type Plan = 'monthly' | 'semester' | 'annual'
+type Plan =
+  | 'monthly'
+  | 'semester'
+  | 'annual'
+  | 'individual_monthly'
+  | 'individual_annual'
+  | 'family_monthly'
+  | 'family_annual'
 
-const PRICE_IDS: Record<Plan, string> = {
-  monthly: process.env.NEXT_PUBLIC_STRIPE_PRICE_MONTHLY!,
-  semester: process.env.NEXT_PUBLIC_STRIPE_PRICE_SEMESTER!,
-  annual: process.env.NEXT_PUBLIC_STRIPE_PRICE_ANNUAL!,
+const PRICE_IDS = {
+  individual_monthly: process.env.NEXT_PUBLIC_STRIPE_PRICE_INDIVIDUAL_MONTHLY,
+  individual_annual: process.env.NEXT_PUBLIC_STRIPE_PRICE_INDIVIDUAL_ANNUAL,
+  family_monthly: process.env.NEXT_PUBLIC_STRIPE_PRICE_FAMILY_MONTHLY,
+  family_annual: process.env.NEXT_PUBLIC_STRIPE_PRICE_FAMILY_ANNUAL,
 }
 
 export async function startStripeCheckout(plan: Plan) {
-  const priceId = PRICE_IDS[plan]
+  const resolvedPlan =
+    plan === 'monthly'
+      ? 'individual_monthly'
+      : plan === 'semester'
+      ? 'family_monthly'
+      : plan === 'annual'
+      ? 'family_annual'
+      : plan
+
+  const priceId = PRICE_IDS[resolvedPlan]
 
   // Log price IDs for debugging (first 10 chars only for security)
   console.log('[Stripe Checkout] Plan mapping:', {
     plan,
+    resolvedPlan,
     priceId: priceId ? `${priceId.substring(0, 10)}...` : 'MISSING',
     allPriceIds: {
-      monthly: PRICE_IDS.monthly ? `${PRICE_IDS.monthly.substring(0, 10)}...` : 'MISSING',
-      semester: PRICE_IDS.semester ? `${PRICE_IDS.semester.substring(0, 10)}...` : 'MISSING',
-      annual: PRICE_IDS.annual ? `${PRICE_IDS.annual.substring(0, 10)}...` : 'MISSING',
+      individual_monthly: PRICE_IDS.individual_monthly
+        ? `${PRICE_IDS.individual_monthly.substring(0, 10)}...`
+        : 'MISSING',
+      individual_annual: PRICE_IDS.individual_annual
+        ? `${PRICE_IDS.individual_annual.substring(0, 10)}...`
+        : 'MISSING',
+      family_monthly: PRICE_IDS.family_monthly
+        ? `${PRICE_IDS.family_monthly.substring(0, 10)}...`
+        : 'MISSING',
+      family_annual: PRICE_IDS.family_annual
+        ? `${PRICE_IDS.family_annual.substring(0, 10)}...`
+        : 'MISSING',
     }
   })
 
   // Validate that price IDs are unique
-  const uniquePriceIds = new Set(Object.values(PRICE_IDS).filter(Boolean))
-  if (uniquePriceIds.size < Object.keys(PRICE_IDS).length) {
+  const priceValues = Object.values(PRICE_IDS).filter(Boolean) as string[]
+  const uniquePriceIds = new Set(priceValues)
+  if (uniquePriceIds.size < priceValues.length) {
     console.error('[Stripe Checkout] WARNING: Duplicate price IDs detected!', {
-      monthly: PRICE_IDS.monthly,
-      semester: PRICE_IDS.semester,
-      annual: PRICE_IDS.annual,
+      individual_monthly: PRICE_IDS.individual_monthly,
+      individual_annual: PRICE_IDS.individual_annual,
+      family_monthly: PRICE_IDS.family_monthly,
+      family_annual: PRICE_IDS.family_annual,
     })
-    alert(`Pricing configuration error: Duplicate price IDs detected. Please check your environment variables. All three plans (monthly, semester, annual) must have unique Stripe price IDs.`)
+    alert(`Pricing configuration error: Duplicate price IDs detected. Please check your environment variables.`)
     return
   }
 
   if (!priceId) {
-    console.error('Missing Stripe price ID for plan:', plan)
+    console.error('Missing Stripe price ID for plan:', resolvedPlan)
     console.error('Available price IDs:', PRICE_IDS)
-    alert(`Pricing configuration error: Missing price ID for ${plan} plan. Please check your environment variables.`)
+    alert(`Pricing configuration error: Missing price ID for ${resolvedPlan} plan. Please check your environment variables.`)
     return
   }
 

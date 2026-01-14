@@ -62,7 +62,7 @@ export default function Sidebar({ onNavigate }: SidebarProps = {}) {
           {/* Logo or Brand with Icon */}
           <div className="flex items-center gap-2.5">
             <div className="w-2 h-2 rounded-full bg-indigo-500"></div>
-            <span className="text-xl font-bold text-white tracking-tight">ForgeNursing</span>
+            <span className="text-xl font-bold text-white tracking-tight">ForgeStudy Platform</span>
           </div>
         </div>
         
@@ -96,6 +96,20 @@ export default function Sidebar({ onNavigate }: SidebarProps = {}) {
         {/* History Button - Moved from TutorHeader */}
         <div className="mt-4 pt-4 border-t border-indigo-900/50">
           <HistoryButton onNavigate={onNavigate} />
+        </div>
+        
+        {/* Switch Profile Link */}
+        <div className="mt-4">
+          <Link
+            href="/profiles"
+            onClick={onNavigate}
+            className="group flex items-center gap-3 rounded-lg px-4 py-3.5 text-sm font-medium transition-all duration-200 text-indigo-300 hover:bg-gradient-to-r hover:from-indigo-900/50 hover:to-purple-900/50 hover:text-indigo-100"
+          >
+            <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
+            </svg>
+            Switch Profile
+          </Link>
         </div>
         
         {/* User Profile / Footer */}

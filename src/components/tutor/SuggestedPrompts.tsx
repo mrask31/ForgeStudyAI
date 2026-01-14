@@ -14,9 +14,9 @@ const SYLLABUS_PROMPTS = [
 
 const TEXTBOOK_PROMPTS = [
   "Summarize this chapter into a study guide.",
-  "Create 10 NCLEX-style questions from this reading.",
+  "Create 10 practice questions from this reading.",
   "Explain the most confusing concepts in simple terms.",
-  "Pull out the top 5 clinical must-know points."
+  "Pull out the top 5 key concepts to remember."
 ]
 
 const DEFAULT_FILE_PROMPTS = [
@@ -28,7 +28,7 @@ const DEFAULT_FILE_PROMPTS = [
 
 const EXAM_PROMPTS = [
   "Walk me through the highest-yield concepts for this exam.",
-  "Create 10 NCLEX-style questions from my exam topics.",
+  "Create 10 practice questions from my exam topics.",
   "Drill me on weak areas and track my confidence.",
   "Help me build a study schedule for this exam.",
 ]
@@ -109,7 +109,7 @@ function generateContextualPrompts(lastMessage: string): string[] {
   if (prompts.length < 3) {
     prompts.push("Can you explain this in simpler terms?")
     prompts.push("What's the most important thing to remember?")
-    prompts.push("How would this appear on an NCLEX question?")
+    prompts.push("How would this appear on a test question?")
     prompts.push("Can you give me a practice scenario?")
   }
 

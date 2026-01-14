@@ -10,7 +10,7 @@ export default function BeliefValidation() {
           <span className="sm:hidden">Works With Your Other Tools</span>
         </h2>
         <p className="text-base sm:text-lg text-slate-700 mb-6 sm:mb-8 hidden sm:block">
-          UWorld tests you. SimpleNursing helps you remember. ForgeNursing helps it finally click by strengthening the clinical-thinking skills NCLEX expects.
+          Upload notes, syllabi, or weekly materials and get guided help aligned with your coursework.
         </p>
         <p className="text-base sm:text-lg text-slate-700 mb-6 sm:mb-8 sm:hidden">
           We help you understand what they teach.
@@ -23,7 +23,7 @@ export default function BeliefValidation() {
             <AlertCircle className="w-5 h-5 sm:w-6 sm:h-6 text-red-700" />
           </div>
           <p className="text-base sm:text-lg text-slate-700 font-semibold flex-1 leading-relaxed">
-            I know the content but freeze on NCLEX-style questions
+            I know the content but struggle with test questions
           </p>
         </div>
         <div className="flex items-start gap-3 sm:gap-4 p-5 sm:p-6 rounded-xl bg-gradient-to-br from-red-50/80 to-rose-50/80 backdrop-blur-sm border-2 border-red-200/60 hover:from-red-100 hover:to-rose-100 hover:border-red-300 transition-all duration-200 shadow-sm hover:shadow-md transform hover:scale-[1.02]">
@@ -54,16 +54,16 @@ export default function BeliefValidation() {
       
       <div className="bg-gradient-to-r from-indigo-600 via-purple-600 to-indigo-700 rounded-xl p-6 sm:p-8 md:p-10 text-center text-white shadow-xl shadow-indigo-500/30">
         <h3 className="text-xl sm:text-2xl md:text-3xl font-bold mb-3 sm:mb-4 text-white drop-shadow-md hidden sm:block">
-          Built With Nursing Students and Educators in Mind
+          Built With Students and Educators in Mind
         </h3>
         <h3 className="text-xl sm:text-2xl md:text-3xl font-bold mb-3 sm:mb-4 text-white drop-shadow-md sm:hidden">
           Student-Centered & Ethical
         </h3>
         <p className="text-base sm:text-lg md:text-xl mb-6 sm:mb-8 text-white/95 leading-relaxed hidden sm:block">
-          ForgeNursing is currently being pilot-tested with real students to ensure it truly supports clinical reasoning — ethically, calmly, and effectively. No gimmicks. No pressure. Just meaningful learning.
+          ForgeStudy Platform helps you understand concepts step-by-step — clearly, calmly, and effectively. No gimmicks. No pressure. Just meaningful learning.
         </p>
         <p className="text-base sm:text-lg md:text-xl mb-6 sm:mb-8 text-white/95 leading-relaxed sm:hidden">
-          Currently in pilot testing with real nursing students.
+          AI study companion designed for Grades 3–12 students.
         </p>
         <Link
           href="/signup?plan=monthly"

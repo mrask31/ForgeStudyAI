@@ -451,10 +451,95 @@ export default function SettingsPage() {
           <p className={`${tokens.smallText} text-clinical-text-secondary`}>
             Need help? Email{' '}
             <a
-              href="mailto:support@forgenursing.com"
+Objective:
+Push the ForgeStudy Platform landing page from “nice template” to “world-class, high-conversion, parent-emotional” — and move away from the purple ForgeNursing look.
+
+Hard Constraints:
+- NO database changes.
+- NO auth rewrites.
+- NO routing changes beyond existing /signup and /login CTA links.
+- Grade band cards remain informational ONLY (not clickable).
+- Keep current sections functional and responsive; this is a UI/UX + copy + styling overhaul.
+
+Brand + Visual Direction:
+- Remove purple as the primary brand color.
+- Use a premium education palette: deep navy + teal/cyan accents + subtle warm highlight (amber) for emphasis.
+- Background should be airy and clean with subtle gradients (no heavy purple slabs).
+- Buttons: primary uses teal/cyan or a navy-to-teal gradient; secondary is outline.
+- Improve typography hierarchy: stronger headlines, tighter subhead spacing, more breathing room.
+
+Conversion Goal:
+Parents should feel urgency: “I need this for my kids now.”
+Accomplish this with parent-first copy, pain-to-promise storytelling, and more product realism.
+
+Required Changes:
+
+1) HERO SECTION (rewrite copy + visuals)
+- Replace hero headline/subheadline with parent-first messaging:
+  Headline option (use one):
+  “Homework shouldn’t end in tears.”
+  Subheadline: “ForgeStudy helps students (Grades 3–12) understand their work step-by-step so they build confidence and independence.”
+- Add a small line: “Designed for Grades 3–12 (not for K–2).”
+- Keep CTAs:
+  Get Started → /signup (primary)
+  Log In → /login (secondary)
+- Keep benefit chips, but rewrite to be parent-centric:
+  e.g., “Less fighting at home”, “Explains step-by-step”, “Profiles for families”
+- Update the hero product preview panel to look more like a real app:
+  Show “Readiness Dashboard”, “Tonight’s Focus”, “Progress”, and an “Ask a question” input.
+  (It can remain a stylized mock — just make it feel real and premium.)
+
+2) Add a “PARENT PAIN → RELIEF” SECTION right after hero
+Title: “If homework time feels like this… you’re not alone.”
+Include 4 short bullets that sound real (no exaggeration):
+- “I don’t remember how to help.”
+- “My kid shuts down when they get stuck.”
+- “We spend forever and still feel behind.”
+- “I’m worried they’re falling behind.”
+Then a short promise line:
+“ForgeStudy turns ‘stuck’ into progress — by teaching how to think, not what to copy.”
+
+3) Value Props (tighten copy)
+Rewrite to be more specific and less generic SaaS:
+- “Explains step-by-step (not just answers)”
+- “Builds study habits and independence”
+- “Personal dashboards per student”
+- “One parent account, multiple learners”
+
+4) Grade Bands section
+- Ensure Elementary is Grades 3–5 (already updated).
+- REMOVE “Most Popular” badges from grade cards.
+- Ensure cards are visually consistent and feel premium, but remain informational only.
+
+5) How It Works
+- Keep the 4-step flow but make it feel more premium and clearer:
+  Create account → Add student profile(s) → Land in dashboard → Switch profiles anytime
+- Add one short line under step 3: “Students land in the Readiness dashboard.”
+
+6) Pricing (keep $9.99 / $19.99)
+- Make pricing look more premium and confident.
+- Individual: $9.99/mo
+- Family: $19.99/mo (up to 4 students)
+- Add note: “Monthly pricing. Cancel anytime.”
+- Keep CTA buttons linking to /signup.
+
+7) FAQ
+- Keep current FAQ list but ensure answers are parent-trust oriented and aligned with “not cheating / real learning”.
+- Style accordions to match new palette.
+
+8) Final CTA section
+- Replace the large purple block with a premium callout (navy/teal).
+- Copy should be urgent but tasteful:
+  “Make tonight’s homework easier.”
+  “Get started in minutes.”
+
+Deliverable:
+Update the landing page component styles and copy to match the above.
+The final page should feel premium, modern, emotional, and high-converting — without breaking any flows.
+              href="mailto:support@forgestudy.com"
               className="text-clinical-primary hover:text-clinical-secondary transition-colors"
             >
-              support@forgenursing.com
+              support@forgestudy.com
             </a>
           </p>
         </div>

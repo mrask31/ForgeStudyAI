@@ -38,7 +38,7 @@ export default function BillingCancelPage() {
           </h1>
           
           <p className="text-slate-600 mb-6 leading-relaxed">
-            Your checkout was cancelled. No charges were made. To access ForgeNursing, please complete your subscription setup.
+            Your checkout was cancelled. No charges were made. To access ForgeStudy Platform, please complete your subscription setup.
           </p>
 
           <div className="space-y-3">
@@ -65,8 +65,8 @@ export default function BillingCancelPage() {
             </p>
             <p className="text-xs text-slate-500">
               Questions? Contact us at{' '}
-              <a href="mailto:support@forgenursing.com" className="text-indigo-600 hover:underline">
-                support@forgenursing.com
+              <a href="mailto:support@forgestudy.com" className="text-indigo-600 hover:underline">
+                support@forgestudy.com
               </a>
             </p>
           </div>

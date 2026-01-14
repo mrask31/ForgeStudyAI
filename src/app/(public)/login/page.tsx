@@ -11,7 +11,7 @@ export default function LoginPage() {
   const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
   const [message, setMessage] = useState<{ text: string; type: 'error' | 'success' } | null>(null)
-  const [redirect, setRedirect] = useState('/tutor')
+  const [redirect, setRedirect] = useState('/profiles')
   const [showVerificationSuccess, setShowVerificationSuccess] = useState(false)
   
   const router = useRouter()
@@ -20,8 +20,12 @@ export default function LoginPage() {
     if (typeof window !== 'undefined') {
       const params = new URLSearchParams(window.location.search)
       const redirectParam = params.get('redirect')
+      // For backward compatibility, respect redirect param if provided
+      // Otherwise default to profiles
       if (redirectParam) {
         setRedirect(redirectParam)
+      } else {
+        setRedirect('/profiles')
       }
       
       // Check if user just verified their email
@@ -37,6 +41,19 @@ export default function LoginPage() {
       }
     }
   }, [])
+
+  // Auth guard: if already signed in, go to /profiles
+  useEffect(() => {
+    const checkExistingSession = async () => {
+      const { data: { session } } = await supabase.auth.getSession()
+      if (session) {
+        console.log('[Login] Session exists, redirecting to /profiles')
+        router.replace('/profiles')
+      }
+    }
+
+    checkExistingSession()
+  }, [router, supabase])
 
   // Memoize Supabase client to prevent recreation on every render
   // Ensure Supabase client configuration for production
@@ -96,96 +113,8 @@ export default function LoginPage() {
         return // Exit early, finally block will set loading to false
       }
 
-      console.log('[Login] Sign in successful, checking subscription...', { userId: data.user.id })
-
-      // Check subscription status before redirecting
-      // Also check for stripe_subscription_id to see if they've completed checkout
-      const { data: profile, error: profileError } = await supabase
-        .from('profiles')
-        .select('subscription_status, stripe_subscription_id')
-        .eq('id', data.user.id)
-        .single()
-
-      if (profileError) {
-        console.error('[Login] Error checking subscription status:', profileError)
-        console.error('[Login] Profile error details:', {
-          message: profileError.message,
-          code: profileError.code,
-          details: profileError.details,
-          hint: profileError.hint
-        })
-        // On error, default to checkout to be safe
-        console.log('[Login] Redirecting to checkout (profile error)')
-        window.location.replace('/checkout')
-        return // Exit early, redirecting so don't set loading to false
-      }
-
-      // Get subscription status - handle null/undefined cases
-      const subscriptionStatus = profile?.subscription_status
-      const hasStripeSubscription = !!profile?.stripe_subscription_id
-      
-      // Log everything for debugging
-      console.log('[Login] 🔍 Subscription check:', {
-        subscriptionStatus: subscriptionStatus || 'null/undefined',
-        subscriptionStatusType: typeof subscriptionStatus,
-        hasStripeSubscription,
-        stripeSubscriptionId: profile?.stripe_subscription_id || 'none',
-        profileExists: !!profile,
-        rawProfile: JSON.stringify(profile, null, 2),
-        userId: data.user.id
-      })
-      
-      // PRIORITY 1: If user has ANY Stripe subscription ID, they've completed checkout
-      // Allow them in regardless of status (webhook might be delayed)
-      if (hasStripeSubscription) {
-        console.log('[Login] ✅ User has Stripe subscription ID - allowing access (webhook may be delayed)')
-        
-        // If status is not trialing or active, update it
-        if (subscriptionStatus !== 'trialing' && subscriptionStatus !== 'active') {
-          console.log('[Login] Updating status to trialing (user has Stripe subscription)')
-          const { error: updateError } = await supabase
-            .from('profiles')
-            .update({ subscription_status: 'trialing' })
-            .eq('id', data.user.id)
-          
-          if (updateError) {
-            console.error('[Login] Error updating status to trialing:', updateError)
-            // Still allow access even if update fails
-          } else {
-            console.log('[Login] ✅ Updated status to trialing')
-          }
-        }
-        
-        console.log('[Login] Redirecting to tutor')
-        window.location.replace(redirect)
-        return
-      }
-      
-      // PRIORITY 2: If user has trialing or active status, go to tutor
-      // Normalize subscription status to string for comparison
-      const status = String(subscriptionStatus || '').toLowerCase().trim()
-      if (status === 'trialing' || status === 'active' || 
-          subscriptionStatus === 'trialing' || subscriptionStatus === 'active') {
-        console.log('[Login] ✅ User has active subscription (trialing or active), redirecting to:', redirect)
-        window.location.replace(redirect)
-        return
-      }
-      
-      // PRIORITY 3: If user needs payment, redirect to checkout
-      if (!subscriptionStatus || 
-          status === 'pending_payment' || 
-          status === 'canceled' || 
-          status === 'past_due' || 
-          status === 'unpaid') {
-        console.log('[Login] ❌ Redirecting to checkout (payment needed). Status:', subscriptionStatus || 'null')
-        window.location.replace('/checkout')
-        return
-      }
-      
-      // PRIORITY 4: Unknown status - log and redirect to checkout to be safe
-      console.warn('[Login] ⚠️ Unknown subscription status:', subscriptionStatus, '- redirecting to checkout')
-      window.location.replace('/checkout')
-      // Note: We don't set loading to false on success because we're redirecting
+      console.log('[Login] Sign in successful, redirecting to /profiles')
+      router.replace('/profiles')
     } catch (err) {
       // In catch: console.error for debugging, show user-friendly error
       console.error('[Login] Unexpected login error:', err)
@@ -197,13 +126,8 @@ export default function LoginPage() {
         type: 'error' 
       })
     } finally {
-      // Make sure finally always runs so the spinner stops, even on failure
-      // Check if we're still on the login page before setting loading to false
-      // (If we redirected, the page will unmount anyway)
-      const currentPath = typeof window !== 'undefined' ? window.location.pathname : ''
-      if (currentPath === '/login') {
-        setLoading(false)
-      }
+      console.log('[Login] Login flow complete, stopping loader')
+      setLoading(false)
     }
   }
 
@@ -211,44 +135,47 @@ export default function LoginPage() {
     <div className="min-h-[calc(100dvh-4rem)] bg-slate-50">
       <div className="grid grid-cols-1 lg:grid-cols-2 min-h-[calc(100dvh-4rem)] flex-col-reverse lg:flex-row">
         {/* Left Column - Desktop Only, shown below on mobile */}
-        <div className="hidden lg:flex bg-gradient-to-br from-indigo-50 to-purple-50 border-r border-slate-200 flex flex-col justify-center items-center h-full px-8 text-center">
+        <div className="hidden lg:flex bg-gradient-to-br from-slate-50 to-white border-r border-slate-200 flex flex-col justify-center items-center h-full px-8 text-center">
           <div className="max-w-md space-y-8">
             <div className="space-y-4">
-              <div className="w-16 h-16 bg-indigo-600 rounded-xl flex items-center justify-center mx-auto shadow-lg">
+              <div className="w-16 h-16 bg-gradient-to-br from-teal-600 to-cyan-600 rounded-xl flex items-center justify-center mx-auto shadow-lg">
                 <MessageSquare className="w-8 h-8 text-white" />
               </div>
-              <blockquote className="text-xl text-slate-700 italic leading-relaxed font-medium">
-                "<span className="font-semibold text-indigo-700">Reasoning</span> is the difference between knowing the answer and saving a life."
-              </blockquote>
+              <h2 className="text-2xl font-bold text-slate-900 leading-tight">
+                Homework help that teaches — not cheats.
+              </h2>
+              <p className="text-base text-slate-600 leading-relaxed">
+                Step-by-step support for Grades 3–12 that builds real understanding.
+              </p>
             </div>
             
             {/* Quick Benefits */}
-            <div className="space-y-4 pt-8 border-t border-indigo-200">
+            <div className="space-y-4 pt-8 border-t border-slate-200">
               <div className="flex items-start gap-3 text-left">
-                <div className="w-10 h-10 rounded-lg bg-indigo-100 flex items-center justify-center flex-shrink-0">
-                  <BookOpen className="w-5 h-5 text-indigo-600" />
+                <div className="w-10 h-10 rounded-lg bg-teal-50 flex items-center justify-center flex-shrink-0">
+                  <MessageSquare className="w-5 h-5 text-teal-600" />
                 </div>
                 <div>
-                  <div className="font-semibold text-slate-900 text-sm mb-1">Continue your studies</div>
-                  <div className="text-xs text-slate-600">Pick up where you left off</div>
+                  <div className="font-semibold text-slate-900 text-sm mb-1">Explains step-by-step (not just answers)</div>
+                  <div className="text-xs text-slate-600">Guided explanations that build understanding</div>
                 </div>
               </div>
               <div className="flex items-start gap-3 text-left">
-                <div className="w-10 h-10 rounded-lg bg-indigo-100 flex items-center justify-center flex-shrink-0">
-                  <Shield className="w-5 h-5 text-indigo-600" />
+                <div className="w-10 h-10 rounded-lg bg-teal-50 flex items-center justify-center flex-shrink-0">
+                  <GraduationCap className="w-5 h-5 text-teal-600" />
                 </div>
                 <div>
-                  <div className="font-semibold text-slate-900 text-sm mb-1">Your learning library</div>
-                  <div className="text-xs text-slate-600">All your saved explanations and clips</div>
+                  <div className="font-semibold text-slate-900 text-sm mb-1">Personal readiness dashboard</div>
+                  <div className="text-xs text-slate-600">Track progress and focus areas</div>
                 </div>
               </div>
               <div className="flex items-start gap-3 text-left">
-                <div className="w-10 h-10 rounded-lg bg-indigo-100 flex items-center justify-center flex-shrink-0">
-                  <GraduationCap className="w-5 h-5 text-indigo-600" />
+                <div className="w-10 h-10 rounded-lg bg-teal-50 flex items-center justify-center flex-shrink-0">
+                  <Shield className="w-5 h-5 text-teal-600" />
                 </div>
                 <div>
-                  <div className="font-semibold text-slate-900 text-sm mb-1">Access your dashboard</div>
-                  <div className="text-xs text-slate-600">View your progress and study patterns</div>
+                  <div className="font-semibold text-slate-900 text-sm mb-1">Profiles for families (up to 4 students)</div>
+                  <div className="text-xs text-slate-600">One account, multiple learners</div>
                 </div>
               </div>
             </div>
@@ -261,7 +188,7 @@ export default function LoginPage() {
             <div className="bg-white border border-slate-200 rounded-2xl p-6 sm:p-8 shadow-lg">
               {/* Header */}
               <div className="text-center mb-6 sm:mb-8">
-                <div className="inline-flex items-center justify-center w-14 h-14 bg-indigo-600 rounded-xl mb-4 shadow-lg">
+                <div className="inline-flex items-center justify-center w-14 h-14 bg-gradient-to-br from-teal-700 to-teal-600 rounded-xl mb-4 shadow-lg shadow-teal-500/25">
                   <MessageSquare className="w-7 h-7 text-white" />
                 </div>
                 {showVerificationSuccess ? (
@@ -279,7 +206,7 @@ export default function LoginPage() {
                       Welcome back
                     </h1>
                     <p className="text-sm text-slate-600">
-                      Sign in to continue your clinical reasoning journey
+                      Sign in to keep building confidence and independence.
                     </p>
                   </>
                 )}
@@ -293,7 +220,7 @@ export default function LoginPage() {
                     <input
                       type="email"
                       placeholder="Enter your email"
-                      className="w-full pl-12 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-600 focus:border-transparent transition-all"
+                      className="w-full pl-12 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-teal-600 focus:border-transparent transition-all"
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
                       required
@@ -304,7 +231,7 @@ export default function LoginPage() {
                     <input
                       type="password"
                       placeholder="Enter your password"
-                      className="w-full pl-12 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-600 focus:border-transparent transition-all"
+                      className="w-full pl-12 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-teal-600 focus:border-transparent transition-all"
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
                       required
@@ -325,7 +252,7 @@ export default function LoginPage() {
                 <button
                   type="submit"
                   disabled={loading || !email || !password}
-                  className="w-full flex items-center justify-center gap-2 px-6 py-3 sm:py-3.5 bg-indigo-600 text-white rounded-xl text-base font-medium hover:bg-indigo-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-lg hover:shadow-xl min-h-[44px]"
+                  className="w-full flex items-center justify-center gap-2 px-6 py-3 sm:py-3.5 bg-gradient-to-r from-teal-700 to-teal-600 text-white rounded-xl text-base font-bold hover:from-teal-800 hover:to-teal-700 focus:outline-none focus:ring-2 focus:ring-teal-600 focus:ring-offset-2 transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-md shadow-teal-500/30 hover:shadow-lg hover:shadow-teal-500/40 min-h-[44px]"
                 >
                   {loading ? (
                     <>
@@ -348,7 +275,7 @@ export default function LoginPage() {
                 </span>
                 <Link
                   href="/signup"
-                  className="text-sm font-semibold text-indigo-600 hover:text-indigo-700 transition-colors"
+                  className="text-sm font-semibold text-teal-600 hover:text-teal-700 transition-colors"
                 >
                   Sign up
                 </Link>

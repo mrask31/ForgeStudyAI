@@ -67,17 +67,17 @@ export default function PublicLayout({ children }: { children: React.ReactNode }
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16 sm:h-18">
             <Link href="/" className="flex items-center gap-2 sm:gap-2.5 group">
-              <div className="w-8 h-8 sm:w-9 sm:h-9 bg-gradient-to-br from-indigo-600 to-purple-600 rounded-xl flex items-center justify-center shadow-md shadow-indigo-500/30 group-hover:shadow-lg group-hover:shadow-indigo-500/40 transition-all duration-200">
-                <span className="font-bold text-white text-sm sm:text-base leading-none">FN</span>
+              <div className="w-8 h-8 sm:w-9 sm:h-9 bg-gradient-to-br from-teal-600 to-cyan-600 rounded-xl flex items-center justify-center shadow-md shadow-teal-500/30 group-hover:shadow-lg group-hover:shadow-teal-500/40 transition-all duration-200">
+                <span className="font-bold text-white text-sm sm:text-base leading-none">FS</span>
               </div>
-              <span className="font-bold text-lg sm:text-xl text-slate-900 bg-gradient-to-r from-slate-900 to-indigo-900 bg-clip-text text-transparent">ForgeNursing</span>
+              <span className="font-semibold text-lg sm:text-xl text-slate-800">ForgeStudy Platform</span>
             </Link>
             <div className="flex items-center gap-3 sm:gap-4">
               {/* Show "Go to Tutor" for logged-in users with active subscription */}
               {user && hasActiveSubscription && pathname !== '/checkout' && (
                 <Link
                   href="/tutor"
-                  className="px-4 sm:px-5 py-2 sm:py-2.5 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-xl text-xs sm:text-sm font-semibold hover:from-indigo-700 hover:to-purple-700 transition-all duration-200 shadow-md shadow-indigo-500/30 hover:shadow-lg hover:shadow-indigo-500/40 min-h-[40px] sm:min-h-[44px] flex items-center transform hover:scale-105 active:scale-95"
+                  className="px-4 sm:px-5 py-2 sm:py-2.5 bg-gradient-to-r from-teal-600 to-cyan-600 text-white rounded-xl text-xs sm:text-sm font-semibold hover:from-teal-700 hover:to-cyan-700 transition-all duration-200 shadow-md shadow-teal-500/30 hover:shadow-lg hover:shadow-teal-500/40 min-h-[40px] sm:min-h-[44px] flex items-center transform hover:scale-105 active:scale-95"
                 >
                   Go to Tutor
                 </Link>
@@ -86,7 +86,7 @@ export default function PublicLayout({ children }: { children: React.ReactNode }
               {(!user || (pathname === '/' && !hasActiveSubscription)) && (
                 <Link
                   href="/login"
-                  className="px-4 sm:px-5 py-2 sm:py-2.5 text-slate-700 hover:text-indigo-700 text-xs sm:text-sm font-semibold transition-colors min-h-[40px] sm:min-h-[44px] flex items-center border-2 border-transparent hover:border-indigo-200 rounded-xl"
+                  className="px-4 sm:px-5 py-2 sm:py-2.5 text-slate-600 hover:text-slate-900 text-xs sm:text-sm font-medium transition-colors min-h-[40px] sm:min-h-[44px] flex items-center border-2 border-transparent hover:border-slate-200 rounded-xl"
                 >
                   Log In
                 </Link>
@@ -95,7 +95,7 @@ export default function PublicLayout({ children }: { children: React.ReactNode }
               {pathname === '/' && (!user || !hasActiveSubscription) && (
                 <Link
                   href="/signup?plan=monthly"
-                  className="px-4 sm:px-5 py-2 sm:py-2.5 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-xl text-xs sm:text-sm font-semibold hover:from-indigo-700 hover:to-purple-700 transition-all duration-200 shadow-md shadow-indigo-500/30 hover:shadow-lg hover:shadow-indigo-500/40 min-h-[40px] sm:min-h-[44px] flex items-center transform hover:scale-105 active:scale-95"
+                  className="px-4 sm:px-5 py-2 sm:py-2.5 bg-gradient-to-r from-teal-600 to-cyan-600 text-white rounded-xl text-xs sm:text-sm font-semibold hover:from-teal-700 hover:to-cyan-700 transition-all duration-200 shadow-md shadow-teal-500/30 hover:shadow-lg hover:shadow-teal-500/40 min-h-[40px] sm:min-h-[44px] flex items-center transform hover:scale-105 active:scale-95"
                 >
                   Get Started
                 </Link>
@@ -121,8 +121,8 @@ export default function PublicLayout({ children }: { children: React.ReactNode }
               <Link href="/privacy" className="hover:text-slate-900 transition-colors">
                 Privacy Policy
               </Link>
-              <a href="mailto:support@forgenursing.com" className="hover:text-slate-900 transition-colors">
-                Contact: support@forgenursing.com
+              <a href="mailto:support@forgestudy.com" className="hover:text-slate-900 transition-colors">
+                Contact: support@forgestudy.com
               </a>
             </div>
             <div className="text-slate-500 text-center sm:text-right">

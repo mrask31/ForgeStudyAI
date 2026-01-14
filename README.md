@@ -1,6 +1,6 @@
-# ForgeNursing
+# ForgeStudy Platform
 
-AI-powered clinical reasoning tutor for NCLEX preparation.
+AI-powered study companion for Grades 3–12 students.
 
 ## Getting Started
 
@@ -20,10 +20,10 @@ Open [http://localhost:3000](http://localhost:3000) with your browser to see the
 
 ## Features
 
-- **Clinical Reasoning Tutoring**: AI-powered guidance to help nursing students think like nurses
-- **NCLEX Preparation**: Focused on exam-style reasoning and prioritization frameworks
-- **Material Upload**: Upload your course materials (PDFs, notes, slides) for personalized tutoring
-- **Strict NCLEX Mode**: Simulate exam conditions with less guidance
+- **Step-by-Step Learning**: AI-powered guidance to help students understand their work, not just get answers
+- **Grades 3–12 Support**: Tailored learning support from elementary through high school
+- **Family Accounts**: One parent account can manage up to 4 student profiles
+- **Personalized Dashboards**: Each student gets their own readiness dashboard tracking progress and focus areas
 
 ## Tech Stack
 

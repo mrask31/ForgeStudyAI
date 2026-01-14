@@ -9,7 +9,7 @@ export default function ThreeFeatures() {
           <span className="sm:hidden">Learn the "Why," Not Just the Answer</span>
         </h2>
         <p className="text-base sm:text-lg text-slate-700 max-w-2xl mx-auto px-4 leading-relaxed hidden sm:block">
-          Most study tools help you memorize. ForgeNursing helps you think like a safe, confident nurse.
+          Most study tools help you memorize. ForgeStudy Platform helps you understand concepts step-by-step.
         </p>
       </div>
       
@@ -20,16 +20,16 @@ export default function ThreeFeatures() {
             <Brain className="w-6 h-6 text-indigo-600" />
           </div>
           <h3 className="text-lg font-bold text-slate-900 mb-2">
-            <span className="hidden sm:inline">🧠 Learn Clinical Judgment</span>
-            <span className="sm:hidden">Clinical reasoning</span>
+            <span className="hidden sm:inline">🧠 Step-by-Step Understanding</span>
+            <span className="sm:hidden">Guided help</span>
           </h3>
           <p className="text-slate-600 leading-relaxed mb-4 hidden sm:block">
-            Get step-by-step reasoning instead of generic answers.
+            Get step-by-step guidance instead of generic answers.
           </p>
           <ul className="space-y-2 text-sm text-slate-600 hidden sm:block">
             <li className="flex items-center gap-2">
               <Check className="w-4 h-4 text-indigo-600 flex-shrink-0" />
-              <span>Step-by-step reasoning</span>
+              <span>Step-by-step explanations</span>
             </li>
             <li className="flex items-center gap-2">
               <Check className="w-4 h-4 text-indigo-600 flex-shrink-0" />
@@ -123,10 +123,10 @@ export default function ThreeFeatures() {
               <Target className="w-7 h-7 text-indigo-600" />
             </div>
             <div>
-              <h4 className="font-bold text-slate-900 mb-2 hidden sm:block">✔ AI tutor for nursing + NCLEX</h4>
+              <h4 className="font-bold text-slate-900 mb-2 hidden sm:block">✔ AI tutor for Grades 3–12</h4>
               <h4 className="font-bold text-slate-900 mb-2 sm:hidden">AI tutor</h4>
               <p className="text-slate-700 text-sm hidden sm:block">
-                Uses your own textbooks & PDFs
+                Uses your own notes & materials
               </p>
             </div>
           </div>
@@ -135,10 +135,10 @@ export default function ThreeFeatures() {
               <Zap className="w-6 h-6 text-indigo-600" />
             </div>
             <div>
-              <h4 className="font-bold text-slate-900 mb-2 hidden sm:block">✔ Guided reasoning — not just answers</h4>
-              <h4 className="font-bold text-slate-900 mb-2 sm:hidden">Guided reasoning</h4>
+              <h4 className="font-bold text-slate-900 mb-2 hidden sm:block">✔ Guided help — not just answers</h4>
+              <h4 className="font-bold text-slate-900 mb-2 sm:hidden">Guided help</h4>
               <p className="text-slate-700 text-sm hidden sm:block">
-                Step-by-step clinical reasoning guidance
+                Step-by-step guidance aligned with your coursework
               </p>
             </div>
           </div>

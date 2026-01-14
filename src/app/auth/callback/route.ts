@@ -7,7 +7,7 @@ export async function GET(request: Request) {
   const { searchParams, origin } = new URL(request.url)
   const code = searchParams.get('code')
   const plan = searchParams.get('plan')
-  const next = searchParams.get('next') ?? '/tutor'
+  const next = searchParams.get('next') ?? '/post-login'
   
   // Confirm redirectTo / callbackUrl matches production domain
   // Use NEXT_PUBLIC_APP_URL if available, otherwise use request origin
@@ -103,24 +103,22 @@ export async function GET(request: Request) {
         }
       }
 
-      // If there's a plan parameter, redirect to checkout initiation page
-      // This will trigger the Stripe checkout flow
-      if (plan && (plan === 'monthly' || plan === 'semester' || plan === 'annual')) {
-        return NextResponse.redirect(`${appUrl}/checkout?plan=${plan}`)
-      }
-      
-      // If user needs to pay (pending_payment, canceled, past_due, unpaid), redirect to checkout
-      // This handles cases where they verified via an old email link without a plan parameter
-      if (subscriptionStatus === 'pending_payment' || 
-          subscriptionStatus === 'canceled' || 
-          subscriptionStatus === 'past_due' || 
-          subscriptionStatus === 'unpaid') {
-        // Redirect to checkout without plan so user can choose
-        return NextResponse.redirect(`${appUrl}/checkout`)
-      }
-      
-      // Redirect to a valid route (e.g. /tutor), not a non-existent path
-      return NextResponse.redirect(`${appUrl}${next}`)
+    const allowedPlans = [
+      'monthly',
+      'semester',
+      'annual',
+      'individual_monthly',
+      'individual_annual',
+      'family_monthly',
+      'family_annual',
+    ]
+
+    // Always send verified users to checkout
+    if (plan && allowedPlans.includes(plan)) {
+      return NextResponse.redirect(`${appUrl}/checkout?plan=${plan}`)
+    }
+
+    return NextResponse.redirect(`${appUrl}/checkout`)
     }
   }
 

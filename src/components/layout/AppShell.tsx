@@ -82,7 +82,7 @@ export function AppShell({ children, variant = 'app' }: AppShellProps) {
                   ? `${programTrack} • Class of ${graduationYear}`
                   : programTrack 
                     ? programTrack
-                    : 'ForgeNursing'}
+                    : 'ForgeStudy Platform'}
               </span>
             </div>
             <div className="w-10"></div>

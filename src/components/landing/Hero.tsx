@@ -26,7 +26,7 @@ export default function Hero({ user }: HeroProps) {
                 <Award className="w-5 h-5" />
               </div>
               <div className="text-sm font-semibold">Step-by-Step</div>
-              <div className="text-xs opacity-90">Clinical Reasoning</div>
+              <div className="text-xs opacity-90">Guided Help</div>
             </div>
             <div className="flex flex-col items-center gap-1.5">
               <div className="p-2 bg-white/20 backdrop-blur-sm rounded-lg shadow-md">
@@ -49,16 +49,16 @@ export default function Hero({ user }: HeroProps) {
               <div className="p-0.5 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-md">
                 <MessageSquare className="w-3 h-3 text-white" />
               </div>
-              AI Tutor for NCLEX Prep
+              AI Study Companion for Grades 3–12
             </div>
             
             <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold bg-gradient-to-r from-slate-900 via-indigo-900 to-slate-900 bg-clip-text text-transparent tracking-tight mb-4 sm:mb-6 leading-tight pb-1">
-              <span className="hidden sm:inline">Stop Memorizing. Start Thinking Like a Nurse.</span>
-              <span className="sm:hidden">Think Like a Nurse — Not a Memorizer</span>
+              <span className="hidden sm:inline">Your AI Study Companion for Grades 3–12</span>
+              <span className="sm:hidden">AI Study Companion for Grades 3–12</span>
             </h1>
             
             <p className="text-base sm:text-lg md:text-xl text-slate-700 mb-6 sm:mb-8 leading-relaxed font-medium">
-              <span className="hidden sm:inline">ForgeNursing is an AI tutor that teaches clinical reasoning using your own textbooks and lecture notes — so NCLEX questions finally make sense.</span>
+              <span className="hidden sm:inline">Upload notes, syllabi, or weekly materials and get guided help aligned with your coursework.</span>
               <span className="sm:hidden">AI tutoring based on your own class materials.</span>
             </p>
             
@@ -112,8 +112,8 @@ export default function Hero({ user }: HeroProps) {
                   <GraduationCap className="w-4 h-4 text-indigo-600" />
                 </div>
                 <div>
-                  <div className="font-semibold text-slate-900 text-xs mb-0.5">NCLEX Ready</div>
-                  <div className="text-xs text-slate-600">Builds exam thinking</div>
+                  <div className="font-semibold text-slate-900 text-xs mb-0.5">Study Ready</div>
+                  <div className="text-xs text-slate-600">Builds understanding</div>
                 </div>
               </div>
             </div>
@@ -130,7 +130,7 @@ export default function Hero({ user }: HeroProps) {
                   <div className="w-3 h-3 rounded-full bg-emerald-400"></div>
                 </div>
                 <div className="flex-1 bg-white rounded px-3 py-1 text-xs text-slate-400 border border-slate-200">
-                  clinical-studio.forgenursing.com
+                  forgestudy-platform.com
                 </div>
               </div>
               
@@ -171,7 +171,7 @@ export default function Hero({ user }: HeroProps) {
                     </div>
                     <div className="mt-3 pt-3 border-t border-slate-200">
                       <p className="text-xs text-indigo-600 font-medium">
-                        💡 This is how NCLEX wants you to think — priorities first, then actions
+                        💡 Step-by-step guidance to help you understand
                       </p>
                     </div>
                   </div>

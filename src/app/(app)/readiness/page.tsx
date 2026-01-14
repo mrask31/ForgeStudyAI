@@ -727,7 +727,7 @@ export default function ClinicalDashboard() {
         {/* Footer Disclaimer */}
         <div className="mt-6 text-center">
           <p className="text-xs text-slate-500 italic">
-            Dashboard metrics reflect study activity and engagement — not a guarantee of NCLEX performance.
+            Dashboard metrics reflect study activity and engagement — not a guarantee of academic performance.
           </p>
         </div>
       </div>

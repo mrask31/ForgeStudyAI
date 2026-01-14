@@ -2,7 +2,7 @@ import { DensityMode } from '@/contexts/DensityContext'
 
 /**
  * Centralized density tokens for consistent UI spacing and typography
- * across all pages in ForgeNursing.
+ * across all pages in ForgeStudy Platform.
  */
 
 export interface DensityTokens {

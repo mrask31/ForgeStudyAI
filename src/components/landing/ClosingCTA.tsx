@@ -9,11 +9,11 @@ export default function ClosingCTA() {
       <div className="text-center space-y-6 sm:space-y-8">
         <div className="space-y-3 sm:space-y-4">
           <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold bg-gradient-to-r from-slate-900 via-indigo-900 to-slate-900 bg-clip-text text-transparent">
-            <span className="hidden sm:inline">Ready to Feel More Confident in Nursing School?</span>
-            <span className="sm:hidden">Feel More Confident in Nursing School</span>
+            <span className="hidden sm:inline">Ready to Improve Your Understanding?</span>
+            <span className="sm:hidden">Improve Your Understanding</span>
           </h2>
           <div className="space-y-2 text-base sm:text-lg md:text-xl text-slate-700 hidden sm:block">
-            <p>Try ForgeNursing free and finally understand the why behind the answers.</p>
+            <p>Try ForgeStudy Platform free and get step-by-step guidance on your coursework.</p>
           </div>
         </div>
         

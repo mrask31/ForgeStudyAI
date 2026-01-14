@@ -659,7 +659,7 @@ export default function TutorSession({
               const classInfo = tutorContext.selectedClass
                 ? ` from ${tutorContext.selectedClass.code} — ${tutorContext.selectedClass.name}`
                 : ''
-              return `I want to study ${tutorContext.selectedTopic.title}${classInfo}. Please explain it step by step at my level and then quiz me with NCLEX-style questions.`
+              return `I want to study ${tutorContext.selectedTopic.title}${classInfo}. Please explain it step by step at my level and then quiz me with practice questions.`
             }
             return undefined
           })()}

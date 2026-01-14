@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { createBrowserClient } from '@supabase/ssr'
 import { useRouter } from 'next/navigation'
 import { Mail, Lock, ArrowRight, Loader2, CheckCircle, MessageSquare, BookOpen, GraduationCap, Shield, Sparkles } from 'lucide-react'
@@ -23,23 +23,31 @@ export default function SignupPage() {
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
   )
 
-  // Check if user is already verified and signed in when page loads (but not if we're showing success screen)
+  const normalizeAppUrl = useCallback((url?: string | null) => {
+    if (!url) return ''
+    if (url.startsWith('http://') || url.startsWith('https://')) {
+      return url
+    }
+    const protocol = url.includes('localhost') || url.includes('127.0.0.1') ? 'http://' : 'https://'
+    return `${protocol}${url}`
+  }, [])
+
+  const appUrl = normalizeAppUrl(process.env.NEXT_PUBLIC_APP_URL)
+
+  // Auth guard: if already signed in, go to /profiles
   useEffect(() => {
-    if (showSuccess) return // Don't redirect if we're already showing the verification waiting screen
-    
-    const checkExistingAuth = async () => {
-      const { data: { user } } = await supabase.auth.getUser()
-      
-      if (user && user.email_confirmed_at) {
-        // User is already verified and signed in, redirect to login with message
-        router.push('/login?verified=true&email=' + encodeURIComponent(user.email || ''))
+    const checkExistingSession = async () => {
+      const { data: { session } } = await supabase.auth.getSession()
+      if (session) {
+        console.log('[Signup] Session exists, redirecting to /profiles')
+        router.replace('/profiles')
       }
     }
-    
-    checkExistingAuth()
-  }, [router, supabase, showSuccess])
 
-  // Store plan parameter from URL in localStorage
+    checkExistingSession()
+  }, [router, supabase])
+
+  // Store plan and band parameters from URL in localStorage
   useEffect(() => {
     if (typeof window !== 'undefined') {
       const params = new URLSearchParams(window.location.search)
@@ -47,8 +55,31 @@ export default function SignupPage() {
       if (plan && (plan === 'monthly' || plan === 'semester' || plan === 'annual')) {
         localStorage.setItem('forgenursing-pending-plan', plan)
       }
+      const band = params.get('band')
+      if (band && (band === 'high' || band === 'middle' || band === 'elementary')) {
+        localStorage.setItem('forgestudy-pending-band', band)
+      }
     }
   }, [])
+
+  const checkAuthAndRedirect = useCallback(async () => {
+    const { data: { session } } = await supabase.auth.getSession()
+
+    if (session?.user) {
+      console.log('[Signup] Session found after verification, redirecting to /checkout')
+      setIsVerifying(true)
+      setMessage({ 
+        text: 'Email verified! Redirecting...', 
+        type: 'success' 
+      })
+
+      setTimeout(() => {
+        router.replace('/checkout')
+      }, 1000)
+    } else {
+      console.log('[Signup] No session yet, waiting for verification...')
+    }
+  }, [router, supabase])
 
   // Listen for auth state changes and poll for email verification
   useEffect(() => {
@@ -56,61 +87,10 @@ export default function SignupPage() {
 
     let pollInterval: NodeJS.Timeout | null = null
 
-    const checkAuthAndRedirect = async () => {
-      const { data: { user } } = await supabase.auth.getUser()
-      
-      if (user) {
-        // User has verified their email and is now signed in
-        setIsVerifying(true)
-        setMessage({ 
-          text: 'Email verified! Redirecting...', 
-          type: 'success' 
-        })
-
-        // Clear polling
-        if (pollInterval) {
-          clearInterval(pollInterval)
-        }
-
-        // Check subscription status before redirecting
-        try {
-          const { data: profile } = await supabase
-            .from('profiles')
-            .select('subscription_status')
-            .eq('id', user.id)
-            .single()
-
-          const subscriptionStatus = profile?.subscription_status || 'pending_payment'
-          
-          // Get plan from localStorage
-          const plan = localStorage.getItem('forgenursing-pending-plan')
-          
-          // Small delay to show the success message
-          setTimeout(() => {
-            // If user needs payment, always redirect to checkout (without plan so user can choose)
-            if (subscriptionStatus === 'pending_payment' || 
-                subscriptionStatus === 'canceled' || 
-                subscriptionStatus === 'past_due' || 
-                subscriptionStatus === 'unpaid') {
-              router.push('/checkout')
-            } else {
-              // User is already subscribed, go to tutor
-              router.push('/tutor')
-            }
-          }, 1000)
-        } catch (error) {
-          console.error('Error checking subscription status:', error)
-          // On error, default to checkout (without plan so user can choose)
-          setTimeout(() => {
-            router.push('/checkout')
-          }, 1000)
-        }
-      }
-    }
-
     // Listen for auth state changes (works for same device/tab)
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
       if (event === 'SIGNED_IN' && session?.user) {
+        console.log('[Signup] Auth state change: SIGNED_IN, redirecting to /checkout')
         await checkAuthAndRedirect()
       }
     })
@@ -121,13 +101,23 @@ export default function SignupPage() {
     // Initial check
     checkAuthAndRedirect()
 
+    const handleVisibilityChange = () => {
+      if (!document.hidden) {
+        console.log('[Signup] Tab focused, re-checking session')
+        checkAuthAndRedirect()
+      }
+    }
+
+    document.addEventListener('visibilitychange', handleVisibilityChange)
+
     return () => {
       subscription.unsubscribe()
+      document.removeEventListener('visibilitychange', handleVisibilityChange)
       if (pollInterval) {
         clearInterval(pollInterval)
       }
     }
-  }, [showSuccess, router, supabase])
+  }, [showSuccess, checkAuthAndRedirect, supabase])
 
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -143,24 +133,36 @@ export default function SignupPage() {
     // Get plan from localStorage or URL
     const params = new URLSearchParams(window.location.search)
     const plan = params.get('plan') || localStorage.getItem('forgenursing-pending-plan')
-    
+
+    const allowedPlans = [
+      'monthly',
+      'semester',
+      'annual',
+      'individual_monthly',
+      'individual_annual',
+      'family_monthly',
+      'family_annual',
+    ]
+
     // Build callback URL with plan parameter if present
-    // Use NEXT_PUBLIC_APP_URL if available (production), otherwise use current origin
-    let baseUrl = process.env.NEXT_PUBLIC_APP_URL || window.location.origin
-    
-    // Ensure baseUrl has a protocol (required for email redirects)
-    if (baseUrl && !baseUrl.startsWith('http://') && !baseUrl.startsWith('https://')) {
-      // Default to https:// unless it's localhost
-      const protocol = baseUrl.includes('localhost') || baseUrl.includes('127.0.0.1') ? 'http://' : 'https://'
-      baseUrl = `${protocol}${baseUrl}`
+    // Use NEXT_PUBLIC_APP_URL to ensure verification works cross-device
+    let baseUrl = appUrl
+    if (!baseUrl) {
+      console.error('[Signup] NEXT_PUBLIC_APP_URL is missing. Email verification will not work cross-device.')
+      setMessage({
+        text: 'App URL is not configured. Please contact support.',
+        type: 'error',
+      })
+      return
     }
-    
+
     let callbackUrl = `${baseUrl}/auth/callback`
-    if (plan && (plan === 'monthly' || plan === 'semester' || plan === 'annual')) {
+    if (plan && allowedPlans.includes(plan)) {
       callbackUrl += `?plan=${plan}`
     }
 
     try {
+      console.log('[Signup] Attempting to create account...', { email: email.trim() })
       const { data, error } = await supabase.auth.signUp({
         email,
         password,
@@ -190,11 +192,8 @@ export default function SignupPage() {
           (error.status === 400 && errorMessage.includes('already'))
         
         if (isEmailExists) {
-          setMessage({ 
-            text: `This email address is already registered. Please sign in instead.`, 
-            type: 'error' 
-          })
-          setLoading(false)
+          console.log('[Signup] Email already registered, redirecting to /login?redirect=/profiles')
+          router.replace('/login?redirect=/profiles')
           return
         }
         
@@ -211,13 +210,8 @@ export default function SignupPage() {
           hasUser: !!data.user, 
           hasSession: !!data.session 
         })
-        
-        // This likely means the email already exists (verified user)
-        setMessage({ 
-          text: `This email address is already registered. Please sign in instead.`, 
-          type: 'error' 
-        })
-        setLoading(false)
+        console.log('[Signup] No user returned, redirecting to /login?redirect=/profiles')
+        router.replace('/login?redirect=/profiles')
         return
       }
       
@@ -230,31 +224,25 @@ export default function SignupPage() {
           email: data.user.email,
           emailConfirmed: data.user.email_confirmed_at
         })
-        
-        // Supabase WILL send a verification email for repeated signups
-        // Show success state and wait for verification
+
+        // Email confirmation required: show success state and wait for verification
         setShowSuccess(true)
         setIsVerifying(true)
         setMessage({ 
-          text: "A verification email has been sent. Please check your inbox (including spam) and click the verification link. We'll automatically redirect you once you verify.", 
+          text: "Check your email for the confirmation link. Once verified, we'll send you to checkout.", 
           type: 'success' 
         })
-        setLoading(false)
         return
       }
-      
-      // New user created successfully
-      setShowSuccess(true)
-      setIsVerifying(true)
-      setMessage({ 
-        text: "Check your email for the confirmation link! We'll automatically redirect you once you verify.", 
-        type: 'success' 
-      })
+
+      console.log('[Signup] Signup successful, redirecting to /checkout')
+      router.replace('/checkout')
     } catch (error: any) {
       // Handle other errors
       const errorMessage = error.message || 'An error occurred. Please try again.'
       setMessage({ text: errorMessage, type: 'error' })
     } finally {
+      console.log('[Signup] Signup flow complete, stopping loader')
       setLoading(false)
     }
   }
@@ -356,14 +344,20 @@ export default function SignupPage() {
       <div className="min-h-[calc(100dvh-4rem)] bg-slate-50">
         <div className="grid grid-cols-1 lg:grid-cols-2 min-h-[calc(100dvh-4rem)]">
           {/* Left Column */}
-          <div className="hidden lg:flex bg-gradient-to-br from-indigo-50 to-purple-50 border-r border-slate-200 flex flex-col justify-center items-center h-full px-8 text-center">
+          <div className="hidden lg:flex bg-gradient-to-br from-slate-50 to-white border-r border-slate-200 flex flex-col justify-center items-center h-full px-8 text-center">
             <div className="max-w-md space-y-6">
-              <div className="w-16 h-16 bg-indigo-600 rounded-xl flex items-center justify-center mx-auto shadow-lg">
+              <div className="w-16 h-16 bg-gradient-to-br from-teal-700 to-teal-600 rounded-xl flex items-center justify-center mx-auto shadow-lg shadow-teal-500/25">
                 <MessageSquare className="w-8 h-8 text-white" />
               </div>
-              <blockquote className="text-xl text-slate-700 italic leading-relaxed font-medium">
-                "<span className="font-semibold text-indigo-700">Reasoning</span> is the difference between knowing the answer and saving a life."
-              </blockquote>
+              <h2 className="text-2xl font-bold text-slate-900 leading-tight">
+                Make tonight's homework easier.
+              </h2>
+              <p className="text-base text-slate-600 leading-relaxed">
+                ForgeStudy turns "I'm stuck" into progress with guided explanations and better study habits.
+              </p>
+              <p className="text-sm text-slate-500 italic">
+                Less stress for them. Less frustration for you.
+              </p>
             </div>
           </div>
 
@@ -383,35 +377,38 @@ export default function SignupPage() {
                       Redirecting you now...
                     </p>
                     <div className="flex justify-center">
-                      <Loader2 className="h-8 w-8 animate-spin text-indigo-600" />
+                      <Loader2 className="h-8 w-8 animate-spin text-teal-600" />
                     </div>
                   </>
                 ) : (
                   <>
-                    <div className="w-20 h-20 bg-indigo-50 rounded-full flex items-center justify-center mx-auto mb-6">
-                      <Mail className="w-10 h-10 text-indigo-600" />
+                    <div className="w-20 h-20 bg-teal-50 rounded-full flex items-center justify-center mx-auto mb-6">
+                      <Mail className="w-10 h-10 text-teal-600" />
                     </div>
                     <h1 className="text-2xl font-semibold text-slate-900 mb-3">
-                      Check your email
+                      Check your email to continue
                     </h1>
+                    <div className="inline-flex items-center justify-center px-3 py-1 bg-amber-50 border border-amber-200 rounded-full text-xs font-semibold text-amber-800 mb-3">
+                      Verify to continue to checkout
+                    </div>
                     <p className="text-base text-slate-600 mb-2">
-                      We've sent a confirmation link to
+                      Verify your email to unlock checkout. We sent a confirmation link to
                     </p>
-                    <p className="text-base font-semibold text-indigo-600 mb-6 break-all">
+                    <p className="text-base font-semibold text-teal-600 mb-6 break-all">
                       {email}
                     </p>
-                    <div className="bg-indigo-50 border border-indigo-200 rounded-xl p-4 mb-6 text-left">
+                    <div className="bg-teal-50 border border-teal-200 rounded-xl p-4 mb-6 text-left">
                       <div className="space-y-2 text-sm text-slate-700">
                         <div className="flex items-start gap-2">
-                          <span className="text-indigo-600 mt-0.5">•</span>
+                          <span className="text-teal-600 mt-0.5">•</span>
                           <span>Check your Spam/Junk folder if you don't see it</span>
                         </div>
                         <div className="flex items-start gap-2">
-                          <span className="text-indigo-600 mt-0.5">•</span>
+                          <span className="text-teal-600 mt-0.5">•</span>
                           <span>Click the confirmation link (on any device)</span>
                         </div>
                         <div className="flex items-start gap-2">
-                          <span className="text-indigo-600 mt-0.5">•</span>
+                          <span className="text-teal-600 mt-0.5">•</span>
                           <span>This page will automatically refresh when verified</span>
                         </div>
                       </div>
@@ -426,8 +423,8 @@ export default function SignupPage() {
                       </div>
                     )}
                     <div className="flex items-center justify-center gap-2 text-sm text-slate-500 mb-4">
-                      <Loader2 className="h-4 w-4 animate-spin text-indigo-600" />
-                      <span>Waiting for email verification...</span>
+                      <Loader2 className="h-4 w-4 animate-spin text-teal-600" />
+                      <span>Waiting for verification, then sending you to checkout...</span>
                     </div>
                     <div className="flex flex-col gap-3">
                       <button
@@ -435,21 +432,18 @@ export default function SignupPage() {
                         onClick={async (e) => {
                           e.preventDefault()
                           e.stopPropagation()
-                          // Check if user is now verified
-                          const { data: { user } } = await supabase.auth.getUser()
-                          if (user && user.email_confirmed_at) {
-                            // User is verified, redirect to login with success message
-                            router.push('/login?verified=true&email=' + encodeURIComponent(user.email || email))
-                          } else {
-                            // Not verified yet, just refresh
-                            window.location.reload()
-                          }
+                          await checkAuthAndRedirect()
+                          // Fallback: if still no session, force a refresh
+                          window.location.reload()
                         }}
                         className="inline-flex items-center justify-center gap-2 px-4 py-2 bg-slate-100 text-slate-700 rounded-lg text-sm font-medium hover:bg-slate-200 transition-colors"
                       >
                         <Loader2 className="h-4 w-4" />
-                        Check Verification Status
+                        Refresh after verification
                       </button>
+                      <div className="text-xs text-slate-500 text-center">
+                        If you verified on another device, reopen this page to finish checkout.
+                      </div>
                       <button
                         type="button"
                         onClick={(e) => {
@@ -458,7 +452,7 @@ export default function SignupPage() {
                           handleResendEmail(e)
                         }}
                         disabled={resending}
-                        className="inline-flex items-center justify-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-lg text-sm font-medium hover:bg-indigo-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                        className="inline-flex items-center justify-center gap-2 px-4 py-2 bg-gradient-to-r from-teal-700 to-teal-600 text-white rounded-lg text-sm font-bold hover:from-teal-800 hover:to-teal-700 focus:outline-none focus:ring-2 focus:ring-teal-600 focus:ring-offset-2 transition-colors disabled:opacity-50 disabled:cursor-not-allowed shadow-md shadow-teal-500/30"
                       >
                         {resending ? (
                           <>
@@ -472,9 +466,24 @@ export default function SignupPage() {
                           </>
                         )}
                       </button>
+                      {appUrl && (
+                        <div className="bg-slate-50 border border-slate-200 rounded-xl p-4 text-center">
+                          <p className="text-xs font-semibold text-slate-700 mb-2">
+                            Open ForgeStudy on your phone
+                          </p>
+                          <img
+                            src={`https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${encodeURIComponent(appUrl)}`}
+                            alt="ForgeStudy QR code"
+                            className="mx-auto rounded-lg border border-slate-200 bg-white p-2"
+                          />
+                          <p className="text-[11px] text-slate-500 mt-2">
+                            Scan to open the verification flow on mobile.
+                          </p>
+                        </div>
+                      )}
                       <Link
                         href="/login"
-                        className="inline-flex items-center gap-2 px-4 py-2 text-indigo-600 hover:text-indigo-700 text-sm font-medium transition-colors"
+                        className="inline-flex items-center gap-2 px-4 py-2 text-teal-600 hover:text-teal-700 text-sm font-medium transition-colors"
                       >
                         Back to Sign In
                       </Link>
@@ -493,44 +502,50 @@ export default function SignupPage() {
     <div className="min-h-[calc(100dvh-4rem)] bg-slate-50">
       <div className="grid grid-cols-1 lg:grid-cols-2 min-h-[calc(100dvh-4rem)] flex-col-reverse lg:flex-row">
         {/* Left Column - Desktop Only, shown below on mobile */}
-        <div className="hidden lg:flex bg-gradient-to-br from-indigo-50 to-purple-50 border-r border-slate-200 flex flex-col justify-center items-center h-full px-8 text-center">
+        <div className="hidden lg:flex bg-gradient-to-br from-slate-50 to-white border-r border-slate-200 flex flex-col justify-center items-center h-full px-8 text-center">
           <div className="max-w-md space-y-8">
             <div className="space-y-4">
-              <div className="w-16 h-16 bg-indigo-600 rounded-xl flex items-center justify-center mx-auto shadow-lg">
+              <div className="w-16 h-16 bg-gradient-to-br from-teal-700 to-teal-600 rounded-xl flex items-center justify-center mx-auto shadow-lg shadow-teal-500/25">
                 <MessageSquare className="w-8 h-8 text-white" />
               </div>
-              <blockquote className="text-xl text-slate-700 italic leading-relaxed font-medium">
-                "<span className="font-semibold text-indigo-700">Reasoning</span> is the difference between knowing the answer and saving a life."
-              </blockquote>
+              <h2 className="text-2xl font-bold text-slate-900 leading-tight">
+                Make tonight's homework easier.
+              </h2>
+              <p className="text-base text-slate-600 leading-relaxed">
+                ForgeStudy turns "I'm stuck" into progress with guided explanations and better study habits.
+              </p>
+              <p className="text-sm text-slate-500 italic">
+                Less stress for them. Less frustration for you.
+              </p>
             </div>
             
             {/* Quick Benefits */}
-            <div className="space-y-4 pt-8 border-t border-indigo-200">
+            <div className="space-y-4 pt-8 border-t border-slate-200">
               <div className="flex items-start gap-3 text-left">
-                <div className="w-10 h-10 rounded-lg bg-indigo-100 flex items-center justify-center flex-shrink-0">
-                  <BookOpen className="w-5 h-5 text-indigo-600" />
+                <div className="w-10 h-10 rounded-lg bg-teal-50 flex items-center justify-center flex-shrink-0">
+                  <Sparkles className="w-5 h-5 text-teal-600" />
                 </div>
                 <div>
-                  <div className="font-semibold text-slate-900 text-sm mb-1">Learn from your materials</div>
-                  <div className="text-xs text-slate-600">Upload your notes and textbooks</div>
+                  <div className="font-semibold text-slate-900 text-sm mb-1">Create a student profile in minutes</div>
+                  <div className="text-xs text-slate-600">Quick setup for Grades 3–12</div>
                 </div>
               </div>
               <div className="flex items-start gap-3 text-left">
-                <div className="w-10 h-10 rounded-lg bg-indigo-100 flex items-center justify-center flex-shrink-0">
-                  <GraduationCap className="w-5 h-5 text-indigo-600" />
+                <div className="w-10 h-10 rounded-lg bg-teal-50 flex items-center justify-center flex-shrink-0">
+                  <BookOpen className="w-5 h-5 text-teal-600" />
                 </div>
                 <div>
-                  <div className="font-semibold text-slate-900 text-sm mb-1">Build clinical reasoning</div>
-                  <div className="text-xs text-slate-600">Step-by-step NCLEX-style preparation</div>
+                  <div className="font-semibold text-slate-900 text-sm mb-1">Built for real learning, not shortcuts</div>
+                  <div className="text-xs text-slate-600">Step-by-step explanations that build understanding</div>
                 </div>
               </div>
               <div className="flex items-start gap-3 text-left">
-                <div className="w-10 h-10 rounded-lg bg-indigo-100 flex items-center justify-center flex-shrink-0">
-                  <Shield className="w-5 h-5 text-indigo-600" />
+                <div className="w-10 h-10 rounded-lg bg-teal-50 flex items-center justify-center flex-shrink-0">
+                  <Shield className="w-5 h-5 text-teal-600" />
                 </div>
                 <div>
-                  <div className="font-semibold text-slate-900 text-sm mb-1">Free preview</div>
-                  <div className="text-xs text-slate-600">7-day free trial included</div>
+                  <div className="font-semibold text-slate-900 text-sm mb-1">Cancel anytime during your preview</div>
+                  <div className="text-xs text-slate-600">No commitment, full access during trial</div>
                 </div>
               </div>
             </div>
@@ -543,18 +558,28 @@ export default function SignupPage() {
             <div className="bg-white border border-slate-200 rounded-2xl p-6 sm:p-8 shadow-lg">
               {/* Header */}
               <div className="text-center mb-6 sm:mb-8">
-                <div className="inline-flex items-center justify-center w-14 h-14 bg-indigo-600 rounded-xl mb-4 shadow-lg">
+                <div className="inline-flex items-center justify-center w-14 h-14 bg-gradient-to-br from-teal-700 to-teal-600 rounded-xl mb-4 shadow-lg shadow-teal-500/25">
                   <Sparkles className="w-7 h-7 text-white" />
                 </div>
                 <h1 className="text-2xl sm:text-3xl font-semibold text-slate-900 mb-2">
                   Start your free preview
                 </h1>
                 <p className="text-sm text-slate-600">
-                  Join nursing students building real clinical reasoning skills
+                  Get set up in minutes. Built for Grades 3–12.
                 </p>
               </div>
 
               {/* Form */}
+              {!appUrl && (
+                <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 text-left">
+                  <p className="text-sm font-semibold text-amber-900 mb-1">
+                    Configure your app URL
+                  </p>
+                  <p className="text-xs text-amber-800">
+                    Set <code className="font-semibold">NEXT_PUBLIC_APP_URL</code> so email verification works on all devices.
+                  </p>
+                </div>
+              )}
               <form onSubmit={handleSignup} className="space-y-4 sm:space-y-5">
                 <div className="space-y-4">
                   <div className="relative">
@@ -562,7 +587,7 @@ export default function SignupPage() {
                     <input
                       type="email"
                       placeholder="Enter your email"
-                      className="w-full pl-12 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-600 focus:border-transparent transition-all"
+                      className="w-full pl-12 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-teal-600 focus:border-transparent transition-all"
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
                       required
@@ -573,7 +598,7 @@ export default function SignupPage() {
                     <input
                       type="password"
                       placeholder="Create a password"
-                      className="w-full pl-12 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-600 focus:border-transparent transition-all"
+                      className="w-full pl-12 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-teal-600 focus:border-transparent transition-all"
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
                       required
@@ -610,8 +635,8 @@ export default function SignupPage() {
 
                 <button
                   type="submit"
-                  disabled={loading || !email || !password || !acceptedTerms}
-                  className="w-full flex items-center justify-center gap-2 px-6 py-3 sm:py-3.5 bg-indigo-600 text-white rounded-xl text-base font-medium hover:bg-indigo-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-lg hover:shadow-xl min-h-[44px]"
+                  disabled={loading || !email || !password || !acceptedTerms || !appUrl}
+                  className="w-full flex items-center justify-center gap-2 px-6 py-3 sm:py-3.5 bg-gradient-to-r from-teal-700 to-teal-600 text-white rounded-xl text-base font-bold hover:from-teal-800 hover:to-teal-700 focus:outline-none focus:ring-2 focus:ring-teal-600 focus:ring-offset-2 transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-md shadow-teal-500/30 hover:shadow-lg hover:shadow-teal-500/40 min-h-[44px]"
                 >
                   {loading ? (
                     <>
@@ -632,16 +657,16 @@ export default function SignupPage() {
                       type="checkbox"
                       checked={acceptedTerms}
                       onChange={(e) => setAcceptedTerms(e.target.checked)}
-                      className="mt-0.5 w-4 h-4 text-indigo-600 border-slate-300 rounded focus:ring-2 focus:ring-indigo-600 cursor-pointer"
+                      className="mt-0.5 w-4 h-4 text-teal-600 border-slate-300 rounded focus:ring-2 focus:ring-teal-600 cursor-pointer"
                       required
                     />
                     <span className="text-xs text-slate-600 leading-relaxed">
                       I agree to the{' '}
-                      <Link href="/terms" target="_blank" className="text-indigo-600 hover:text-indigo-700 underline font-medium">
+                      <Link href="/terms" target="_blank" className="text-teal-600 hover:text-teal-700 underline font-medium">
                         Terms of Service
                       </Link>
                       {' '}and{' '}
-                      <Link href="/privacy" target="_blank" className="text-indigo-600 hover:text-indigo-700 underline font-medium">
+                      <Link href="/privacy" target="_blank" className="text-teal-600 hover:text-teal-700 underline font-medium">
                         Privacy Policy
                       </Link>
                     </span>
@@ -659,7 +684,7 @@ export default function SignupPage() {
                 </span>
                 <Link
                   href="/login"
-                  className="text-sm font-semibold text-indigo-600 hover:text-indigo-700 transition-colors"
+                  className="text-sm font-semibold text-teal-600 hover:text-teal-700 transition-colors"
                 >
                   Sign in
                 </Link>
