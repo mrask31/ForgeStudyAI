@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { 
   GraduationCap, BookOpen, Sparkles, ArrowRight, Shield, Users, 
@@ -11,6 +11,14 @@ import { Accordion } from '@/components/ui/accordion'
 
 export default function HomePage() {
   const [billingPeriod, setBillingPeriod] = useState<'monthly' | 'annual'>('annual')
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+    const params = new URLSearchParams(window.location.search)
+    if (!params.has('code')) return
+    const targetUrl = new URL('/auth/callback', window.location.origin)
+    targetUrl.search = params.toString()
+    window.location.replace(targetUrl.toString())
+  }, [])
   const faqItems = [
     {
       question: "Is this cheating?",
