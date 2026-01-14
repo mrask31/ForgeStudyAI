@@ -2,4 +2,33 @@
 export const SOLO_MAX_PROFILES = 1
 export const FAMILY_MAX_PROFILES = 4
 
-// General Tutor prompts (broad, NCLEX-focused for all nursing students)
+// Tutor prompt sets
+export const GENERAL_TUTOR_PROMPTS = [
+  'Explain this step-by-step so I can solve it.',
+  'Give me a quick example I can follow.',
+  'What is the most important idea here?',
+  'Can you help me check my work?',
+]
+
+export const CLASS_TUTOR_PROMPTS = [
+  'Help me with tonight’s class topic.',
+  'Quiz me with a practice problem.',
+  'What should I review before the next quiz?',
+  'Show me a simpler way to understand this.',
+]
+
+export const TUTOR_PROMPTS = GENERAL_TUTOR_PROMPTS
+
+export const REFLECTION_PROMPTS = [
+  'What did I do well in this problem?',
+  'Where did I get stuck, and why?',
+  'What should I try next time?',
+  'Can you summarize my progress today?',
+]
+
+export const NOTES_PROMPTS = [
+  'Summarize this into 5 bullet points.',
+  'Pull out key terms and definitions.',
+  'Create a quick study checklist.',
+  'Turn this into a short study guide.',
+]
