@@ -8,6 +8,7 @@ export default function ClientCallback() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const [status, setStatus] = useState<'working' | 'error'>('working')
+  const [errorMessage, setErrorMessage] = useState<string | null>(null)
 
   const supabase = useMemo(() => {
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
@@ -31,7 +32,7 @@ export default function ClientCallback() {
       if (error) {
         console.error('[Client Callback] Error exchanging code for session:', error)
         setStatus('error')
-        router.replace('/login?error=auth-code-error')
+        setErrorMessage(error.message || 'Unknown error')
         return
       }
       router.replace('/checkout')
@@ -51,6 +52,30 @@ export default function ClientCallback() {
             ? 'One moment while we complete your signup.'
             : 'Please try signing in again or request a new verification email.'}
         </p>
+        {status === 'error' && (
+          <div className="mt-4 text-left text-xs text-slate-600 bg-slate-50 border border-slate-200 rounded-lg p-3">
+            <div className="font-semibold text-slate-700 mb-1">Error detail</div>
+            <div className="break-words">{errorMessage || 'Unknown error'}</div>
+          </div>
+        )}
+        {status === 'error' && (
+          <button
+            type="button"
+            onClick={() => {
+              const storedEmail = window.localStorage.getItem('forgestudy-pending-email')
+              const loginUrl = new URL('/login', window.location.origin)
+              loginUrl.searchParams.set('verified', 'true')
+              loginUrl.searchParams.set('redirect', '/checkout')
+              if (storedEmail) {
+                loginUrl.searchParams.set('email', storedEmail)
+              }
+              window.location.assign(loginUrl.toString())
+            }}
+            className="mt-4 inline-flex items-center justify-center px-4 py-2 rounded-lg bg-teal-600 text-white text-sm font-semibold hover:bg-teal-700 transition-colors"
+          >
+            Go to sign in
+          </button>
+        )}
       </div>
     </div>
   )
