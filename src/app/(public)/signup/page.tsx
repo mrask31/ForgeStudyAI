@@ -157,7 +157,7 @@ export default function SignupPage() {
       return
     }
 
-    const callbackUrl = `${baseUrl}/auth/callback`
+    const callbackUrl = `${baseUrl}/auth/confirm`
 
     try {
       console.log('[Signup] Attempting to create account...', { email: email.trim() })
