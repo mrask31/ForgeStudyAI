@@ -18,6 +18,7 @@ function NewProfileContent() {
   const [error, setError] = useState<string | null>(null)
   const [user, setUser] = useState<any>(null)
   const [isCheckingAuth, setIsCheckingAuth] = useState(true)
+  const [authError, setAuthError] = useState<string | null>(null)
   const [profileCount, setProfileCount] = useState<number | null>(null)
   const { setActiveProfileId } = useActiveProfile()
 
@@ -33,10 +34,16 @@ function NewProfileContent() {
         }
 
         const supabase = createBrowserClient(supabaseUrl, supabaseAnonKey)
-        const { data: { session } } = await supabase.auth.getSession()
+        const sessionPromise = supabase.auth.getSession()
+        const timeoutPromise = new Promise<null>((resolve) => {
+          setTimeout(() => resolve(null), 7000)
+        })
+        const sessionResult = await Promise.race([sessionPromise, timeoutPromise])
+        const session = sessionResult && 'data' in sessionResult ? sessionResult.data.session : null
 
         if (!session?.user) {
-          router.replace('/login')
+          setAuthError('We could not confirm your session. Please sign in again.')
+          window.location.assign('/login')
           return
         }
 
@@ -58,7 +65,8 @@ function NewProfileContent() {
         }
       } catch (error) {
         console.error('[New Profile Page] Error checking auth:', error)
-        router.replace('/login')
+        setAuthError('We could not confirm your session. Please sign in again.')
+        window.location.assign('/login')
       } finally {
         setIsCheckingAuth(false)
       }
@@ -135,7 +143,9 @@ function NewProfileContent() {
     return (
       <div className="h-full bg-slate-50 flex items-center justify-center">
         <div className="text-center">
-          <div className="text-slate-600">Redirecting to sign in...</div>
+          <div className="text-slate-600">
+            {authError || 'Redirecting to sign in...'}
+          </div>
         </div>
       </div>
     )
