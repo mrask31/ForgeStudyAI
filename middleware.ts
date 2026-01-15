@@ -14,6 +14,21 @@ export async function middleware(request: NextRequest) {
     const { pathname } = request.nextUrl
     const searchParams = request.nextUrl.searchParams
 
+    // Force production traffic onto the canonical app URL to avoid cross-domain auth issues.
+    const appUrlEnv = process.env.NEXT_PUBLIC_APP_URL
+    if (process.env.NODE_ENV === 'production' && appUrlEnv) {
+      const normalizedAppUrl = appUrlEnv.startsWith('http')
+        ? appUrlEnv
+        : appUrlEnv.includes('localhost') || appUrlEnv.includes('127.0.0.1')
+          ? `http://${appUrlEnv}`
+          : `https://${appUrlEnv}`
+      if (normalizedAppUrl && request.nextUrl.origin !== normalizedAppUrl) {
+        const redirectUrl = new URL(pathname, normalizedAppUrl)
+        redirectUrl.search = request.nextUrl.search
+        return NextResponse.redirect(redirectUrl)
+      }
+    }
+
     // If Supabase verification code lands on "/", route it to /auth/callback
     if (pathname === '/' && searchParams.has('code')) {
       const callbackUrl = new URL('/auth/callback', request.url)
