@@ -60,6 +60,22 @@ export default function LoginPage() {
           text: `Thanks for verifying your email! Please sign in to continue.`, 
           type: 'success' 
         })
+        if (!redirectParam) {
+          setRedirect('/checkout')
+        }
+      } else if (verified === 'true' && !verifiedEmail) {
+        const storedEmail = window.localStorage.getItem('forgestudy-pending-email')
+        if (storedEmail) {
+          setShowVerificationSuccess(true)
+          setEmail(storedEmail)
+          setMessage({ 
+            text: `Thanks for verifying your email! Please sign in to continue.`, 
+            type: 'success' 
+          })
+          if (!redirectParam) {
+            setRedirect('/checkout')
+          }
+        }
       }
     }
   }, [])
@@ -113,8 +129,8 @@ export default function LoginPage() {
         return // Exit early, finally block will set loading to false
       }
 
-      console.log('[Login] Sign in successful, redirecting to /profiles')
-      router.replace('/profiles')
+      console.log('[Login] Sign in successful, redirecting', { redirect })
+      router.replace(redirect || '/profiles')
     } catch (err) {
       // In catch: console.error for debugging, show user-friendly error
       console.error('[Login] Unexpected login error:', err)

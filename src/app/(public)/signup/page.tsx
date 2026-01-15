@@ -129,6 +129,7 @@ export default function SignupPage() {
     
     setLoading(true)
     setMessage(null)
+    localStorage.setItem('forgestudy-pending-email', email.trim())
 
     // Get plan from localStorage or URL
     const params = new URLSearchParams(window.location.search)
@@ -430,20 +431,14 @@ export default function SignupPage() {
                           e.preventDefault()
                           e.stopPropagation()
                           await checkAuthAndRedirect()
-                          // Fallback: if still no session, force a refresh
-                          // If the current origin differs from NEXT_PUBLIC_APP_URL, jump there.
-                          if (appUrl && window.location.origin !== appUrl) {
-                            const params = new URLSearchParams(window.location.search)
-                            const planParam =
-                              params.get('plan') || localStorage.getItem('forgenursing-pending-plan')
-                            const targetUrl = new URL('/signup', appUrl)
-                            if (planParam) {
-                              targetUrl.searchParams.set('plan', planParam)
-                            }
-                            window.location.assign(targetUrl.toString())
-                            return
+                          const storedEmail = localStorage.getItem('forgestudy-pending-email')
+                          const loginUrl = new URL('/login', window.location.origin)
+                          loginUrl.searchParams.set('verified', 'true')
+                          loginUrl.searchParams.set('redirect', '/checkout')
+                          if (storedEmail) {
+                            loginUrl.searchParams.set('email', storedEmail)
                           }
-                          window.location.reload()
+                          window.location.assign(loginUrl.toString())
                         }}
                         className="inline-flex items-center justify-center gap-2 px-4 py-2 bg-slate-100 text-slate-700 rounded-lg text-sm font-medium hover:bg-slate-200 transition-colors"
                       >
