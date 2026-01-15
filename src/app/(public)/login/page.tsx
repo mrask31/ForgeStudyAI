@@ -18,9 +18,10 @@ export default function LoginPage() {
 
   // Memoize Supabase client to prevent recreation on every render
   // Ensure Supabase client configuration for production
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+  const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+
   const supabase = useMemo(() => {
-    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
-    const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
 
     // Sanity check: log warning in dev if env vars are missing
     if (process.env.NODE_ENV === 'development') {
@@ -100,22 +101,25 @@ export default function LoginPage() {
     // Ensure spinner stops on login error - always set loading to false in finally
     setLoading(true)
     setMessage(null)
-    const timeoutId = window.setTimeout(() => {
-      setMessage({
-        text: 'Login is taking too long. Please try again.',
-        type: 'error',
-      })
-      setLoading(false)
-    }, 12000)
-
     try {
       console.log('[Login] Attempting to sign in...', { email: email.trim() })
-      
-      // Wrap the sign-in call in try/catch with defensive error handling
-      const { data, error } = await supabase.auth.signInWithPassword({
+
+      const signInPromise = supabase.auth.signInWithPassword({
         email: email.trim(),
         password,
       })
+
+      const timeoutPromise = new Promise<never>((_, reject) => {
+        setTimeout(() => {
+          reject(
+            new Error(
+              `Login timed out. Please check your connection or Supabase URL (${supabaseUrl || 'missing'}).`
+            )
+          )
+        }, 10000)
+      })
+
+      const { data, error } = await Promise.race([signInPromise, timeoutPromise])
 
       // On error: Set isLoading back to false, store error state, show human-readable message
       if (error) {
@@ -149,7 +153,6 @@ export default function LoginPage() {
         type: 'error' 
       })
     } finally {
-      window.clearTimeout(timeoutId)
       console.log('[Login] Login flow complete, stopping loader')
       setLoading(false)
     }
