@@ -81,9 +81,9 @@ export async function POST(req: Request) {
     // 3. Build base URL for redirects (use request origin as fallback)
     const requestUrl = new URL(req.url)
     let appUrl: string
-    
+
     if (process.env.NEXT_PUBLIC_APP_URL) {
-      const baseUrl = process.env.NEXT_PUBLIC_APP_URL
+      const baseUrl = process.env.NEXT_PUBLIC_APP_URL.trim().replace(/\/+$/, '')
       // If NEXT_PUBLIC_APP_URL doesn't have a protocol, add it
       if (baseUrl.startsWith('http://') || baseUrl.startsWith('https://')) {
         appUrl = baseUrl
@@ -96,7 +96,7 @@ export async function POST(req: Request) {
       // Use request origin (already includes protocol)
       appUrl = requestUrl.origin
     }
-    
+
     console.log('[Stripe Checkout] Using app URL:', appUrl)
     
     // 4. Create Stripe Checkout Session with 7-day free trial
@@ -116,8 +116,9 @@ export async function POST(req: Request) {
       },
       payment_method_collection: 'always', // Require payment method even during trial
       allow_promotion_codes: true, // Enable coupon/promo code entry field
-      success_url: `${appUrl}/billing/success?session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url: `${appUrl}/billing/cancel`,
+      success_url: new URL('/billing/success', appUrl).toString() +
+        '?session_id={CHECKOUT_SESSION_ID}',
+      cancel_url: new URL('/billing/cancel', appUrl).toString(),
       customer_email: user.email || undefined,
       client_reference_id: user.id, // Link the session to the user
     })
