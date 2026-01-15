@@ -29,7 +29,7 @@ function NewProfileContent() {
         const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
 
         if (!supabaseUrl || !supabaseAnonKey) {
-          router.replace('/login')
+          router.replace('/login?redirect=/profiles/new')
           return
         }
 
@@ -43,7 +43,7 @@ function NewProfileContent() {
 
         if (!session?.user) {
           setAuthError('We could not confirm your session. Please sign in again.')
-          window.location.assign('/login')
+          window.location.assign('/login?redirect=/profiles/new')
           return
         }
 
@@ -66,7 +66,7 @@ function NewProfileContent() {
       } catch (error) {
         console.error('[New Profile Page] Error checking auth:', error)
         setAuthError('We could not confirm your session. Please sign in again.')
-        window.location.assign('/login')
+        window.location.assign('/login?redirect=/profiles/new')
       } finally {
         setIsCheckingAuth(false)
       }

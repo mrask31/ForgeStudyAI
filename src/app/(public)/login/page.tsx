@@ -100,6 +100,13 @@ export default function LoginPage() {
     // Ensure spinner stops on login error - always set loading to false in finally
     setLoading(true)
     setMessage(null)
+    const timeoutId = window.setTimeout(() => {
+      setMessage({
+        text: 'Login is taking too long. Please try again.',
+        type: 'error',
+      })
+      setLoading(false)
+    }, 12000)
 
     try {
       console.log('[Login] Attempting to sign in...', { email: email.trim() })
@@ -142,6 +149,7 @@ export default function LoginPage() {
         type: 'error' 
       })
     } finally {
+      window.clearTimeout(timeoutId)
       console.log('[Login] Login flow complete, stopping loader')
       setLoading(false)
     }
