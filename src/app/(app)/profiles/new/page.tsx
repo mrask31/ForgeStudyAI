@@ -17,6 +17,7 @@ function NewProfileContent() {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [user, setUser] = useState<any>(null)
+  const [isCheckingAuth, setIsCheckingAuth] = useState(true)
   const [profileCount, setProfileCount] = useState<number | null>(null)
   const { setActiveProfileId } = useActiveProfile()
 
@@ -25,22 +26,21 @@ function NewProfileContent() {
       try {
         const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
         const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
-        
+
         if (!supabaseUrl || !supabaseAnonKey) {
-          router.push('/login')
-          return
-        }
-        
-        const supabase = createBrowserClient(supabaseUrl, supabaseAnonKey)
-        const { data: { user } } = await supabase.auth.getUser()
-        
-        if (!user) {
-          const bandParam = searchParams.get('band')
-          router.push(`/signup?band=${bandParam || 'high'}`)
+          router.replace('/login')
           return
         }
 
-        setUser(user)
+        const supabase = createBrowserClient(supabaseUrl, supabaseAnonKey)
+        const { data: { session } } = await supabase.auth.getSession()
+
+        if (!session?.user) {
+          router.replace('/login')
+          return
+        }
+
+        setUser(session.user)
 
         // Read band from query params
         const bandParam = searchParams.get('band')
@@ -54,14 +54,16 @@ function NewProfileContent() {
 
         // If at max, redirect to profiles page
         if (profiles.length >= FAMILY_MAX_PROFILES) {
-          router.push('/profiles')
+          router.replace('/profiles')
         }
       } catch (error) {
         console.error('[New Profile Page] Error checking auth:', error)
-        router.push('/login')
+        router.replace('/login')
+      } finally {
+        setIsCheckingAuth(false)
       }
     }
-    
+
     loadData()
   }, [searchParams, router])
 
@@ -119,11 +121,21 @@ function NewProfileContent() {
     }
   }
 
-  if (!user) {
+  if (isCheckingAuth) {
     return (
       <div className="h-full bg-slate-50 flex items-center justify-center">
         <div className="text-center">
           <div className="text-slate-600">Checking authentication...</div>
+        </div>
+      </div>
+    )
+  }
+
+  if (!user) {
+    return (
+      <div className="h-full bg-slate-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="text-slate-600">Redirecting to sign in...</div>
         </div>
       </div>
     )
