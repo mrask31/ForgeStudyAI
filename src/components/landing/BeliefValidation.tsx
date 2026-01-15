@@ -66,7 +66,7 @@ export default function BeliefValidation() {
           AI study companion designed for Grades 3–12 students.
         </p>
         <Link
-          href="/signup?plan=monthly"
+          href="/signup"
           className="inline-flex items-center justify-center gap-2 w-full sm:w-auto px-6 sm:px-8 py-3 sm:py-3.5 bg-white text-indigo-700 rounded-lg text-sm sm:text-base font-semibold hover:bg-indigo-50 transition-all duration-200 shadow-lg hover:shadow-xl min-h-[44px] transform hover:scale-105 active:scale-95"
         >
           See How It Works

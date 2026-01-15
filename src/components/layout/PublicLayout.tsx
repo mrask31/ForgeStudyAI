@@ -94,7 +94,7 @@ export default function PublicLayout({ children }: { children: React.ReactNode }
               {/* Show "Get Started" on landing page when user is not logged in OR doesn't have active subscription */}
               {pathname === '/' && (!user || !hasActiveSubscription) && (
                 <Link
-                  href="/signup?plan=monthly"
+                  href="/signup"
                   className="px-4 sm:px-5 py-2 sm:py-2.5 bg-gradient-to-r from-teal-600 to-cyan-600 text-white rounded-xl text-xs sm:text-sm font-semibold hover:from-teal-700 hover:to-cyan-700 transition-all duration-200 shadow-md shadow-teal-500/30 hover:shadow-lg hover:shadow-teal-500/40 min-h-[40px] sm:min-h-[44px] flex items-center transform hover:scale-105 active:scale-95"
                 >
                   Get Started

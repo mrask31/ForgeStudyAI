@@ -19,7 +19,7 @@ export default function ClosingCTA() {
         
         <div className="pt-4 sm:pt-6">
           <Link
-            href="/signup?plan=monthly"
+            href="/signup"
             className="inline-flex items-center justify-center gap-2 w-full sm:w-auto px-8 sm:px-10 py-3.5 sm:py-4 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-lg text-base sm:text-lg font-semibold hover:from-indigo-700 hover:to-purple-700 transition-all duration-200 shadow-lg shadow-indigo-500/30 hover:shadow-xl hover:shadow-indigo-500/40 min-h-[44px] transform hover:scale-105 active:scale-95"
           >
             Start Free Preview
