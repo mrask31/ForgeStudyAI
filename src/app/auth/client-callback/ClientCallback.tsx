@@ -27,8 +27,21 @@ export default function ClientCallback() {
       return
     }
 
+    let didTimeout = false
+    const timeoutId = window.setTimeout(() => {
+      didTimeout = true
+      setStatus('error')
+      setErrorMessage(
+        'Verification timed out. Please request a new verification email and try again.'
+      )
+    }, 10000)
+
     const run = async () => {
       const { error } = await supabase.auth.exchangeCodeForSession(code)
+      window.clearTimeout(timeoutId)
+      if (didTimeout) {
+        return
+      }
       if (error) {
         console.error('[Client Callback] Error exchanging code for session:', error)
         setStatus('error')
