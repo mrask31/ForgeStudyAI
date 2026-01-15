@@ -26,14 +26,21 @@ function CheckoutContent() {
   const [isStartingCheckout, setIsStartingCheckout] = useState(false)
 
   useEffect(() => {
-    // Clean up localStorage
-    localStorage.removeItem('forgenursing-pending-plan')
-    
     // If a plan is provided in URL and valid, set it as selected (but still show UI)
     const normalizedPlan = normalizePlan(urlPlan)
     if (normalizedPlan) {
       setSelectedPlan(normalizedPlan)
+      localStorage.removeItem('forgenursing-pending-plan')
+      return
     }
+
+    const pendingPlan = localStorage.getItem('forgenursing-pending-plan')
+    const normalizedPendingPlan = normalizePlan(pendingPlan)
+    if (normalizedPendingPlan) {
+      setSelectedPlan(normalizedPendingPlan)
+    }
+
+    localStorage.removeItem('forgenursing-pending-plan')
   }, [urlPlan])
 
   const handleStartCheckout = async () => {

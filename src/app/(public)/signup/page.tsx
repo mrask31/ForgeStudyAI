@@ -156,10 +156,7 @@ export default function SignupPage() {
       return
     }
 
-    let callbackUrl = `${baseUrl}/auth/callback`
-    if (plan && allowedPlans.includes(plan)) {
-      callbackUrl += `?plan=${plan}`
-    }
+    const callbackUrl = `${baseUrl}/auth/callback`
 
     try {
       console.log('[Signup] Attempting to create account...', { email: email.trim() })
