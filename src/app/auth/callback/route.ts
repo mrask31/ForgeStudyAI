@@ -42,8 +42,10 @@ export async function GET(request: Request) {
     
     if (error) {
       console.error('[Auth Callback] Error exchanging code for session:', error)
-      // Use appUrl for consistent redirects (already declared at top of function)
-      return NextResponse.redirect(`${appUrl}/login?error=auth-code-error`)
+      const fallbackUrl = new URL('/auth/client-callback', appUrl)
+      fallbackUrl.searchParams.set('code', code)
+      fallbackUrl.searchParams.set('fallback', '1')
+      return NextResponse.redirect(fallbackUrl)
     }
     
     if (!error) {
