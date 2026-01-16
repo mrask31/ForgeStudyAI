@@ -284,7 +284,7 @@ export async function deleteLearningSourceItems(itemIds: string[]) {
   }
 
   let failedStorage = 0
-  for (const [bucket, paths] of filesByBucket.entries()) {
+  for (const [bucket, paths] of Array.from(filesByBucket.entries())) {
     if (paths.length === 0) continue
     const { error: storageError } = await supabase.storage.from(bucket).remove(paths)
     if (storageError) {
