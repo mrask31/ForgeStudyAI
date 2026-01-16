@@ -226,13 +226,25 @@ export default function SourcesPage() {
         <div className="grid gap-8 lg:grid-cols-[1.1fr_0.9fr]">
           <section className="rounded-3xl border border-slate-200/70 bg-white/90 p-6 sm:p-8 shadow-lg shadow-slate-200/40">
             <div className="mb-6">
-              <h2 className="text-xl font-semibold text-slate-900 mb-2">
-                Add {TAB_META[activeTab].label.toLowerCase()} materials
-              </h2>
-              <p className="text-sm text-slate-600">{TAB_META[activeTab].description}</p>
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                <div>
+                  <h2 className="text-xl font-semibold text-slate-900 mb-2">
+                    Add {TAB_META[activeTab].label.toLowerCase()} materials
+                  </h2>
+                  <p className="text-sm text-slate-600">{TAB_META[activeTab].description}</p>
+                </div>
+                <button
+                  type="submit"
+                  form="sources-form"
+                  disabled={isSubmitting}
+                  className="inline-flex items-center justify-center px-5 py-2.5 rounded-xl bg-gradient-to-r from-teal-600 to-cyan-600 text-white text-sm font-semibold shadow-lg hover:from-teal-700 hover:to-cyan-700 transition-all disabled:opacity-60"
+                >
+                  {isSubmitting ? 'Saving...' : 'Add source'}
+                </button>
+              </div>
             </div>
 
-            <form onSubmit={handleAddSource} className="space-y-4">
+            <form id="sources-form" onSubmit={handleAddSource} className="space-y-4">
               <div>
                 <label className="block text-sm font-semibold text-slate-700 mb-2">Title</label>
                 <input
@@ -266,7 +278,7 @@ export default function SourcesPage() {
                 />
               </div>
               <div>
-                <label className="block text-sm font-semibold text-slate-700 mb-2">Attach a file (metadata only)</label>
+                <label className="block text-sm font-semibold text-slate-700 mb-2">Attach a file</label>
                 <div className="flex items-center gap-3">
                   <label className="inline-flex items-center gap-2 px-4 py-2 rounded-xl border border-dashed border-slate-300 text-slate-600 text-sm cursor-pointer hover:border-teal-400 hover:text-teal-700 transition-colors">
                     <UploadCloud className="w-4 h-4" />
