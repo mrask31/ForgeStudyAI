@@ -397,33 +397,6 @@ export default function SourcesPage() {
           </div>
         </div>
 
-        {selectedItemIds.length > 0 && (
-          <div className="mb-6 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-slate-200 bg-white/80 px-4 py-3 text-sm">
-            <div className="text-slate-600">
-              <span className="font-semibold text-slate-800">{selectedItemIds.length}</span> selected
-            </div>
-            <div className="flex items-center gap-2">
-              <button
-                type="button"
-                onClick={clearSelection}
-                className="inline-flex items-center gap-1 rounded-full border border-slate-200 px-3 py-1.5 text-xs font-semibold text-slate-600 hover:text-slate-800"
-              >
-                <X className="w-3.5 h-3.5" />
-                Clear
-              </button>
-              <button
-                type="button"
-                onClick={handleBulkDelete}
-                disabled={isDeleting}
-                className="inline-flex items-center gap-1 rounded-full bg-rose-600 px-3 py-1.5 text-xs font-semibold text-white shadow-sm hover:bg-rose-700 disabled:opacity-60"
-              >
-                <Trash2 className="w-3.5 h-3.5" />
-                {isDeleting ? 'Deleting...' : 'Delete selected'}
-              </button>
-            </div>
-          </div>
-        )}
-
         <div className="grid gap-4 md:grid-cols-3 mb-8">
           {summaryCards.map((card) => {
             const isActive = card.type === activeTab
@@ -450,7 +423,31 @@ export default function SourcesPage() {
 
         {recentUploads.length > 0 && (
           <div className="rounded-2xl border border-slate-200/70 bg-white/80 px-4 py-4 mb-8">
-            <div className="text-sm font-semibold text-slate-800 mb-3">Recent uploads</div>
+            <div className="flex flex-wrap items-center justify-between gap-3 mb-3">
+              <div className="text-sm font-semibold text-slate-800">Recent uploads</div>
+              {selectedItemIds.length > 0 && (
+                <div className="flex items-center gap-2 text-xs">
+                  <span className="text-slate-500">{selectedItemIds.length} selected</span>
+                  <button
+                    type="button"
+                    onClick={clearSelection}
+                    className="inline-flex items-center gap-1 rounded-full border border-slate-200 px-2.5 py-1 font-semibold text-slate-600 hover:text-slate-800"
+                  >
+                    <X className="w-3.5 h-3.5" />
+                    Clear
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleBulkDelete}
+                    disabled={isDeleting}
+                    className="inline-flex items-center gap-1 rounded-full bg-rose-600 px-2.5 py-1 font-semibold text-white shadow-sm hover:bg-rose-700 disabled:opacity-60"
+                  >
+                    <Trash2 className="w-3.5 h-3.5" />
+                    {isDeleting ? 'Deleting...' : 'Delete'}
+                  </button>
+                </div>
+              )}
+            </div>
             <div className="grid gap-2">
               {recentUploads.map((item) => (
                 <div key={item.id} className="flex items-center justify-between gap-3 text-sm text-slate-600">
@@ -602,12 +599,38 @@ export default function SourcesPage() {
           </section>
 
           <section className="rounded-3xl border border-slate-200/70 bg-white/90 p-6 sm:p-8 shadow-lg shadow-slate-200/40">
-            <h2 className="text-xl font-semibold text-slate-900 mb-2">
-              Current {TAB_META[activeTab].label.toLowerCase()} sources
-            </h2>
-            <p className="text-sm text-slate-600 mb-4">
-              These materials will be prioritized when answering student questions.
-            </p>
+            <div className="flex flex-wrap items-start justify-between gap-3 mb-4">
+              <div>
+                <h2 className="text-xl font-semibold text-slate-900 mb-2">
+                  Current {TAB_META[activeTab].label.toLowerCase()} sources
+                </h2>
+                <p className="text-sm text-slate-600">
+                  These materials will be prioritized when answering student questions.
+                </p>
+              </div>
+              {selectedItemIds.length > 0 && (
+                <div className="flex items-center gap-2 text-xs">
+                  <span className="text-slate-500">{selectedItemIds.length} selected</span>
+                  <button
+                    type="button"
+                    onClick={clearSelection}
+                    className="inline-flex items-center gap-1 rounded-full border border-slate-200 px-2.5 py-1 font-semibold text-slate-600 hover:text-slate-800"
+                  >
+                    <X className="w-3.5 h-3.5" />
+                    Clear
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleBulkDelete}
+                    disabled={isDeleting}
+                    className="inline-flex items-center gap-1 rounded-full bg-rose-600 px-2.5 py-1 font-semibold text-white shadow-sm hover:bg-rose-700 disabled:opacity-60"
+                  >
+                    <Trash2 className="w-3.5 h-3.5" />
+                    {isDeleting ? 'Deleting...' : 'Delete'}
+                  </button>
+                </div>
+              )}
+            </div>
 
             {isLoading ? (
               <div className="text-sm text-slate-500">Loading sources...</div>
