@@ -14,6 +14,7 @@ CREATE TABLE IF NOT EXISTS public.student_profiles (
   display_name TEXT NOT NULL,
   grade_band TEXT NOT NULL CHECK (grade_band IN ('elementary', 'middle', 'high')),
   grade TEXT, -- Optional: K-12 grade level
+  interests TEXT, -- Optional: interests, hobbies, and likes
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
   CONSTRAINT valid_grade CHECK (
@@ -25,6 +26,10 @@ CREATE TABLE IF NOT EXISTS public.student_profiles (
 -- 2. Create index for faster queries
 CREATE INDEX IF NOT EXISTS idx_student_profiles_owner_id ON public.student_profiles(owner_id);
 CREATE INDEX IF NOT EXISTS idx_student_profiles_grade_band ON public.student_profiles(grade_band);
+
+-- Ensure interests column exists on existing tables (idempotent)
+ALTER TABLE public.student_profiles
+  ADD COLUMN IF NOT EXISTS interests TEXT;
 
 -- 3. Enable RLS (Row Level Security)
 ALTER TABLE public.student_profiles ENABLE ROW LEVEL SECURITY;

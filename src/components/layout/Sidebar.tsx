@@ -55,13 +55,13 @@ export default function Sidebar({ onNavigate }: SidebarProps = {}) {
   }, [])
 
   return (
-    <aside className="flex w-full h-full flex-col bg-gradient-to-br from-indigo-950 via-indigo-900 to-purple-950 text-indigo-100">
+    <aside className="flex w-full h-full flex-col bg-gradient-to-br from-slate-950 via-teal-900 to-emerald-950 text-teal-100">
       {/* Sidebar Content */}
       <div className="flex h-full flex-col px-6 py-8">
         <div className="mb-10 px-2">
           {/* Logo or Brand with Icon */}
           <div className="flex items-center gap-2.5">
-            <div className="w-2 h-2 rounded-full bg-indigo-500"></div>
+            <div className="w-2 h-2 rounded-full bg-teal-400"></div>
             <span className="text-xl font-bold text-white tracking-tight">ForgeStudy Platform</span>
           </div>
         </div>
@@ -82,8 +82,8 @@ export default function Sidebar({ onNavigate }: SidebarProps = {}) {
                 className={`
                   group flex items-center gap-3 rounded-lg px-4 py-3.5 text-sm font-medium transition-all duration-200
                   ${isActive 
-                    ? "bg-gradient-to-r from-indigo-600 to-purple-600 text-white shadow-md" 
-                    : "text-indigo-300 hover:bg-gradient-to-r hover:from-indigo-900/50 hover:to-purple-900/50 hover:text-indigo-100"}
+                    ? "bg-gradient-to-r from-teal-600 to-emerald-600 text-white shadow-md" 
+                    : "text-teal-200 hover:bg-gradient-to-r hover:from-teal-900/50 hover:to-emerald-900/50 hover:text-white"}
                 `}
               >
                 <Icon className="h-5 w-5" />
@@ -94,7 +94,7 @@ export default function Sidebar({ onNavigate }: SidebarProps = {}) {
         </nav>
         
         {/* History Button - Moved from TutorHeader */}
-        <div className="mt-4 pt-4 border-t border-indigo-900/50">
+        <div className="mt-4 pt-4 border-t border-teal-900/50">
           <HistoryButton onNavigate={onNavigate} />
         </div>
         
@@ -103,7 +103,7 @@ export default function Sidebar({ onNavigate }: SidebarProps = {}) {
           <Link
             href="/profiles"
             onClick={onNavigate}
-            className="group flex items-center gap-3 rounded-lg px-4 py-3.5 text-sm font-medium transition-all duration-200 text-indigo-300 hover:bg-gradient-to-r hover:from-indigo-900/50 hover:to-purple-900/50 hover:text-indigo-100"
+            className="group flex items-center gap-3 rounded-lg px-4 py-3.5 text-sm font-medium transition-all duration-200 text-teal-200 hover:bg-gradient-to-r hover:from-teal-900/50 hover:to-emerald-900/50 hover:text-white"
           >
             <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
@@ -113,9 +113,9 @@ export default function Sidebar({ onNavigate }: SidebarProps = {}) {
         </div>
         
         {/* User Profile / Footer */}
-        <div className="mt-auto pt-6 border-t border-indigo-900/50">
+        <div className="mt-auto pt-6 border-t border-teal-900/50">
           <div className="flex items-center gap-3 px-2">
-            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-indigo-600 to-purple-600 border border-indigo-500/50 flex items-center justify-center shadow-sm">
+            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-teal-600 to-emerald-600 border border-teal-500/50 flex items-center justify-center shadow-sm">
               <UserIcon className="w-5 h-5 text-white" />
             </div>
             <div className="flex flex-col min-w-0">
@@ -123,13 +123,13 @@ export default function Sidebar({ onNavigate }: SidebarProps = {}) {
                 <>
                   <span className="text-sm font-bold text-white truncate">{preferredName}</span>
                   {programTrack && graduationDate ? (
-                    <span className="text-xs text-indigo-300 truncate">
+                    <span className="text-xs text-teal-200 truncate">
                       {programTrack} • Class of {new Date(graduationDate).getFullYear()}
                     </span>
                   ) : programTrack ? (
-                    <span className="text-xs text-indigo-300 truncate">{programTrack}</span>
+                    <span className="text-xs text-teal-200 truncate">{programTrack}</span>
                   ) : graduationDate ? (
-                    <span className="text-xs text-indigo-300 truncate">
+                    <span className="text-xs text-teal-200 truncate">
                       Class of {new Date(graduationDate).getFullYear()}
                     </span>
                   ) : null}
@@ -137,7 +137,7 @@ export default function Sidebar({ onNavigate }: SidebarProps = {}) {
               ) : (
                 <>
                   <span className="text-sm font-medium text-white">Student Account</span>
-                  <span className="text-xs text-indigo-300">{programTrack || 'RN Track'}</span>
+                  <span className="text-xs text-teal-200">{programTrack || 'RN Track'}</span>
                 </>
               )}
             </div>

@@ -14,6 +14,7 @@ function NewProfileContent() {
   const [band, setBand] = useState<'high' | 'middle' | 'elementary' | null>(null)
   const [displayName, setDisplayName] = useState('')
   const [grade, setGrade] = useState('')
+  const [interests, setInterests] = useState('')
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [user, setUser] = useState<any>(null)
@@ -110,6 +111,7 @@ function NewProfileContent() {
         display_name: displayName.trim(),
         grade_band: band,
         grade: grade.trim() || null,
+        interests: interests.trim() || null,
       })
 
       // After creation, check profile count and redirect
@@ -173,7 +175,7 @@ function NewProfileContent() {
   }
 
   const gradeOptions = band === 'elementary' 
-    ? ['K', '1', '2', '3', '4', '5']
+    ? ['3', '4', '5']
     : band === 'middle'
     ? ['6', '7', '8']
     : ['9', '10', '11', '12']
@@ -278,6 +280,23 @@ function NewProfileContent() {
                 </select>
               </div>
             )}
+
+            <div>
+              <label htmlFor="interests" className="block text-sm font-semibold text-slate-900 mb-2">
+                Interests & hobbies (optional)
+              </label>
+              <p className="text-xs text-slate-500 mb-2">
+                We use this to make examples more engaging for your student.
+              </p>
+              <textarea
+                id="interests"
+                value={interests}
+                onChange={(e) => setInterests(e.target.value)}
+                placeholder="e.g., soccer, space, art, Minecraft, dinosaurs"
+                className="w-full min-h-[120px] px-4 py-3 border-2 border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-teal-600 focus:border-teal-400 transition-all text-slate-900"
+                disabled={isSubmitting}
+              />
+            </div>
 
             {/* Error Message */}
             {error && (

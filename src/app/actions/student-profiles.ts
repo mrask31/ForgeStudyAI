@@ -11,6 +11,7 @@ export interface StudentProfile {
   display_name: string
   grade_band: 'elementary' | 'middle' | 'high'
   grade: string | null
+  interests: string | null
   created_at: string
   updated_at: string
 }
@@ -79,6 +80,7 @@ export async function createStudentProfile(data: {
   display_name: string
   grade_band: 'elementary' | 'middle' | 'high'
   grade?: string | null
+  interests?: string | null
 }): Promise<StudentProfile> {
   const supabase = createClient()
 
@@ -118,6 +120,7 @@ export async function createStudentProfile(data: {
       display_name: data.display_name.trim(),
       grade_band: data.grade_band,
       grade: data.grade?.trim() || null,
+      interests: data.interests?.trim() || null,
     })
     .select()
     .single()
@@ -189,6 +192,7 @@ export async function updateStudentProfile(
     display_name?: string
     grade_band?: 'elementary' | 'middle' | 'high'
     grade?: string | null
+    interests?: string | null
   }
 ): Promise<StudentProfile> {
   const supabase = createClient()
@@ -230,6 +234,10 @@ export async function updateStudentProfile(
     } else {
       updateData.grade = null
     }
+  }
+
+  if (data.interests !== undefined) {
+    updateData.interests = data.interests?.trim() || null
   }
 
   const { data: profile, error } = await supabase
