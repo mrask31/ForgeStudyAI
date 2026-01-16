@@ -79,11 +79,11 @@ function NewProfileContent() {
   const getBandRoute = (bandValue: 'high' | 'middle' | 'elementary') => {
     switch (bandValue) {
       case 'elementary':
-        return '/elementary'
+        return '/app/elementary'
       case 'middle':
-        return '/middle'
+        return '/app/middle'
       case 'high':
-        return '/high'
+        return '/app/high'
       default:
         return '/profiles'
     }

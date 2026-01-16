@@ -10,6 +10,7 @@ import HistoryButton from './HistoryButton'
 const NAV_ITEMS = [
   { label: 'Clinical Studio', href: '/tutor', icon: MessageSquare },
   { label: 'My Classes', href: '/classes', icon: GraduationCap },
+  { label: 'Sources', href: '/sources', icon: FileText },
   { label: 'Dashboard', href: '/readiness', icon: Activity },
   { label: 'Medical Dictionary', href: '/dictionary', icon: BookOpen },
   { label: 'Settings', href: '/settings', icon: Settings },

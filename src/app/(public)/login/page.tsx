@@ -11,7 +11,7 @@ export default function LoginPage() {
   const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
   const [message, setMessage] = useState<{ text: string; type: 'error' | 'success' } | null>(null)
-  const [redirect, setRedirect] = useState('/profiles')
+  const [redirect, setRedirect] = useState('/post-login')
   const [showVerificationSuccess, setShowVerificationSuccess] = useState(false)
   
   const router = useRouter()
@@ -48,7 +48,7 @@ export default function LoginPage() {
       if (redirectParam) {
         setRedirect(redirectParam)
       } else {
-        setRedirect('/profiles')
+        setRedirect('/post-login')
       }
       
       // Check if user just verified their email
@@ -81,13 +81,13 @@ export default function LoginPage() {
     }
   }, [])
 
-  // Auth guard: if already signed in, go to /profiles
+  // Auth guard: if already signed in, go to /post-login
   useEffect(() => {
     const checkExistingSession = async () => {
       const { data: { session } } = await supabase.auth.getSession()
       if (session) {
-        console.log('[Login] Session exists, redirecting to /profiles')
-        router.replace('/profiles')
+        console.log('[Login] Session exists, redirecting to /post-login')
+        router.replace('/post-login')
       }
     }
 
@@ -141,7 +141,7 @@ export default function LoginPage() {
       }
 
       console.log('[Login] Sign in successful, redirecting', { redirect })
-      router.replace(redirect || '/profiles')
+      router.replace(redirect || '/post-login')
     } catch (err) {
       // In catch: console.error for debugging, show user-friendly error
       console.error('[Login] Unexpected login error:', err)

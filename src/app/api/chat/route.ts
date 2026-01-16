@@ -1,6 +1,7 @@
 import { openai } from '@ai-sdk/openai';
 import { streamText, convertToCoreMessages } from 'ai';
 import { getSystemPrompt } from '@/lib/ai/prompts';
+import { retrieveLearningContext } from '@/app/actions/learning-sources';
 import { createServerClient, type CookieOptions } from '@supabase/ssr';
 import { cookies } from 'next/headers';
 import OpenAI from 'openai';
@@ -248,7 +249,7 @@ async function retrieveBinderContext(
 
 export async function POST(req: Request) {
   const body = await req.json();
-  const { messages, strictMode, filterMode = 'mixed', selectedDocIds = [], chatId, topicTitle, className, selectedClassName, attachedFileIds: rawAttachedFileIds } = body;
+  const { messages, strictMode, filterMode = 'mixed', selectedDocIds = [], chatId, topicTitle, className, selectedClassName, attachedFileIds: rawAttachedFileIds, activeProfileId, learningMode } = body;
   
   // CRITICAL: Ensure attachedFileIds is always an array, never 'none' or undefined
   const attachedFileIds = Array.isArray(rawAttachedFileIds) 
@@ -345,6 +346,7 @@ export async function POST(req: Request) {
   // Use chat mode if available, otherwise use filterMode from request
   const effectiveMode = chatMode === 'notes' ? 'notes' : (filterMode === 'notes' ? 'notes' : 'mixed')
   const effectiveSelectedIds = chatMode === 'notes' ? chatSelectedNoteIds : selectedDocIds
+  const effectiveLearningMode = learningMode || (strictMode ? 'strict' : 'balanced')
 
   // Priority: Use attachedFileIds from chat metadata if available, otherwise use selectedDocIds from request
   const effectiveAttachedIds = chatAttachedFileIds.length > 0 ? chatAttachedFileIds : (selectedDocIds.length > 0 ? selectedDocIds : [])
@@ -393,6 +395,11 @@ export async function POST(req: Request) {
   
   // Call robust RAG helper
   let binderResult: BinderContextResult = { hasContext: false, context: '', contextLength: 0, fileCount: 0 };
+  let learningContextResult: { hasContext: boolean; context: string; sourcesUsed: Array<{ title: string; sourceType: string; itemType: string }> } = {
+    hasContext: false,
+    context: '',
+    sourcesUsed: [],
+  };
   
   if (latestUserMessageStr) {
     binderResult = await retrieveBinderContext(
@@ -409,18 +416,67 @@ export async function POST(req: Request) {
       contextLength: binderResult.contextLength,
       query: latestUserMessageStr.substring(0, 50),
     });
+
+    learningContextResult = await retrieveLearningContext({
+      question: latestUserMessageStr,
+      profileId: activeProfileId || null,
+      mode: effectiveLearningMode,
+    });
   }
 
   const binderContext = binderResult.context;
+  const learningContext = learningContextResult.context;
   const fileSummaries = binderResult.fileSummaries || [];
+
+  let activeProfile: { grade_band: 'elementary' | 'middle' | 'high'; grade: string | null } | null = null;
+  if (activeProfileId) {
+    const { data: profileData, error: profileError } = await supabase
+      .from('student_profiles')
+      .select('grade_band, grade')
+      .eq('id', activeProfileId)
+      .eq('owner_id', user.id)
+      .single();
+    if (profileError) {
+      console.warn('[CHAT] Failed to load active profile:', profileError);
+    } else if (profileData) {
+      activeProfile = profileData as any;
+    }
+  }
 
   // Build system prompt for tutor mode
   let systemPrompt: string = '';
-  systemPrompt = getSystemPrompt();
+  systemPrompt = getSystemPrompt({
+    gradeBand: activeProfile?.grade_band,
+    grade: activeProfile?.grade || null,
+  });
+
+  systemPrompt += `
+### STUDENT MATERIALS RULES
+- You may receive a system message labeled "STUDENT MATERIALS CONTEXT".
+- If present, prioritize it as the primary reference.
+- If mode is STRICT: answer ONLY using the provided materials. If they are insufficient, say so and ask for more details.
+- If mode is BALANCED: use student materials first, then add general knowledge if needed.
+- If mode is PRACTICE: ask guiding questions, give hints, and avoid giving the full answer outright.
+- When you use student materials, include a "Sources:" line listing the titles you used.
+- "Sources:" format example: Sources: [Unit 2 Fractions — weekly], [ELA Scope & Sequence — syllabus]
+Current learning mode: ${effectiveLearningMode.toUpperCase()}
+`;
 
   // Build messages array with binder context handling
   const coreMessages = convertToCoreMessages(messages);
   const messagesWithBinder: any[] = [...coreMessages];
+
+  // Add student materials context if available
+  if (learningContextResult.hasContext && learningContext && learningContext.trim().length > 0) {
+    messagesWithBinder.unshift({
+      role: 'system',
+      content: `You have been given STUDENT MATERIALS CONTEXT. Treat these materials as primary references and cite them in a "Sources:" line.`
+    });
+    messagesWithBinder.unshift({
+      role: 'system',
+      content: `STUDENT MATERIALS CONTEXT:\n\n${learningContext}`
+    });
+  }
 
   // Add binder context instructions ONLY if context exists
   if (binderResult.hasContext && binderContext && binderContext.trim().length > 0) {
@@ -435,11 +491,11 @@ export async function POST(req: Request) {
       role: 'system',
       content: `BINDER CONTEXT:\n\n${binderContext}`
     });
-  } else {
-    // No binder context available
+  } else if (!learningContextResult.hasContext) {
+    // No binder context or student materials available
     messagesWithBinder.unshift({
       role: 'system',
-      content: `You currently have no binder context for this question. Answer using your general nursing/NCLEX knowledge, and be explicit that you are not using the student's uploaded materials.`
+      content: `You currently have no student materials for this question. Answer using your general knowledge, and be explicit that you are not using the student's uploaded materials.`
     });
   }
 

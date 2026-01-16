@@ -18,11 +18,11 @@ export default function ProfilesPage() {
   const getBandRoute = (band: StudentProfile['grade_band']) => {
     switch (band) {
       case 'elementary':
-        return '/elementary'
+        return '/app/elementary'
       case 'middle':
-        return '/middle'
+        return '/app/middle'
       case 'high':
-        return '/high'
+        return '/app/high'
       default:
         return '/profiles'
     }

@@ -13,6 +13,7 @@ import ArchivedChatBanner from '@/components/chat/ArchivedChatBanner'
 import SuggestedPrompts from '@/components/tutor/SuggestedPrompts'
 import ChatMessageList, { type ChatMessage } from '@/components/tutor/ChatMessageList'
 import { useTutorContext } from '@/components/tutor/TutorContext'
+import { useActiveProfile } from '@/contexts/ActiveProfileContext'
 import { setTopicSummaryAndStudiedAt } from '@/lib/api/notebook'
 import { createBrowserClient } from '@supabase/ssr'
 import FollowUpPrompts from '@/components/tutor/FollowUpPrompts'
@@ -85,6 +86,7 @@ export default function ClinicalTutorWorkspace({
 }: ClinicalTutorWorkspaceProps) {
   const [customError, setCustomError] = useState('')
   const tutorContext = useTutorContext()
+  const { activeProfileId } = useActiveProfile()
   const [savingToNotebook, setSavingToNotebook] = useState<string | null>(null) // messageId being saved
   const [flaggedMessages, setFlaggedMessages] = useState<Set<string>>(new Set())
   const [isTogglingHelp, setIsTogglingHelp] = useState<boolean>(false)
@@ -208,8 +210,9 @@ export default function ClinicalTutorWorkspace({
       className,
       selectedClassName,
       attachedFileIds, // Always an array, never 'none'
+      activeProfileId,
     };
-  }, [chatId, strictMode, filterMode, selectedDocIds, mode, topicTitle, className, selectedClassName, attachedFiles]);
+  }, [chatId, strictMode, filterMode, selectedDocIds, mode, topicTitle, className, selectedClassName, attachedFiles, activeProfileId]);
   
   const { messages, append, isLoading, setMessages } = useChat({
     api: '/api/chat',

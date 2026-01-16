@@ -2,16 +2,50 @@ import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { getStudentProfiles } from '@/app/actions/student-profiles'
 
+const getBandRoute = (band: 'elementary' | 'middle' | 'high') => {
+  if (band === 'middle') return '/app/middle'
+  if (band === 'high') return '/app/high'
+  return '/app/elementary'
+}
+
 export default async function PostLoginPage() {
   const supabase = createClient()
 
-  // Verify session
   const { data: { user }, error: authError } = await supabase.auth.getUser()
   if (authError || !user) {
-    // Not logged in, redirect to login
     redirect('/login')
   }
 
-  // Always route to /profiles after login
+  const { data: profile, error: profileError } = await supabase
+    .from('profiles')
+    .select('subscription_status')
+    .eq('id', user.id)
+    .single()
+
+  if (profileError) {
+    console.warn('[PostLogin] Failed to load profile status:', profileError)
+  }
+
+  const subscriptionStatus = profile?.subscription_status
+  const isActive =
+    subscriptionStatus === 'active' ||
+    subscriptionStatus === 'trialing' ||
+    subscriptionStatus === 'past_due' ||
+    subscriptionStatus === 'incomplete'
+
+  if (!isActive) {
+    redirect('/checkout')
+  }
+
+  const profiles = await getStudentProfiles()
+
+  if (profiles.length === 0) {
+    redirect('/profiles/new')
+  }
+
+  if (profiles.length === 1) {
+    redirect(getBandRoute(profiles[0].grade_band))
+  }
+
   redirect('/profiles')
 }

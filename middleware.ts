@@ -46,7 +46,7 @@ export async function middleware(request: NextRequest) {
     if (!supabaseUrl || !supabaseAnonKey) {
       console.error('[Middleware] Supabase environment variables are missing!')
       // For public routes, allow access even without Supabase
-      const publicRoutes = ['/', '/login', '/signup', '/reset', '/reset-password', '/auth/callback', '/privacy', '/terms', '/billing/payment-required', '/checkout']
+      const publicRoutes = ['/', '/login', '/signup', '/reset', '/reset-password', '/auth/callback', '/privacy', '/terms', '/billing/payment-required', '/checkout', '/elementary', '/middle', '/high']
       const isPublicRoute = publicRoutes.includes(pathname) || pathname.startsWith('/auth/')
       
       if (isPublicRoute) {
@@ -115,7 +115,7 @@ export async function middleware(request: NextRequest) {
       // If Supabase client creation or auth check fails, log error but don't crash
       console.error('[Middleware] Error initializing Supabase:', error)
       // Allow public routes to continue
-      const publicRoutes = ['/', '/login', '/signup', '/auth/callback', '/privacy', '/terms', '/billing/payment-required', '/checkout']
+      const publicRoutes = ['/', '/login', '/signup', '/auth/callback', '/privacy', '/terms', '/billing/payment-required', '/checkout', '/elementary', '/middle', '/high']
       const isPublicRoute = publicRoutes.includes(pathname) || pathname.startsWith('/auth/')
       if (isPublicRoute) {
         return response
@@ -127,11 +127,11 @@ export async function middleware(request: NextRequest) {
     }
 
     // Public routes (also include billing routes for access)
-    const publicRoutes = ['/', '/login', '/signup', '/reset', '/reset-password', '/auth/callback', '/privacy', '/terms', '/billing/payment-required', '/checkout']
+    const publicRoutes = ['/', '/login', '/signup', '/reset', '/reset-password', '/auth/callback', '/privacy', '/terms', '/billing/payment-required', '/checkout', '/elementary', '/middle', '/high']
     const isPublicRoute = publicRoutes.includes(pathname) || pathname.startsWith('/auth/')
 
     // Protected routes (require authentication)
-    const protectedRoutes = ['/clinical-desk', '/tutor', '/binder', '/readiness', '/settings', '/classes', '/profiles', '/post-login', '/p/', '/elementary', '/middle', '/high']
+    const protectedRoutes = ['/clinical-desk', '/tutor', '/binder', '/readiness', '/settings', '/classes', '/profiles', '/post-login', '/p/', '/sources', '/app/elementary', '/app/middle', '/app/high']
     const isProtectedRoute = protectedRoutes.some(route => pathname.startsWith(route))
     
     // Routes that require auth but bypass subscription check (onboarding/profile management)
@@ -139,10 +139,7 @@ export async function middleware(request: NextRequest) {
     const isAuthOnlyRoute = pathname === '/profiles' || 
                            pathname.startsWith('/profiles/') || 
                            pathname === '/post-login' ||
-                           pathname.startsWith('/p/') ||
-                           pathname === '/elementary' ||
-                           pathname === '/middle' ||
-                           pathname === '/high'
+                           pathname.startsWith('/p/')
 
     // Allow access to billing pages (success, cancel, payment-required) and checkout
     const billingRoutes = ['/billing', '/checkout']
