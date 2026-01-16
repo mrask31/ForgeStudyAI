@@ -132,12 +132,6 @@ export default function SourcesPage() {
     return groups
   }, [filteredSources])
 
-  const recentUploads = useMemo(() => {
-    return items
-      .filter((item) => !effectiveProfileId || item.learning_sources?.profile_id === effectiveProfileId)
-      .slice(0, 5)
-  }, [items, effectiveProfileId])
-
   const summaryCards = useMemo(() => {
     const cards = ['syllabus', 'weekly', 'photos'].map((type) => {
       const sourcesForType = sources.filter((source) => source.source_type === type)
@@ -420,63 +414,6 @@ export default function SourcesPage() {
             )
           })}
         </div>
-
-        {recentUploads.length > 0 && (
-          <div className="rounded-2xl border border-slate-200/70 bg-white/80 px-4 py-4 mb-8">
-            <div className="flex flex-wrap items-center justify-between gap-3 mb-3">
-              <div className="text-sm font-semibold text-slate-800">Recent uploads</div>
-              {selectedItemIds.length > 0 && (
-                <div className="flex items-center gap-2 text-xs">
-                  <span className="text-slate-500">{selectedItemIds.length} selected</span>
-                  <button
-                    type="button"
-                    onClick={clearSelection}
-                    className="inline-flex items-center gap-1 rounded-full border border-slate-200 px-2.5 py-1 font-semibold text-slate-600 hover:text-slate-800"
-                  >
-                    <X className="w-3.5 h-3.5" />
-                    Clear
-                  </button>
-                  <button
-                    type="button"
-                    onClick={handleBulkDelete}
-                    disabled={isDeleting}
-                    className="inline-flex items-center gap-1 rounded-full bg-rose-600 px-2.5 py-1 font-semibold text-white shadow-sm hover:bg-rose-700 disabled:opacity-60"
-                  >
-                    <Trash2 className="w-3.5 h-3.5" />
-                    {isDeleting ? 'Deleting...' : 'Delete'}
-                  </button>
-                </div>
-              )}
-            </div>
-            <div className="grid gap-2">
-              {recentUploads.map((item) => (
-                <div key={item.id} className="flex items-center justify-between gap-3 text-sm text-slate-600">
-                  <label className="flex items-center gap-2">
-                    <input
-                      type="checkbox"
-                      checked={isItemSelected(item.id)}
-                      onChange={() => toggleItemSelection(item.id)}
-                      className="h-4 w-4 rounded border-slate-300 text-teal-600 focus:ring-teal-500"
-                    />
-                    <span className="truncate">
-                      {item.original_filename || item.metadata?.label || 'Uploaded file'}
-                    </span>
-                  </label>
-                  {item.file_url && (
-                    <button
-                      type="button"
-                      onClick={() => handleSignedUrl(item.file_url)}
-                      className="inline-flex items-center gap-1 text-teal-600 hover:text-teal-700"
-                    >
-                      <Download className="w-4 h-4" />
-                      Open
-                    </button>
-                  )}
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
 
         <div className="flex flex-wrap gap-2 mb-8">
           {(Object.keys(TAB_META) as TabKey[]).map((key) => {
