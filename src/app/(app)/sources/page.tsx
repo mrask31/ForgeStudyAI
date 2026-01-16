@@ -224,7 +224,7 @@ export default function SourcesPage() {
         </div>
 
         <div className="grid gap-8 lg:grid-cols-[1.1fr_0.9fr]">
-          <section className="rounded-3xl border border-slate-200/70 bg-white/90 p-6 sm:p-8 shadow-lg shadow-slate-200/40">
+          <section className="rounded-3xl border border-slate-200/70 bg-white/90 p-6 sm:p-8 shadow-lg shadow-slate-200/40 max-h-[calc(100vh-240px)] overflow-y-auto">
             <div className="mb-6">
               <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                 <div>
