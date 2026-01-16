@@ -31,6 +31,12 @@ export interface LearningSourceItem {
   updated_at: string
 }
 
+const parseStorageUrl = (fileUrl: string) => {
+  const trimmed = fileUrl.replace(/^\/+/, '')
+  const [bucket, ...rest] = trimmed.split('/')
+  return { bucket, path: rest.join('/') }
+}
+
 const STOP_WORDS = new Set([
   'a', 'an', 'the', 'and', 'or', 'but', 'with', 'without', 'to', 'from', 'in', 'on', 'of',
   'for', 'by', 'is', 'are', 'was', 'were', 'be', 'been', 'it', 'this', 'that', 'these', 'those',
@@ -183,6 +189,57 @@ export async function listLearningSources(profileId?: string | null) {
     itemCount: itemLookup.get(source.id)?.count || 0,
     lastItemAt: itemLookup.get(source.id)?.lastUpdated || null,
   }))
+}
+
+export async function listLearningSourceItems(profileId?: string | null) {
+  const supabase = createClient()
+  const { data: { user }, error: authError } = await supabase.auth.getUser()
+  if (authError || !user) {
+    throw new Error('Unauthorized')
+  }
+
+  let query = supabase
+    .from('learning_source_items')
+    .select('id, source_id, item_type, file_url, original_filename, mime_type, metadata, created_at, learning_sources!inner(id, profile_id, user_id, source_type, title)')
+    .eq('learning_sources.user_id', user.id)
+    .order('created_at', { ascending: false })
+
+  if (profileId) {
+    query = query.eq('learning_sources.profile_id', profileId)
+  }
+
+  const { data: items, error } = await query
+  if (error) {
+    console.error('[LearningSources] Error listing items:', error)
+    throw new Error('Failed to load learning source items')
+  }
+
+  return items || []
+}
+
+export async function getSignedSourceUrl(fileUrl: string, expiresInSeconds: number = 300) {
+  const supabase = createClient()
+  const { data: { user }, error: authError } = await supabase.auth.getUser()
+  if (authError || !user) {
+    throw new Error('Unauthorized')
+  }
+
+  if (!fileUrl) {
+    throw new Error('Missing file URL')
+  }
+
+  const { bucket, path } = parseStorageUrl(fileUrl)
+  if (!bucket || !path) {
+    throw new Error('Invalid file URL')
+  }
+
+  const { data, error } = await supabase.storage.from(bucket).createSignedUrl(path, expiresInSeconds)
+  if (error) {
+    console.error('[LearningSources] Error signing URL:', error)
+    throw new Error('Failed to generate download link')
+  }
+
+  return data?.signedUrl || null
 }
 
 export async function retrieveLearningContext(params: {
