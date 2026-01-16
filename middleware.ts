@@ -46,7 +46,7 @@ export async function middleware(request: NextRequest) {
     if (!supabaseUrl || !supabaseAnonKey) {
       console.error('[Middleware] Supabase environment variables are missing!')
       // For public routes, allow access even without Supabase
-      const publicRoutes = ['/', '/login', '/signup', '/auth/callback', '/privacy', '/terms', '/billing/payment-required', '/checkout']
+      const publicRoutes = ['/', '/login', '/signup', '/reset', '/reset-password', '/auth/callback', '/privacy', '/terms', '/billing/payment-required', '/checkout']
       const isPublicRoute = publicRoutes.includes(pathname) || pathname.startsWith('/auth/')
       
       if (isPublicRoute) {
@@ -127,7 +127,7 @@ export async function middleware(request: NextRequest) {
     }
 
     // Public routes (also include billing routes for access)
-    const publicRoutes = ['/', '/login', '/signup', '/auth/callback', '/privacy', '/terms', '/billing/payment-required', '/checkout']
+    const publicRoutes = ['/', '/login', '/signup', '/reset', '/reset-password', '/auth/callback', '/privacy', '/terms', '/billing/payment-required', '/checkout']
     const isPublicRoute = publicRoutes.includes(pathname) || pathname.startsWith('/auth/')
 
     // Protected routes (require authentication)

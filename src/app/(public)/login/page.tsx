@@ -295,6 +295,15 @@ export default function LoginPage() {
                 </button>
               </form>
 
+              <div className="mt-3 text-right">
+                <Link
+                  href="/reset"
+                  className="text-sm font-semibold text-teal-600 hover:text-teal-700 transition-colors"
+                >
+                  Forgot password?
+                </Link>
+              </div>
+
               {/* Toggle */}
               <div className="mt-6 sm:mt-8 pt-4 sm:pt-6 border-t border-slate-200 text-center">
                 <span className="text-sm text-slate-600">
