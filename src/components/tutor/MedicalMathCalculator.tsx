@@ -1,11 +1,13 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { X, Calculator } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import { useActiveProfile } from '@/contexts/ActiveProfileContext'
+import { getStudentProfiles } from '@/app/actions/student-profiles'
 
-type CalculatorTool = 'iv-flow' | 'drops-per-minute' | 'weight-based' | 'safe-dose'
+type CalculatorLevel = 'elementary' | 'middle' | 'high'
 
 interface MedicalMathCalculatorProps {
   isOpen: boolean
@@ -13,147 +15,125 @@ interface MedicalMathCalculatorProps {
 }
 
 export default function MedicalMathCalculator({ isOpen, onClose }: MedicalMathCalculatorProps) {
-  const [activeTool, setActiveTool] = useState<CalculatorTool>('iv-flow')
-  const [weightUnit, setWeightUnit] = useState<'kg' | 'lbs'>('lbs') // Default to lbs for US students
-  
-  // IV Flow Rate (mL/hr)
-  const [totalVolume, setTotalVolume] = useState('')
-  const [totalTime, setTotalTime] = useState('')
-  const [ivFlowResult, setIvFlowResult] = useState<number | null>(null)
+  const { activeProfileId } = useActiveProfile()
+  const [activeLevel, setActiveLevel] = useState<CalculatorLevel>('elementary')
+  const [expression, setExpression] = useState('')
+  const [result, setResult] = useState<string | null>(null)
+  const [error, setError] = useState<string | null>(null)
 
-  // Drops per Minute
-  const [dropsVolume, setDropsVolume] = useState('')
-  const [dropsTime, setDropsTime] = useState('')
-  const [dropFactor, setDropFactor] = useState('15') // Default 15 gtt/mL
-  const [dropsResult, setDropsResult] = useState<number | null>(null)
+  useEffect(() => {
+    if (!activeProfileId) return
+    let isMounted = true
 
-  // Weight-Based Dose
-  const [medDose, setMedDose] = useState('')
-  const [patientWeight, setPatientWeight] = useState('')
-  const [weightResult, setWeightResult] = useState<number | null>(null)
-
-  // Safe Dose Range
-  const [orderedDose, setOrderedDose] = useState('')
-  const [minDose, setMinDose] = useState('')
-  const [maxDose, setMaxDose] = useState('')
-  const [safeDoseWeight, setSafeDoseWeight] = useState('')
-  const [safeDoseResult, setSafeDoseResult] = useState<{ isSafe: boolean; reason: string } | null>(null)
-
-  // Convert lbs to kg (1 kg = 2.20462 lbs)
-  const convertToKg = (weight: number, unit: 'kg' | 'lbs'): number => {
-    if (unit === 'lbs') {
-      return weight / 2.20462
+    const loadProfile = async () => {
+      try {
+        const profiles = await getStudentProfiles()
+        const match = profiles.find((profile) => profile.id === activeProfileId)
+        if (!match || !isMounted) return
+        setActiveLevel(match.grade_band)
+      } catch (err) {
+        console.warn('[Calculator] Failed to load profile, defaulting to elementary.', err)
+      }
     }
-    return weight
+
+    loadProfile()
+    return () => {
+      isMounted = false
+    }
+  }, [activeProfileId])
+
+  useEffect(() => {
+    setResult(null)
+    setError(null)
+  }, [activeLevel])
+
+  const levelLabel = useMemo(() => {
+    if (activeLevel === 'middle') return 'Middle (6–8)'
+    if (activeLevel === 'high') return 'High (9–12)'
+    return 'Elementary (3–5)'
+  }, [activeLevel])
+
+  const buildExpression = (value: string, level: CalculatorLevel) => {
+    let cleaned = value.trim().toLowerCase()
+    cleaned = cleaned.replace(/×/g, '*').replace(/÷/g, '/')
+
+    const tokens = cleaned.match(/[a-z]+/g) || []
+    const allowedTokens = level === 'high'
+      ? ['sin', 'cos', 'tan', 'log', 'ln', 'sqrt', 'pi', 'e']
+      : level === 'middle'
+        ? ['sqrt', 'pi', 'e']
+        : []
+
+    if (tokens.some((token) => !allowedTokens.includes(token))) {
+      return null
+    }
+
+    if (level === 'elementary' && !/^[0-9+\-*/().\s]+$/.test(cleaned)) {
+      return null
+    }
+
+    cleaned = cleaned.replace(/\^/g, '**')
+    cleaned = cleaned.replace(/\bsqrt\s*\(/g, 'Math.sqrt(')
+    cleaned = cleaned.replace(/\bsin\s*\(/g, 'Math.sin(')
+    cleaned = cleaned.replace(/\bcos\s*\(/g, 'Math.cos(')
+    cleaned = cleaned.replace(/\btan\s*\(/g, 'Math.tan(')
+    cleaned = cleaned.replace(/\blog\s*\(/g, 'Math.log10(')
+    cleaned = cleaned.replace(/\bln\s*\(/g, 'Math.log(')
+    cleaned = cleaned.replace(/\bpi\b/g, 'Math.PI')
+    cleaned = cleaned.replace(/\be\b/g, 'Math.E')
+
+    if (!/^[0-9+\-*/().\sMathPIElogtansincosqrt]+$/.test(cleaned)) {
+      return null
+    }
+
+    return cleaned
   }
 
-  // Calculate IV Flow Rate
-  useEffect(() => {
-    const vol = parseFloat(totalVolume)
-    const time = parseFloat(totalTime)
-    if (vol > 0 && time > 0) {
-      const result = vol / time
-      setIvFlowResult(result)
-    } else {
-      setIvFlowResult(null)
-    }
-  }, [totalVolume, totalTime])
+  const handleCompute = () => {
+    setError(null)
+    setResult(null)
+    if (!expression.trim()) return
 
-  // Calculate Drops per Minute
-  useEffect(() => {
-    const vol = parseFloat(dropsVolume)
-    const time = parseFloat(dropsTime)
-    const factor = parseFloat(dropFactor)
-    if (vol > 0 && time > 0 && factor > 0) {
-      const result = (vol * factor) / (time * 60)
-      setDropsResult(Math.round(result * 100) / 100)
-    } else {
-      setDropsResult(null)
+    const computed = buildExpression(expression, activeLevel)
+    if (!computed) {
+      setError('Use only the allowed symbols for this level.')
+      return
     }
-  }, [dropsVolume, dropsTime, dropFactor])
 
-  // Calculate Weight-Based Dose
-  useEffect(() => {
-    const dose = parseFloat(medDose)
-    const weight = parseFloat(patientWeight)
-    if (dose > 0 && weight > 0) {
-      // Convert weight to kg for calculation (med dosing is always mg/kg)
-      const weightInKg = convertToKg(weight, weightUnit)
-      const result = (dose / weightInKg)
-      setWeightResult(Math.round(result * 100) / 100)
-    } else {
-      setWeightResult(null)
-    }
-  }, [medDose, patientWeight, weightUnit])
-
-  // Check Safe Dose Range
-  useEffect(() => {
-    const ordered = parseFloat(orderedDose)
-    const min = parseFloat(minDose)
-    const max = parseFloat(maxDose)
-    const weight = parseFloat(safeDoseWeight)
-    
-    if (ordered > 0 && min > 0 && max > 0 && weight > 0) {
-      // Convert weight to kg for calculation (med dosing is always mg/kg)
-      const weightInKg = convertToKg(weight, weightUnit)
-      const minTotal = min * weightInKg
-      const maxTotal = max * weightInKg
-      const isSafe = ordered >= minTotal && ordered <= maxTotal
-      
-      if (isSafe) {
-        setSafeDoseResult({
-          isSafe: true,
-          reason: `Ordered dose (${ordered} mg) is within safe range (${minTotal.toFixed(2)} - ${maxTotal.toFixed(2)} mg)`
-        })
+    try {
+      const value = Function(`"use strict"; return (${computed});`)()
+      if (Number.isFinite(value)) {
+        setResult(String(Math.round(value * 100000) / 100000))
       } else {
-        if (ordered < minTotal) {
-          setSafeDoseResult({
-            isSafe: false,
-            reason: `Ordered dose (${ordered} mg) is below minimum safe dose (${minTotal.toFixed(2)} mg)`
-          })
-        } else {
-          setSafeDoseResult({
-            isSafe: false,
-            reason: `Ordered dose (${ordered} mg) exceeds maximum safe dose (${maxTotal.toFixed(2)} mg)`
-          })
-        }
+        setError('That expression did not evaluate to a number.')
       }
-    } else {
-      setSafeDoseResult(null)
+    } catch (err) {
+      setError('Check the expression format and try again.')
     }
-  }, [orderedDose, minDose, maxDose, safeDoseWeight, weightUnit])
-
-  const tools: { id: CalculatorTool; label: string }[] = [
-    { id: 'iv-flow', label: 'IV Flow Rate' },
-    { id: 'drops-per-minute', label: 'Drops/min' },
-    { id: 'weight-based', label: 'Weight-Based' },
-    { id: 'safe-dose', label: 'Safe Dose Range' }
-  ]
+  }
 
   if (!isOpen) return null
 
   return (
     <>
-      {/* Overlay - Both mobile and desktop */}
-      <div 
-        className="fixed inset-0 bg-black/20 z-[60] transition-opacity md:bg-black/10"
+      <div
+        className="fixed inset-0 z-50 bg-black/40 backdrop-blur-sm"
         onClick={onClose}
+        aria-hidden={!isOpen}
       />
-      
-      {/* Calculator Panel */}
+
       <div className="
         bg-white rounded-xl shadow-xl border border-slate-200
         fixed z-[60] overflow-y-auto
         bottom-0 left-0 right-0 max-h-[70vh] rounded-t-xl
         md:bottom-20 md:left-1/2 md:-translate-x-1/2 md:right-auto md:w-full md:max-w-md md:max-h-[60vh] md:rounded-xl
       ">
-        {/* Header */}
-        <div className="sticky top-0 bg-gradient-to-r from-indigo-50 to-purple-50 border-b border-slate-200 px-4 py-3 flex items-center justify-between rounded-t-xl">
+        <div className="sticky top-0 bg-gradient-to-r from-emerald-50 to-teal-50 border-b border-slate-200 px-4 py-3 flex items-center justify-between rounded-t-xl">
           <div className="flex items-center gap-2">
-            <Calculator className="w-4 h-4 text-indigo-600" />
+            <Calculator className="w-4 h-4 text-emerald-600" />
             <div>
-              <h3 className="text-sm font-semibold text-slate-900">Medical Math — Study Tool</h3>
-              <p className="text-xs text-slate-600">For educational practice only</p>
+              <h3 className="text-sm font-semibold text-slate-900">Calculator — {levelLabel}</h3>
+              <p className="text-xs text-slate-600">For learning and practice</p>
             </div>
           </div>
           <button
@@ -165,300 +145,68 @@ export default function MedicalMathCalculator({ isOpen, onClose }: MedicalMathCa
           </button>
         </div>
 
-        {/* Tool Tabs and Weight Unit Selector */}
-        <div className="px-2 pt-3 space-y-2 border-b border-slate-200">
+        <div className="px-2 pt-3 border-b border-slate-200">
           <div className="flex gap-1 overflow-x-auto">
-            {tools.map((tool) => (
+            {([
+              { id: 'elementary', label: 'Elementary' },
+              { id: 'middle', label: 'Middle' },
+              { id: 'high', label: 'High' },
+            ] as Array<{ id: CalculatorLevel; label: string }>).map((level) => (
               <button
-                key={tool.id}
-                onClick={() => setActiveTool(tool.id)}
+                key={level.id}
+                onClick={() => setActiveLevel(level.id)}
                 className={`
                   px-3 py-2 text-xs font-medium rounded-t-lg whitespace-nowrap transition-colors
-                  ${activeTool === tool.id
-                    ? 'bg-indigo-50 text-indigo-700 border-b-2 border-indigo-600'
+                  ${activeLevel === level.id
+                    ? 'bg-emerald-50 text-emerald-700 border-b-2 border-emerald-600'
                     : 'text-slate-600 hover:bg-slate-50'
                   }
                 `}
               >
-                {tool.label}
+                {level.label}
               </button>
             ))}
           </div>
-          {/* Weight Unit Selector - Show for weight-based tools */}
-          {(activeTool === 'weight-based' || activeTool === 'safe-dose') && (
-            <div className="flex items-center gap-2 pb-2">
-              <span className="text-xs text-slate-600 font-medium">Weight Unit:</span>
-              <div className="flex gap-1 bg-slate-100 rounded-lg p-0.5">
-                <button
-                  onClick={() => setWeightUnit('lbs')}
-                  className={`px-2.5 py-1 text-xs font-medium rounded transition-colors ${
-                    weightUnit === 'lbs'
-                      ? 'bg-white text-indigo-700 shadow-sm'
-                      : 'text-slate-600 hover:text-slate-900'
-                  }`}
-                >
-                  lbs
-                </button>
-                <button
-                  onClick={() => setWeightUnit('kg')}
-                  className={`px-2.5 py-1 text-xs font-medium rounded transition-colors ${
-                    weightUnit === 'kg'
-                      ? 'bg-white text-indigo-700 shadow-sm'
-                      : 'text-slate-600 hover:text-slate-900'
-                  }`}
-                >
-                  kg
-                </button>
-              </div>
-            </div>
-          )}
         </div>
 
-        {/* Calculator Content */}
-        <div className="p-4">
-          {/* IV Flow Rate */}
-          {activeTool === 'iv-flow' && (
-            <div className="space-y-4">
-              <div>
-                <label className="block text-xs font-medium text-slate-700 mb-1.5">
-                  Total Volume (mL)
-                </label>
-                <Input
-                  type="number"
-                  value={totalVolume}
-                  onChange={(e) => setTotalVolume(e.target.value)}
-                  placeholder="e.g., 1000"
-                  className="text-sm"
-                />
-              </div>
-              <div>
-                <label className="block text-xs font-medium text-slate-700 mb-1.5">
-                  Total Time (hours)
-                </label>
-                <Input
-                  type="number"
-                  value={totalTime}
-                  onChange={(e) => setTotalTime(e.target.value)}
-                  placeholder="e.g., 8"
-                  className="text-sm"
-                />
-              </div>
-              
-              {ivFlowResult !== null && (
-                <div className="bg-indigo-50 rounded-lg p-3 space-y-2">
-                  <div className="text-sm font-semibold text-indigo-900">
-                    Flow Rate: {ivFlowResult.toFixed(2)} mL/hr
-                  </div>
-                  <div className="text-xs text-slate-600 space-y-1">
-                    <p className="font-medium">Formula:</p>
-                    <p className="font-mono">Flow Rate = Total Volume ÷ Total Time</p>
-                    <p className="font-medium mt-2">Calculation:</p>
-                    <p className="font-mono">{totalVolume} ÷ {totalTime} = {ivFlowResult.toFixed(2)} mL/hr</p>
-                  </div>
-                </div>
-              )}
+        <div className="p-4 space-y-4">
+          <div className="space-y-2">
+            <label className="text-xs font-medium text-slate-600">Expression</label>
+            <Input
+              value={expression}
+              onChange={(e) => setExpression(e.target.value)}
+              placeholder={activeLevel === 'elementary'
+                ? 'Example: 12 + 5 * 3'
+                : activeLevel === 'middle'
+                  ? 'Example: (5^2) + sqrt(81)'
+                  : 'Example: sin(0.5) + log(100)'}
+            />
+            <div className="text-[11px] text-slate-500">
+              {activeLevel === 'elementary' && 'Allowed: + − × ÷ ( )'}
+              {activeLevel === 'middle' && 'Allowed: + − × ÷ ( ) ^ sqrt()'}
+              {activeLevel === 'high' && 'Allowed: + − × ÷ ( ) ^ sqrt() sin() cos() tan() log() ln() pi e'}
             </div>
-          )}
+          </div>
 
-          {/* Drops per Minute */}
-          {activeTool === 'drops-per-minute' && (
-            <div className="space-y-4">
-              <div>
-                <label className="block text-xs font-medium text-slate-700 mb-1.5">
-                  Volume (mL)
-                </label>
-                <Input
-                  type="number"
-                  value={dropsVolume}
-                  onChange={(e) => setDropsVolume(e.target.value)}
-                  placeholder="e.g., 1000"
-                  className="text-sm"
-                />
-              </div>
-              <div>
-                <label className="block text-xs font-medium text-slate-700 mb-1.5">
-                  Time (hours)
-                </label>
-                <Input
-                  type="number"
-                  value={dropsTime}
-                  onChange={(e) => setDropsTime(e.target.value)}
-                  placeholder="e.g., 8"
-                  className="text-sm"
-                />
-              </div>
-              <div>
-                <label className="block text-xs font-medium text-slate-700 mb-1.5">
-                  Drop Factor (gtt/mL)
-                </label>
-                <Input
-                  type="number"
-                  value={dropFactor}
-                  onChange={(e) => setDropFactor(e.target.value)}
-                  placeholder="15"
-                  className="text-sm"
-                />
-                <p className="text-xs text-slate-500 mt-1">Common: 10, 15, 20, or 60 gtt/mL</p>
-              </div>
-              
-              {dropsResult !== null && (
-                <div className="bg-indigo-50 rounded-lg p-3 space-y-2">
-                  <div className="text-sm font-semibold text-indigo-900">
-                    Drops per Minute: {dropsResult} gtt/min
-                  </div>
-                  <div className="text-xs text-slate-600 space-y-1">
-                    <p className="font-medium">Formula:</p>
-                    <p className="font-mono">Drops/min = (Volume × Drop Factor) ÷ (Time × 60)</p>
-                    <p className="font-medium mt-2">Calculation:</p>
-                    <p className="font-mono">({dropsVolume} × {dropFactor}) ÷ ({dropsTime} × 60) = {dropsResult} gtt/min</p>
-                  </div>
-                </div>
-              )}
-            </div>
-          )}
+          <div className="flex items-center gap-2">
+            <Button
+              type="button"
+              className="bg-emerald-600 text-white hover:bg-emerald-700"
+              onClick={handleCompute}
+            >
+              Calculate
+            </Button>
+            {error && <span className="text-xs text-rose-600">{error}</span>}
+          </div>
 
-          {/* Weight-Based Dose */}
-          {activeTool === 'weight-based' && (
-            <div className="space-y-4">
-              <div>
-                <label className="block text-xs font-medium text-slate-700 mb-1.5">
-                  Medication Dose (mg)
-                </label>
-                <Input
-                  type="number"
-                  value={medDose}
-                  onChange={(e) => setMedDose(e.target.value)}
-                  placeholder="e.g., 500"
-                  className="text-sm"
-                />
-              </div>
-              <div>
-                <label className="block text-xs font-medium text-slate-700 mb-1.5">
-                  Patient Weight ({weightUnit === 'lbs' ? 'lbs' : 'kg'})
-                </label>
-                <Input
-                  type="number"
-                  value={patientWeight}
-                  onChange={(e) => setPatientWeight(e.target.value)}
-                  placeholder={weightUnit === 'lbs' ? "e.g., 154" : "e.g., 70"}
-                  className="text-sm"
-                />
-              </div>
-              
-              {weightResult !== null && (
-                <div className="bg-indigo-50 rounded-lg p-3 space-y-2">
-                  <div className="text-sm font-semibold text-indigo-900">
-                    Dose per kg: {weightResult} mg/kg
-                  </div>
-                  <div className="text-xs text-slate-600 space-y-1">
-                    <p className="font-medium">Formula:</p>
-                    <p className="font-mono">Dose/kg = Total Dose ÷ Patient Weight (in kg)</p>
-                    <p className="font-medium mt-2">Calculation:</p>
-                    {weightUnit === 'lbs' && patientWeight ? (
-                      <p className="font-mono">
-                        {patientWeight} lbs ÷ 2.20462 = {(parseFloat(patientWeight) / 2.20462).toFixed(2)} kg<br />
-                        {medDose} mg ÷ {(parseFloat(patientWeight) / 2.20462).toFixed(2)} kg = {weightResult} mg/kg
-                      </p>
-                    ) : (
-                      <p className="font-mono">{medDose} mg ÷ {patientWeight} kg = {weightResult} mg/kg</p>
-                    )}
-                  </div>
-                </div>
-              )}
-            </div>
-          )}
-
-          {/* Safe Dose Range */}
-          {activeTool === 'safe-dose' && (
-            <div className="space-y-4">
-              <div>
-                <label className="block text-xs font-medium text-slate-700 mb-1.5">
-                  Ordered Dose (mg)
-                </label>
-                <Input
-                  type="number"
-                  value={orderedDose}
-                  onChange={(e) => setOrderedDose(e.target.value)}
-                  placeholder="e.g., 500"
-                  className="text-sm"
-                />
-              </div>
-              <div>
-                <label className="block text-xs font-medium text-slate-700 mb-1.5">
-                  Minimum Dose (mg/kg)
-                </label>
-                <Input
-                  type="number"
-                  value={minDose}
-                  onChange={(e) => setMinDose(e.target.value)}
-                  placeholder="e.g., 5"
-                  className="text-sm"
-                />
-              </div>
-              <div>
-                <label className="block text-xs font-medium text-slate-700 mb-1.5">
-                  Maximum Dose (mg/kg)
-                </label>
-                <Input
-                  type="number"
-                  value={maxDose}
-                  onChange={(e) => setMaxDose(e.target.value)}
-                  placeholder="e.g., 10"
-                  className="text-sm"
-                />
-              </div>
-              <div>
-                <label className="block text-xs font-medium text-slate-700 mb-1.5">
-                  Patient Weight ({weightUnit === 'lbs' ? 'lbs' : 'kg'})
-                </label>
-                <Input
-                  type="number"
-                  value={safeDoseWeight}
-                  onChange={(e) => setSafeDoseWeight(e.target.value)}
-                  placeholder={weightUnit === 'lbs' ? "e.g., 154" : "e.g., 70"}
-                  className="text-sm"
-                />
-              </div>
-              
-              {safeDoseResult && (
-                <div className={`rounded-lg p-3 space-y-2 ${safeDoseResult.isSafe ? 'bg-emerald-50' : 'bg-red-50'}`}>
-                  <div className={`text-sm font-semibold ${safeDoseResult.isSafe ? 'text-emerald-900' : 'text-red-900'}`}>
-                    {safeDoseResult.isSafe ? '✓ Safe Dose' : '⚠ Dose Outside Safe Range'}
-                  </div>
-                  <div className="text-xs text-slate-700">
-                    {safeDoseResult.reason}
-                  </div>
-                  <div className="text-xs text-slate-600 space-y-1 mt-2">
-                    <p className="font-medium">Formula:</p>
-                    <p className="font-mono">Safe Range = (Min mg/kg × Weight in kg) to (Max mg/kg × Weight in kg)</p>
-                    <p className="font-medium mt-2">Calculation:</p>
-                    {weightUnit === 'lbs' && safeDoseWeight ? (
-                      <p className="font-mono">
-                        {safeDoseWeight} lbs ÷ 2.20462 = {(parseFloat(safeDoseWeight) / 2.20462).toFixed(2)} kg<br />
-                        Min: {minDose} × {(parseFloat(safeDoseWeight) / 2.20462).toFixed(2)} = {(parseFloat(minDose) * (parseFloat(safeDoseWeight) / 2.20462)).toFixed(2)} mg<br />
-                        Max: {maxDose} × {(parseFloat(safeDoseWeight) / 2.20462).toFixed(2)} = {(parseFloat(maxDose) * (parseFloat(safeDoseWeight) / 2.20462)).toFixed(2)} mg
-                      </p>
-                    ) : (
-                      <p className="font-mono">
-                        Min: {minDose} × {safeDoseWeight} = {(parseFloat(minDose) * parseFloat(safeDoseWeight)).toFixed(2)} mg<br />
-                        Max: {maxDose} × {safeDoseWeight} = {(parseFloat(maxDose) * parseFloat(safeDoseWeight)).toFixed(2)} mg
-                      </p>
-                    )}
-                  </div>
-                </div>
-              )}
-            </div>
-          )}
-        </div>
-
-        {/* Footer Disclaimer */}
-        <div className="sticky bottom-0 bg-slate-50 border-t border-slate-200 px-4 py-2 rounded-b-xl">
-          <p className="text-[10px] text-slate-500 text-center">
-            Not for clinical decision use. Always verify per institutional policy.
-          </p>
+          <div className="bg-emerald-50 rounded-lg p-3 space-y-1">
+            <p className="text-xs text-slate-600">Result:</p>
+            <p className="text-lg font-semibold text-emerald-700">
+              {result ?? '—'}
+            </p>
+          </div>
         </div>
       </div>
     </>
   )
 }
-

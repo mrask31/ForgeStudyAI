@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { X, Save, Folder, Tag } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { useDensity } from '@/contexts/DensityContext'
@@ -21,6 +21,15 @@ export default function SaveClipModal({ isOpen, onClose, onSave, defaultTitle = 
   const [tagInput, setTagInput] = useState('')
   const [tags, setTags] = useState<string[]>([])
   const [isSaving, setIsSaving] = useState(false)
+
+  useEffect(() => {
+    if (isOpen) {
+      setTitle(defaultTitle)
+      setFolder('General')
+      setTagInput('')
+      setTags([])
+    }
+  }, [defaultTitle, isOpen])
 
   if (!isOpen) return null
 

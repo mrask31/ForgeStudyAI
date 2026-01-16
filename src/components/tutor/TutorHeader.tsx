@@ -13,26 +13,14 @@ import { listExams } from '@/lib/api/exams'
 interface TutorHeaderProps {
   strictMode: boolean
   onStrictModeChange: (strict: boolean) => void
-  selectedClass?: StudentClass | null
-  selectedTopic?: NotebookTopic | null
-  onClearTopic?: () => void
   onStartNewSession?: () => void
-  classes?: StudentClass[]
-  selectedClassId?: string
-  onSelectClass?: (classId: string | undefined) => void
   currentSessionId?: string | null // Current active session ID for archiving
 }
 
 export default function TutorHeader({ 
   strictMode, 
   onStrictModeChange,
-  selectedClass,
-  selectedTopic,
-  onClearTopic,
   onStartNewSession,
-  classes = [],
-  selectedClassId,
-  onSelectClass,
   currentSessionId,
 }: TutorHeaderProps) {
   const router = useRouter()
@@ -99,32 +87,14 @@ export default function TutorHeader({
               <div className="absolute top-0 left-4 transform -translate-y-1/2 rotate-45 w-2 h-2 bg-slate-900"></div>
               <p className="font-semibold mb-1.5 text-white">Practice Mode</p>
               <p className="text-slate-300 leading-relaxed">
-                When enabled, the tutor will ask you to think through answers first before providing explanations. This simulates exam conditions and helps build your reasoning skills.
+                When enabled, the tutor will ask you to try first, then give hints and step-by-step guidance. This builds confidence and independent thinking.
               </p>
             </div>
           </div>
         </div>
 
-        {/* Right: Class / Topic strip + New Chat */}
+        {/* Right: New Chat */}
         <div className="flex items-center gap-2 flex-shrink-0">
-          <div className="flex items-center gap-1 flex-shrink-0">
-            <span className="text-[10px] sm:text-xs font-medium text-slate-500 uppercase tracking-wide whitespace-nowrap hidden sm:inline">
-              Class
-            </span>
-            <select
-              value={selectedClassId ?? ""}
-              onChange={(e) => onSelectClass?.(e.target.value || undefined)}
-              className="rounded-lg border-2 border-slate-200 bg-white/80 backdrop-blur-sm px-2 sm:px-3 py-1.5 sm:py-2 text-xs sm:text-sm font-medium text-slate-700 shadow-sm hover:border-emerald-300 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-400 w-[120px] sm:w-[160px] transition-all duration-200"
-            >
-              <option value="">General Tutor</option>
-              {classes.map((cls) => (
-                <option key={cls.id} value={cls.id}>
-                  {cls.code} – {cls.name}
-                </option>
-              ))}
-            </select>
-          </div>
-
           {/* Start New Chat button - only show when there's an active session */}
           {currentSessionId && (
             <Button

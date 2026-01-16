@@ -379,7 +379,7 @@ export default function ChatMessageList({
           return (
             <div key={m.id} className="flex justify-end">
               <div className="ml-auto max-w-[70%]">
-                <div className="inline-block rounded-2xl bg-indigo-600 px-5 py-3 text-sm font-medium text-white shadow-lg hover:shadow-xl transition-all duration-200 leading-relaxed">
+                <div className="inline-block rounded-2xl bg-emerald-600 px-5 py-3 text-sm font-medium text-white shadow-lg hover:shadow-xl transition-all duration-200 leading-relaxed">
                   {m.content}
                 </div>
               </div>

@@ -729,12 +729,6 @@ function TutorPageContent() {
           <TutorHeader
             strictMode={strictMode}
             onStrictModeChange={setStrictMode}
-            selectedClass={tutorContext.selectedClass}
-            selectedTopic={tutorContext.selectedTopic}
-            onClearTopic={tutorContext.clearTopic}
-            classes={tutorContext.classes}
-            selectedClassId={tutorContext.selectedClassId}
-            onSelectClass={tutorContext.setSelectedClassId}
             currentSessionId={resolvedChatId}
             onStartNewSession={async () => {
               // Clear the resolved session to show landing page

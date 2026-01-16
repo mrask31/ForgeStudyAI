@@ -96,7 +96,7 @@ export default function ChatInterface({
 
   return (
     <div className="flex-shrink-0 pt-3 bg-slate-50 relative">
-      {/* Medical Math Calculator Panel */}
+      {/* Calculator Panel */}
       <MedicalMathCalculator 
         isOpen={isCalculatorOpen} 
         onClose={() => setIsCalculatorOpen(false)} 
@@ -125,7 +125,7 @@ export default function ChatInterface({
         </div>
       )}
 
-      {/* Medical Math Button - Above input on desktop */}
+      {/* Calculator Button - Above input on desktop */}
       <div className="px-2 mb-2 flex justify-center md:justify-start">
         <button
           type="button"
@@ -141,10 +141,10 @@ export default function ChatInterface({
               : 'bg-white/80 text-slate-600 hover:bg-white hover:text-emerald-600 border border-slate-200 hover:border-emerald-200 shadow-sm'
             }
           `}
-          aria-label="Toggle Medical Math Calculator"
+          aria-label="Toggle calculator"
         >
           <Calculator className="w-3.5 h-3.5" />
-          <span>Medical Math</span>
+          <span>Calculator</span>
         </button>
       </div>
 
