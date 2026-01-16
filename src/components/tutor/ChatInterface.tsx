@@ -6,10 +6,7 @@ import SuggestedPrompts from '@/components/tutor/SuggestedPrompts'
 import { useTutorContext } from './TutorContext'
 import MedicalMathCalculator from './MedicalMathCalculator'
 
-type Mode = 'tutor' | 'reflections'
-
 interface ChatInterfaceProps {
-  mode: Mode
   sessionId?: string // Optional - will be created on first message if missing
   onSend: (message: string) => Promise<void> | void
   initialPrompt?: string // For topic/exam prefill - does NOT auto-send
@@ -21,7 +18,6 @@ interface ChatInterfaceProps {
 }
 
 export default function ChatInterface({
-  mode,
   sessionId,
   onSend,
   initialPrompt,
@@ -47,16 +43,6 @@ export default function ChatInterface({
       files: attachedFiles.map(f => ({ id: f.id, name: f.name, document_type: f.document_type })),
     });
   }, [attachedFiles]);
-
-  // Get placeholder based on context
-  const getPlaceholder = () => {
-    if (mode === 'reflections') {
-      return "What would you like to reflect on today?"
-    }
-    return "Ask a clinical question or reference your binder materials…"
-  }
-
-  const placeholder = getPlaceholder()
 
   // Update input when initialPrompt changes, but only if no messages and user hasn't typed
   useEffect(() => {
@@ -101,14 +87,11 @@ export default function ChatInterface({
     await onSend(prompt)
   }
 
-  // Get placeholder based on attached files
   const getPlaceholderText = () => {
     if (attachedFiles.length > 0) {
-      return "Ask a question about your files..."
+      return "Ask a question about your uploaded materials..."
     }
-    return mode === 'reflections' 
-      ? "What would you like to reflect on today?"
-      : "Ask a clinical question..."
+    return "Ask a question about what you're learning..."
   }
 
   return (
@@ -125,13 +108,13 @@ export default function ChatInterface({
           {attachedFiles.map((file) => (
             <div 
               key={file.id} 
-              className="flex items-center gap-2 rounded-full bg-white/80 border border-indigo-100 px-3 py-1 text-xs text-indigo-700 shadow-sm backdrop-blur-sm transition-all duration-200"
+              className="flex items-center gap-2 rounded-full bg-white/80 border border-emerald-100 px-3 py-1 text-xs text-emerald-700 shadow-sm backdrop-blur-sm transition-all duration-200"
             >
               <span className="truncate max-w-[150px]">{file.name}</span>
               {onDetach && (
                 <button 
                   onClick={() => onDetach(file.id)} 
-                  className="hover:text-indigo-900 transition-colors"
+                  className="hover:text-emerald-900 transition-colors"
                   aria-label={`Remove ${file.name}`}
                 >
                   ×
@@ -154,8 +137,8 @@ export default function ChatInterface({
           className={`
             flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all duration-200
             ${isCalculatorOpen
-              ? 'bg-indigo-100 text-indigo-700 border border-indigo-200'
-              : 'bg-white/80 text-slate-600 hover:bg-white hover:text-indigo-600 border border-slate-200 hover:border-indigo-200 shadow-sm'
+              ? 'bg-emerald-100 text-emerald-700 border border-emerald-200'
+              : 'bg-white/80 text-slate-600 hover:bg-white hover:text-emerald-600 border border-slate-200 hover:border-emerald-200 shadow-sm'
             }
           `}
           aria-label="Toggle Medical Math Calculator"
@@ -173,7 +156,7 @@ export default function ChatInterface({
         {/* Paperclip */}
         <button 
           type="button"
-          className="rounded-full p-2 text-slate-400 hover:bg-slate-50 hover:text-indigo-600 transition-all duration-200"
+          className="rounded-full p-2 text-slate-400 hover:bg-slate-50 hover:text-emerald-600 transition-all duration-200"
           aria-label="Attach file"
         >
           <Paperclip className="h-5 w-5" />
@@ -200,7 +183,7 @@ export default function ChatInterface({
         <button 
           type="submit"
           disabled={isLoading || !inputValue.trim()}
-          className="rounded-full bg-gradient-to-r from-indigo-600 to-indigo-700 p-2.5 text-white shadow-lg hover:from-indigo-700 hover:to-indigo-800 transition-all duration-200 active:scale-95 disabled:opacity-60 disabled:cursor-not-allowed"
+          className="rounded-full bg-gradient-to-r from-emerald-600 to-teal-600 p-2.5 text-white shadow-lg hover:from-emerald-700 hover:to-teal-700 transition-all duration-200 active:scale-95 disabled:opacity-60 disabled:cursor-not-allowed"
           aria-label="Send message"
         >
           <ArrowUp className="h-5 w-5" />

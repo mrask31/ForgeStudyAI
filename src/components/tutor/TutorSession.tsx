@@ -12,11 +12,8 @@ import { listNotebookTopics } from '@/lib/api/notebook'
 import { NotebookTopic } from '@/lib/types'
 import { createBrowserClient } from '@supabase/ssr'
 
-type Mode = 'tutor' | 'reflections'
-
 interface TutorSessionProps {
   sessionId?: string // Optional - will be created on first message if missing
-  mode: Mode
   strictMode: boolean
   onStrictModeChange: (strict: boolean) => void
   onSessionCreated?: (sessionId: string) => void // Callback when session is created
@@ -30,7 +27,6 @@ interface TutorSessionProps {
 
 export default function TutorSession({
   sessionId: propSessionId,
-  mode,
   strictMode,
   onStrictModeChange,
   onSessionCreated,
@@ -104,10 +100,8 @@ export default function TutorSession({
       }
     }
     
-    if (mode === 'tutor') {
-      checkActiveFiles()
-    }
-  }, [mode])
+    checkActiveFiles()
+  }, [])
 
   // Check if user has seen onboarding
   useEffect(() => {
@@ -328,7 +322,7 @@ export default function TutorSession({
       }
 
       // Step B: Create a new session
-      const intent = mode === 'reflections' ? 'new_reflection' : 'new_question'
+      const intent = 'new_question'
       
       const payload: any = { intent }
       
@@ -345,7 +339,7 @@ export default function TutorSession({
       if (tutorContext.selectedTopicFileIds && tutorContext.selectedTopicFileIds.length > 0) {
         payload.fileIds = tutorContext.selectedTopicFileIds
       }
-      if (mode === 'tutor' && attachedFiles.length > 0) {
+      if (attachedFiles.length > 0) {
         payload.attachedFileIds = attachedFiles.map(f => f.id)
       }
       
@@ -396,7 +390,7 @@ export default function TutorSession({
     if (!effectiveSessionId) {
       try {
         // Determine intent based on mode
-        const intent = mode === 'reflections' ? 'new_reflection' : 'new_question'
+        const intent = 'new_question'
         
         // Build payload with context
         const payload: any = { intent }
@@ -415,7 +409,7 @@ export default function TutorSession({
         if (tutorContext.selectedTopicFileIds && tutorContext.selectedTopicFileIds.length > 0) {
           payload.fileIds = tutorContext.selectedTopicFileIds
         }
-        if (mode === 'tutor' && attachedFiles.length > 0) {
+        if (attachedFiles.length > 0) {
           payload.attachedFileIds = attachedFiles.map(f => f.id)
         }
         
@@ -600,7 +594,7 @@ export default function TutorSession({
             strictMode={strictMode} 
             chatId={sessionId} 
             filterMode="mixed"
-            mode={mode === 'reflections' ? 'tutor' : mode}
+            mode="tutor"
             attachedFiles={attachedFiles}
             selectedMessageId={selectedMessageId}
             onSelectMessage={setSelectedMessageId}
@@ -617,7 +611,7 @@ export default function TutorSession({
               }
             }}
           />
-        ) : mode === 'tutor' && activeChunkCount === 0 && !sessionId && !tutorContext.selectedClassId ? (
+        ) : activeChunkCount === 0 && !sessionId && !tutorContext.selectedClassId ? (
           // Only show empty state if there's no active session, no files, AND no class selected
           // If a class is selected, the landing page will show the welcome message instead
           <TutorEmptyState 
@@ -628,9 +622,7 @@ export default function TutorSession({
           <div className="flex items-center justify-center min-h-[400px]">
             <div className="text-center">
               <p className="text-slate-600 text-sm">
-                {mode === 'tutor' 
-                  ? "What would you like to study today?"
-                  : "What would you like to reflect on today?"}
+                What would you like to study today?
               </p>
             </div>
           </div>
@@ -641,7 +633,7 @@ export default function TutorSession({
       {showScrollToBottom && (
         <button
           onClick={handleScrollToBottom}
-          className="absolute bottom-24 right-6 z-20 p-2.5 rounded-full bg-white/90 backdrop-blur-sm border border-slate-300 shadow-lg text-slate-500 hover:text-indigo-600 hover:bg-white hover:border-indigo-400 hover:shadow-xl transition-all duration-200 opacity-70 hover:opacity-100"
+          className="absolute bottom-24 right-6 z-20 p-2.5 rounded-full bg-white/90 backdrop-blur-sm border border-slate-300 shadow-lg text-slate-500 hover:text-emerald-600 hover:bg-white hover:border-emerald-400 hover:shadow-xl transition-all duration-200 opacity-70 hover:opacity-100"
           aria-label="Scroll to bottom"
         >
           <ChevronDown className="w-5 h-5" />
@@ -651,11 +643,10 @@ export default function TutorSession({
       {/* Chat input docked at bottom */}
       <div className="flex-shrink-0">
         <ChatInterface
-          mode={mode}
           sessionId={sessionId}
           onSend={handleSend}
           initialPrompt={(() => {
-            if (mode === 'tutor' && tutorContext.selectedTopic) {
+            if (tutorContext.selectedTopic) {
               const classInfo = tutorContext.selectedClass
                 ? ` from ${tutorContext.selectedClass.code} — ${tutorContext.selectedClass.name}`
                 : ''

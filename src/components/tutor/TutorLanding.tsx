@@ -1,13 +1,9 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { useRouter } from 'next/navigation'
 import SuggestedPrompts from '@/components/tutor/SuggestedPrompts'
 
-type Mode = 'tutor' | 'reflections'
-
 interface TutorLandingProps {
-  mode: Mode
   onStartSession: (message: string) => Promise<void>
   attachedFiles?: { id: string, name: string, document_type: string | null }[]
   attachedContext?: 'none' | 'syllabus' | 'textbook' | 'mixed'
@@ -16,14 +12,12 @@ interface TutorLandingProps {
 }
 
 export default function TutorLanding({ 
-  mode, 
   onStartSession,
   attachedFiles = [],
   attachedContext = 'none',
   selectedClassId,
   selectedClass
 }: TutorLandingProps) {
-  const router = useRouter()
   const hasAttachedFiles = attachedFiles.length > 0
   const isGeneralTutor = !selectedClassId
   const [welcomeMessage, setWelcomeMessage] = useState<string | null>(null)
@@ -39,18 +33,15 @@ export default function TutorLanding({
   }
 
   const getMainHeading = () => {
-    if (mode === 'reflections') {
-      return `${getGreeting()} What would you like to reflect on today?`
-    }
     if (isGeneralTutor) {
-      return `${getGreeting()} I'm your General Tutor — ready to help you learn!`
+      return `${getGreeting()} I'm your Tutor — ready to help you learn!`
     }
     return `${getGreeting()} What are we studying today?`
   }
 
   // Fetch last chat and generate welcome message for class-specific landing
   useEffect(() => {
-    if (mode === 'reflections' || isGeneralTutor || !selectedClassId) {
+    if (isGeneralTutor || !selectedClassId) {
       setWelcomeMessage(null)
       return
     }
@@ -150,20 +141,17 @@ export default function TutorLanding({
     }
 
     generateWelcomeMessage()
-  }, [selectedClassId, mode, isGeneralTutor, selectedClass])
+  }, [selectedClassId, isGeneralTutor, selectedClass])
 
   const getSubtext = () => {
-    if (mode === 'reflections') {
-      return "You can talk about your feelings, stressful days, or meaningful patient experiences."
-    }
     if (isGeneralTutor) {
-      return "I can help you with coursework, practice questions, study strategies, and understanding concepts. Ask me anything!"
+      return "I can help with coursework, practice questions, study strategies, and understanding concepts. Ask me anything!"
     }
     return "You can ask about class topics, practice questions, or coursework concepts."
   }
 
   const getHelperText = () => {
-    if (mode === 'reflections' || !isGeneralTutor) {
+    if (!isGeneralTutor) {
       return null
     }
     return (
@@ -246,7 +234,7 @@ export default function TutorLanding({
       {/* Suggestion Chips - Mode-aware */}
       <div className="w-full">
         <SuggestedPrompts 
-          mode={mode} 
+          mode="tutor" 
           onPromptSelect={(prompt) => {
             // On landing, clicking a suggestion starts a session
             handleSuggestionClick(prompt)
