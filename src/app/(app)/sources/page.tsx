@@ -1,12 +1,13 @@
 'use client'
 
 import { useEffect, useMemo, useState } from 'react'
-import { UploadCloud, FileText, Images, BookOpen, Search, Download, Eye, FileTextIcon } from 'lucide-react'
+import { UploadCloud, FileText, Images, BookOpen, Search, Download, Eye, FileTextIcon, Trash2, X } from 'lucide-react'
 import { useActiveProfile } from '@/contexts/ActiveProfileContext'
 import { createBrowserClient } from '@supabase/ssr'
 import {
   addLearningSourceItem,
   createLearningSource,
+  deleteLearningSourceItems,
   getSignedSourceUrl,
   listLearningSourceItems,
   listLearningSources,
@@ -78,6 +79,8 @@ export default function SourcesPage() {
   const [searchQuery, setSearchQuery] = useState('')
   const [profileScope, setProfileScope] = useState<'active' | 'all'>('active')
   const [signedUrls, setSignedUrls] = useState<Record<string, string>>({})
+  const [selectedItemIds, setSelectedItemIds] = useState<string[]>([])
+  const [isDeleting, setIsDeleting] = useState(false)
 
   const [title, setTitle] = useState('')
   const [description, setDescription] = useState('')
@@ -164,6 +167,10 @@ export default function SourcesPage() {
       setSources(sourcesData)
       setItems(itemsData)
       setProfiles(profileData)
+      setSelectedItemIds((prev) => {
+        const validIds = new Set(itemsData.map((item) => item.id))
+        return prev.filter((id) => validIds.has(id))
+      })
     } catch (err: any) {
       console.error('[Sources] Failed to load sources:', err)
       setError('Could not load learning sources. Please try again.')
@@ -310,6 +317,38 @@ export default function SourcesPage() {
     }
   }
 
+  const isItemSelected = (id: string) => selectedItemIds.includes(id)
+
+  const toggleItemSelection = (id: string) => {
+    setSelectedItemIds((prev) => (prev.includes(id) ? prev.filter((itemId) => itemId !== id) : [...prev, id]))
+  }
+
+  const clearSelection = () => {
+    setSelectedItemIds([])
+  }
+
+  const handleBulkDelete = async () => {
+    if (selectedItemIds.length === 0 || isDeleting) return
+    const confirmed = window.confirm(`Delete ${selectedItemIds.length} item${selectedItemIds.length === 1 ? '' : 's'}? This cannot be undone.`)
+    if (!confirmed) return
+
+    setIsDeleting(true)
+    setError(null)
+    try {
+      const result = await deleteLearningSourceItems(selectedItemIds)
+      if (result.failedStorage > 0) {
+        setError('Some files could not be removed from storage, but the items were deleted.')
+      }
+      setSelectedItemIds([])
+      await loadSources()
+    } catch (err: any) {
+      console.error('[Sources] Failed to delete items:', err)
+      setError(err?.message || 'Could not delete selected items. Please try again.')
+    } finally {
+      setIsDeleting(false)
+    }
+  }
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-100">
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-12 sm:py-16">
@@ -358,6 +397,33 @@ export default function SourcesPage() {
           </div>
         </div>
 
+        {selectedItemIds.length > 0 && (
+          <div className="mb-6 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-slate-200 bg-white/80 px-4 py-3 text-sm">
+            <div className="text-slate-600">
+              <span className="font-semibold text-slate-800">{selectedItemIds.length}</span> selected
+            </div>
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={clearSelection}
+                className="inline-flex items-center gap-1 rounded-full border border-slate-200 px-3 py-1.5 text-xs font-semibold text-slate-600 hover:text-slate-800"
+              >
+                <X className="w-3.5 h-3.5" />
+                Clear
+              </button>
+              <button
+                type="button"
+                onClick={handleBulkDelete}
+                disabled={isDeleting}
+                className="inline-flex items-center gap-1 rounded-full bg-rose-600 px-3 py-1.5 text-xs font-semibold text-white shadow-sm hover:bg-rose-700 disabled:opacity-60"
+              >
+                <Trash2 className="w-3.5 h-3.5" />
+                {isDeleting ? 'Deleting...' : 'Delete selected'}
+              </button>
+            </div>
+          </div>
+        )}
+
         <div className="grid gap-4 md:grid-cols-3 mb-8">
           {summaryCards.map((card) => {
             const isActive = card.type === activeTab
@@ -387,10 +453,18 @@ export default function SourcesPage() {
             <div className="text-sm font-semibold text-slate-800 mb-3">Recent uploads</div>
             <div className="grid gap-2">
               {recentUploads.map((item) => (
-                <div key={item.id} className="flex items-center justify-between text-sm text-slate-600">
-                  <span className="truncate">
-                    {item.original_filename || item.metadata?.label || 'Uploaded file'}
-                  </span>
+                <div key={item.id} className="flex items-center justify-between gap-3 text-sm text-slate-600">
+                  <label className="flex items-center gap-2">
+                    <input
+                      type="checkbox"
+                      checked={isItemSelected(item.id)}
+                      onChange={() => toggleItemSelection(item.id)}
+                      className="h-4 w-4 rounded border-slate-300 text-teal-600 focus:ring-teal-500"
+                    />
+                    <span className="truncate">
+                      {item.original_filename || item.metadata?.label || 'Uploaded file'}
+                    </span>
+                  </label>
                   {item.file_url && (
                     <button
                       type="button"
@@ -567,9 +641,15 @@ export default function SourcesPage() {
                             </div>
                             {sourceItems.length > 0 && (
                               <div className="mt-3 space-y-2">
-                                {sourceItems.slice(0, 3).map((item) => (
+                                {sourceItems.map((item) => (
                                   <div key={item.id} className="flex items-start justify-between gap-3">
-                                    <div className="flex items-start gap-2 text-sm text-slate-600">
+                                    <label className="flex items-start gap-2 text-sm text-slate-600">
+                                      <input
+                                        type="checkbox"
+                                        checked={isItemSelected(item.id)}
+                                        onChange={() => toggleItemSelection(item.id)}
+                                        className="mt-1 h-4 w-4 rounded border-slate-300 text-teal-600 focus:ring-teal-500"
+                                      />
                                       <FileTextIcon className="w-4 h-4 mt-0.5 text-slate-400" />
                                       <div>
                                         <div className="font-medium text-slate-700">
@@ -577,7 +657,7 @@ export default function SourcesPage() {
                                         </div>
                                         <div className="text-xs text-slate-400">{formatDate(item.created_at)}</div>
                                       </div>
-                                    </div>
+                                    </label>
                                     {item.file_url && (
                                       <div className="flex items-center gap-2">
                                         {item.mime_type?.startsWith('image/') && !signedUrls[item.file_url] && (
@@ -602,11 +682,6 @@ export default function SourcesPage() {
                                     )}
                                   </div>
                                 ))}
-                                {sourceItems.length > 3 && (
-                                  <div className="text-xs text-slate-400">
-                                    +{sourceItems.length - 3} more items
-                                  </div>
-                                )}
                                 {sourceItems.some((item) => item.file_url && signedUrls[item.file_url] && item.mime_type?.startsWith('image/')) && (
                                   <div className="grid grid-cols-2 gap-2 mt-2">
                                     {sourceItems

@@ -242,6 +242,74 @@ export async function getSignedSourceUrl(fileUrl: string, expiresInSeconds: numb
   return data?.signedUrl || null
 }
 
+export async function deleteLearningSourceItems(itemIds: string[]) {
+  if (!Array.isArray(itemIds) || itemIds.length === 0) {
+    return { deleted: 0, missing: 0, failedStorage: 0 }
+  }
+
+  const supabase = createClient()
+  const { data: { user }, error: authError } = await supabase.auth.getUser()
+  if (authError || !user) {
+    throw new Error('Unauthorized')
+  }
+
+  const { data: items, error } = await supabase
+    .from('learning_source_items')
+    .select('id, file_url, learning_sources!inner(user_id)')
+    .in('id', itemIds)
+    .eq('learning_sources.user_id', user.id)
+
+  if (error) {
+    console.error('[LearningSources] Error loading items for delete:', error)
+    throw new Error('Failed to delete items')
+  }
+
+  const validItems = items || []
+  if (validItems.length === 0) {
+    return { deleted: 0, missing: itemIds.length, failedStorage: 0 }
+  }
+
+  const filesByBucket = new Map<string, string[]>()
+  for (const item of validItems) {
+    if (!item.file_url) continue
+    try {
+      const { bucket, path } = parseStorageUrl(item.file_url)
+      if (!bucket || !path) continue
+      const list = filesByBucket.get(bucket) || []
+      list.push(path)
+      filesByBucket.set(bucket, list)
+    } catch (err) {
+      console.warn('[LearningSources] Skipping invalid file URL:', item.file_url)
+    }
+  }
+
+  let failedStorage = 0
+  for (const [bucket, paths] of filesByBucket.entries()) {
+    if (paths.length === 0) continue
+    const { error: storageError } = await supabase.storage.from(bucket).remove(paths)
+    if (storageError) {
+      console.error('[LearningSources] Error removing storage files:', storageError)
+      failedStorage += paths.length
+    }
+  }
+
+  const { error: deleteError } = await supabase
+    .from('learning_source_items')
+    .delete()
+    .in('id', validItems.map((item) => item.id))
+
+  if (deleteError) {
+    console.error('[LearningSources] Error deleting items:', deleteError)
+    throw new Error('Failed to delete items')
+  }
+
+  return {
+    deleted: validItems.length,
+    missing: Math.max(0, itemIds.length - validItems.length),
+    failedStorage,
+  }
+}
+
 export async function retrieveLearningContext(params: {
   question: string
   profileId?: string | null
