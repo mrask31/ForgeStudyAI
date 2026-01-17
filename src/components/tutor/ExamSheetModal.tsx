@@ -40,6 +40,38 @@ export default function ExamSheetModal({
       .replace(/^ {4}/gm, '')
       .trim()
   }, [markdown])
+  const parsedContent = useMemo(() => {
+    const result = { title: '', sections: [] as Array<{ title: string; content: string }> }
+    if (!normalizedMarkdown) return result
+
+    const lines = normalizedMarkdown.split('\n')
+    let currentTitle = ''
+    let currentLines: string[] = []
+
+    const pushSection = () => {
+      if (!currentTitle) return
+      result.sections.push({ title: currentTitle, content: currentLines.join('\n').trim() })
+      currentLines = []
+    }
+
+    for (const line of lines) {
+      if (line.startsWith('# ') && !result.title) {
+        result.title = line.replace(/^#\s+/, '').trim()
+        continue
+      }
+      if (line.startsWith('## ')) {
+        if (currentTitle) {
+          pushSection()
+        }
+        currentTitle = line.replace(/^##\s+/, '').trim()
+        continue
+      }
+      currentLines.push(line)
+    }
+
+    pushSection()
+    return result
+  }, [normalizedMarkdown])
   const markdownComponents: Components = {
     h1: ({ children }: { children?: React.ReactNode }) => (
       <h1 className="text-base font-semibold text-slate-900 mb-4 mt-2">{children}</h1>
@@ -73,6 +105,30 @@ export default function ExamSheetModal({
       </blockquote>
     ),
     hr: () => <hr className="my-4 border-slate-200" />,
+  }
+  const slugify = (value: string) =>
+    value
+      .toLowerCase()
+      .replace(/[^a-z0-9\s-]/g, '')
+      .trim()
+      .replace(/\s+/g, '-')
+
+  const getSectionComponents = (isChecklist: boolean): Components => {
+    if (!isChecklist) return markdownComponents
+    return {
+      ...markdownComponents,
+      ul: ({ children }: { children?: React.ReactNode }) => (
+        <ul className="space-y-2 text-sm text-slate-700">{children}</ul>
+      ),
+      li: ({ children }: { children?: React.ReactNode }) => (
+        <li className="flex items-start gap-2">
+          <span className="mt-0.5 inline-flex h-4 w-4 items-center justify-center rounded border border-slate-300 bg-white text-[10px] text-slate-400">
+            ✓
+          </span>
+          <span className="leading-relaxed">{children}</span>
+        </li>
+      ),
+    }
   }
 
   useEffect(() => {
@@ -140,9 +196,51 @@ export default function ExamSheetModal({
                 Topic: {topic}
               </div>
             )}
-            <div className="max-w-none text-sm text-slate-700">
-              <ReactMarkdown components={markdownComponents}>{normalizedMarkdown}</ReactMarkdown>
-            </div>
+            {parsedContent.title && (
+              <h1 className="text-base font-semibold text-slate-900">{parsedContent.title}</h1>
+            )}
+            {parsedContent.sections.length > 0 ? (
+              <div className="space-y-4">
+                <div className="rounded-lg border border-slate-200 bg-slate-50 px-4 py-3">
+                  <p className="text-xs font-semibold uppercase tracking-wide text-slate-600 mb-2">
+                    Contents
+                  </p>
+                  <ul className="space-y-1 text-xs text-slate-600">
+                    {parsedContent.sections.map((section) => {
+                      const id = slugify(section.title)
+                      return (
+                        <li key={id}>
+                          <a href={`#${id}`} className="hover:text-slate-900">
+                            {section.title}
+                          </a>
+                        </li>
+                      )
+                    })}
+                  </ul>
+                </div>
+
+                {parsedContent.sections.map((section) => {
+                  const id = slugify(section.title)
+                  const isChecklist = /must[-\s]?know/i.test(section.title)
+                  return (
+                    <section key={id} id={id} className="rounded-xl border border-slate-200 bg-white px-4 py-3">
+                      <h2 className="text-xs font-semibold uppercase tracking-wide text-slate-600 mb-2">
+                        {section.title}
+                      </h2>
+                      <div className="max-w-none text-sm text-slate-700">
+                        <ReactMarkdown components={getSectionComponents(isChecklist)}>
+                          {section.content}
+                        </ReactMarkdown>
+                      </div>
+                    </section>
+                  )
+                })}
+              </div>
+            ) : (
+              <div className="max-w-none text-sm text-slate-700">
+                <ReactMarkdown components={markdownComponents}>{normalizedMarkdown}</ReactMarkdown>
+              </div>
+            )}
           </>
         )}
       </div>
