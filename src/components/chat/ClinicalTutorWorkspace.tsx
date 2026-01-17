@@ -903,6 +903,9 @@ export default function ClinicalTutorWorkspace({
         isOpen={saveClipModal.isOpen}
         onClose={() => setSaveClipModal({ isOpen: false, messageId: '', content: '' })}
         onSave={async ({ title, folder, tags }) => {
+          const safeMessageId = saveClipModal.messageId && isValidUUID(saveClipModal.messageId)
+            ? saveClipModal.messageId
+            : null
           const response = await fetch('/api/clips', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -914,7 +917,7 @@ export default function ClinicalTutorWorkspace({
               tags,
               classId: tutorContext.selectedClassId || null,
               chatId: chatId || null,
-              messageId: saveClipModal.messageId || null,
+              messageId: safeMessageId,
             }),
           })
           if (!response.ok) {

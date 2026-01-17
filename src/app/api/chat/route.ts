@@ -249,7 +249,20 @@ async function retrieveBinderContext(
 
 export async function POST(req: Request) {
   const body = await req.json();
-  const { messages, strictMode, filterMode = 'mixed', selectedDocIds = [], chatId, topicTitle, className, selectedClassName, attachedFileIds: rawAttachedFileIds, activeProfileId, learningMode } = body;
+  const {
+    messages,
+    strictMode,
+    filterMode = 'mixed',
+    selectedDocIds = [],
+    chatId,
+    topicTitle,
+    className,
+    selectedClassName,
+    attachedFileIds: rawAttachedFileIds,
+    activeProfileId,
+    learningMode,
+    mode: interactionMode = 'tutor',
+  } = body;
   
   // CRITICAL: Ensure attachedFileIds is always an array, never 'none' or undefined
   const attachedFileIds = Array.isArray(rawAttachedFileIds) 
@@ -445,9 +458,15 @@ export async function POST(req: Request) {
 
   // Build system prompt for tutor mode
   let systemPrompt: string = '';
+  const resolvedInteractionMode =
+    interactionMode === 'essay_feedback' || interactionMode === 'planner' || interactionMode === 'tutor'
+      ? interactionMode
+      : 'tutor'
+
   systemPrompt = getSystemPrompt({
     gradeBand: activeProfile?.grade_band,
     grade: activeProfile?.grade || null,
+    mode: resolvedInteractionMode,
   });
 
   systemPrompt += `
@@ -590,10 +609,10 @@ Remember: The student selected this topic because they want to study it. Keep yo
   // Formatting rules - Structured response takes precedence
   systemPrompt += `
 FORMATTING RULES:
-- Use the structured response format (Snapshot, Key Findings, Clinical Reasoning, Priority Actions, Clinical Safety Note, Next Steps) for clinical scenarios.
-- For non-scenario questions, provide concise, direct answers.
-- End with 1-2 guided follow-up questions when appropriate.
-- If binder context was present, explicitly mention filenames and document types in your response. Example: "From Medical_Surgical_Unit_3_Heart_Failure.pdf (Textbook)…"
+- Follow the Mode Overlay response structure exactly.
+- Keep responses scannable with headings and short bullets.
+- End with 1 guided follow-up question when appropriate.
+- If student materials were provided, include a "Sources:" line with filenames.
 `;
 
   const result = await streamText({
