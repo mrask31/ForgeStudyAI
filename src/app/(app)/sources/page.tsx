@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useMemo, useState } from 'react'
-import { UploadCloud, FileText, Images, BookOpen, Search, Download, Eye, FileTextIcon, Trash2, X, Map, ClipboardList } from 'lucide-react'
+import { UploadCloud, FileText, Images, BookOpen, Search, Download, Eye, FileTextIcon, Trash2, X, Map as MapIcon, ClipboardList } from 'lucide-react'
 import { useActiveProfile } from '@/contexts/ActiveProfileContext'
 import { createBrowserClient } from '@supabase/ssr'
 import {
@@ -654,7 +654,7 @@ export default function SourcesPage() {
                     disabled={isGeneratingMap}
                     className="inline-flex items-center gap-1 rounded-full border border-slate-200 px-2.5 py-1 font-semibold text-slate-600 hover:text-slate-800"
                   >
-                    <Map className="w-3.5 h-3.5" />
+                    <MapIcon className="w-3.5 h-3.5" />
                     {isGeneratingMap ? 'Mapping...' : 'Study Map'}
                   </button>
                   <button
