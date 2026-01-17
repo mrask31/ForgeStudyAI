@@ -80,7 +80,7 @@ export default function ClassesPage() {
           <div className="flex items-start justify-between mb-3 sm:mb-4 flex-wrap gap-3 sm:gap-4">
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2.5 sm:gap-3 mb-2 sm:mb-3">
-                <div className="p-2 sm:p-2.5 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-xl shadow-lg shadow-indigo-500/20 flex-shrink-0">
+                <div className="p-2 sm:p-2.5 bg-gradient-to-br from-emerald-500 to-green-600 rounded-xl shadow-lg shadow-emerald-500/20 flex-shrink-0">
                   <GraduationCap className="w-5 h-5 sm:w-6 sm:h-6 md:w-7 md:h-7 text-white" />
                 </div>
                 <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold bg-gradient-to-r from-slate-900 via-indigo-900 to-slate-900 bg-clip-text text-transparent">
@@ -90,11 +90,19 @@ export default function ClassesPage() {
               <p className="text-sm sm:text-base text-slate-600 ml-11 sm:ml-14 max-w-2xl leading-relaxed">
                 Choose a class to open its study map, see what to do first, and start a focused session.
               </p>
+              <div className="ml-11 sm:ml-14 mt-3 sm:mt-4 max-w-2xl rounded-xl border border-emerald-100 bg-emerald-50/60 px-4 py-3 text-sm text-emerald-900">
+                <p className="font-semibold mb-2">What you can do here</p>
+                <ul className="list-disc pl-5 space-y-1">
+                  <li>Create a class to get a study map and start-here path.</li>
+                  <li>Open a class to launch a focused study session.</li>
+                  <li>See what to do next before you dive in.</li>
+                </ul>
+              </div>
             </div>
             {!showForm && (
               <Button 
                 onClick={handleAddClass} 
-                className="bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white shadow-md shadow-indigo-500/30 hover:shadow-lg hover:shadow-indigo-500/40 transition-all duration-200 transform hover:scale-105 active:scale-95 mt-2 sm:mt-0 flex-shrink-0"
+                className="bg-gradient-to-r from-emerald-600 to-green-600 hover:from-emerald-700 hover:to-green-700 text-white shadow-md shadow-emerald-500/30 hover:shadow-lg hover:shadow-emerald-500/40 transition-all duration-200 transform hover:scale-105 active:scale-95 mt-2 sm:mt-0 flex-shrink-0"
               >
                 <Plus className="w-4 h-4 mr-2" />
                 Add Class
@@ -117,15 +125,15 @@ export default function ClassesPage() {
           </div>
         ) : loading ? (
           <div className="text-center py-16">
-            <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-br from-slate-100 to-slate-200 mb-4">
+            <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-br from-emerald-50 to-green-100 mb-4">
               <GraduationCap className="w-8 h-8 text-slate-400 animate-pulse" />
             </div>
             <p className="text-lg font-medium text-slate-600">Loading your classes...</p>
           </div>
         ) : classes.length === 0 ? (
           <div className="text-center py-12 sm:py-16 bg-white/80 backdrop-blur-sm border border-slate-200/60 rounded-2xl shadow-lg shadow-slate-200/50">
-            <div className="inline-flex items-center justify-center w-16 h-16 sm:w-20 sm:h-20 rounded-2xl bg-gradient-to-br from-slate-100 to-slate-200 mb-4 sm:mb-6">
-              <BookOpen className="w-8 h-8 sm:w-10 sm:h-10 text-slate-400" />
+            <div className="inline-flex items-center justify-center w-16 h-16 sm:w-20 sm:h-20 rounded-2xl bg-gradient-to-br from-emerald-50 to-green-100 mb-4 sm:mb-6">
+              <BookOpen className="w-8 h-8 sm:w-10 sm:h-10 text-emerald-500" />
             </div>
             <h3 className="text-xl sm:text-2xl font-bold text-slate-900 mb-2 sm:mb-3">No classes yet</h3>
             <p className="text-sm sm:text-base text-slate-600 mb-6 sm:mb-8 max-w-md mx-auto leading-relaxed px-4">
@@ -133,7 +141,7 @@ export default function ClassesPage() {
             </p>
             <Button 
               onClick={handleAddClass} 
-              className="bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white shadow-md shadow-indigo-500/30 hover:shadow-lg hover:shadow-indigo-500/40 transition-all duration-200 transform hover:scale-105 active:scale-95"
+              className="bg-gradient-to-r from-emerald-600 to-green-600 hover:from-emerald-700 hover:to-green-700 text-white shadow-md shadow-emerald-500/30 hover:shadow-lg hover:shadow-emerald-500/40 transition-all duration-200 transform hover:scale-105 active:scale-95"
             >
               <Plus className="w-4 h-4 mr-2" />
               Create Your First Class
