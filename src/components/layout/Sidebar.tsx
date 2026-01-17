@@ -24,9 +24,6 @@ interface SidebarProps {
 export default function Sidebar({ onNavigate }: SidebarProps = {}) {
   const pathname = usePathname()
   const { activeProfileId } = useActiveProfile()
-  const [preferredName, setPreferredName] = useState<string | null>(null)
-  const [programTrack, setProgramTrack] = useState<string | null>(null)
-  const [graduationDate, setGraduationDate] = useState<string | null>(null)
   const [studentName, setStudentName] = useState<string | null>(null)
   const [gradeBand, setGradeBand] = useState<string | null>(null)
 
@@ -40,28 +37,16 @@ export default function Sidebar({ onNavigate }: SidebarProps = {}) {
         const { data: { user } } = await supabase.auth.getUser()
         if (!user) return
 
-        const { data: profile } = await supabase
-          .from('profiles')
-          .select('preferred_name, program_track, graduation_date')
-          .eq('id', user.id)
-          .single()
-
-        if (profile) {
-          setPreferredName(profile.preferred_name || null)
-          setProgramTrack(profile.program_track || null)
-          setGraduationDate(profile.graduation_date || null)
-        }
-
         if (activeProfileId) {
           const { data: studentProfile } = await supabase
             .from('student_profiles')
-            .select('name, grade_band')
+            .select('display_name, grade_band')
             .eq('id', activeProfileId)
             .eq('owner_id', user.id)
             .single()
 
           if (studentProfile) {
-            setStudentName(studentProfile.name || null)
+            setStudentName(studentProfile.display_name || null)
             setGradeBand(studentProfile.grade_band || null)
           } else {
             setStudentName(null)
@@ -130,52 +115,34 @@ export default function Sidebar({ onNavigate }: SidebarProps = {}) {
           <HistoryButton onNavigate={onNavigate} />
         </div>
         
-        {/* Switch Profile Link */}
-        <div className="mt-4">
+        {/* User Profile / Footer */}
+        <div className="mt-auto pt-6 border-t border-teal-900/50">
           <Link
             href="/profiles"
             onClick={onNavigate}
-            className="group flex items-center gap-3 rounded-lg px-4 py-3.5 text-sm font-medium transition-all duration-200 text-teal-200 hover:bg-gradient-to-r hover:from-teal-900/50 hover:to-emerald-900/50 hover:text-white"
+            className="flex items-center gap-3 px-2 py-2 rounded-lg hover:bg-teal-900/40 transition-colors"
           >
-            <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
-            </svg>
-            Switch Profile
-          </Link>
-        </div>
-        
-        {/* User Profile / Footer */}
-        <div className="mt-auto pt-6 border-t border-teal-900/50">
-          <div className="flex items-center gap-3 px-2">
             <div className="w-10 h-10 rounded-full bg-gradient-to-br from-teal-600 to-emerald-600 border border-teal-500/50 flex items-center justify-center shadow-sm">
               <UserIcon className="w-5 h-5 text-white" />
             </div>
             <div className="flex flex-col min-w-0">
-              {studentName || preferredName ? (
+              {studentName ? (
                 <>
-                  <span className="text-sm font-bold text-white truncate">{studentName || preferredName}</span>
+                  <span className="text-sm font-bold text-white truncate">{studentName}</span>
                   {gradeBand ? (
                     <span className="text-xs text-teal-200 truncate">{gradeBandLabel(gradeBand)}</span>
-                  ) : programTrack && graduationDate ? (
-                    <span className="text-xs text-teal-200 truncate">
-                      {programTrack} • Class of {new Date(graduationDate).getFullYear()}
-                    </span>
-                  ) : programTrack ? (
-                    <span className="text-xs text-teal-200 truncate">{programTrack}</span>
-                  ) : graduationDate ? (
-                    <span className="text-xs text-teal-200 truncate">
-                      Class of {new Date(graduationDate).getFullYear()}
-                    </span>
-                  ) : null}
+                  ) : (
+                    <span className="text-xs text-teal-200 truncate">Select a grade band</span>
+                  )}
                 </>
               ) : (
                 <>
                   <span className="text-sm font-medium text-white">Student Account</span>
-                  <span className="text-xs text-teal-200">{programTrack || 'General Track'}</span>
+                  <span className="text-xs text-teal-200">Choose a profile</span>
                 </>
               )}
             </div>
-          </div>
+          </Link>
         </div>
       </div>
     </aside>

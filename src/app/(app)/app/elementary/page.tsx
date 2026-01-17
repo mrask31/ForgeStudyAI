@@ -49,6 +49,43 @@ export default function ElementaryDashboardPage() {
             )}
           </section>
 
+          <section className="grid gap-4 md:grid-cols-3">
+            {[
+              {
+                title: 'Continue where you left off',
+                description: 'Pick up your last session and keep the momentum going.',
+                href: '/tutor',
+                action: 'Resume session',
+              },
+              {
+                title: 'Start a new map',
+                description: 'Open the tutor and build a simple map for today’s topic.',
+                href: '/tutor',
+                action: 'Start a new map',
+              },
+              {
+                title: 'Tonight’s plan',
+                description: 'Get a quick plan for what to study tonight.',
+                href: '/tutor',
+                action: 'Build a plan',
+              },
+            ].map((item) => (
+              <div
+                key={item.title}
+                className="rounded-2xl border border-teal-100 bg-white/90 p-6 shadow-md shadow-slate-200/40"
+              >
+                <h3 className="text-lg font-semibold text-slate-900 mb-2">{item.title}</h3>
+                <p className="text-sm text-slate-600 mb-4">{item.description}</p>
+                <Link
+                  href={item.href}
+                  className="inline-flex items-center justify-center rounded-xl bg-teal-600 px-4 py-2 text-sm font-semibold text-white hover:bg-teal-700 transition-colors"
+                >
+                  {item.action}
+                </Link>
+              </div>
+            ))}
+          </section>
+
           <section className="grid gap-6 md:grid-cols-3">
             {[
               {

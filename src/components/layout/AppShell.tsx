@@ -1,11 +1,10 @@
 'use client'
 
-import { ReactNode, useState, useEffect } from 'react'
+import { ReactNode, useState } from 'react'
 import { DensityProvider } from '@/contexts/DensityContext'
 import Sidebar from '@/components/layout/Sidebar'
 import MobileNav from '@/components/layout/MobileNav'
 import { Menu } from 'lucide-react'
-import { createBrowserClient } from '@supabase/ssr'
 
 interface AppShellProps {
   children: ReactNode
@@ -14,42 +13,6 @@ interface AppShellProps {
 
 export function AppShell({ children, variant = 'app' }: AppShellProps) {
   const [mobileNavOpen, setMobileNavOpen] = useState(false)
-  const [programTrack, setProgramTrack] = useState<string | null>(null)
-  const [graduationYear, setGraduationYear] = useState<number | null>(null)
-
-  useEffect(() => {
-    if (variant !== 'app') return
-    
-    const loadProfile = async () => {
-      try {
-        const supabase = createBrowserClient(
-          process.env.NEXT_PUBLIC_SUPABASE_URL!,
-          process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-        )
-        const { data: { user } } = await supabase.auth.getUser()
-        if (!user) return
-
-        const { data: profile } = await supabase
-          .from('profiles')
-          .select('program_track, graduation_date')
-          .eq('id', user.id)
-          .single()
-
-        if (profile) {
-          if (profile.program_track) {
-            setProgramTrack(profile.program_track)
-          }
-          if (profile.graduation_date) {
-            setGraduationYear(new Date(profile.graduation_date).getFullYear())
-          }
-        }
-      } catch (error) {
-        console.error('[AppShell] Error loading profile:', error)
-      }
-    }
-
-    loadProfile()
-  }, [variant])
 
   if (variant === 'public') {
     // Public pages (landing, login, signup, checkout) use simpler layout
@@ -78,11 +41,7 @@ export function AppShell({ children, variant = 'app' }: AppShellProps) {
             <div className="flex items-center gap-2.5">
               <div className="w-2 h-2 rounded-full bg-teal-400"></div>
               <span className="text-lg font-bold text-white tracking-tight">
-                {programTrack && graduationYear 
-                  ? `${programTrack} • Class of ${graduationYear}`
-                  : programTrack 
-                    ? programTrack
-                    : 'ForgeStudy Platform'}
+                ForgeStudy Platform
               </span>
             </div>
             <div className="w-10"></div>

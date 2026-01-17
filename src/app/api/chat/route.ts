@@ -441,11 +441,16 @@ export async function POST(req: Request) {
   const learningContext = learningContextResult.context;
   const fileSummaries = binderResult.fileSummaries || [];
 
-  let activeProfile: { grade_band: 'elementary' | 'middle' | 'high'; grade: string | null } | null = null;
+  let activeProfile: {
+    display_name: string | null;
+    grade_band: 'elementary' | 'middle' | 'high';
+    grade: string | null;
+    interests: string | null;
+  } | null = null;
   if (activeProfileId) {
     const { data: profileData, error: profileError } = await supabase
       .from('student_profiles')
-      .select('grade_band, grade')
+      .select('display_name, grade_band, grade, interests')
       .eq('id', activeProfileId)
       .eq('owner_id', user.id)
       .single();
@@ -468,6 +473,27 @@ export async function POST(req: Request) {
     grade: activeProfile?.grade || null,
     mode: resolvedInteractionMode,
   });
+
+  if (activeProfile) {
+    const profileName = activeProfile.display_name || 'Student';
+    const interestsLine = activeProfile.interests ? activeProfile.interests : 'None provided';
+    const gradeLine = activeProfile.grade ? `Grade: ${activeProfile.grade}` : 'Grade: Not specified';
+    systemPrompt += `
+### STUDENT PROFILE
+Name: ${profileName}
+Grade band: ${activeProfile.grade_band}
+${gradeLine}
+Interests & hobbies: ${interestsLine}
+
+Guidance:
+- If the student asks about their likes or hobbies, answer using this profile data.
+- Use the interests to create analogies or examples when helpful.
+- Do not invent interests that are not listed above.
+- If interests are missing and would help, ask the student to share a few.
+- If this is the first reply of the session, greet the student by name once.
+- Use the student's name sparingly for occasional encouragement after that.
+`;
+  }
 
   systemPrompt += `
 ### STUDENT MATERIALS RULES

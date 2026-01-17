@@ -44,8 +44,8 @@ export default async function PostLoginPage() {
   }
 
   if (profiles.length === 1) {
-    redirect(getBandRoute(profiles[0].grade_band))
+    redirect('/profiles?auto=1')
   }
 
-  redirect('/profiles')
+  redirect('/profiles?auto=1')
 }

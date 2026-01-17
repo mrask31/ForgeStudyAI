@@ -1,18 +1,23 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { createBrowserClient } from '@supabase/ssr'
 import { getStudentProfiles, type StudentProfile, deleteStudentProfile } from '@/app/actions/student-profiles'
-import { GraduationCap, BookOpen, Sparkles, Trash2, Plus, User } from 'lucide-react'
+import { GraduationCap, BookOpen, Sparkles, Trash2, Plus, User, Lock } from 'lucide-react'
 import Link from 'next/link'
 import { useActiveProfile } from '@/contexts/ActiveProfileContext'
+import { verifyStudentProfilePin } from '@/app/actions/pins'
 
 export default function ProfilesPage() {
   const router = useRouter()
+  const searchParams = useSearchParams()
   const [profiles, setProfiles] = useState<StudentProfile[]>([])
   const [isLoading, setIsLoading] = useState(true)
-  const [user, setUser] = useState<any>(null)
+  const [pinPromptProfile, setPinPromptProfile] = useState<StudentProfile | null>(null)
+  const [pinValue, setPinValue] = useState('')
+  const [pinError, setPinError] = useState<string | null>(null)
+  const [isVerifyingPin, setIsVerifyingPin] = useState(false)
   const { setActiveProfileId } = useActiveProfile()
 
   const getBandRoute = (band: StudentProfile['grade_band']) => {
@@ -42,16 +47,9 @@ export default function ProfilesPage() {
           return
         }
 
-        setUser(user)
         const studentProfiles = await getStudentProfiles()
         setProfiles(studentProfiles)
 
-        if (studentProfiles.length === 1) {
-          const onlyProfile = studentProfiles[0]
-          setActiveProfileId(onlyProfile.id)
-          router.replace(getBandRoute(onlyProfile.grade_band))
-          return
-        }
       } catch (error) {
         console.error('[Profiles Page] Error loading profiles:', error)
       } finally {
@@ -63,6 +61,13 @@ export default function ProfilesPage() {
   }, [router])
 
   const handleProfileClick = (profile: StudentProfile) => {
+    if (profile.has_pin) {
+      setPinPromptProfile(profile)
+      setPinValue('')
+      setPinError(null)
+      return
+    }
+
     setActiveProfileId(profile.id)
     router.push(getBandRoute(profile.grade_band))
   }
@@ -121,6 +126,46 @@ export default function ProfilesPage() {
       return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase()
     }
     return displayName.substring(0, 2).toUpperCase()
+  }
+
+  useEffect(() => {
+    if (!profiles.length) return
+    const shouldAuto = searchParams.get('auto') === '1'
+    if (!shouldAuto) return
+
+    if (profiles.length === 1) {
+      const onlyProfile = profiles[0]
+      if (onlyProfile.has_pin) {
+        setPinPromptProfile(onlyProfile)
+      } else {
+        setActiveProfileId(onlyProfile.id)
+        router.replace(getBandRoute(onlyProfile.grade_band))
+      }
+    }
+  }, [profiles, searchParams, router, setActiveProfileId])
+
+  const handlePinSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!pinPromptProfile) return
+
+    setPinError(null)
+    setIsVerifyingPin(true)
+    try {
+      const result = await verifyStudentProfilePin(pinPromptProfile.id, pinValue)
+      if (!result.valid) {
+        setPinError('Incorrect PIN. Try again.')
+        return
+      }
+      setActiveProfileId(pinPromptProfile.id)
+      router.push(getBandRoute(pinPromptProfile.grade_band))
+      setPinPromptProfile(null)
+      setPinValue('')
+    } catch (error) {
+      console.error('[Profiles Page] PIN verification failed:', error)
+      setPinError('Failed to verify PIN. Please try again.')
+    } finally {
+      setIsVerifyingPin(false)
+    }
   }
 
   if (isLoading) {
@@ -217,6 +262,12 @@ export default function ProfilesPage() {
                   {profile.grade && (
                     <p className="text-xs text-slate-500">Grade {profile.grade}</p>
                   )}
+                  {profile.has_pin && (
+                    <div className="mt-3 inline-flex items-center gap-1 rounded-full bg-slate-100 px-2.5 py-1 text-xs text-slate-600">
+                      <Lock className="w-3 h-3" />
+                      PIN protected
+                    </div>
+                  )}
                 </div>
               </div>
             )
@@ -251,6 +302,49 @@ export default function ProfilesPage() {
           </div>
         )}
       </div>
+      {pinPromptProfile && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 px-4">
+          <div className="w-full max-w-sm rounded-2xl bg-white p-6 shadow-xl">
+            <h2 className="text-lg font-semibold text-slate-900 mb-2">Enter PIN</h2>
+            <p className="text-sm text-slate-600 mb-4">
+              This profile is PIN-protected. Enter the 4-digit PIN to continue.
+            </p>
+            <form onSubmit={handlePinSubmit} className="space-y-4">
+              <input
+                type="password"
+                inputMode="numeric"
+                value={pinValue}
+                onChange={(e) => setPinValue(e.target.value)}
+                maxLength={4}
+                className="w-full rounded-xl border border-slate-200 px-4 py-2 text-lg tracking-[0.3em] text-center focus:outline-none focus:ring-2 focus:ring-teal-600"
+                placeholder="••••"
+              />
+              {pinError && (
+                <div className="rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-xs text-red-700">
+                  {pinError}
+                </div>
+              )}
+              <div className="flex gap-3">
+                <button
+                  type="button"
+                  onClick={() => setPinPromptProfile(null)}
+                  className="flex-1 rounded-xl border border-slate-200 px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50"
+                  disabled={isVerifyingPin}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="flex-1 rounded-xl bg-teal-600 px-4 py-2 text-sm font-semibold text-white hover:bg-teal-700 disabled:opacity-60"
+                  disabled={isVerifyingPin || pinValue.length !== 4}
+                >
+                  {isVerifyingPin ? 'Checking...' : 'Unlock'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

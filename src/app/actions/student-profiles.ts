@@ -12,6 +12,7 @@ export interface StudentProfile {
   grade_band: 'elementary' | 'middle' | 'high'
   grade: string | null
   interests: string | null
+  has_pin?: boolean
   created_at: string
   updated_at: string
 }
@@ -30,7 +31,7 @@ export async function getStudentProfiles(): Promise<StudentProfile[]> {
   // Get the user's profile id (which matches auth.uid())
   const { data: profiles, error } = await supabase
     .from('student_profiles')
-    .select('*')
+    .select('id, owner_id, display_name, grade_band, grade, interests, created_at, updated_at, pin_hash')
     .eq('owner_id', user.id)
     .order('created_at', { ascending: true })
 
@@ -39,7 +40,13 @@ export async function getStudentProfiles(): Promise<StudentProfile[]> {
     throw new Error('Failed to fetch student profiles')
   }
 
-  return profiles || []
+  return (profiles || []).map((profile) => {
+    const { pin_hash, ...rest } = profile as any
+    return {
+      ...rest,
+      has_pin: Boolean(pin_hash),
+    } as StudentProfile
+  })
 }
 
 /**
@@ -55,7 +62,7 @@ export async function getStudentProfile(profileId: string): Promise<StudentProfi
 
   const { data: profile, error } = await supabase
     .from('student_profiles')
-    .select('*')
+    .select('id, owner_id, display_name, grade_band, grade, interests, created_at, updated_at, pin_hash')
     .eq('id', profileId)
     .eq('owner_id', user.id)
     .single()
@@ -69,7 +76,15 @@ export async function getStudentProfile(profileId: string): Promise<StudentProfi
     throw new Error('Failed to fetch student profile')
   }
 
-  return profile
+  if (!profile) {
+    return null
+  }
+
+  const { pin_hash, ...rest } = profile as any
+  return {
+    ...rest,
+    has_pin: Boolean(pin_hash),
+  } as StudentProfile
 }
 
 /**

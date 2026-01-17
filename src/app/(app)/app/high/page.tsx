@@ -46,6 +46,43 @@ export default function HighDashboardPage() {
             )}
           </section>
 
+          <section className="grid gap-4 md:grid-cols-3">
+            {[
+              {
+                title: 'Continue where you left off',
+                description: 'Return to your last session with quick context.',
+                href: '/tutor',
+                action: 'Resume session',
+              },
+              {
+                title: 'Start a new map',
+                description: 'Build a fresh concept map for today’s subject.',
+                href: '/tutor',
+                action: 'Start a new map',
+              },
+              {
+                title: 'Tonight’s plan',
+                description: 'Create a short study plan for what’s due next.',
+                href: '/tutor',
+                action: 'Build a plan',
+              },
+            ].map((item) => (
+              <div
+                key={item.title}
+                className="rounded-2xl border border-emerald-100 bg-white/90 p-6 shadow-md shadow-slate-200/40"
+              >
+                <h3 className="text-lg font-semibold text-slate-900 mb-2">{item.title}</h3>
+                <p className="text-sm text-slate-600 mb-4">{item.description}</p>
+                <Link
+                  href={item.href}
+                  className="inline-flex items-center justify-center rounded-xl bg-emerald-600 px-4 py-2 text-sm font-semibold text-white hover:bg-emerald-700 transition-colors"
+                >
+                  {item.action}
+                </Link>
+              </div>
+            ))}
+          </section>
+
           <section className="grid gap-6 md:grid-cols-3">
             {[
               {
