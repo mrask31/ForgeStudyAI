@@ -1,7 +1,7 @@
 'use client'
 
 import { ReactNode } from 'react'
-import { findMedicalTerms } from '@/lib/medicalTerms'
+import { findVocabularyTerms } from '@/lib/medicalTerms'
 import MedicalTermPopover from './MedicalTermPopover'
 
 interface TextWithMedicalTermsProps {
@@ -9,18 +9,18 @@ interface TextWithMedicalTermsProps {
 }
 
 /**
- * Component that renders text with medical terms made clickable
- * Medical terms are detected and wrapped with a popover component
+ * Component that renders text with vocabulary terms made clickable
+ * Vocabulary terms are detected and wrapped with a popover component
  */
 export default function TextWithMedicalTerms({ text }: TextWithMedicalTermsProps): ReactNode {
-  const matches = findMedicalTerms(text)
+  const matches = findVocabularyTerms(text)
   
   // If no matches, just return the text as-is
   if (matches.length === 0) {
     return <>{text}</>
   }
   
-  // Build array of text segments and medical term components
+  // Build array of text segments and vocabulary term components
   const segments: ReactNode[] = []
   let lastIndex = 0
   
@@ -33,7 +33,7 @@ export default function TextWithMedicalTerms({ text }: TextWithMedicalTermsProps
     // Get the original casing from the text
     const originalTerm = text.slice(match.startIndex, match.endIndex)
     
-    // Add the medical term with popover
+    // Add the vocabulary term with popover
     segments.push(
       <MedicalTermPopover
         key={`${match.startIndex}-${match.endIndex}`}

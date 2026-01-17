@@ -2,7 +2,7 @@
 
 import { useState, useMemo, useEffect } from 'react'
 import { Search, BookOpen, Bookmark, BookmarkCheck } from 'lucide-react'
-import { MEDICAL_TERMS } from '@/lib/medicalTerms'
+import { VOCABULARY_TERMS } from '@/lib/medicalTerms'
 
 export default function DictionaryPage() {
   const [searchQuery, setSearchQuery] = useState('')
@@ -13,13 +13,13 @@ export default function DictionaryPage() {
 
   // Get unique categories
   const categories = useMemo(() => {
-    const cats = new Set(MEDICAL_TERMS.map(t => t.category).filter(Boolean))
+    const cats = new Set(VOCABULARY_TERMS.map(t => t.category).filter(Boolean))
     return Array.from(cats).sort()
   }, [])
 
   // Filter terms based on search, category, and saved status
   const filteredTerms = useMemo(() => {
-    let filtered = MEDICAL_TERMS
+    let filtered = VOCABULARY_TERMS
 
     // Filter by category
     if (selectedCategory) {

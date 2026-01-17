@@ -1,7 +1,7 @@
 'use client'
 
 import { ReactNode, useMemo } from 'react'
-import { findMedicalTerms, MEDICAL_TERMS } from '@/lib/medicalTerms'
+import { VOCABULARY_TERMS } from '@/lib/medicalTerms'
 import MedicalTermPopover from './MedicalTermPopover'
 import ReactMarkdown from 'react-markdown'
 
@@ -11,8 +11,8 @@ interface MessageWithMedicalTermsProps {
 }
 
 /**
- * Component that processes the entire message content to find medical terms
- * and renders it with ReactMarkdown, ensuring medical terms are detected
+ * Component that processes the entire message content to find vocabulary terms
+ * and renders it with ReactMarkdown, ensuring vocabulary terms are detected
  * even when ReactMarkdown splits text into fragments.
  * 
  * Strategy: Process the full content, find all terms, then render with a custom
@@ -22,16 +22,16 @@ export default function MessageWithMedicalTerms({
   content, 
   markdownComponents 
 }: MessageWithMedicalTermsProps): ReactNode {
-  // Build a map of all medical terms for quick lookup
+  // Build a map of all vocabulary terms for quick lookup
   // We check ALL terms in fragments, not just ones found in initial scan
-  const medicalTermMap = useMemo(() => {
+  const vocabularyTermMap = useMemo(() => {
     const map = new Map<string, { term: string; definition: string; category?: string }>()
     
-    for (const medicalTerm of MEDICAL_TERMS) {
-      map.set(medicalTerm.term.toLowerCase(), {
-        term: medicalTerm.term,
-        definition: medicalTerm.definition,
-        category: medicalTerm.category
+    for (const vocabularyTerm of VOCABULARY_TERMS) {
+      map.set(vocabularyTerm.term.toLowerCase(), {
+        term: vocabularyTerm.term,
+        definition: vocabularyTerm.definition,
+        category: vocabularyTerm.category
       })
     }
     
@@ -52,13 +52,13 @@ export default function MessageWithMedicalTerms({
       
       const lowerText = text.toLowerCase()
       
-      // Check if this fragment contains any medical terms
+      // Check if this fragment contains any vocabulary terms
       const parts: ReactNode[] = []
       let lastIndex = 0
       const matches: Array<{ start: number; end: number; termInfo: { term: string; definition: string; category?: string } }> = []
       
       // Sort terms by length (longest first) to match longer phrases first
-      const sortedTerms = Array.from(medicalTermMap.entries()).sort((a, b) => b[0].length - a[0].length)
+      const sortedTerms = Array.from(vocabularyTermMap.entries()).sort((a, b) => b[0].length - a[0].length)
       
       // Find all term matches in this fragment
       for (const [lowerTerm, termInfo] of sortedTerms) {
@@ -109,7 +109,7 @@ export default function MessageWithMedicalTerms({
           parts.push(text.slice(lastIndex, match.start))
         }
         
-        // Add the medical term with popover (preserve original casing)
+        // Add the vocabulary term with popover (preserve original casing)
         const originalTerm = text.slice(match.start, match.end)
         parts.push(
           <MedicalTermPopover

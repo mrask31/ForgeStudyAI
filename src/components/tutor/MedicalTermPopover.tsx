@@ -61,8 +61,8 @@ export default function MedicalTermPopover({ term, definition, category, childre
       <Popover.Trigger asChild>
         <button
           type="button"
-          className="inline-flex items-baseline gap-0.5 text-indigo-600 hover:text-indigo-700 hover:underline cursor-help focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-1 rounded px-0.5 -mx-0.5 transition-colors"
-          aria-label={`Medical term: ${term}`}
+          className="inline-flex items-baseline gap-0.5 text-emerald-600 hover:text-emerald-700 hover:underline cursor-help focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-1 rounded px-0.5 -mx-0.5 transition-colors"
+          aria-label={`Vocabulary term: ${term}`}
         >
           {children}
           <Info className="inline-block w-3 h-3 mb-0.5 opacity-60" aria-hidden="true" />
@@ -87,7 +87,7 @@ export default function MedicalTermPopover({ term, definition, category, childre
                 className={`flex items-center gap-1.5 text-xs font-medium px-2 py-1 rounded transition-colors ${
                   isSaved
                     ? 'text-emerald-600 bg-emerald-50 cursor-default'
-                    : 'text-indigo-600 hover:text-indigo-700 hover:bg-indigo-50'
+                    : 'text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50'
                 } disabled:opacity-50`}
               >
                 {isSaved ? (
@@ -105,7 +105,7 @@ export default function MedicalTermPopover({ term, definition, category, childre
               <Popover.Close asChild>
                 <button
                   type="button"
-                  className="text-xs text-slate-600 hover:text-slate-700 font-medium focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-1 rounded px-2 py-1"
+                  className="text-xs text-slate-600 hover:text-slate-700 font-medium focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-1 rounded px-2 py-1"
                 >
                   Close
                 </button>
