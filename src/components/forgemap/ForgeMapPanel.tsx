@@ -44,15 +44,24 @@ export default function ForgeMapPanel({ isOpen, onClose, messageContent, chatId,
         }),
       })
 
+      const payload = await response.json().catch(() => ({}))
+
       if (!response.ok) {
-        throw new Error('Failed to generate map')
+        const errorMessage = payload?.error || 'Failed to generate concept map. Please try again.'
+        throw new Error(errorMessage)
       }
 
-      const { map } = await response.json()
-      setMapMarkdown(map.map_markdown)
+      const mapMarkdownValue =
+        payload?.map?.map_markdown || payload?.mapMarkdown || payload?.map
+
+      if (!mapMarkdownValue) {
+        throw new Error('No map content returned. Please try again.')
+      }
+
+      setMapMarkdown(mapMarkdownValue)
     } catch (err: any) {
       console.error('ForgeMap error:', err)
-      setError('Failed to generate concept map. Please try again.')
+      setError(err?.message || 'Failed to generate concept map. Please try again.')
     } finally {
       setIsLoading(false)
     }

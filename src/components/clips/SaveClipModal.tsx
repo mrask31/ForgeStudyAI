@@ -21,6 +21,7 @@ export default function SaveClipModal({ isOpen, onClose, onSave, defaultTitle = 
   const [tagInput, setTagInput] = useState('')
   const [tags, setTags] = useState<string[]>([])
   const [isSaving, setIsSaving] = useState(false)
+  const [errorMessage, setErrorMessage] = useState<string | null>(null)
 
   useEffect(() => {
     if (isOpen) {
@@ -28,6 +29,7 @@ export default function SaveClipModal({ isOpen, onClose, onSave, defaultTitle = 
       setFolder('General')
       setTagInput('')
       setTags([])
+      setErrorMessage(null)
     }
   }, [defaultTitle, isOpen])
 
@@ -48,6 +50,7 @@ export default function SaveClipModal({ isOpen, onClose, onSave, defaultTitle = 
   const handleSave = async () => {
     if (!title.trim()) return
     setIsSaving(true)
+    setErrorMessage(null)
     try {
       await onSave({ title: title.trim(), folder, tags })
       // Reset form
@@ -58,6 +61,7 @@ export default function SaveClipModal({ isOpen, onClose, onSave, defaultTitle = 
       onClose()
     } catch (error) {
       console.error('Failed to save clip:', error)
+      setErrorMessage('Failed to save clip. Please try again.')
     } finally {
       setIsSaving(false)
     }
@@ -162,6 +166,11 @@ export default function SaveClipModal({ isOpen, onClose, onSave, defaultTitle = 
               </div>
             )}
           </div>
+          {errorMessage && (
+            <div className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-xs text-red-700">
+              {errorMessage}
+            </div>
+          )}
         </div>
 
         {/* Footer */}

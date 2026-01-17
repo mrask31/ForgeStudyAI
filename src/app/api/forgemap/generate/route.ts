@@ -131,12 +131,16 @@ export async function POST(req: Request) {
     const messageId = generateMessageId(chatId, messageContent)
 
     // 4. Check if map already exists
-    const { data: existingMap } = await supabase
+    const { data: existingMap, error: existingMapError } = await supabase
       .from('maps')
       .select('*')
       .eq('user_id', user.id)
       .eq('message_id', messageId)
-      .single()
+      .maybeSingle()
+
+    if (existingMapError && existingMapError.code !== 'PGRST205') {
+      console.warn('[ForgeMap] Existing map lookup error:', existingMapError)
+    }
 
     if (existingMap) {
       return NextResponse.json({ map: existingMap })
@@ -200,7 +204,12 @@ Rules:
 
     if (insertError) {
       console.error('[ForgeMap] Save error:', insertError)
-      return NextResponse.json({ error: 'Failed to save map' }, { status: 500 })
+      return NextResponse.json({
+        map: {
+          map_markdown: mapMarkdown,
+        },
+        warning: 'Map generated but could not be saved.',
+      })
     }
 
     return NextResponse.json({ map })

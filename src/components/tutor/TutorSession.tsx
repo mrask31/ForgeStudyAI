@@ -385,6 +385,15 @@ export default function TutorSession({
     if (!message.trim()) return
 
     let effectiveSessionId = sessionId
+    const scrollToBottom = () => {
+      const container = scrollContainerRef.current
+      if (!container) return
+      shouldAutoScrollRef.current = true
+      container.scrollTo({
+        top: container.scrollHeight,
+        behavior: 'smooth',
+      })
+    }
 
     // Create session if it doesn't exist
     if (!effectiveSessionId) {
@@ -468,6 +477,8 @@ export default function TutorSession({
         } 
       }))
     }, delay)
+
+    setTimeout(scrollToBottom, Math.max(150, delay))
   }
 
   const hasMessages = !!sessionId
