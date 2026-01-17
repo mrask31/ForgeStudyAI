@@ -220,6 +220,54 @@ export async function middleware(request: NextRequest) {
       }
     }
 
+    // Require at least one student profile before accessing app features
+    if (user && isProtectedRoute && !isAuthOnlyRoute && supabase) {
+      try {
+        const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY
+        let hasProfiles = false
+        let profilesError: any = null
+
+        if (serviceRoleKey) {
+          const adminClient = createClient(
+            supabaseUrl,
+            serviceRoleKey
+          )
+          const { count, error } = await adminClient
+            .from('student_profiles')
+            .select('id', { count: 'exact', head: true })
+            .eq('owner_id', user.id)
+          if (error) {
+            profilesError = error
+          } else {
+            hasProfiles = (count || 0) > 0
+          }
+        } else {
+          const { data, error } = await supabase
+            .from('student_profiles')
+            .select('id')
+            .eq('owner_id', user.id)
+            .limit(1)
+          if (error) {
+            profilesError = error
+          } else {
+            hasProfiles = (data || []).length > 0
+          }
+        }
+
+        if (profilesError) {
+          console.error('[Middleware] Error checking student profiles:', profilesError)
+          return NextResponse.redirect(new URL('/profiles/new', request.url))
+        }
+
+        if (!hasProfiles && !pathname.startsWith('/profiles')) {
+          return NextResponse.redirect(new URL('/profiles/new', request.url))
+        }
+      } catch (error) {
+        console.error('[Middleware] Error enforcing profile gate:', error)
+        return NextResponse.redirect(new URL('/profiles/new', request.url))
+      }
+    }
+
     // Redirect authenticated users away from auth pages
     if (user && (pathname === '/login' || pathname === '/signup')) {
       return NextResponse.redirect(new URL('/profiles', request.url))
