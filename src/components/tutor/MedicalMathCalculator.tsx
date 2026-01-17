@@ -1,11 +1,12 @@
 'use client'
 
 import { useState, useEffect, useMemo } from 'react'
-import { X, Calculator } from 'lucide-react'
+import { Calculator } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { useActiveProfile } from '@/contexts/ActiveProfileContext'
 import { getStudentProfiles } from '@/app/actions/student-profiles'
+import ToolPanel from '@/components/ui/tool-panel'
 
 type CalculatorLevel = 'elementary' | 'middle' | 'high'
 
@@ -115,98 +116,79 @@ export default function MedicalMathCalculator({ isOpen, onClose }: MedicalMathCa
   if (!isOpen) return null
 
   return (
-    <>
-      <div
-        className="fixed inset-0 z-50 bg-black/40 backdrop-blur-sm"
-        onClick={onClose}
-        aria-hidden={!isOpen}
-      />
+    <ToolPanel
+      isOpen={isOpen}
+      onClose={onClose}
+      title={`Calculator — ${levelLabel}`}
+      icon={<Calculator className="w-5 h-5 text-emerald-600" />}
+      contentClassName="p-0"
+      panelWidthClassName="w-[420px]"
+    >
+      <div className="border-b border-slate-200 px-5 py-3">
+        <p className="text-xs text-slate-600">For learning and practice</p>
+      </div>
 
-      <div className="
-        bg-white rounded-xl shadow-xl border border-slate-200
-        fixed z-[60] overflow-y-auto
-        bottom-0 left-0 right-0 max-h-[70vh] rounded-t-xl
-        md:bottom-20 md:left-1/2 md:-translate-x-1/2 md:right-auto md:w-full md:max-w-md md:max-h-[60vh] md:rounded-xl
-      ">
-        <div className="sticky top-0 bg-gradient-to-r from-emerald-50 to-teal-50 border-b border-slate-200 px-4 py-3 flex items-center justify-between rounded-t-xl">
-          <div className="flex items-center gap-2">
-            <Calculator className="w-4 h-4 text-emerald-600" />
-            <div>
-              <h3 className="text-sm font-semibold text-slate-900">Calculator — {levelLabel}</h3>
-              <p className="text-xs text-slate-600">For learning and practice</p>
-            </div>
-          </div>
-          <button
-            onClick={onClose}
-            className="p-1.5 hover:bg-white/60 rounded-lg transition-colors"
-            aria-label="Close calculator"
-          >
-            <X className="w-4 h-4 text-slate-600" />
-          </button>
-        </div>
-
-        <div className="px-2 pt-3 border-b border-slate-200">
-          <div className="flex gap-1 overflow-x-auto">
-            {([
-              { id: 'elementary', label: 'Elementary' },
-              { id: 'middle', label: 'Middle' },
-              { id: 'high', label: 'High' },
-            ] as Array<{ id: CalculatorLevel; label: string }>).map((level) => (
-              <button
-                key={level.id}
-                onClick={() => setActiveLevel(level.id)}
-                className={`
-                  px-3 py-2 text-xs font-medium rounded-t-lg whitespace-nowrap transition-colors
-                  ${activeLevel === level.id
-                    ? 'bg-emerald-50 text-emerald-700 border-b-2 border-emerald-600'
-                    : 'text-slate-600 hover:bg-slate-50'
-                  }
-                `}
-              >
-                {level.label}
-              </button>
-            ))}
-          </div>
-        </div>
-
-        <div className="p-4 space-y-4">
-          <div className="space-y-2">
-            <label className="text-xs font-medium text-slate-600">Expression</label>
-            <Input
-              value={expression}
-              onChange={(e) => setExpression(e.target.value)}
-              placeholder={activeLevel === 'elementary'
-                ? 'Example: 12 + 5 * 3'
-                : activeLevel === 'middle'
-                  ? 'Example: (5^2) + sqrt(81)'
-                  : 'Example: sin(0.5) + log(100)'}
-            />
-            <div className="text-[11px] text-slate-500">
-              {activeLevel === 'elementary' && 'Allowed: + − × ÷ ( )'}
-              {activeLevel === 'middle' && 'Allowed: + − × ÷ ( ) ^ sqrt()'}
-              {activeLevel === 'high' && 'Allowed: + − × ÷ ( ) ^ sqrt() sin() cos() tan() log() ln() pi e'}
-            </div>
-          </div>
-
-          <div className="flex items-center gap-2">
-            <Button
-              type="button"
-              className="bg-emerald-600 text-white hover:bg-emerald-700"
-              onClick={handleCompute}
+      <div className="px-3 pt-3 border-b border-slate-200">
+        <div className="flex gap-1 overflow-x-auto">
+          {([
+            { id: 'elementary', label: 'Elementary' },
+            { id: 'middle', label: 'Middle' },
+            { id: 'high', label: 'High' },
+          ] as Array<{ id: CalculatorLevel; label: string }>).map((level) => (
+            <button
+              key={level.id}
+              onClick={() => setActiveLevel(level.id)}
+              className={`
+                px-3 py-2 text-xs font-medium rounded-t-lg whitespace-nowrap transition-colors
+                ${activeLevel === level.id
+                  ? 'bg-emerald-50 text-emerald-700 border-b-2 border-emerald-600'
+                  : 'text-slate-600 hover:bg-slate-50'
+                }
+              `}
             >
-              Calculate
-            </Button>
-            {error && <span className="text-xs text-rose-600">{error}</span>}
-          </div>
-
-          <div className="bg-emerald-50 rounded-lg p-3 space-y-1">
-            <p className="text-xs text-slate-600">Result:</p>
-            <p className="text-lg font-semibold text-emerald-700">
-              {result ?? '—'}
-            </p>
-          </div>
+              {level.label}
+            </button>
+          ))}
         </div>
       </div>
-    </>
+
+      <div className="p-5 space-y-4">
+        <div className="space-y-2">
+          <label className="text-xs font-medium text-slate-600">Expression</label>
+          <Input
+            value={expression}
+            onChange={(e) => setExpression(e.target.value)}
+            placeholder={activeLevel === 'elementary'
+              ? 'Example: 12 + 5 * 3'
+              : activeLevel === 'middle'
+                ? 'Example: (5^2) + sqrt(81)'
+                : 'Example: sin(0.5) + log(100)'}
+          />
+          <div className="text-[11px] text-slate-500">
+            {activeLevel === 'elementary' && 'Allowed: + − × ÷ ( )'}
+            {activeLevel === 'middle' && 'Allowed: + − × ÷ ( ) ^ sqrt()'}
+            {activeLevel === 'high' && 'Allowed: + − × ÷ ( ) ^ sqrt() sin() cos() tan() log() ln() pi e'}
+          </div>
+        </div>
+
+        <div className="flex items-center gap-2">
+          <Button
+            type="button"
+            className="bg-emerald-600 text-white hover:bg-emerald-700"
+            onClick={handleCompute}
+          >
+            Calculate
+          </Button>
+          {error && <span className="text-xs text-rose-600">{error}</span>}
+        </div>
+
+        <div className="bg-emerald-50 rounded-lg p-3 space-y-1">
+          <p className="text-xs text-slate-600">Result:</p>
+          <p className="text-lg font-semibold text-emerald-700">
+            {result ?? '—'}
+          </p>
+        </div>
+      </div>
+    </ToolPanel>
   )
 }

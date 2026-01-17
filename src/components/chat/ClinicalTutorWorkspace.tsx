@@ -783,7 +783,7 @@ export default function ClinicalTutorWorkspace({
                         title="Show Concept Map"
                       >
                         <Map className="w-3 h-3" />
-                        <span>Map</span>
+                        <span>Concept Map</span>
                       </button>
                       <button
                         onClick={async () => {
@@ -999,7 +999,7 @@ export default function ClinicalTutorWorkspace({
       <StudyMapPanel
         isOpen={confusionMap.isOpen}
         onClose={() => setConfusionMap({ isOpen: false, mapMarkdown: '', clarifyingQuestion: null })}
-        title="Quick Reset Map"
+        title="Reset Map"
         mapMarkdown={confusionMap.mapMarkdown}
         clarifyingQuestion={confusionMap.clarifyingQuestion || null}
       />

@@ -1,7 +1,8 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { X, ListChecks } from 'lucide-react'
+import { ListChecks } from 'lucide-react'
+import ToolPanel from '@/components/ui/tool-panel'
 
 interface PracticeLadderModalProps {
   isOpen: boolean
@@ -69,40 +70,39 @@ export default function PracticeLadderModal({
   if (!isOpen) return null
 
   return (
-    <>
-      <div className="fixed inset-0 z-50 bg-black/40" onClick={onClose} />
-      <div className="fixed inset-0 z-50 flex items-center justify-center px-4 py-6">
-        <div className="w-full max-w-2xl rounded-2xl bg-white shadow-xl border border-slate-200 max-h-[85vh] overflow-hidden flex flex-col">
-          <div className="flex items-center justify-between px-5 py-4 border-b border-slate-200">
-            <div className="flex items-center gap-2">
-              <ListChecks className="w-5 h-5 text-emerald-600" />
-              <h2 className="text-lg font-semibold text-slate-900">Practice Ladder</h2>
+    <ToolPanel
+      isOpen={isOpen}
+      onClose={onClose}
+      title="Practice Ladder"
+      icon={<ListChecks className="w-5 h-5 text-emerald-600" />}
+    >
+      <div className="space-y-4">
+        {!isLoading && !error && (
+          <p className="text-sm text-slate-600">
+            Start at Level 1 and move down the ladder as you gain confidence.
+          </p>
+        )}
+        {isLoading && <p className="text-sm text-slate-600">Generating practice ladder...</p>}
+        {error && <p className="text-sm text-red-600">{error}</p>}
+        {!isLoading && !error && levels && levels.length === 0 && (
+          <p className="text-sm text-slate-600">No practice ladder available yet.</p>
+        )}
+        {levels?.map((level) => (
+          <div key={level.level} className="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3">
+            <div className="flex items-center gap-2 text-sm font-semibold text-slate-900 mb-2">
+              <span className="inline-flex h-6 w-6 items-center justify-center rounded-full bg-emerald-100 text-emerald-700 text-xs font-semibold">
+                {level.level}
+              </span>
+              <span>Level {level.level}: {level.label}</span>
             </div>
-            <button onClick={onClose} className="p-1 text-slate-500 hover:text-slate-700" aria-label="Close">
-              <X className="w-5 h-5" />
-            </button>
+            <ul className="list-disc pl-5 text-sm text-slate-700 space-y-1">
+              {(level.items || []).map((item: string, index: number) => (
+                <li key={index}>{item}</li>
+              ))}
+            </ul>
           </div>
-          <div className="flex-1 overflow-y-auto p-5 space-y-4">
-            {isLoading && <p className="text-sm text-slate-600">Generating practice...</p>}
-            {error && <p className="text-sm text-red-600">{error}</p>}
-            {!isLoading && !error && levels && levels.length === 0 && (
-              <p className="text-sm text-slate-600">No practice items generated.</p>
-            )}
-            {levels?.map((level) => (
-              <div key={level.level} className="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3">
-                <div className="text-sm font-semibold text-slate-900 mb-2">
-                  Level {level.level}: {level.label}
-                </div>
-                <ul className="list-disc pl-5 text-sm text-slate-700 space-y-1">
-                  {(level.items || []).map((item: string, index: number) => (
-                    <li key={index}>{item}</li>
-                  ))}
-                </ul>
-              </div>
-            ))}
-          </div>
-        </div>
+        ))}
       </div>
-    </>
+    </ToolPanel>
   )
 }
