@@ -6,6 +6,7 @@ import { usePathname } from 'next/navigation'
 import { MessageSquare, FileText, Settings, Activity, GraduationCap, BookOpen } from 'lucide-react'
 import { createBrowserClient } from '@supabase/ssr'
 import HistoryButton from './HistoryButton'
+import { useActiveProfile } from '@/contexts/ActiveProfileContext'
 
 const NAV_ITEMS = [
   { label: 'Tutor Workspace', href: '/tutor', icon: MessageSquare },
@@ -22,9 +23,12 @@ interface SidebarProps {
 
 export default function Sidebar({ onNavigate }: SidebarProps = {}) {
   const pathname = usePathname()
+  const { activeProfileId } = useActiveProfile()
   const [preferredName, setPreferredName] = useState<string | null>(null)
   const [programTrack, setProgramTrack] = useState<string | null>(null)
   const [graduationDate, setGraduationDate] = useState<string | null>(null)
+  const [studentName, setStudentName] = useState<string | null>(null)
+  const [gradeBand, setGradeBand] = useState<string | null>(null)
 
   useEffect(() => {
     const loadProfile = async () => {
@@ -47,13 +51,40 @@ export default function Sidebar({ onNavigate }: SidebarProps = {}) {
           setProgramTrack(profile.program_track || null)
           setGraduationDate(profile.graduation_date || null)
         }
+
+        if (activeProfileId) {
+          const { data: studentProfile } = await supabase
+            .from('student_profiles')
+            .select('name, grade_band')
+            .eq('id', activeProfileId)
+            .eq('owner_id', user.id)
+            .single()
+
+          if (studentProfile) {
+            setStudentName(studentProfile.name || null)
+            setGradeBand(studentProfile.grade_band || null)
+          } else {
+            setStudentName(null)
+            setGradeBand(null)
+          }
+        } else {
+          setStudentName(null)
+          setGradeBand(null)
+        }
       } catch (error) {
         console.error('[Sidebar] Error loading profile:', error)
       }
     }
 
     loadProfile()
-  }, [])
+  }, [activeProfileId])
+
+  const gradeBandLabel = (band: string | null) => {
+    if (band === 'elementary') return 'Grades 3–5'
+    if (band === 'middle') return 'Grades 6–8'
+    if (band === 'high') return 'Grades 9–12'
+    return null
+  }
 
   return (
     <aside className="flex w-full h-full flex-col bg-gradient-to-br from-slate-950 via-teal-900 to-emerald-950 text-teal-100">
@@ -120,10 +151,12 @@ export default function Sidebar({ onNavigate }: SidebarProps = {}) {
               <UserIcon className="w-5 h-5 text-white" />
             </div>
             <div className="flex flex-col min-w-0">
-              {preferredName ? (
+              {studentName || preferredName ? (
                 <>
-                  <span className="text-sm font-bold text-white truncate">{preferredName}</span>
-                  {programTrack && graduationDate ? (
+                  <span className="text-sm font-bold text-white truncate">{studentName || preferredName}</span>
+                  {gradeBand ? (
+                    <span className="text-xs text-teal-200 truncate">{gradeBandLabel(gradeBand)}</span>
+                  ) : programTrack && graduationDate ? (
                     <span className="text-xs text-teal-200 truncate">
                       {programTrack} • Class of {new Date(graduationDate).getFullYear()}
                     </span>
@@ -138,7 +171,7 @@ export default function Sidebar({ onNavigate }: SidebarProps = {}) {
               ) : (
                 <>
                   <span className="text-sm font-medium text-white">Student Account</span>
-                  <span className="text-xs text-teal-200">{programTrack || 'RN Track'}</span>
+                  <span className="text-xs text-teal-200">{programTrack || 'General Track'}</span>
                 </>
               )}
             </div>

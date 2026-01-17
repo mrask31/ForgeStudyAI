@@ -29,7 +29,7 @@ export default function ElementaryDashboardPage() {
                   href="/tutor"
                   className="inline-flex items-center justify-center px-6 py-3 rounded-xl bg-gradient-to-r from-teal-600 to-cyan-600 text-white font-semibold shadow-lg hover:from-teal-700 hover:to-cyan-700 transition-all"
                 >
-                  Start a session
+                  Start a guided lesson
                 </Link>
                 <Link
                   href="/sources"
@@ -37,6 +37,9 @@ export default function ElementaryDashboardPage() {
                 >
                   Add learning materials
                 </Link>
+                <div className="rounded-xl border border-teal-100 bg-teal-50/70 px-4 py-2 text-xs text-teal-800">
+                  Map-first: we show a simple study map before practice.
+                </div>
               </div>
             </div>
             {!activeProfileId && (
