@@ -29,7 +29,13 @@ export default function ExamSheetModal({
   const [error, setError] = useState<string | null>(null)
   const normalizedMarkdown = useMemo(() => {
     if (!markdown) return ''
-    return markdown
+    let value = markdown.replace(/\r\n/g, '\n')
+    const trimmed = value.trim()
+    const fenceMatch = trimmed.match(/^```(?:\w+)?\s*\n([\s\S]*?)\n```$/)
+    if (fenceMatch?.[1]) {
+      value = fenceMatch[1]
+    }
+    return value
       .replace(/\t/g, '    ')
       .replace(/^ {4}/gm, '')
       .trim()
