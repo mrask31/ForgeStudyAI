@@ -84,11 +84,11 @@ export default function ClassesPage() {
                   <GraduationCap className="w-5 h-5 sm:w-6 sm:h-6 md:w-7 md:h-7 text-white" />
                 </div>
                 <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold bg-gradient-to-r from-slate-900 via-indigo-900 to-slate-900 bg-clip-text text-transparent">
-                  My Classes & Materials
+                  My Learning Map
                 </h1>
               </div>
               <p className="text-sm sm:text-base text-slate-600 ml-11 sm:ml-14 max-w-2xl leading-relaxed">
-                Organize your classes and study materials in one place. Upload materials, then study with your AI tutor.
+                Organize classes, upload materials, and start with a clear study path. This is your map-first home base for learning.
               </p>
             </div>
             {!showForm && (
@@ -129,14 +129,14 @@ export default function ClassesPage() {
             </div>
             <h3 className="text-xl sm:text-2xl font-bold text-slate-900 mb-2 sm:mb-3">No classes yet</h3>
             <p className="text-sm sm:text-base text-slate-600 mb-6 sm:mb-8 max-w-md mx-auto leading-relaxed px-4">
-              Add your first class to get started. You'll be able to upload materials and study with your AI tutor.
+              Add your first class to build a study map, upload materials, and create a clear start-here path.
             </p>
             <Button 
               onClick={handleAddClass} 
               className="bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white shadow-md shadow-indigo-500/30 hover:shadow-lg hover:shadow-indigo-500/40 transition-all duration-200 transform hover:scale-105 active:scale-95"
             >
               <Plus className="w-4 h-4 mr-2" />
-              Add Your First Class
+              Create Your First Class
             </Button>
           </div>
         ) : (
