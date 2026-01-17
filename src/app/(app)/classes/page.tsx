@@ -88,7 +88,7 @@ export default function ClassesPage() {
                 </h1>
               </div>
               <p className="text-sm sm:text-base text-slate-600 ml-11 sm:ml-14 max-w-2xl leading-relaxed">
-                Organize classes, upload materials, and start with a clear study path. This is your map-first home base for learning.
+                Choose a class to open its study map, see what to do first, and start a focused session.
               </p>
             </div>
             {!showForm && (
@@ -129,7 +129,7 @@ export default function ClassesPage() {
             </div>
             <h3 className="text-xl sm:text-2xl font-bold text-slate-900 mb-2 sm:mb-3">No classes yet</h3>
             <p className="text-sm sm:text-base text-slate-600 mb-6 sm:mb-8 max-w-md mx-auto leading-relaxed px-4">
-              Add your first class to build a study map, upload materials, and create a clear start-here path.
+              Add your first class to get a study map, a start-here path, and a focused study workspace.
             </p>
             <Button 
               onClick={handleAddClass} 
