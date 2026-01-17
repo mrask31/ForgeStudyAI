@@ -50,7 +50,7 @@ interface FocusArea {
   messageId?: string // For flagged message pairs
 }
 
-export default function ClinicalDashboard() {
+export default function LearningDashboard() {
   const { density } = useDensity()
   const tokens = getDensityTokens(density)
   const router = useRouter()
@@ -355,10 +355,10 @@ export default function ClinicalDashboard() {
 
   if (isLoading) {
     return (
-      <div className="h-full bg-gradient-to-br from-slate-50 via-indigo-50/20 to-slate-50 flex items-center justify-center">
+      <div className="h-full bg-gradient-to-br from-slate-50 via-emerald-50/20 to-slate-50 flex items-center justify-center">
         <div className="text-center">
-          <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-br from-indigo-100 to-purple-100 mb-4">
-            <div className="animate-spin rounded-full h-8 w-8 border-2 border-indigo-600 border-t-transparent"></div>
+          <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-br from-emerald-100 to-green-100 mb-4">
+            <div className="animate-spin rounded-full h-8 w-8 border-2 border-emerald-600 border-t-transparent"></div>
           </div>
           <p className="text-lg font-medium text-slate-600">Loading your dashboard...</p>
         </div>
@@ -369,19 +369,19 @@ export default function ClinicalDashboard() {
   const displayClips = showAllClips ? filteredClips : filteredClips.slice(0, 6)
 
   return (
-    <div className="h-full overflow-y-auto bg-gradient-to-br from-slate-50 via-indigo-50/20 to-slate-50">
+    <div className="h-full overflow-y-auto bg-gradient-to-br from-slate-50 via-emerald-50/20 to-slate-50">
       <div className={`${tokens.containerMaxWidth || 'max-w-7xl'} mx-auto px-4 md:px-6 lg:px-8 py-3 sm:py-4 md:py-6 pt-safe-t pb-safe-b`}>
-        {/* Medical Dashboard Header - Enhanced */}
+        {/* Learning Dashboard Header */}
         <div className="mb-6 sm:mb-8">
           <div className="flex items-start justify-between mb-3 sm:mb-4 flex-wrap gap-3 sm:gap-4">
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2.5 sm:gap-3 mb-2 sm:mb-3">
-                <div className="p-2 sm:p-2.5 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-xl shadow-lg shadow-indigo-500/20 flex-shrink-0">
+                <div className="p-2 sm:p-2.5 bg-gradient-to-br from-emerald-500 to-green-600 rounded-xl shadow-lg shadow-emerald-500/20 flex-shrink-0">
                   <Target className="w-5 h-5 sm:w-6 sm:h-6 md:w-7 md:h-7 text-white" />
                 </div>
                 <div className="flex items-center gap-2 sm:gap-3 flex-wrap">
-                  <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold bg-gradient-to-r from-slate-900 via-indigo-900 to-slate-900 bg-clip-text text-transparent">
-                    Clinical Dashboard
+                  <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold bg-gradient-to-r from-slate-900 via-emerald-900 to-slate-900 bg-clip-text text-transparent">
+                    Learning Dashboard
                   </h1>
                   <div className="flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-1.5 sm:py-2 bg-gradient-to-r from-emerald-50 to-teal-50 border border-emerald-200 rounded-lg sm:rounded-xl shadow-sm">
                     <div className="w-2 h-2 sm:w-2.5 sm:h-2.5 bg-emerald-500 rounded-full animate-pulse shadow-sm shadow-emerald-500/50"></div>
@@ -389,10 +389,10 @@ export default function ClinicalDashboard() {
                   </div>
                 </div>
               </div>
-              {/* Student Chart Header */}
+              {/* Student Profile Header */}
               <div className="ml-11 sm:ml-14 max-w-2xl space-y-1 sm:space-y-1.5">
                 <p className="text-sm sm:text-base font-medium text-slate-900">
-                  Chart: {preferredName || 'Student'} • {programTrack || 'RN Track'}
+                  Student: {preferredName || 'Student'} • {programTrack || 'General Track'}
                 </p>
                 {graduationDate && daysUntilGrad !== null && (
                   <p className="text-xs sm:text-sm text-slate-600">
@@ -415,19 +415,19 @@ export default function ClinicalDashboard() {
           </div>
         </div>
 
-        {/* Study Vitals Label */}
+        {/* Study Signals Label */}
         <div className="mb-3 sm:mb-4">
           <h2 className="text-xs sm:text-sm font-semibold text-slate-500 uppercase tracking-wider">
-            Study Vitals
+            Study Signals
           </h2>
         </div>
 
-        {/* Vital Signs Row - Medical Style Metrics - Enhanced */}
+        {/* Study Signals Row */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4 md:gap-6 mb-6 sm:mb-8">
-          <div className="bg-white/80 backdrop-blur-sm border-l-4 border-l-orange-500 rounded-xl p-3 sm:p-4 md:p-5 shadow-lg shadow-slate-200/50 hover:shadow-xl hover:shadow-orange-200/30 transition-all duration-300">
+          <div className="bg-white/80 backdrop-blur-sm border-l-4 border-l-emerald-500 rounded-xl p-3 sm:p-4 md:p-5 shadow-lg shadow-slate-200/50 hover:shadow-xl hover:shadow-emerald-200/30 transition-all duration-300">
             <div className="flex items-center justify-between mb-2 sm:mb-3">
-              <div className="p-1.5 sm:p-2 bg-gradient-to-br from-orange-100 to-orange-50 rounded-lg">
-                <Flame className="w-4 h-4 sm:w-5 sm:h-5 text-orange-600" />
+              <div className="p-1.5 sm:p-2 bg-gradient-to-br from-emerald-100 to-emerald-50 rounded-lg">
+                <Flame className="w-4 h-4 sm:w-5 sm:h-5 text-emerald-600" />
               </div>
               <span className="text-[10px] sm:text-xs font-semibold text-slate-500 uppercase tracking-wide">Streak</span>
             </div>
@@ -435,10 +435,10 @@ export default function ClinicalDashboard() {
             <div className="text-xs sm:text-sm text-slate-600">day{studyStreak === 1 ? '' : 's'} consecutive</div>
           </div>
 
-          <div className="bg-white/80 backdrop-blur-sm border-l-4 border-l-blue-500 rounded-xl p-3 sm:p-4 md:p-5 shadow-lg shadow-slate-200/50 hover:shadow-xl hover:shadow-blue-200/30 transition-all duration-300">
+          <div className="bg-white/80 backdrop-blur-sm border-l-4 border-l-green-500 rounded-xl p-3 sm:p-4 md:p-5 shadow-lg shadow-slate-200/50 hover:shadow-xl hover:shadow-green-200/30 transition-all duration-300">
             <div className="flex items-center justify-between mb-2 sm:mb-3">
-              <div className="p-1.5 sm:p-2 bg-gradient-to-br from-blue-100 to-blue-50 rounded-lg">
-                <Calendar className="w-4 h-4 sm:w-5 sm:h-5 text-blue-600" />
+              <div className="p-1.5 sm:p-2 bg-gradient-to-br from-green-100 to-green-50 rounded-lg">
+                <Calendar className="w-4 h-4 sm:w-5 sm:h-5 text-green-600" />
               </div>
               <span className="text-[10px] sm:text-xs font-semibold text-slate-500 uppercase tracking-wide">This Week</span>
             </div>
@@ -457,10 +457,10 @@ export default function ClinicalDashboard() {
             <div className="text-xs sm:text-sm text-slate-600">topics explored</div>
           </div>
 
-          <div className="bg-white/80 backdrop-blur-sm border-l-4 border-l-purple-500 rounded-xl p-3 sm:p-4 md:p-5 shadow-lg shadow-slate-200/50 hover:shadow-xl hover:shadow-purple-200/30 transition-all duration-300">
+          <div className="bg-white/80 backdrop-blur-sm border-l-4 border-l-emerald-600 rounded-xl p-3 sm:p-4 md:p-5 shadow-lg shadow-slate-200/50 hover:shadow-xl hover:shadow-emerald-200/30 transition-all duration-300">
             <div className="flex items-center justify-between mb-2 sm:mb-3">
-              <div className="p-1.5 sm:p-2 bg-gradient-to-br from-purple-100 to-purple-50 rounded-lg">
-                <Bookmark className="w-4 h-4 sm:w-5 sm:h-5 text-purple-600" />
+              <div className="p-1.5 sm:p-2 bg-gradient-to-br from-emerald-100 to-emerald-50 rounded-lg">
+                <Bookmark className="w-4 h-4 sm:w-5 sm:h-5 text-emerald-600" />
               </div>
               <span className="text-[10px] sm:text-xs font-semibold text-slate-500 uppercase tracking-wide">Saved</span>
             </div>
@@ -472,9 +472,9 @@ export default function ClinicalDashboard() {
         {/* Study Activity by Class - Enhanced */}
         {chatCountsByClass.length > 0 && (
           <div className="bg-white/80 backdrop-blur-sm border border-slate-200/60 rounded-2xl shadow-lg shadow-slate-200/50 mb-8 overflow-hidden">
-            <div className="bg-gradient-to-r from-indigo-50/80 to-purple-50/80 border-b border-indigo-200/60 px-6 py-4">
+            <div className="bg-gradient-to-r from-emerald-50/80 to-green-50/80 border-b border-emerald-200/60 px-6 py-4">
               <h3 className="text-base font-bold text-slate-900 flex items-center gap-2.5 mb-1">
-                <div className="p-1.5 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-lg">
+                <div className="p-1.5 bg-gradient-to-br from-emerald-500 to-green-600 rounded-lg">
                   <MessageSquare className="w-4 h-4 text-white" />
                 </div>
                 Study Activity by Class
@@ -486,13 +486,13 @@ export default function ClinicalDashboard() {
                 {chatCountsByClass.map((item) => (
                   <div
                     key={item.classId}
-                    className="p-4 bg-gradient-to-br from-slate-50/80 to-white border border-slate-200/60 rounded-xl hover:border-indigo-300 hover:shadow-md hover:shadow-indigo-200/30 transition-all duration-200 transform hover:scale-[1.02]"
+                    className="p-4 bg-gradient-to-br from-slate-50/80 to-white border border-slate-200/60 rounded-xl hover:border-emerald-300 hover:shadow-md hover:shadow-emerald-200/30 transition-all duration-200 transform hover:scale-[1.02]"
                   >
                     <div className="flex items-center justify-between mb-2">
                       <span className="text-sm font-bold text-slate-900 truncate">
                         {item.classCode}
                       </span>
-                      <span className="text-xs font-bold text-indigo-700 bg-gradient-to-r from-indigo-50 to-purple-50 px-2.5 py-1 rounded-lg border border-indigo-200/50">
+                      <span className="text-xs font-bold text-emerald-700 bg-gradient-to-r from-emerald-50 to-green-50 px-2.5 py-1 rounded-lg border border-emerald-200/50">
                         {item.count} {item.count === 1 ? 'session' : 'sessions'}
                       </span>
                     </div>
@@ -562,15 +562,15 @@ export default function ClinicalDashboard() {
           {/* Right Column: Learning Library - Enhanced */}
           <div>
             <div className="bg-white/80 backdrop-blur-sm border border-slate-200/60 rounded-2xl shadow-lg shadow-slate-200/50 overflow-hidden">
-              <div className="bg-gradient-to-r from-purple-50/80 to-indigo-50/80 border-b border-purple-200/60 px-6 py-4">
+              <div className="bg-gradient-to-r from-emerald-50/80 to-green-50/80 border-b border-emerald-200/60 px-6 py-4">
                 <div className="flex items-center justify-between">
                   <h3 className="text-base font-bold text-slate-900 flex items-center gap-2.5">
-                    <div className="p-1.5 bg-gradient-to-br from-purple-500 to-indigo-600 rounded-lg">
+                    <div className="p-1.5 bg-gradient-to-br from-emerald-500 to-green-600 rounded-lg">
                       <Bookmark className="w-4 h-4 text-white" />
                     </div>
                     Learning Library
                   </h3>
-                  <span className="text-sm font-bold text-slate-700 bg-white/60 px-3 py-1 rounded-lg border border-purple-200/50">{clipsCount} total</span>
+                  <span className="text-sm font-bold text-slate-700 bg-white/60 px-3 py-1 rounded-lg border border-emerald-200/50">{clipsCount} total</span>
                 </div>
               </div>
               
@@ -583,7 +583,7 @@ export default function ClinicalDashboard() {
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                     placeholder="Search learning moments..."
-                    className="w-full pl-12 pr-4 py-3 text-sm font-medium border-2 border-slate-200 rounded-xl bg-white/80 backdrop-blur-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-400 transition-all duration-200 shadow-sm hover:shadow-md"
+                    className="w-full pl-12 pr-4 py-3 text-sm font-medium border-2 border-slate-200 rounded-xl bg-white/80 backdrop-blur-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-400 transition-all duration-200 shadow-sm hover:shadow-md"
                   />
                 </div>
                 {(folders.length > 0 || tags.length > 0) && (
@@ -595,8 +595,8 @@ export default function ClinicalDashboard() {
                       }}
                       className={`px-4 py-2 rounded-xl text-xs font-semibold transition-all duration-200 transform hover:scale-105 active:scale-95 ${
                         !selectedFolder && !selectedTag
-                          ? 'bg-gradient-to-r from-indigo-600 to-purple-600 text-white shadow-md shadow-indigo-500/30'
-                          : 'bg-white text-slate-700 border-2 border-slate-200 hover:border-indigo-300 hover:bg-slate-50 shadow-sm'
+                          ? 'bg-gradient-to-r from-emerald-600 to-green-600 text-white shadow-md shadow-emerald-500/30'
+                          : 'bg-white text-slate-700 border-2 border-slate-200 hover:border-emerald-300 hover:bg-slate-50 shadow-sm'
                       }`}
                     >
                       All
@@ -610,8 +610,8 @@ export default function ClinicalDashboard() {
                         }}
                         className={`px-4 py-2 rounded-xl text-xs font-semibold transition-all duration-200 transform hover:scale-105 active:scale-95 flex items-center gap-1.5 ${
                           selectedFolder === folder
-                            ? 'bg-gradient-to-r from-indigo-600 to-purple-600 text-white shadow-md shadow-indigo-500/30'
-                            : 'bg-white text-slate-700 border-2 border-slate-200 hover:border-indigo-300 hover:bg-slate-50 shadow-sm'
+                            ? 'bg-gradient-to-r from-emerald-600 to-green-600 text-white shadow-md shadow-emerald-500/30'
+                            : 'bg-white text-slate-700 border-2 border-slate-200 hover:border-emerald-300 hover:bg-slate-50 shadow-sm'
                         }`}
                       >
                         <Folder className="w-3.5 h-3.5" />
@@ -627,8 +627,8 @@ export default function ClinicalDashboard() {
                         }}
                         className={`px-4 py-2 rounded-xl text-xs font-semibold transition-all duration-200 transform hover:scale-105 active:scale-95 flex items-center gap-1.5 ${
                           selectedTag === tag
-                            ? 'bg-gradient-to-r from-indigo-600 to-purple-600 text-white shadow-md shadow-indigo-500/30'
-                            : 'bg-white text-slate-700 border-2 border-slate-200 hover:border-indigo-300 hover:bg-slate-50 shadow-sm'
+                            ? 'bg-gradient-to-r from-emerald-600 to-green-600 text-white shadow-md shadow-emerald-500/30'
+                            : 'bg-white text-slate-700 border-2 border-slate-200 hover:border-emerald-300 hover:bg-slate-50 shadow-sm'
                         }`}
                       >
                         <Tag className="w-3.5 h-3.5" />
@@ -650,7 +650,7 @@ export default function ClinicalDashboard() {
                       >
                         <button
                           onClick={() => handleReviewClip(clip)}
-                          className="w-full text-left p-5 rounded-xl border-2 border-slate-200/60 bg-gradient-to-br from-white to-slate-50/50 hover:border-purple-300 hover:from-purple-50/80 hover:to-indigo-50/80 transition-all duration-200 transform hover:scale-[1.01] shadow-sm hover:shadow-md hover:shadow-purple-200/30"
+                        className="w-full text-left p-5 rounded-xl border-2 border-slate-200/60 bg-gradient-to-br from-white to-slate-50/50 hover:border-emerald-300 hover:from-emerald-50/80 hover:to-green-50/80 transition-all duration-200 transform hover:scale-[1.01] shadow-sm hover:shadow-md hover:shadow-emerald-200/30"
                         >
                           <div className="flex items-start justify-between gap-4">
                             <div className="flex-1 min-w-0">
@@ -658,7 +658,7 @@ export default function ClinicalDashboard() {
                                 <h4 className="text-base font-bold text-slate-900 truncate">
                                   {clip.title}
                                 </h4>
-                                <span className="text-xs font-semibold text-purple-700 bg-gradient-to-r from-purple-100 to-indigo-100 px-3 py-1 rounded-lg border border-purple-200/50">
+                              <span className="text-xs font-semibold text-emerald-700 bg-gradient-to-r from-emerald-100 to-green-100 px-3 py-1 rounded-lg border border-emerald-200/50">
                                   {clip.folder}
                                 </span>
                               </div>
@@ -688,7 +688,7 @@ export default function ClinicalDashboard() {
                               >
                                 <Trash2 className="w-4 h-4" />
                               </button>
-                              <ChevronRight className="w-5 h-5 text-slate-400 group-hover:text-purple-600 group-hover:translate-x-1 transition-all duration-200" />
+                              <ChevronRight className="w-5 h-5 text-slate-400 group-hover:text-emerald-600 group-hover:translate-x-1 transition-all duration-200" />
                             </div>
                           </div>
                         </button>
@@ -697,8 +697,8 @@ export default function ClinicalDashboard() {
                   </div>
                 ) : (
                   <div className="text-center py-16">
-                    <div className="inline-flex items-center justify-center w-20 h-20 rounded-2xl bg-gradient-to-br from-purple-100 to-indigo-100 mb-6">
-                      <Bookmark className="w-10 h-10 text-purple-400" />
+                    <div className="inline-flex items-center justify-center w-20 h-20 rounded-2xl bg-gradient-to-br from-emerald-100 to-green-100 mb-6">
+                      <Bookmark className="w-10 h-10 text-emerald-500" />
                     </div>
                     <p className="text-base font-semibold text-slate-700 mb-2">
                       {allClips.length === 0 ? 'No learning moments saved yet' : 'No clips match your filters'}
@@ -713,7 +713,7 @@ export default function ClinicalDashboard() {
                   <div className="mt-6 text-center">
                     <Button
                       onClick={() => setShowAllClips(!showAllClips)}
-                      className="bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white shadow-md shadow-indigo-500/30 hover:shadow-lg hover:shadow-indigo-500/40 transition-all duration-200 transform hover:scale-105 active:scale-95 font-semibold"
+                      className="bg-gradient-to-r from-emerald-600 to-green-600 hover:from-emerald-700 hover:to-green-700 text-white shadow-md shadow-emerald-500/30 hover:shadow-lg hover:shadow-emerald-500/40 transition-all duration-200 transform hover:scale-105 active:scale-95 font-semibold"
                     >
                       {showAllClips ? 'Show Less' : `Show All (${filteredClips.length})`}
                     </Button>
