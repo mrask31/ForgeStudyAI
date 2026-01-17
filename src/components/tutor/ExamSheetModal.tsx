@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { FileText } from 'lucide-react'
 import ReactMarkdown, { type Components } from 'react-markdown'
 import ToolPanel from '@/components/ui/tool-panel'
@@ -27,15 +27,24 @@ export default function ExamSheetModal({
   const [isLoading, setIsLoading] = useState(false)
   const [markdown, setMarkdown] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
+  const normalizedMarkdown = useMemo(() => {
+    if (!markdown) return ''
+    return markdown
+      .replace(/\t/g, '    ')
+      .replace(/^ {4}/gm, '')
+      .trim()
+  }, [markdown])
   const markdownComponents: Components = {
     h1: ({ children }: { children?: React.ReactNode }) => (
-      <h1 className="text-xl font-semibold text-slate-900 mb-3 mt-6 first:mt-0">{children}</h1>
+      <h1 className="text-base font-semibold text-slate-900 mb-4 mt-2">{children}</h1>
     ),
     h2: ({ children }: { children?: React.ReactNode }) => (
-      <h2 className="text-lg font-semibold text-slate-900 mb-2 mt-5 first:mt-0">{children}</h2>
+      <h2 className="text-xs font-semibold uppercase tracking-wide text-slate-600 mb-2 mt-6 first:mt-0">
+        {children}
+      </h2>
     ),
     h3: ({ children }: { children?: React.ReactNode }) => (
-      <h3 className="text-base font-semibold text-slate-900 mb-2 mt-4 first:mt-0">{children}</h3>
+      <h3 className="text-sm font-semibold text-slate-900 mb-2 mt-4 first:mt-0">{children}</h3>
     ),
     p: ({ children }: { children?: React.ReactNode }) => (
       <p className="text-sm text-slate-700 leading-relaxed mb-3 last:mb-0">{children}</p>
@@ -126,7 +135,7 @@ export default function ExamSheetModal({
               </div>
             )}
             <div className="max-w-none text-sm text-slate-700">
-              <ReactMarkdown components={markdownComponents}>{markdown}</ReactMarkdown>
+              <ReactMarkdown components={markdownComponents}>{normalizedMarkdown}</ReactMarkdown>
             </div>
           </>
         )}
