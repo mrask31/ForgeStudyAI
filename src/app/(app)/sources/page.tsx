@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useMemo, useState } from 'react'
-import { UploadCloud, FileText, Images, BookOpen, Search, Download, Eye, FileTextIcon, Trash2, X } from 'lucide-react'
+import { UploadCloud, FileText, Images, BookOpen, Search, Download, Eye, FileTextIcon, Trash2, X, Map, ClipboardList } from 'lucide-react'
 import { useActiveProfile } from '@/contexts/ActiveProfileContext'
 import { createBrowserClient } from '@supabase/ssr'
 import {
@@ -14,6 +14,8 @@ import {
   type LearningSourceType,
 } from '@/app/actions/learning-sources'
 import { getStudentProfiles, type StudentProfile } from '@/app/actions/student-profiles'
+import StudyMapPanel from '@/components/forgemap/StudyMapPanel'
+import HomeworkPlanModal from '@/components/homework/HomeworkPlanModal'
 
 type TabKey = 'syllabus' | 'weekly' | 'photos'
 
@@ -81,6 +83,24 @@ export default function SourcesPage() {
   const [signedUrls, setSignedUrls] = useState<Record<string, string>>({})
   const [selectedItemIds, setSelectedItemIds] = useState<string[]>([])
   const [isDeleting, setIsDeleting] = useState(false)
+  const [isGeneratingMap, setIsGeneratingMap] = useState(false)
+  const [isGeneratingHomework, setIsGeneratingHomework] = useState(false)
+  const [studyMap, setStudyMap] = useState<{ isOpen: boolean; title: string; mapMarkdown: string }>({
+    isOpen: false,
+    title: 'Instant Study Map',
+    mapMarkdown: '',
+  })
+  const [homeworkPlan, setHomeworkPlan] = useState<{
+    isOpen: boolean
+    title: string
+    tasks: Array<{ title: string; due_date?: string | null; estimated_minutes?: number | null }>
+    planMarkdown: string | null
+  }>({
+    isOpen: false,
+    title: 'Tonight Plan',
+    tasks: [],
+    planMarkdown: null,
+  })
 
   const [title, setTitle] = useState('')
   const [description, setDescription] = useState('')
@@ -343,8 +363,88 @@ export default function SourcesPage() {
     }
   }
 
+  const handleGenerateStudyMap = async () => {
+    if (selectedItemIds.length === 0 || isGeneratingMap) return
+    setIsGeneratingMap(true)
+    setError(null)
+    try {
+      const response = await fetch('/api/study-map/instant', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({
+          sourceItemIds: selectedItemIds,
+          profileId: activeProfileId || null,
+          title: 'Instant Study Map',
+        }),
+      })
+      const payload = await response.json()
+      if (!response.ok) {
+        throw new Error(payload?.error || 'Failed to generate study map')
+      }
+      setStudyMap({
+        isOpen: true,
+        title: 'Instant Study Map',
+        mapMarkdown: payload?.map?.map_markdown || '',
+      })
+    } catch (err: any) {
+      console.error('[Sources] Study map error:', err)
+      setError(err?.message || 'Failed to generate study map')
+    } finally {
+      setIsGeneratingMap(false)
+    }
+  }
+
+  const handleGenerateHomeworkPlan = async () => {
+    if (selectedItemIds.length === 0 || isGeneratingHomework) return
+    setIsGeneratingHomework(true)
+    setError(null)
+    try {
+      const extractResponse = await fetch('/api/homework/extract', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({
+          sourceItemIds: selectedItemIds,
+          profileId: activeProfileId || null,
+        }),
+      })
+      const extractPayload = await extractResponse.json()
+      if (!extractResponse.ok) {
+        throw new Error(extractPayload?.error || 'Failed to extract homework')
+      }
+
+      const planResponse = await fetch('/api/homework/plan', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({
+          planId: extractPayload?.plan?.id,
+          profileId: activeProfileId || null,
+        }),
+      })
+      const planPayload = await planResponse.json()
+      if (!planResponse.ok) {
+        throw new Error(planPayload?.error || 'Failed to build homework plan')
+      }
+
+      setHomeworkPlan({
+        isOpen: true,
+        title: planPayload?.plan?.title || 'Tonight Plan',
+        tasks: planPayload?.tasks || extractPayload?.tasks || [],
+        planMarkdown: planPayload?.plan?.plan_markdown || null,
+      })
+    } catch (err: any) {
+      console.error('[Sources] Homework plan error:', err)
+      setError(err?.message || 'Failed to generate homework plan')
+    } finally {
+      setIsGeneratingHomework(false)
+    }
+  }
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-100">
+    <>
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-100">
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-12 sm:py-16">
         <div className="mb-10">
           <h1 className="text-3xl sm:text-4xl font-bold text-slate-900 mb-3">
@@ -550,6 +650,24 @@ export default function SourcesPage() {
                   <span className="text-slate-500">{selectedItemIds.length} selected</span>
                   <button
                     type="button"
+                    onClick={handleGenerateStudyMap}
+                    disabled={isGeneratingMap}
+                    className="inline-flex items-center gap-1 rounded-full border border-slate-200 px-2.5 py-1 font-semibold text-slate-600 hover:text-slate-800"
+                  >
+                    <Map className="w-3.5 h-3.5" />
+                    {isGeneratingMap ? 'Mapping...' : 'Study Map'}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleGenerateHomeworkPlan}
+                    disabled={isGeneratingHomework}
+                    className="inline-flex items-center gap-1 rounded-full border border-amber-200 bg-amber-50 px-2.5 py-1 font-semibold text-amber-700 hover:text-amber-800"
+                  >
+                    <ClipboardList className="w-3.5 h-3.5" />
+                    {isGeneratingHomework ? 'Planning...' : 'Tonight Plan'}
+                  </button>
+                  <button
+                    type="button"
                     onClick={clearSelection}
                     className="inline-flex items-center gap-1 rounded-full border border-slate-200 px-2.5 py-1 font-semibold text-slate-600 hover:text-slate-800"
                   >
@@ -670,6 +788,24 @@ export default function SourcesPage() {
           </section>
         </div>
       </div>
-    </div>
+      </div>
+
+      <StudyMapPanel
+      isOpen={studyMap.isOpen}
+      onClose={() => setStudyMap({ isOpen: false, title: 'Instant Study Map', mapMarkdown: '' })}
+      title={studyMap.title}
+      mapMarkdown={studyMap.mapMarkdown}
+      />
+
+      <HomeworkPlanModal
+      isOpen={homeworkPlan.isOpen}
+      onClose={() =>
+        setHomeworkPlan({ isOpen: false, title: 'Tonight Plan', tasks: [], planMarkdown: null })
+      }
+      title={homeworkPlan.title}
+      tasks={homeworkPlan.tasks}
+      planMarkdown={homeworkPlan.planMarkdown}
+      />
+    </>
   )
 }

@@ -121,7 +121,13 @@ export async function POST(req: Request) {
 
     // 2. Parse request body
     const body = await req.json()
-    const { messageContent, chatId, mode = 'mixed', selectedDocIds = [] } = body
+    const {
+      messageContent,
+      chatId,
+      mode = 'mixed',
+      selectedDocIds = [],
+      mapType = 'topic',
+    } = body
 
     if (!messageContent) {
       return NextResponse.json({ error: 'Message content is required' }, { status: 400 })
@@ -155,12 +161,11 @@ export async function POST(req: Request) {
     }
 
     // 6. Generate concept map using AI
-    const mapPrompt = `You are a clinical reasoning tutor. Generate a structured Clinical Concept Map from the following message content.
+    const baseContext = `${binderContext ? `\n${binderContext}\n` : ''}\nMessage Content:\n${messageContent}\n`
 
-${binderContext ? `\n${binderContext}\n` : ''}
+    let mapPrompt = `You are a clinical reasoning tutor. Generate a structured Clinical Concept Map from the following message content.
 
-Message Content:
-${messageContent}
+${baseContext}
 
 Generate a concept map using ONLY these Markdown headers (use all that apply):
 ### 🔗 Cause → Effect
@@ -177,16 +182,63 @@ Rules:
 - Do NOT include headers that don't apply
 - Keep each section to 3-5 key points max`
 
+    if (mapType === 'confusion') {
+      mapPrompt = `You are a learning coach. The student is confused and needs a reset.
+
+${baseContext}
+
+Create a very small concept map with EXACTLY 3 nodes (no more), in this format:
+### Map
+- Node 1
+- Node 2
+- Node 3
+
+Then include a single clarifying question on its own line in this format:
+Clarifying question: <question>
+
+Rules:
+- Keep nodes short (3-6 words each)
+- Make the clarifying question answerable in one sentence`
+    }
+
+    if (mapType === 'instant') {
+      mapPrompt = `You are a study coach. Create an Instant Study Map that turns content into a plan.
+
+${baseContext}
+
+Use ONLY these headers (include all that apply):
+### What this is about
+### Key concepts
+### Dependencies (learn these first)
+### Start here (first 3 steps)
+### Why it matters
+
+Rules:
+- Use bullet points under each header
+- Keep each section to 3-5 bullets max
+- Keep language simple and scannable`
+    }
+
     // Type assertion needed due to dependency version mismatch:
     // The 'ai' package has its own nested @ai-sdk/provider dependency that TypeScript sees as
     // incompatible with the root @ai-sdk/provider used by @ai-sdk/openai, even though they're
     // functionally compatible at runtime. This is a known issue with nested dependencies.
-    const { text: mapMarkdown } = await generateText({
+    const { text: mapMarkdownRaw } = await generateText({
       // @ts-expect-error - Version mismatch between root @ai-sdk/provider and ai's nested @ai-sdk/provider
       model: openai('gpt-4o-mini'),
       prompt: mapPrompt,
       temperature: 0.3,
     })
+
+    let mapMarkdown = mapMarkdownRaw
+    let clarifyingQuestion: string | null = null
+    if (mapType === 'confusion') {
+      const questionMatch = mapMarkdownRaw.match(/Clarifying question:\s*(.+)$/im)
+      if (questionMatch) {
+        clarifyingQuestion = questionMatch[1].trim()
+        mapMarkdown = mapMarkdownRaw.replace(questionMatch[0], '').trim()
+      }
+    }
 
     // 7. Save map to database
     const { data: map, error: insertError } = await supabase
@@ -207,12 +259,13 @@ Rules:
       return NextResponse.json({
         map: {
           map_markdown: mapMarkdown,
+          clarifying_question: clarifyingQuestion,
         },
         warning: 'Map generated but could not be saved.',
       })
     }
 
-    return NextResponse.json({ map })
+    return NextResponse.json({ map, clarifyingQuestion })
   } catch (error: any) {
     console.error('[ForgeMap] Critical error:', error)
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })

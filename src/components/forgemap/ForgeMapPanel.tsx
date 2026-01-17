@@ -13,14 +13,24 @@ interface ForgeMapPanelProps {
   chatId: string | null
   mode: 'notes' | 'reference' | 'mixed'
   selectedDocIds: string[]
+  mapType?: 'topic' | 'confusion' | 'instant'
 }
 
-export default function ForgeMapPanel({ isOpen, onClose, messageContent, chatId, mode, selectedDocIds }: ForgeMapPanelProps) {
+export default function ForgeMapPanel({
+  isOpen,
+  onClose,
+  messageContent,
+  chatId,
+  mode,
+  selectedDocIds,
+  mapType = 'topic',
+}: ForgeMapPanelProps) {
   const { density } = useDensity()
   const tokens = getDensityTokens(density)
   const [mapMarkdown, setMapMarkdown] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [clarifyingQuestion, setClarifyingQuestion] = useState<string | null>(null)
 
   useEffect(() => {
     if (isOpen && messageContent) {
@@ -31,6 +41,7 @@ export default function ForgeMapPanel({ isOpen, onClose, messageContent, chatId,
   const loadOrGenerateMap = async () => {
     setIsLoading(true)
     setError(null)
+    setClarifyingQuestion(null)
 
     try {
       const response = await fetch('/api/forgemap/generate', {
@@ -41,6 +52,7 @@ export default function ForgeMapPanel({ isOpen, onClose, messageContent, chatId,
           chatId,
           mode,
           selectedDocIds,
+          mapType,
         }),
       })
 
@@ -53,12 +65,17 @@ export default function ForgeMapPanel({ isOpen, onClose, messageContent, chatId,
 
       const mapMarkdownValue =
         payload?.map?.map_markdown || payload?.mapMarkdown || payload?.map
+      const clarifying =
+        payload?.clarifyingQuestion || payload?.map?.clarifying_question || null
 
       if (!mapMarkdownValue) {
         throw new Error('No map content returned. Please try again.')
       }
 
       setMapMarkdown(mapMarkdownValue)
+      if (clarifying) {
+        setClarifyingQuestion(String(clarifying))
+      }
     } catch (err: any) {
       console.error('ForgeMap error:', err)
       setError(err?.message || 'Failed to generate concept map. Please try again.')
@@ -167,6 +184,12 @@ export default function ForgeMapPanel({ isOpen, onClose, messageContent, chatId,
                     </div>
                   </div>
                 ))}
+                {clarifyingQuestion && (
+                  <div className="rounded-lg border border-slate-200 bg-white px-4 py-3 text-sm text-slate-700">
+                    <span className="font-semibold text-slate-900">Clarifying question:</span>{' '}
+                    {clarifyingQuestion}
+                  </div>
+                )}
               </div>
             )}
           </div>
@@ -222,6 +245,12 @@ export default function ForgeMapPanel({ isOpen, onClose, messageContent, chatId,
                   </div>
                 </div>
               ))}
+              {clarifyingQuestion && (
+                <div className="rounded-lg border border-slate-200 bg-white px-4 py-3 text-sm text-slate-700">
+                  <span className="font-semibold text-slate-900">Clarifying question:</span>{' '}
+                  {clarifyingQuestion}
+                </div>
+              )}
             </div>
           )}
         </div>

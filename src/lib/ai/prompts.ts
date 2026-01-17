@@ -1,6 +1,13 @@
 type GradeBand = 'elementary' | 'middle' | 'high'
 type InteractionMode = 'tutor' | 'essay_feedback' | 'planner'
 
+const gradeBandSummary = (gradeBand?: GradeBand) => {
+  if (gradeBand === 'elementary') return 'Elementary (Grades 3–5)'
+  if (gradeBand === 'middle') return 'Middle (Grades 6–8)'
+  if (gradeBand === 'high') return 'High (Grades 9–12)'
+  return 'Unknown grade band'
+}
+
 export const FORGESTUDY_BASE_SYSTEM_PROMPT = `
 You are ForgeStudy, a calm, supportive learning coach for K-12 students. Your job is to reduce confusion, build confidence, and teach how to think, not just give answers.
 
@@ -124,6 +131,154 @@ export function getSystemPrompt(options?: {
     gradeOverlay.trim(),
     modeOverlay.trim(),
   ].join('\n\n')
+}
+
+export function getInstantStudyMapPrompt(params: {
+  content: string
+  gradeBand?: GradeBand
+  grade?: string | null
+}) {
+  const gradeLine = params.grade ? `Student grade: ${params.grade}` : ''
+  return `You are a study coach.
+Grade band: ${gradeBandSummary(params.gradeBand)}. ${gradeLine}
+
+Create an Instant Study Map that turns content into a plan.
+
+Content:
+${params.content}
+
+Use ONLY these headers (include all that apply):
+### What this is about
+### Key concepts
+### Dependencies (learn these first)
+### Start here (first 3 steps)
+### Why it matters
+
+Rules:
+- Use bullet points under each header
+- Keep each section to 3-5 bullets max
+- Keep language simple and scannable`
+}
+
+export function getConfusionMapPrompt(params: {
+  content: string
+  gradeBand?: GradeBand
+  grade?: string | null
+}) {
+  const gradeLine = params.grade ? `Student grade: ${params.grade}` : ''
+  return `You are a learning coach helping a confused student.
+Grade band: ${gradeBandSummary(params.gradeBand)}. ${gradeLine}
+
+Content:
+${params.content}
+
+Create a very small concept map with EXACTLY 3 nodes (no more), in this format:
+### Map
+- Node 1
+- Node 2
+- Node 3
+
+Then include a single clarifying question on its own line in this format:
+Clarifying question: <question>
+
+Rules:
+- Keep nodes short (3-6 words each)
+- Make the clarifying question answerable in one sentence`
+}
+
+export function getPracticeLadderPrompt(params: {
+  content: string
+  gradeBand?: GradeBand
+  grade?: string | null
+}) {
+  const gradeLine = params.grade ? `Student grade: ${params.grade}` : ''
+  return `You are a teacher generating practice questions from a study map or topic.
+Grade band: ${gradeBandSummary(params.gradeBand)}. ${gradeLine}
+
+Content:
+${params.content}
+
+Return JSON in this shape:
+{
+  "title": "short title",
+  "levels": [
+    { "level": 1, "label": "Identify parts", "items": ["question 1", "question 2"] },
+    { "level": 2, "label": "Connect relationships", "items": ["question 1", "question 2"] },
+    { "level": 3, "label": "Apply in scenario", "items": ["question 1", "question 2"] },
+    { "level": 4, "label": "Mixed review", "items": ["question 1", "question 2"] }
+  ]
+}
+
+Rules:
+- 2-3 items per level
+- Keep questions short and age-appropriate`
+}
+
+export function getExamSheetPrompt(params: {
+  content: string
+  gradeBand?: GradeBand
+  grade?: string | null
+}) {
+  const gradeLine = params.grade ? `Student grade: ${params.grade}` : ''
+  return `You are a study coach creating a one-page exam sheet.
+Grade band: ${gradeBandSummary(params.gradeBand)}. ${gradeLine}
+
+Content:
+${params.content}
+
+Return a single-page markdown with these sections:
+## Mini Map
+## Key formulas or rules
+## Common traps
+## 5 must-know questions
+
+Rules:
+- Keep it printable and concise`
+}
+
+export function getHomeworkExtractPrompt(params: {
+  content: string
+  gradeBand?: GradeBand
+  grade?: string | null
+}) {
+  const gradeLine = params.grade ? `Student grade: ${params.grade}` : ''
+  return `You are extracting homework tasks from a messy document.
+Grade band: ${gradeBandSummary(params.gradeBand)}. ${gradeLine}
+
+Document:
+${params.content}
+
+Return JSON in this shape:
+{
+  "title": "short title",
+  "tasks": [
+    { "title": "task", "due_date": "YYYY-MM-DD or null", "estimated_minutes": 20, "priority": 1 }
+  ]
+}
+
+Rules:
+- If date is unclear, use null
+- Estimate minutes (10-60)
+- Priority 1 = highest urgency`
+}
+
+export function getHomeworkPlanPrompt(params: {
+  tasksJson: string
+  gradeBand?: GradeBand
+  grade?: string | null
+}) {
+  const gradeLine = params.grade ? `Student grade: ${params.grade}` : ''
+  return `You are creating a tonight plan from homework tasks.
+Grade band: ${gradeBandSummary(params.gradeBand)}. ${gradeLine}
+
+Tasks JSON:
+${params.tasksJson}
+
+Return a short plan with:
+1) Start here (10-15 minutes)
+2) Then this (time blocks)
+3) Stop point for tonight
+4) Quick check-in question`
 }
 
 export function getStrictModePrompt() {

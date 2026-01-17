@@ -29,6 +29,9 @@ interface ChatMessageListProps {
   savingToNotebook?: string | null
   onSaveClip?: (messageId: string, content: string) => void // New prop for saving clips
   onShowMap?: (messageId: string, content: string) => void // New prop for showing concept map
+  onShowConfusionMap?: (messageId: string, content: string) => void
+  onShowPracticeLadder?: (messageId: string, content: string) => void
+  onShowExamSheet?: (messageId: string, content: string) => void
   onSendMessage?: (message: string) => void // Callback to send a follow-up prompt
 }
 
@@ -57,6 +60,9 @@ export default function ChatMessageList({
   savingToNotebook,
   onSaveClip,
   onShowMap,
+  onShowConfusionMap,
+  onShowPracticeLadder,
+  onShowExamSheet,
   onSendMessage,
 }: ChatMessageListProps) {
   const tutorContext = useTutorContext()
@@ -245,6 +251,39 @@ export default function ChatMessageList({
                         <Map className="w-3 h-3" />
                       )}
                       <span>{showMapId === m.id ? 'Opened' : 'Map'}</span>
+                    </button>
+                    <button
+                      onClick={() => {
+                        if (onShowConfusionMap) {
+                          onShowConfusionMap(m.id, m.content)
+                        }
+                      }}
+                      className="flex items-center gap-1 px-2 py-1 text-xs rounded-lg text-slate-500 hover:text-amber-600 hover:bg-amber-50 transition-all duration-200"
+                      title="I'm lost — shrink to a mini map"
+                    >
+                      <span>I'm Lost</span>
+                    </button>
+                    <button
+                      onClick={() => {
+                        if (onShowPracticeLadder) {
+                          onShowPracticeLadder(m.id, m.content)
+                        }
+                      }}
+                      className="flex items-center gap-1 px-2 py-1 text-xs rounded-lg text-slate-500 hover:text-emerald-600 hover:bg-emerald-50 transition-all duration-200"
+                      title="Generate practice ladder"
+                    >
+                      <span>Practice</span>
+                    </button>
+                    <button
+                      onClick={() => {
+                        if (onShowExamSheet) {
+                          onShowExamSheet(m.id, m.content)
+                        }
+                      }}
+                      className="flex items-center gap-1 px-2 py-1 text-xs rounded-lg text-slate-500 hover:text-indigo-600 hover:bg-indigo-50 transition-all duration-200"
+                      title="Build an exam sheet"
+                    >
+                      <span>Exam Sheet</span>
                     </button>
                     <button
                       onClick={() => {

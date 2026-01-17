@@ -9,6 +9,9 @@ import { useDensity } from '@/contexts/DensityContext'
 import { getDensityTokens } from '@/lib/density-tokens'
 import SaveClipModal from '@/components/clips/SaveClipModal'
 import ForgeMapPanel from '@/components/forgemap/ForgeMapPanel'
+import StudyMapPanel from '@/components/forgemap/StudyMapPanel'
+import PracticeLadderModal from '@/components/tutor/PracticeLadderModal'
+import ExamSheetModal from '@/components/tutor/ExamSheetModal'
 import ArchivedChatBanner from '@/components/chat/ArchivedChatBanner'
 import SuggestedPrompts from '@/components/tutor/SuggestedPrompts'
 import ChatMessageList, { type ChatMessage } from '@/components/tutor/ChatMessageList'
@@ -117,6 +120,21 @@ export default function ClinicalTutorWorkspace({
   const [chatSummary, setChatSummary] = useState<string | null>(null)
   const [saveClipModal, setSaveClipModal] = useState<{ isOpen: boolean; messageId: string; content: string }>({ isOpen: false, messageId: '', content: '' })
   const [forgeMapPanel, setForgeMapPanel] = useState<{ isOpen: boolean; messageContent: string }>({ isOpen: false, messageContent: '' })
+  const [confusionMap, setConfusionMap] = useState<{ isOpen: boolean; mapMarkdown: string; clarifyingQuestion?: string | null }>({
+    isOpen: false,
+    mapMarkdown: '',
+    clarifyingQuestion: null,
+  })
+  const [practiceModal, setPracticeModal] = useState<{ isOpen: boolean; messageId: string; content: string }>({
+    isOpen: false,
+    messageId: '',
+    content: '',
+  })
+  const [examSheetModal, setExamSheetModal] = useState<{ isOpen: boolean; messageId: string; content: string }>({
+    isOpen: false,
+    messageId: '',
+    content: '',
+  })
   const { density } = useDensity()
   const tokens = getDensityTokens(density)
 
@@ -660,6 +678,39 @@ export default function ClinicalTutorWorkspace({
             onShowMap={(messageId, content) => {
               setForgeMapPanel({ isOpen: true, messageContent: content })
             }}
+            onShowConfusionMap={async (messageId, content) => {
+              try {
+                const response = await fetch('/api/study-map/confusion', {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  credentials: 'include',
+                  body: JSON.stringify({
+                    messageContent: content,
+                    chatId,
+                    messageId,
+                    profileId: activeProfileId || null,
+                  }),
+                })
+                const payload = await response.json()
+                if (response.ok) {
+                  setConfusionMap({
+                    isOpen: true,
+                    mapMarkdown: payload?.map?.map_markdown || '',
+                    clarifyingQuestion: payload?.map?.clarifying_question || payload?.clarifyingQuestion || null,
+                  })
+                } else {
+                  console.error('[Confusion Map] Error:', payload?.error)
+                }
+              } catch (error) {
+                console.error('[Confusion Map] Error:', error)
+              }
+            }}
+            onShowPracticeLadder={(messageId, content) => {
+              setPracticeModal({ isOpen: true, messageId, content })
+            }}
+            onShowExamSheet={(messageId, content) => {
+              setExamSheetModal({ isOpen: true, messageId, content })
+            }}
             onSendMessage={async (message) => {
               await handleSendMessage(message, chatId || undefined)
             }}
@@ -943,6 +994,33 @@ export default function ClinicalTutorWorkspace({
             ? attachedFiles.map(f => f.id).filter(id => id)
             : selectedDocIds
         }
+      />
+
+      <StudyMapPanel
+        isOpen={confusionMap.isOpen}
+        onClose={() => setConfusionMap({ isOpen: false, mapMarkdown: '', clarifyingQuestion: null })}
+        title="Quick Reset Map"
+        mapMarkdown={confusionMap.mapMarkdown}
+        clarifyingQuestion={confusionMap.clarifyingQuestion || null}
+      />
+
+      <PracticeLadderModal
+        isOpen={practiceModal.isOpen}
+        onClose={() => setPracticeModal({ isOpen: false, messageId: '', content: '' })}
+        messageContent={practiceModal.content}
+        chatId={chatId}
+        messageId={practiceModal.messageId}
+        profileId={activeProfileId || null}
+      />
+
+      <ExamSheetModal
+        isOpen={examSheetModal.isOpen}
+        onClose={() => setExamSheetModal({ isOpen: false, messageId: '', content: '' })}
+        messageContent={examSheetModal.content}
+        chatId={chatId}
+        messageId={examSheetModal.messageId}
+        profileId={activeProfileId || null}
+        topic={tutorContext.selectedTopic?.title || null}
       />
 
       {/* NO INPUT HERE - ChatInterface in TutorSession handles input */}
