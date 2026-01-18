@@ -113,6 +113,45 @@ export async function GET(req: Request) {
       }
     }
 
+    if (!subscriptionId && user.email) {
+      try {
+        const customers = await stripe.customers.list({
+          email: user.email,
+          limit: 1,
+        })
+        const customer = customers.data[0]
+        if (customer?.id) {
+          await supabase
+            .from('profiles')
+            .update({ stripe_customer_id: customer.id })
+            .eq('id', user.id)
+
+          const subscriptions = await stripe.subscriptions.list({
+            customer: customer.id,
+            status: 'all',
+            limit: 5,
+          })
+
+          const activeSubscription = subscriptions.data.find((sub) =>
+            ['trialing', 'active', 'past_due', 'incomplete'].includes(sub.status)
+          )
+
+          if (activeSubscription) {
+            subscriptionId = activeSubscription.id
+            await supabase
+              .from('profiles')
+              .update({
+                stripe_subscription_id: subscriptionId,
+                subscription_status: activeSubscription.status,
+              })
+              .eq('id', user.id)
+          }
+        }
+      } catch (error) {
+        console.error('[Stripe Subscription] Failed to backfill customer from email:', error)
+      }
+    }
+
     if (!subscriptionId) {
       // No subscription found - return null
       return NextResponse.json({
