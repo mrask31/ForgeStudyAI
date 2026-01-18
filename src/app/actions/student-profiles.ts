@@ -110,6 +110,23 @@ export async function createStudentProfile(data: {
     throw new Error(`Maximum of ${FAMILY_MAX_PROFILES} profiles allowed per account`)
   }
 
+  if (existingProfiles.length >= 1) {
+    const { data: parentProfile, error: parentError } = await supabase
+      .from('profiles')
+      .select('parent_pin_hash')
+      .eq('id', user.id)
+      .single()
+
+    if (parentError) {
+      console.error('[Student Profiles] Error checking parent PIN:', parentError)
+      throw new Error('Unable to verify parent PIN status')
+    }
+
+    if (!parentProfile?.parent_pin_hash) {
+      throw new Error('Parent PIN required to add another profile')
+    }
+  }
+
   // Validate display_name
   if (!data.display_name || data.display_name.trim().length === 0) {
     throw new Error('Display name is required')

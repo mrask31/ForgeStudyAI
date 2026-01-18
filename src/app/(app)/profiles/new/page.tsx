@@ -4,6 +4,7 @@ import { useSearchParams, useRouter } from 'next/navigation'
 import { useEffect, useState, Suspense } from 'react'
 import { createBrowserClient } from '@supabase/ssr'
 import { createStudentProfile, getStudentProfiles } from '@/app/actions/student-profiles'
+import { getParentPinStatus } from '@/app/actions/pins'
 import { useActiveProfile } from '@/contexts/ActiveProfileContext'
 import { FAMILY_MAX_PROFILES } from '@/lib/constants'
 import { GraduationCap, BookOpen, Sparkles } from 'lucide-react'
@@ -21,6 +22,8 @@ function NewProfileContent() {
   const [isCheckingAuth, setIsCheckingAuth] = useState(true)
   const [authError, setAuthError] = useState<string | null>(null)
   const [profileCount, setProfileCount] = useState<number | null>(null)
+  const [requiresParentPin, setRequiresParentPin] = useState(false)
+  const [isCheckingPin, setIsCheckingPin] = useState(false)
   const { setActiveProfileId } = useActiveProfile()
 
   useEffect(() => {
@@ -64,6 +67,19 @@ function NewProfileContent() {
         if (profiles.length >= FAMILY_MAX_PROFILES) {
           router.replace('/profiles')
         }
+
+        if (profiles.length >= 1) {
+          setIsCheckingPin(true)
+          try {
+            const status = await getParentPinStatus()
+            setRequiresParentPin(!status.hasPin)
+          } catch (error) {
+            console.error('[New Profile Page] Failed to check parent PIN:', error)
+            setRequiresParentPin(true)
+          } finally {
+            setIsCheckingPin(false)
+          }
+        }
       } catch (error) {
         console.error('[New Profile Page] Error checking auth:', error)
         setAuthError('We could not confirm your session. Please sign in again.')
@@ -95,6 +111,12 @@ function NewProfileContent() {
     setIsSubmitting(true)
 
     try {
+      if (requiresParentPin) {
+        setError('Parent PIN required to add another profile.')
+        setIsSubmitting(false)
+        return
+      }
+
       if (!band) {
         setError('Please select a grade level')
         setIsSubmitting(false)
@@ -168,6 +190,37 @@ function NewProfileContent() {
             >
               Back to Profiles
             </button>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  if (requiresParentPin) {
+    return (
+      <div className="h-full bg-gradient-to-br from-slate-50 to-white flex items-center justify-center px-4">
+        <div className="max-w-2xl w-full text-center">
+          <div className="bg-white border border-slate-200 rounded-2xl p-8 shadow-lg">
+            <h2 className="text-2xl font-bold text-slate-900 mb-3">Set a parent PIN first</h2>
+            <p className="text-base text-slate-600 mb-6">
+              To add another student profile, the parent account needs a PIN. This protects billing and profile management.
+            </p>
+            <div className="flex flex-col sm:flex-row gap-3 justify-center">
+              <button
+                onClick={() => router.push('/profiles')}
+                className="px-6 py-3 border-2 border-slate-300 text-slate-700 rounded-xl font-semibold hover:bg-slate-50 transition-colors"
+                disabled={isCheckingPin}
+              >
+                Back to profiles
+              </button>
+              <button
+                onClick={() => router.push('/parent')}
+                className="px-6 py-3 bg-gradient-to-r from-teal-700 to-teal-600 text-white rounded-xl font-semibold hover:from-teal-800 hover:to-teal-700 transition-colors shadow-md"
+                disabled={isCheckingPin}
+              >
+                Set parent PIN
+              </button>
+            </div>
           </div>
         </div>
       </div>
