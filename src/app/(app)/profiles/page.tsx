@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { Suspense, useEffect, useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { createBrowserClient } from '@supabase/ssr'
 import { getStudentProfiles, type StudentProfile, deleteStudentProfile } from '@/app/actions/student-profiles'
@@ -9,7 +9,7 @@ import Link from 'next/link'
 import { useActiveProfile } from '@/contexts/ActiveProfileContext'
 import { verifyStudentProfilePin } from '@/app/actions/pins'
 
-export default function ProfilesPage() {
+function ProfilesPageContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const [profiles, setProfiles] = useState<StudentProfile[]>([])
@@ -346,5 +346,24 @@ export default function ProfilesPage() {
         </div>
       )}
     </div>
+  )
+}
+
+export default function ProfilesPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="h-full bg-gradient-to-br from-slate-50 to-white flex items-center justify-center">
+          <div className="text-center">
+            <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-br from-teal-100 to-cyan-100 mb-4">
+              <div className="animate-spin rounded-full h-8 w-8 border-2 border-teal-600 border-t-transparent"></div>
+            </div>
+            <p className="text-lg font-medium text-slate-600">Loading profiles...</p>
+          </div>
+        </div>
+      }
+    >
+      <ProfilesPageContent />
+    </Suspense>
   )
 }
