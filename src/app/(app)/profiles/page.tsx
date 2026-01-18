@@ -18,6 +18,7 @@ function ProfilesPageContent() {
   const [pinValue, setPinValue] = useState('')
   const [pinError, setPinError] = useState<string | null>(null)
   const [isVerifyingPin, setIsVerifyingPin] = useState(false)
+  const [planType, setPlanType] = useState<'none' | 'individual' | 'family'>('none')
   const { setActiveProfileId } = useActiveProfile()
 
   const getBandRoute = (band: StudentProfile['grade_band']) => {
@@ -49,6 +50,16 @@ function ProfilesPageContent() {
 
         const studentProfiles = await getStudentProfiles()
         setProfiles(studentProfiles)
+
+        try {
+          const subRes = await fetch('/api/stripe/subscription', { credentials: 'include' })
+          if (subRes.ok) {
+            const subData = await subRes.json()
+            setPlanType(subData.planType || 'individual')
+          }
+        } catch (error) {
+          console.error('[Profiles Page] Error loading plan type:', error)
+        }
 
       } catch (error) {
         console.error('[Profiles Page] Error loading profiles:', error)
@@ -274,7 +285,7 @@ function ProfilesPageContent() {
           })}
 
           {/* Add Profile Card */}
-          {profiles.length < 4 && (
+          {profiles.length < 1 && (
             <Link
               href="/profiles/new"
               className="group bg-white/40 backdrop-blur-sm border-2 border-dashed border-slate-300/60 rounded-2xl p-8 shadow-lg shadow-slate-200/50 hover:shadow-xl hover:shadow-teal-200/30 transition-all duration-300 transform hover:scale-[1.02] hover:border-teal-400 hover:bg-white/60"
@@ -288,6 +299,38 @@ function ProfilesPageContent() {
                 <p className="text-xs text-slate-500 mt-1">Grades 3–12</p>
               </div>
             </Link>
+          )}
+          {profiles.length >= 1 && planType === 'family' && profiles.length < 4 && (
+            <Link
+              href="/profiles/new"
+              className="group bg-white/40 backdrop-blur-sm border-2 border-dashed border-slate-300/60 rounded-2xl p-8 shadow-lg shadow-slate-200/50 hover:shadow-xl hover:shadow-teal-200/30 transition-all duration-300 transform hover:scale-[1.02] hover:border-teal-400 hover:bg-white/60"
+            >
+              <div className="flex flex-col items-center text-center h-full justify-center">
+                <div className="w-20 h-20 bg-gradient-to-br from-teal-100 to-cyan-100 rounded-xl flex items-center justify-center mb-4 shadow-lg group-hover:shadow-xl transition-shadow group-hover:from-teal-200 group-hover:to-cyan-200">
+                  <Plus className="w-10 h-10 text-teal-600" />
+                </div>
+                <h2 className="text-xl font-bold text-slate-900 mb-1">Add Profile</h2>
+                <p className="text-sm text-slate-600">Create a new student profile</p>
+                <p className="text-xs text-slate-500 mt-1">Grades 3–12</p>
+              </div>
+            </Link>
+          )}
+          {profiles.length >= 1 && planType !== 'family' && (
+            <div className="bg-white/40 backdrop-blur-sm border-2 border-dashed border-slate-200/70 rounded-2xl p-8 shadow-lg shadow-slate-200/50">
+              <div className="flex flex-col items-center text-center h-full justify-center">
+                <div className="w-20 h-20 bg-amber-50 border border-amber-200 rounded-xl flex items-center justify-center mb-4">
+                  <Lock className="w-10 h-10 text-amber-600" />
+                </div>
+                <h2 className="text-xl font-bold text-slate-900 mb-1">Family plan required</h2>
+                <p className="text-sm text-slate-600">Upgrade to add more profiles.</p>
+                <Link
+                  href="/parent"
+                  className="mt-4 inline-flex items-center justify-center rounded-xl bg-teal-600 px-4 py-2 text-sm font-semibold text-white hover:bg-teal-700 transition-colors"
+                >
+                  Manage subscription
+                </Link>
+              </div>
+            </div>
           )}
         </div>
 

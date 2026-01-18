@@ -16,6 +16,16 @@ function getStripeClient(): Stripe {
 
 export const dynamic = 'force-dynamic'
 
+const resolvePlanType = (priceId: string | null) => {
+  if (!priceId) return 'none'
+  const familyPrices = [
+    process.env.NEXT_PUBLIC_STRIPE_PRICE_FAMILY_MONTHLY,
+    process.env.NEXT_PUBLIC_STRIPE_PRICE_FAMILY_ANNUAL,
+  ].filter(Boolean)
+  if (familyPrices.includes(priceId)) return 'family'
+  return 'individual'
+}
+
 export async function GET(req: Request) {
   try {
     // Check if Stripe secret key is configured
@@ -90,6 +100,9 @@ export async function GET(req: Request) {
       })
     }
 
+    const priceId = subscription.items?.data?.[0]?.price?.id ?? null
+    const planType = resolvePlanType(priceId)
+
     // Extract subscription properties safely
     // Note: current_period_end may not be in TypeScript types but exists on the object
     const subscriptionData = {
@@ -99,11 +112,14 @@ export async function GET(req: Request) {
       trialEndDate,
       cancelAtPeriodEnd: subscription.cancel_at_period_end ?? false,
       currentPeriodEnd: (subscription as any).current_period_end ?? null,
+      priceId,
+      planType,
     }
 
     return NextResponse.json({
       subscription: subscriptionData,
       status: profile.subscription_status,
+      planType,
     })
 
   } catch (error: unknown) {

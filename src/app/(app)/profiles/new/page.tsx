@@ -23,6 +23,7 @@ function NewProfileContent() {
   const [authError, setAuthError] = useState<string | null>(null)
   const [profileCount, setProfileCount] = useState<number | null>(null)
   const [requiresParentPin, setRequiresParentPin] = useState(false)
+  const [requiresFamilyPlan, setRequiresFamilyPlan] = useState(false)
   const [isCheckingPin, setIsCheckingPin] = useState(false)
   const { setActiveProfileId } = useActiveProfile()
 
@@ -69,6 +70,25 @@ function NewProfileContent() {
         }
 
         if (profiles.length >= 1) {
+          try {
+            const subRes = await fetch('/api/stripe/subscription', { credentials: 'include' })
+            if (subRes.ok) {
+              const subData = await subRes.json()
+              const planType = subData.planType || 'individual'
+              if (planType !== 'family') {
+                setRequiresFamilyPlan(true)
+                return
+              }
+            } else {
+              setRequiresFamilyPlan(true)
+              return
+            }
+          } catch (error) {
+            console.error('[New Profile Page] Failed to check plan type:', error)
+            setRequiresFamilyPlan(true)
+            return
+          }
+
           setIsCheckingPin(true)
           try {
             const status = await getParentPinStatus()
@@ -111,6 +131,12 @@ function NewProfileContent() {
     setIsSubmitting(true)
 
     try {
+      if (requiresFamilyPlan) {
+        setError('Family plan required to add another profile.')
+        setIsSubmitting(false)
+        return
+      }
+
       if (requiresParentPin) {
         setError('Parent PIN required to add another profile.')
         setIsSubmitting(false)
@@ -190,6 +216,35 @@ function NewProfileContent() {
             >
               Back to Profiles
             </button>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  if (requiresFamilyPlan) {
+    return (
+      <div className="h-full bg-gradient-to-br from-slate-50 to-white flex items-center justify-center px-4">
+        <div className="max-w-2xl w-full text-center">
+          <div className="bg-white border border-slate-200 rounded-2xl p-8 shadow-lg">
+            <h2 className="text-2xl font-bold text-slate-900 mb-3">Family plan required</h2>
+            <p className="text-base text-slate-600 mb-6">
+              Your current plan allows one student profile. Upgrade to Family to add more.
+            </p>
+            <div className="flex flex-col sm:flex-row gap-3 justify-center">
+              <button
+                onClick={() => router.push('/profiles')}
+                className="px-6 py-3 border-2 border-slate-300 text-slate-700 rounded-xl font-semibold hover:bg-slate-50 transition-colors"
+              >
+                Back to profiles
+              </button>
+              <button
+                onClick={() => router.push('/parent')}
+                className="px-6 py-3 bg-gradient-to-r from-teal-700 to-teal-600 text-white rounded-xl font-semibold hover:from-teal-800 hover:to-teal-700 transition-colors shadow-md"
+              >
+                Manage subscription
+              </button>
+            </div>
           </div>
         </div>
       </div>

@@ -3,6 +3,8 @@
 import { useState, useMemo, useEffect } from 'react'
 import { Search, BookOpen, Bookmark, BookmarkCheck } from 'lucide-react'
 import { VOCABULARY_TERMS } from '@/lib/medicalTerms'
+import { useActiveProfile } from '@/contexts/ActiveProfileContext'
+import { createBrowserClient } from '@supabase/ssr'
 
 export default function DictionaryPage() {
   const [searchQuery, setSearchQuery] = useState('')
@@ -10,16 +12,58 @@ export default function DictionaryPage() {
   const [savedFilter, setSavedFilter] = useState<'all' | 'saved' | 'not-saved'>('all')
   const [savedWords, setSavedWords] = useState<Set<string>>(() => new Set<string>())
   const [savedWordIds, setSavedWordIds] = useState<Map<string, string>>(() => new Map<string, string>())
+  const [gradeBand, setGradeBand] = useState<'elementary' | 'middle' | 'high' | null>(null)
+  const { activeProfileId } = useActiveProfile()
+
+  useEffect(() => {
+    const loadGradeBand = async () => {
+      if (!activeProfileId) {
+        setGradeBand(null)
+        return
+      }
+      try {
+        const supabase = createBrowserClient(
+          process.env.NEXT_PUBLIC_SUPABASE_URL!,
+          process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+        )
+        const { data: { user } } = await supabase.auth.getUser()
+        if (!user) {
+          setGradeBand(null)
+          return
+        }
+        const { data: profile } = await supabase
+          .from('student_profiles')
+          .select('grade_band')
+          .eq('id', activeProfileId)
+          .eq('owner_id', user.id)
+          .single()
+        setGradeBand(profile?.grade_band || null)
+      } catch (error) {
+        console.error('[Vocabulary Bank] Error loading grade band:', error)
+        setGradeBand(null)
+      }
+    }
+
+    loadGradeBand()
+  }, [activeProfileId])
+
+  const gradeFilteredTerms = useMemo(() => {
+    if (!gradeBand) return VOCABULARY_TERMS
+    return VOCABULARY_TERMS.filter(term => {
+      if (!term.gradeBands || term.gradeBands.length === 0) return true
+      return term.gradeBands.includes(gradeBand)
+    })
+  }, [gradeBand])
 
   // Get unique categories
   const categories = useMemo(() => {
-    const cats = new Set(VOCABULARY_TERMS.map(t => t.category).filter(Boolean))
+    const cats = new Set(gradeFilteredTerms.map(t => t.category).filter(Boolean))
     return Array.from(cats).sort()
-  }, [])
+  }, [gradeFilteredTerms])
 
   // Filter terms based on search, category, and saved status
   const filteredTerms = useMemo(() => {
-    let filtered = VOCABULARY_TERMS
+    let filtered = gradeFilteredTerms
 
     // Filter by category
     if (selectedCategory) {
@@ -43,7 +87,7 @@ export default function DictionaryPage() {
     }
 
     return filtered.sort((a, b) => a.term.localeCompare(b.term))
-  }, [searchQuery, selectedCategory, savedFilter, savedWords])
+  }, [searchQuery, selectedCategory, savedFilter, savedWords, gradeFilteredTerms])
 
   // Load saved words on mount
   useEffect(() => {

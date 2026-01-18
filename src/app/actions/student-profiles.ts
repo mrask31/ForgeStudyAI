@@ -4,6 +4,7 @@ import { createClient } from '@/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
 import { FAMILY_MAX_PROFILES } from '@/lib/constants'
 import { enqueueEmailEvent } from './email-events'
+import Stripe from 'stripe'
 
 export interface StudentProfile {
   id: string
@@ -15,6 +16,25 @@ export interface StudentProfile {
   has_pin?: boolean
   created_at: string
   updated_at: string
+}
+
+const resolvePlanType = (priceId: string | null) => {
+  if (!priceId) return 'none'
+  const familyPrices = [
+    process.env.NEXT_PUBLIC_STRIPE_PRICE_FAMILY_MONTHLY,
+    process.env.NEXT_PUBLIC_STRIPE_PRICE_FAMILY_ANNUAL,
+  ].filter(Boolean)
+  if (familyPrices.includes(priceId)) return 'family'
+  return 'individual'
+}
+
+const getStripeClient = () => {
+  if (!process.env.STRIPE_SECRET_KEY) {
+    throw new Error('Stripe is not configured')
+  }
+  return new Stripe(process.env.STRIPE_SECRET_KEY, {
+    apiVersion: '2025-12-15.clover',
+  })
 }
 
 /**
@@ -113,7 +133,7 @@ export async function createStudentProfile(data: {
   if (existingProfiles.length >= 1) {
     const { data: parentProfile, error: parentError } = await supabase
       .from('profiles')
-      .select('parent_pin_hash')
+      .select('parent_pin_hash, stripe_subscription_id')
       .eq('id', user.id)
       .single()
 
@@ -124,6 +144,21 @@ export async function createStudentProfile(data: {
 
     if (!parentProfile?.parent_pin_hash) {
       throw new Error('Parent PIN required to add another profile')
+    }
+
+    if (!parentProfile?.stripe_subscription_id) {
+      throw new Error('Family plan required to add multiple profiles')
+    }
+
+    const stripe = getStripeClient()
+    const subscription = await stripe.subscriptions.retrieve(
+      parentProfile.stripe_subscription_id
+    )
+    const priceId = subscription.items?.data?.[0]?.price?.id ?? null
+    const planType = resolvePlanType(priceId)
+
+    if (planType !== 'family') {
+      throw new Error('Family plan required to add multiple profiles')
     }
   }
 
