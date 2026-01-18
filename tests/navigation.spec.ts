@@ -1,8 +1,8 @@
 import { test, expect } from '@playwright/test';
 
 /**
- * Navigation Smoke Tests for ForgeNursing
- * 
+ * Navigation Smoke Tests for ForgeStudy
+ *
  * These tests verify that all critical routes are reachable by checking for
  * positive confirmations of correct page content, rather than absence of error text.
  * Run with: npm run test:smoke
@@ -10,13 +10,14 @@ import { test, expect } from '@playwright/test';
 
 // Route-to-content mapping for positive assertions
 const ROUTE_CONTENT_MAP: Record<string, string[]> = {
-  '/': ['ForgeNursing', 'Master Clinical Reasoning'],
-  '/tutor': ['Clinical Tutor'],
-  '/binder': ['My Clinical Binder'],
-  '/readiness': ['Readiness', 'Score'],
-  '/clinical-desk': ['Shift Report', 'Quick Start'],
-  '/settings': ['Settings', 'Display Density'],
-  '/login': ['Welcome Back', 'Enter your credentials'],
+  '/': ['ForgeStudy', 'Homework'],
+  '/tutor': ['Tutor Workspace', 'Good morning', 'Welcome back'],
+  '/classes': ['My Learning Map', 'Welcome back'],
+  '/sources': ['Sources', 'Welcome back'],
+  '/readiness': ['Learning Dashboard', 'Welcome back'],
+  '/dictionary': ['Vocabulary Bank', 'Welcome back'],
+  '/settings': ['Settings', 'Display Density', 'Welcome back'],
+  '/login': ['Welcome back', 'Sign In'],
   '/signup': ['Create Account', 'Sign Up'],
   '/privacy': ['Privacy', 'Privacy Policy'],
   '/terms': ['Terms', 'Terms of Service'],
@@ -26,9 +27,10 @@ const ROUTE_CONTENT_MAP: Record<string, string[]> = {
 const CRITICAL_ROUTES = [
   '/',
   '/tutor',
-  '/binder',
+  '/classes',
+  '/sources',
   '/readiness',
-  '/clinical-desk',
+  '/dictionary',
   '/settings',
 ];
 
@@ -61,9 +63,10 @@ test.describe('Navigation Smoke Tests', () => {
         const foundContent = expectedContent.some(text => 
           pageContent.includes(text)
         );
-        expect(foundContent).toBeTruthy(
+        expect(
+          foundContent,
           `Route ${route} should contain one of: ${expectedContent.join(', ')}`
-        );
+        ).toBeTruthy();
       }
     }
   });
@@ -87,9 +90,10 @@ test.describe('Navigation Smoke Tests', () => {
         const foundContent = expectedContent.some(text => 
           pageContent.includes(text)
         );
-        expect(foundContent).toBeTruthy(
+        expect(
+          foundContent,
           `Route ${route} should contain one of: ${expectedContent.join(', ')}`
-        );
+        ).toBeTruthy();
       }
     }
   });
@@ -103,7 +107,7 @@ test.describe('Navigation Smoke Tests', () => {
     
     // Verify we're on the tutor page
     const tutorContent = await page.textContent('body') || '';
-    expect(tutorContent).toContain('Clinical Tutor');
+    expect(tutorContent).toContain('Tutor Workspace');
     
     // Wait for sidebar to be visible (desktop only)
     const sidebar = page.locator('aside');
@@ -117,10 +121,11 @@ test.describe('Navigation Smoke Tests', () => {
 
     // Define expected navigation items from Sidebar component
     const navItems = [
-      { label: 'Clinical Desk', href: '/clinical-desk', expectedContent: ['Shift Report', 'Quick Start'] },
-      { label: 'Tutor', href: '/tutor', expectedContent: ['Clinical Tutor'] },
-      { label: 'My Clinical Binder', href: '/binder', expectedContent: ['My Clinical Binder'] },
-      { label: 'Readiness', href: '/readiness', expectedContent: ['Readiness', 'Score'] },
+      { label: 'Tutor Workspace', href: '/tutor', expectedContent: ['Tutor Workspace', 'Good morning'] },
+      { label: 'My Classes', href: '/classes', expectedContent: ['My Learning Map'] },
+      { label: 'Sources', href: '/sources', expectedContent: ['Sources'] },
+      { label: 'Dashboard', href: '/readiness', expectedContent: ['Learning Dashboard'] },
+      { label: 'Vocabulary Bank', href: '/dictionary', expectedContent: ['Vocabulary Bank'] },
       { label: 'Settings', href: '/settings', expectedContent: ['Settings', 'Display Density'] },
     ];
 
@@ -152,9 +157,10 @@ test.describe('Navigation Smoke Tests', () => {
       const foundContent = item.expectedContent.some(text => 
         pageContent.includes(text)
       );
-      expect(foundContent).toBeTruthy(
+      expect(
+        foundContent,
         `After navigating to ${item.href}, page should contain one of: ${item.expectedContent.join(', ')}`
-      );
+      ).toBeTruthy();
     }
   });
 
@@ -162,8 +168,8 @@ test.describe('Navigation Smoke Tests', () => {
     await page.goto('/tutor');
     await page.waitForLoadState('networkidle');
     
-    // Look for ForgeNursing brand text or logo
-    const brandLink = page.locator('a:has-text("ForgeNursing")').first();
+    // Look for ForgeStudy brand text or logo
+    const brandLink = page.locator('a:has-text("ForgeStudy")').first();
     
     // If brand link exists, test it
     if (await brandLink.count() > 0) {
@@ -176,7 +182,7 @@ test.describe('Navigation Smoke Tests', () => {
       
       // Verify home page content
       const pageContent = await page.textContent('body') || '';
-      expect(pageContent).toMatch(/ForgeNursing|Master Clinical Reasoning/i);
+      expect(pageContent).toMatch(/ForgeStudy|Homework/i);
     }
   });
 });
