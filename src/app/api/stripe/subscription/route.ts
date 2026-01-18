@@ -72,11 +72,48 @@ export async function GET(req: Request) {
     // Get user's subscription ID from profile
     const { data: profile, error: profileError } = await supabase
       .from('profiles')
-      .select('stripe_subscription_id, subscription_status')
+      .select('stripe_subscription_id, stripe_customer_id, subscription_status')
       .eq('id', user.id)
       .single()
 
-    if (profileError || !profile?.stripe_subscription_id) {
+    if (profileError) {
+      console.error('[Stripe Subscription] Profile lookup failed:', profileError)
+      return NextResponse.json(
+        { error: 'Profile lookup failed' },
+        { status: 500 }
+      )
+    }
+
+    let subscriptionId = profile?.stripe_subscription_id || null
+
+    if (!subscriptionId && profile?.stripe_customer_id) {
+      try {
+        const subscriptions = await stripe.subscriptions.list({
+          customer: profile.stripe_customer_id,
+          status: 'all',
+          limit: 5,
+        })
+
+        const activeSubscription = subscriptions.data.find((sub) =>
+          ['trialing', 'active', 'past_due', 'incomplete'].includes(sub.status)
+        )
+
+        if (activeSubscription) {
+          subscriptionId = activeSubscription.id
+          await supabase
+            .from('profiles')
+            .update({
+              stripe_subscription_id: subscriptionId,
+              subscription_status: activeSubscription.status,
+            })
+            .eq('id', user.id)
+        }
+      } catch (error) {
+        console.error('[Stripe Subscription] Failed to backfill subscription:', error)
+      }
+    }
+
+    if (!subscriptionId) {
       // No subscription found - return null
       return NextResponse.json({
         subscription: null,
@@ -85,9 +122,7 @@ export async function GET(req: Request) {
     }
 
     // Fetch subscription details from Stripe
-    const subscription = await stripe.subscriptions.retrieve(
-      profile.stripe_subscription_id
-    )
+    const subscription = await stripe.subscriptions.retrieve(subscriptionId)
 
     // Calculate trial end date (not days remaining)
     let trialEndDate: string | null = null

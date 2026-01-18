@@ -60,7 +60,36 @@ export async function POST(req: Request) {
       )
     }
 
-    // 2. Get price ID from request body
+    // 2. Ensure Stripe customer exists and store on profile
+    const { data: profile, error: profileError } = await supabase
+      .from('profiles')
+      .select('stripe_customer_id')
+      .eq('id', user.id)
+      .single()
+
+    if (profileError) {
+      console.error('[Stripe Checkout] Failed to load profile:', profileError)
+      return NextResponse.json(
+        { error: 'Profile lookup failed' },
+        { status: 500 }
+      )
+    }
+
+    let customerId = profile?.stripe_customer_id || null
+    if (!customerId) {
+      const customer = await stripe.customers.create({
+        email: user.email || undefined,
+        metadata: { userId: user.id },
+      })
+      customerId = customer.id
+
+      await supabase
+        .from('profiles')
+        .update({ stripe_customer_id: customerId })
+        .eq('id', user.id)
+    }
+
+    // 3. Get price ID from request body
     const body = await req.json()
     const { priceId } = body
 
@@ -78,7 +107,7 @@ export async function POST(req: Request) {
       )
     }
 
-    // 3. Build base URL for redirects (use request origin as fallback)
+    // 4. Build base URL for redirects (use request origin as fallback)
     const requestUrl = new URL(req.url)
     let appUrl: string
 
@@ -99,7 +128,7 @@ export async function POST(req: Request) {
 
     console.log('[Stripe Checkout] Using app URL:', appUrl)
     
-    // 4. Create Stripe Checkout Session with 7-day free trial
+    // 5. Create Stripe Checkout Session with 7-day free trial
     // Note: Stripe will start a 7-day trial and only charge after the trial ends
     // payment_method_collection: 'always' ensures users must provide payment info upfront
     // allow_promotion_codes: true enables coupon/promo code entry in the checkout form
@@ -119,11 +148,11 @@ export async function POST(req: Request) {
       success_url: new URL('/billing/success', appUrl).toString() +
         '?session_id={CHECKOUT_SESSION_ID}',
       cancel_url: new URL('/billing/cancel', appUrl).toString(),
-      customer_email: user.email || undefined,
+      customer: customerId,
       client_reference_id: user.id, // Link the session to the user
     })
 
-    // 5. Return session URL
+    // 6. Return session URL
     return NextResponse.json({ 
       url: session.url,
       sessionId: session.id 
