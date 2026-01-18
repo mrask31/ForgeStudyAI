@@ -10,7 +10,7 @@ import {
 import { Accordion } from '@/components/ui/accordion'
 
 export default function HomePage() {
-  const [billingPeriod, setBillingPeriod] = useState<'monthly' | 'annual'>('annual')
+  const [billingPeriod, setBillingPeriod] = useState<'monthly' | 'annual'>('monthly')
   useEffect(() => {
     if (typeof window === 'undefined') return
     const params = new URLSearchParams(window.location.search)
@@ -376,13 +376,13 @@ export default function HomePage() {
 
           {/* Billing Period Toggle */}
           <div className="flex justify-center mb-8">
-            <div className="inline-flex items-center gap-2 bg-teal-50 border border-teal-200 rounded-2xl p-1.5 shadow-sm shadow-teal-100">
+            <div className="inline-flex items-center gap-2 bg-white border-2 border-teal-300 rounded-2xl p-1.5 shadow-lg shadow-teal-200/60">
               <button
                 onClick={() => setBillingPeriod('monthly')}
                 className={`px-6 py-2.5 rounded-xl text-sm font-semibold transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-teal-600 focus:ring-offset-2 ${
                   billingPeriod === 'monthly'
                     ? 'bg-teal-600 text-white shadow-md shadow-teal-500/30'
-                    : 'text-teal-700 hover:text-teal-900 hover:bg-white'
+                    : 'text-teal-700 hover:text-teal-900 hover:bg-teal-50'
                 }`}
               >
                 Monthly
@@ -392,10 +392,10 @@ export default function HomePage() {
                 className={`px-6 py-2.5 rounded-xl text-sm font-semibold transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-teal-600 focus:ring-offset-2 ${
                   billingPeriod === 'annual'
                     ? 'bg-teal-600 text-white shadow-md shadow-teal-500/30'
-                    : 'text-teal-700 hover:text-teal-900 hover:bg-white'
+                    : 'text-teal-700 hover:text-teal-900 hover:bg-teal-50'
                 }`}
               >
-                Annual — Includes summer (3 months free)
+                Annual
               </button>
             </div>
           </div>
