@@ -194,6 +194,14 @@ export default function ParentDashboardPage() {
     return subscriptionData.status || 'Free Preview'
   }, [subscriptionData])
 
+  const isCancelable = useMemo(() => {
+    const status = subscriptionData?.subscription?.status || subscriptionData?.status
+    if (!status) return false
+    if (status === 'canceled') return false
+    if (subscriptionData?.subscription?.cancelAtPeriodEnd) return false
+    return ['trialing', 'active', 'past_due', 'incomplete'].includes(status)
+  }, [subscriptionData])
+
   if (hasPin === null) {
     return (
       <div className="h-full bg-slate-50 flex items-center justify-center">
@@ -332,39 +340,37 @@ export default function ParentDashboardPage() {
                 Subscription will cancel at end of billing period.
               </p>
             )}
-            {subscriptionData?.subscription &&
-              subscriptionData.subscription.status !== 'canceled' &&
-              !subscriptionData.subscription.cancelAtPeriodEnd && (
-                <button
-                  onClick={async () => {
-                    if (!confirm('Cancel subscription at period end?')) return
-                    setIsCanceling(true)
-                    try {
-                      const res = await fetch('/api/stripe/cancel-subscription', {
-                        method: 'POST',
-                        credentials: 'include',
-                      })
-                      if (!res.ok) {
-                        const error = await res.json()
-                        throw new Error(error.error || 'Failed to cancel subscription')
-                      }
-                      const subRes = await fetch('/api/stripe/subscription', { credentials: 'include' })
-                      if (subRes.ok) {
-                        const data = await subRes.json()
-                        setSubscriptionData(data)
-                      }
-                    } catch (error) {
-                      console.error('[Parent Dashboard] Failed to cancel subscription:', error)
-                    } finally {
-                      setIsCanceling(false)
+            {isCancelable && (
+              <button
+                onClick={async () => {
+                  if (!confirm('Cancel subscription at period end?')) return
+                  setIsCanceling(true)
+                  try {
+                    const res = await fetch('/api/stripe/cancel-subscription', {
+                      method: 'POST',
+                      credentials: 'include',
+                    })
+                    if (!res.ok) {
+                      const error = await res.json()
+                      throw new Error(error.error || 'Failed to cancel subscription')
                     }
-                  }}
-                  className="mt-4 inline-flex items-center justify-center rounded-xl border border-rose-200 px-4 py-2 text-xs font-semibold text-rose-600 hover:bg-rose-50"
-                  disabled={isCanceling}
-                >
-                  {isCanceling ? 'Canceling…' : 'Cancel subscription'}
-                </button>
-              )}
+                    const subRes = await fetch('/api/stripe/subscription', { credentials: 'include' })
+                    if (subRes.ok) {
+                      const data = await subRes.json()
+                      setSubscriptionData(data)
+                    }
+                  } catch (error) {
+                    console.error('[Parent Dashboard] Failed to cancel subscription:', error)
+                  } finally {
+                    setIsCanceling(false)
+                  }
+                }}
+                className="mt-4 inline-flex items-center justify-center rounded-xl border border-rose-200 px-4 py-2 text-xs font-semibold text-rose-600 hover:bg-rose-50"
+                disabled={isCanceling}
+              >
+                {isCanceling ? 'Canceling…' : 'Cancel subscription'}
+              </button>
+            )}
           </div>
 
           <div className="rounded-2xl border border-slate-200/60 bg-white/90 p-6 shadow-lg">
