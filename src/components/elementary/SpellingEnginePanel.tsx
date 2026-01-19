@@ -371,7 +371,7 @@ export default function SpellingEnginePanel({
           <div className="flex flex-wrap gap-2">
             <button
               type="button"
-              onClick={handleStartWarmup}
+              onClick={() => handleStartWarmup()}
               className="px-3 py-2 rounded-lg text-xs sm:text-sm font-medium bg-emerald-50 text-emerald-700 border border-emerald-200 hover:bg-emerald-100"
             >
               5-word warmup
