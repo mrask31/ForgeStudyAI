@@ -9,6 +9,8 @@ interface SpellingEnginePanelProps {
   onAfterSave?: (list?: SpellingList) => void
   autoStartOnSave?: boolean
   autoStartCount?: number
+  showListLibrary?: boolean
+  listLibraryTitle?: string
   showContinueCard?: boolean
   showEnterList?: boolean
   showUseLastListButton?: boolean
@@ -50,6 +52,8 @@ export default function SpellingEnginePanel({
   onAfterSave,
   autoStartOnSave = false,
   autoStartCount = 5,
+  showListLibrary = false,
+  listLibraryTitle = 'Your word lists',
   showContinueCard = true,
   showEnterList = true,
   showUseLastListButton = false,
@@ -62,6 +66,7 @@ export default function SpellingEnginePanel({
 }: SpellingEnginePanelProps) {
   const [listInput, setListInput] = useState('')
   const [lists, setLists] = useState<SpellingList[]>([])
+  const [selectedListId, setSelectedListId] = useState<string | null>(null)
   const [isSaving, setIsSaving] = useState(false)
   const [isTestOpen, setIsTestOpen] = useState(false)
   const [testAnswers, setTestAnswers] = useState<Record<string, string>>({})
@@ -71,7 +76,9 @@ export default function SpellingEnginePanel({
   const [speakingWords, setSpeakingWords] = useState<Record<string, boolean>>({})
   const [gradedResults, setGradedResults] = useState<Record<string, boolean> | null>(null)
 
-  const activeList = lists[0]
+  const activeList = selectedListId
+    ? lists.find((list) => list.id === selectedListId) || lists[0]
+    : lists[0]
   const wordGroups = useMemo(() => groupWords(activeList?.spelling_words || []), [activeList])
 
   useEffect(() => {
@@ -93,7 +100,15 @@ export default function SpellingEnginePanel({
       const response = await fetch(`/api/elementary/spelling/lists?profileId=${profileId}`)
       if (!response.ok) return
       const payload = await response.json()
-      setLists(payload?.lists || [])
+      const nextLists = payload?.lists || []
+      setLists(nextLists)
+      if (nextLists.length > 0) {
+        setSelectedListId((current) => {
+          if (!current) return nextLists[0].id
+          const exists = nextLists.some((list: SpellingList) => list.id === current)
+          return exists ? current : nextLists[0].id
+        })
+      }
     }
     loadLists()
   }, [profileId])
@@ -118,6 +133,9 @@ export default function SpellingEnginePanel({
     const nextLists = payload?.lists || []
     setLists(nextLists)
     const nextActive = nextLists?.[0]
+    if (nextActive?.id) {
+      setSelectedListId(nextActive.id)
+    }
     if (autoStartOnSave && nextActive?.spelling_words?.length) {
       const startWords = nextActive.spelling_words.slice(0, autoStartCount).map((w: SpellingWord) => w.word)
       if (startWords.length > 0) {
@@ -129,8 +147,8 @@ export default function SpellingEnginePanel({
     }
   }
 
-  const handleStartWarmup = () => {
-    const words = (activeList?.spelling_words || []).slice(0, 5).map((w) => w.word)
+  const handleStartWarmup = (list: SpellingList | undefined = activeList) => {
+    const words = (list?.spelling_words || []).slice(0, 5).map((w) => w.word)
     if (words.length === 0) return
     onStartSession(`Let’s practice these words: ${words.join(', ')}. Then do a quick check.`)
   }
@@ -230,6 +248,50 @@ export default function SpellingEnginePanel({
 
   return (
     <div className="space-y-4">
+      {showListLibrary && (
+        <div className="p-4 sm:p-6 bg-white border border-slate-200 rounded-xl shadow-sm space-y-3">
+          <div className="flex items-center justify-between">
+            <h3 className="text-base sm:text-lg font-semibold text-slate-900">{listLibraryTitle}</h3>
+            <span className="text-xs text-slate-500">{lists.length} lists</span>
+          </div>
+          {lists.length === 0 ? (
+            <p className="text-sm text-slate-500">No lists yet. Create one below.</p>
+          ) : (
+            <div className="grid gap-2">
+              {lists.map((list) => {
+                const isActive = list.id === activeList?.id
+                return (
+                  <div
+                    key={list.id}
+                    className={`flex items-center justify-between gap-3 rounded-lg border px-3 py-2 ${
+                      isActive ? 'border-emerald-300 bg-emerald-50/40' : 'border-slate-200'
+                    }`}
+                  >
+                    <button
+                      type="button"
+                      onClick={() => setSelectedListId(list.id)}
+                      className="text-left flex-1"
+                    >
+                      <p className="text-sm font-semibold text-slate-900">{list.title}</p>
+                      <p className="text-xs text-slate-500">{list.spelling_words.length} words</p>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setSelectedListId(list.id)
+                        handleStartWarmup(list)
+                      }}
+                      className="px-3 py-1.5 rounded-lg text-xs font-semibold bg-emerald-600 text-white hover:bg-emerald-700"
+                    >
+                      Study
+                    </button>
+                  </div>
+                )
+              })}
+            </div>
+          )}
+        </div>
+      )}
       {showContinueCard && activeList && (
         <div className="p-4 bg-white border border-slate-200 rounded-xl shadow-sm">
           <div className="flex items-center justify-between gap-3">
