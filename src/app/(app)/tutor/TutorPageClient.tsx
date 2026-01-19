@@ -63,6 +63,7 @@ function TutorPageContent() {
     }
     return prefillMap[entryMode]
   }, [entryMode])
+  const isEntryMode = !!entryMode
   
   // Note: classId sync is handled by TutorContext itself (see TutorContext.tsx useEffect)
   // No need to sync here - it would create infinite loops
@@ -91,6 +92,20 @@ function TutorPageContent() {
     setResolvedChatId(newSessionId)
   }, [])
   
+  const buildTutorUrl = useCallback((chatId?: string) => {
+    const params = new URLSearchParams()
+    if (entryMode) {
+      params.set('mode', entryMode)
+    }
+    if (chatId) {
+      params.set('sessionId', chatId)
+    }
+    if (tutorContext.selectedClassId) {
+      params.set('classId', tutorContext.selectedClassId)
+    }
+    return `/tutor?${params.toString()}`
+  }, [entryMode, tutorContext.selectedClassId])
+
   const handleNewSession = useCallback(async () => {
     const intent = 'new_question'
 
@@ -116,12 +131,12 @@ function TutorPageContent() {
       }
 
       // Navigate to the new session
-      router.push(`/tutor?sessionId=${chatId}`)
+      router.push(buildTutorUrl(chatId))
     } catch (error) {
       console.error('[TutorPage] Failed to create new session:', error)
       setError('Failed to create session. Please try again.')
     }
-  }, [router])
+  }, [router, buildTutorUrl])
   
   const handleInstantStart = useCallback(async (message: string) => {
     if (!message.trim()) return
@@ -170,15 +185,12 @@ function TutorPageContent() {
         localStorage.setItem('forgenursing-tutor-auto-send', 'true')
       }
       
-      const newUrl = tutorContext.selectedClassId
-        ? `/tutor?sessionId=${chatId}&classId=${tutorContext.selectedClassId}`
-        : `/tutor?sessionId=${chatId}`
-      router.push(newUrl)
+      router.push(buildTutorUrl(chatId))
     } catch (error) {
       console.error('[TutorPage] Failed to start session:', error)
       setError('Failed to start session. Please try again.')
     }
-  }, [attachedFiles, tutorContext.selectedClassId, tutorContext.selectedTopicId, router])
+  }, [attachedFiles, tutorContext.selectedClassId, tutorContext.selectedTopicId, router, buildTutorUrl])
 
   // Unified send handler for both landing and session states
   const handleSendMessage = useCallback(async (message: string) => {
@@ -574,7 +586,7 @@ function TutorPageContent() {
           // Redirect to sessionId-based URL for clean state
           console.log('[Tutor] Resolved to chatId:', chatId, 'Redirecting...')
           isResolvingRef.current = false // Reset before redirect
-          router.replace(`/tutor?sessionId=${chatId}`)
+          router.replace(buildTutorUrl(chatId))
           // The redirect will trigger this effect again with sessionId, but the guard will prevent re-resolution
           return
         } catch (error) {
@@ -652,10 +664,7 @@ function TutorPageContent() {
             // Update paramsKey to prevent re-resolution
             lastResolvedParamsRef.current = `${intentParam || ''}-${mostRecent.id}-${tutorContext.selectedClassId || ''}`
             isResolvingRef.current = false // Reset before redirect
-            const newUrl = tutorContext.selectedClassId
-              ? `/tutor?sessionId=${mostRecent.id}&classId=${tutorContext.selectedClassId}`
-              : `/tutor?sessionId=${mostRecent.id}`
-            router.replace(newUrl)
+            router.replace(buildTutorUrl(mostRecent.id))
             return // Will trigger effect again with sessionId, but the guard will prevent re-resolution
           } else {
             // No chat found for this context - show empty state
@@ -724,7 +733,7 @@ function TutorPageContent() {
   const showError = error && !isResolving
   // Show landing when there's no resolved chat (allows welcome message for both General Tutor and class-specific)
   // Only show session if there's an active resolvedChatId (not just structured context)
-  const showLanding = !resolvedChatId && !isResolving && !error
+  const showLanding = (!resolvedChatId && !isResolving && !error) || (isEntryMode && !isResolving && !error)
   // Show session only if there's an active resolved chat
   const showSession = !!resolvedChatId && !isResolving && !error
 
@@ -791,7 +800,54 @@ function TutorPageContent() {
 
         {/* Chat area with scrollable messages and fixed input */}
         <div className="flex-1 flex flex-col min-h-0 mt-2 sm:mt-4 overflow-hidden">
-          {showLanding ? (
+          {isEntryMode ? (
+            <>
+              <div className="flex-1 overflow-y-auto">
+                <TutorLanding
+                  onStartSession={handleInstantStart}
+                  attachedFiles={attachedFiles}
+                  attachedContext={attachedContext}
+                  selectedClassId={tutorContext.selectedClassId}
+                  selectedClass={tutorContext.selectedClass}
+                  gradeBand={activeProfileSummary?.gradeBand}
+                  mode={entryMode ?? 'tutor'}
+                  profileId={activeProfileSummary?.id ?? null}
+                />
+                {showSession && (
+                  <div className="mt-6">
+                    <TutorSession
+                      sessionId={resolvedChatId || undefined}
+                      strictMode={strictMode}
+                      onStrictModeChange={handleStrictModeChange}
+                      onSessionCreated={handleSessionCreated}
+                      attachedFiles={attachedFiles}
+                      onDetachFile={handleDetachFile}
+                      messages={messages}
+                      onMessagesChange={setMessages}
+                      scrollToMessageId={messageIdParam || undefined}
+                    />
+                  </div>
+                )}
+              </div>
+              {!showSession && (
+                <div className="flex-shrink-0 pt-4 sm:pt-6 bg-slate-50">
+                  <ChatInterface
+                    key={`landing-${entryMode ?? 'tutor'}`}
+                    sessionId={undefined}
+                    onSend={handleInstantStart}
+                    initialPrompt={entryPrompt}
+                    attachedFiles={attachedFiles}
+                    attachedContext={attachedContext}
+                    onDetach={handleDetachFile}
+                    messages={[]}
+                  />
+                  <p className="text-[9px] text-slate-400 text-center mt-2 pb-2">
+                    Educational use only. Not a medical device.
+                  </p>
+                </div>
+              )}
+            </>
+          ) : showLanding ? (
             <>
               <div className="flex-1 overflow-y-auto">
                 <TutorLanding
@@ -805,7 +861,6 @@ function TutorPageContent() {
                   profileId={activeProfileSummary?.id ?? null}
                 />
               </div>
-              {/* Chat input docked at bottom for landing page */}
               <div className="flex-shrink-0 pt-4 sm:pt-6 bg-slate-50">
                 <ChatInterface
                   key={`landing-${entryMode ?? 'tutor'}`}
@@ -817,7 +872,6 @@ function TutorPageContent() {
                   onDetach={handleDetachFile}
                   messages={[]}
                 />
-                {/* Disclaimer below chat box */}
                 <p className="text-[9px] text-slate-400 text-center mt-2 pb-2">
                   Educational use only. Not a medical device.
                 </p>
