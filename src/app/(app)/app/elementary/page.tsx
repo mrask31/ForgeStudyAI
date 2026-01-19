@@ -1,7 +1,7 @@
 'use client'
 
 import Link from 'next/link'
-import { Sparkles, BookOpenCheck, PenLine, Shapes } from 'lucide-react'
+import { Sparkles, BookOpenCheck, PenLine, Shapes, BookOpen, Type } from 'lucide-react'
 import { useActiveProfile } from '@/contexts/ActiveProfileContext'
 
 export default function ElementaryDashboardPage() {
@@ -18,28 +18,28 @@ export default function ElementaryDashboardPage() {
                   ForgeElementary • Grades 3–5
                 </div>
                 <h1 className="text-3xl sm:text-4xl font-bold text-slate-900 mb-3">
-                  Calm, joyful learning support for younger learners
+                  Bright, simple learning for younger learners
                 </h1>
                 <p className="text-slate-600 text-base sm:text-lg max-w-2xl">
-                  Short steps, friendly explanations, and confidence-building practice that keeps kids engaged.
+                  One clear starting point with friendly practice that keeps kids confident.
                 </p>
               </div>
               <div className="flex flex-col gap-3">
-                <Link
-                  href="/tutor"
-                  className="inline-flex items-center justify-center px-6 py-3 rounded-xl bg-gradient-to-r from-teal-600 to-cyan-600 text-white font-semibold shadow-lg hover:from-teal-700 hover:to-cyan-700 transition-all"
-                >
-                  Start a guided lesson
-                </Link>
+                <div className="rounded-2xl border border-teal-100 bg-teal-50/70 px-5 py-4">
+                  <p className="text-xs font-semibold text-teal-800 uppercase tracking-wide mb-2">Start here</p>
+                  <Link
+                    href="/tutor"
+                    className="inline-flex items-center justify-center w-full px-6 py-3 rounded-xl bg-gradient-to-r from-teal-600 to-cyan-600 text-white font-semibold shadow-lg hover:from-teal-700 hover:to-cyan-700 transition-all"
+                  >
+                    Start a 5-minute session
+                  </Link>
+                </div>
                 <Link
                   href="/sources"
                   className="inline-flex items-center justify-center px-6 py-3 rounded-xl border-2 border-slate-200 text-slate-700 font-semibold hover:bg-slate-50 transition-colors"
                 >
-                  Add learning materials
+                  Upload learning materials
                 </Link>
-                <div className="rounded-xl border border-teal-100 bg-teal-50/70 px-4 py-2 text-xs text-teal-800">
-                  Map-first: we show a simple study map before practice.
-                </div>
               </div>
             </div>
             {!activeProfileId && (
@@ -49,72 +49,46 @@ export default function ElementaryDashboardPage() {
             )}
           </section>
 
-          <section className="grid gap-4 md:grid-cols-3">
-            {[
-              {
-                title: 'Continue where you left off',
-                description: 'Pick up your last session and keep the momentum going.',
-                href: '/tutor',
-                action: 'Resume session',
-              },
-              {
-                title: 'Start a new map',
-                description: 'Open the tutor and build a simple map for today’s topic.',
-                href: '/tutor',
-                action: 'Start a new map',
-              },
-              {
-                title: 'Tonight’s plan',
-                description: 'Get a quick plan for what to study tonight.',
-                href: '/tutor',
-                action: 'Build a plan',
-              },
-            ].map((item) => (
-              <div
-                key={item.title}
-                className="rounded-2xl border border-teal-100 bg-white/90 p-6 shadow-md shadow-slate-200/40"
-              >
-                <h3 className="text-lg font-semibold text-slate-900 mb-2">{item.title}</h3>
-                <p className="text-sm text-slate-600 mb-4">{item.description}</p>
-                <Link
-                  href={item.href}
-                  className="inline-flex items-center justify-center rounded-xl bg-teal-600 px-4 py-2 text-sm font-semibold text-white hover:bg-teal-700 transition-colors"
+          <section>
+            <div className="flex items-center gap-3 mb-4">
+              <Sparkles className="w-5 h-5 text-teal-700" />
+              <h2 className="text-xl font-semibold text-slate-900">Learn</h2>
+            </div>
+            <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
+              {[
+                {
+                  icon: Type,
+                  title: 'Spelling Words',
+                  description: 'Practice 5 words at a time with gentle prompts.',
+                },
+                {
+                  icon: BookOpenCheck,
+                  title: 'Reading Coach',
+                  description: 'Work through passages step-by-step with clear cues.',
+                },
+                {
+                  icon: BookOpen,
+                  title: 'Sight Words',
+                  description: 'Build fast recognition with short, focused drills.',
+                },
+                {
+                  icon: Shapes,
+                  title: 'Math Help',
+                  description: 'Friendly explanations with visuals and examples.',
+                },
+              ].map((item) => (
+                <div
+                  key={item.title}
+                  className="rounded-2xl border border-slate-200/70 bg-white/80 p-6 shadow-md shadow-slate-200/40"
                 >
-                  {item.action}
-                </Link>
-              </div>
-            ))}
-          </section>
-
-          <section className="grid gap-6 md:grid-cols-3">
-            {[
-              {
-                icon: BookOpenCheck,
-                title: 'Reading comprehension',
-                description: 'Break passages into small steps and highlight the main idea together.',
-              },
-              {
-                icon: PenLine,
-                title: 'Spelling & writing',
-                description: 'Practice tricky words with gentle prompts and phonics-based tips.',
-              },
-              {
-                icon: Shapes,
-                title: 'Math foundations',
-                description: 'Build confidence with number sense, word problems, and visual models.',
-              },
-            ].map((item) => (
-              <div
-                key={item.title}
-                className="rounded-2xl border border-slate-200/70 bg-white/80 p-6 shadow-md shadow-slate-200/40"
-              >
-                <div className="w-12 h-12 rounded-2xl bg-teal-100 text-teal-700 flex items-center justify-center mb-4">
-                  <item.icon className="w-6 h-6" />
+                  <div className="w-12 h-12 rounded-2xl bg-teal-100 text-teal-700 flex items-center justify-center mb-4">
+                    <item.icon className="w-6 h-6" />
+                  </div>
+                  <h3 className="text-lg font-semibold text-slate-900 mb-2">{item.title}</h3>
+                  <p className="text-sm text-slate-600">{item.description}</p>
                 </div>
-                <h3 className="text-lg font-semibold text-slate-900 mb-2">{item.title}</h3>
-                <p className="text-sm text-slate-600">{item.description}</p>
-              </div>
-            ))}
+              ))}
+            </div>
           </section>
 
           <section className="rounded-3xl border border-slate-200/70 bg-white/90 p-8 sm:p-10 shadow-lg shadow-slate-200/40">
@@ -123,14 +97,14 @@ export default function ElementaryDashboardPage() {
                 <Sparkles className="w-5 h-5 text-teal-700" />
               </div>
               <div>
-                <h2 className="text-2xl font-semibold text-slate-900 mb-2">How ForgeStudy helps at home</h2>
+                <h2 className="text-2xl font-semibold text-slate-900 mb-2">Homework help, without the stress</h2>
                 <p className="text-slate-600 mb-4">
-                  We keep lessons short, encouraging, and easy for parents to support.
+                  Short sessions and calm prompts keep momentum without overwhelm.
                 </p>
                 <ul className="grid gap-3 text-sm text-slate-600">
-                  <li>Daily 10–15 minute micro-sessions to keep momentum.</li>
-                  <li>Simple explanations kids can repeat back confidently.</li>
-                  <li>Practice questions that feel like games, not tests.</li>
+                  <li>One question at a time with clear steps.</li>
+                  <li>Lots of examples to build confidence fast.</li>
+                  <li>Map-first guidance that stays simple.</li>
                 </ul>
               </div>
             </div>

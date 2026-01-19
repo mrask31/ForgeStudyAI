@@ -1,11 +1,13 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { Loader2, Map } from 'lucide-react'
+import { Loader2, Map, FolderPlus } from 'lucide-react'
 import { useDensity } from '@/contexts/DensityContext'
 import { getDensityTokens } from '@/lib/density-tokens'
 import ReactMarkdown from 'react-markdown'
 import ToolPanel from '@/components/ui/tool-panel'
+import SaveToTopicModal from '@/components/study-topics/SaveToTopicModal'
+import { useActiveProfileSummary } from '@/hooks/useActiveProfileSummary'
 
 interface ForgeMapPanelProps {
   isOpen: boolean
@@ -28,10 +30,12 @@ export default function ForgeMapPanel({
 }: ForgeMapPanelProps) {
   const { density } = useDensity()
   const tokens = getDensityTokens(density)
+  const { summary: activeProfile } = useActiveProfileSummary()
   const [mapMarkdown, setMapMarkdown] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [clarifyingQuestion, setClarifyingQuestion] = useState<string | null>(null)
+  const [isSaveOpen, setIsSaveOpen] = useState(false)
 
   useEffect(() => {
     if (isOpen && messageContent) {
@@ -114,6 +118,10 @@ export default function ForgeMapPanel({
   }
 
   const sections = mapMarkdown ? parseMapSections(mapMarkdown) : []
+  const canSaveToTopic = !!activeProfile && (activeProfile.gradeBand === 'middle' || activeProfile.gradeBand === 'high')
+  const mapSaveText = mapMarkdown
+    ? `${mapMarkdown}${clarifyingQuestion ? `\n\nClarifying question: ${clarifyingQuestion}` : ''}`
+    : ''
 
   // Section styling based on header type
   const getSectionStyle = (header: string) => {
@@ -133,51 +141,73 @@ export default function ForgeMapPanel({
   }
 
   return (
-    <ToolPanel
-      isOpen={isOpen}
-      onClose={onClose}
-      title="Concept Map"
-      icon={<Map className="w-5 h-5 text-clinical-primary" />}
-    >
-      {isLoading ? (
-        <div className="flex flex-col items-center justify-center py-12">
-          <Loader2 className="animate-spin text-clinical-primary w-8 h-8 mb-4" />
-          <p className={`${tokens.bodyText} text-sm text-clinical-text-secondary`}>Generating concept map...</p>
-        </div>
-      ) : error ? (
-        <div className="text-center py-12">
-          <p className={`${tokens.bodyText} text-sm text-red-600`}>{error}</p>
-        </div>
-      ) : sections.length === 0 ? (
-        <div className="text-center py-12">
-          <p className={`${tokens.bodyText} text-sm text-clinical-text-secondary`}>No concept map available yet.</p>
-        </div>
-      ) : (
-        <div className="space-y-4">
-          {clarifyingQuestion && (
-            <div className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
-              <div className="text-xs font-semibold uppercase tracking-wide text-amber-800 mb-1">
-                Try this first
+    <>
+      <ToolPanel
+        isOpen={isOpen}
+        onClose={onClose}
+        title="Concept Map"
+        icon={<Map className="w-5 h-5 text-clinical-primary" />}
+      >
+        {isLoading ? (
+          <div className="flex flex-col items-center justify-center py-12">
+            <Loader2 className="animate-spin text-clinical-primary w-8 h-8 mb-4" />
+            <p className={`${tokens.bodyText} text-sm text-clinical-text-secondary`}>Generating concept map...</p>
+          </div>
+        ) : error ? (
+          <div className="text-center py-12">
+            <p className={`${tokens.bodyText} text-sm text-red-600`}>{error}</p>
+          </div>
+        ) : sections.length === 0 ? (
+          <div className="text-center py-12">
+            <p className={`${tokens.bodyText} text-sm text-clinical-text-secondary`}>No concept map available yet.</p>
+          </div>
+        ) : (
+          <div className="space-y-4">
+            {canSaveToTopic && mapMarkdown && (
+              <button
+                type="button"
+                onClick={() => setIsSaveOpen(true)}
+                className="inline-flex items-center gap-2 rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-xs font-semibold text-emerald-700 hover:bg-emerald-100 transition-colors"
+              >
+                <FolderPlus className="w-4 h-4" />
+                Save to Study Topics
+              </button>
+            )}
+            {clarifyingQuestion && (
+              <div className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
+                <div className="text-xs font-semibold uppercase tracking-wide text-amber-800 mb-1">
+                  Try this first
+                </div>
+                <span className="font-semibold">Clarifying question:</span> {clarifyingQuestion}
               </div>
-              <span className="font-semibold">Clarifying question:</span> {clarifyingQuestion}
-            </div>
-          )}
-          {sections.map((section, index) => (
-            <div
-              key={index}
-              className={`p-4 rounded-lg border ${getSectionStyle(section.header)}`}
-            >
-              <h3 className={`${tokens.subheading} font-semibold text-clinical-text-primary mb-2`}>
-                {section.header}
-              </h3>
-              <div className={`${tokens.bodyText} text-sm text-clinical-text-secondary prose prose-slate max-w-none`}>
-                <ReactMarkdown>{section.content}</ReactMarkdown>
+            )}
+            {sections.map((section, index) => (
+              <div
+                key={index}
+                className={`p-4 rounded-lg border ${getSectionStyle(section.header)}`}
+              >
+                <h3 className={`${tokens.subheading} font-semibold text-clinical-text-primary mb-2`}>
+                  {section.header}
+                </h3>
+                <div className={`${tokens.bodyText} text-sm text-clinical-text-secondary prose prose-slate max-w-none`}>
+                  <ReactMarkdown>{section.content}</ReactMarkdown>
+                </div>
               </div>
-            </div>
-          ))}
-        </div>
+            ))}
+          </div>
+        )}
+      </ToolPanel>
+      {canSaveToTopic && activeProfile && mapMarkdown && (
+        <SaveToTopicModal
+          isOpen={isSaveOpen}
+          onClose={() => setIsSaveOpen(false)}
+          profileId={activeProfile.id}
+          itemType="map"
+          itemRef={chatId || null}
+          sourceText={mapSaveText}
+        />
       )}
-    </ToolPanel>
+    </>
   )
 }
 

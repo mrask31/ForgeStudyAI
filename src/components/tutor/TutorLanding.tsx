@@ -9,6 +9,7 @@ interface TutorLandingProps {
   attachedContext?: 'none' | 'syllabus' | 'textbook' | 'mixed'
   selectedClassId?: string // To differentiate General Tutor from class-specific
   selectedClass?: { code: string; name: string } | null // Class info for welcome message
+  gradeBand?: 'elementary' | 'middle' | 'high'
 }
 
 export default function TutorLanding({ 
@@ -16,7 +17,8 @@ export default function TutorLanding({
   attachedFiles = [],
   attachedContext = 'none',
   selectedClassId,
-  selectedClass
+  selectedClass,
+  gradeBand,
 }: TutorLandingProps) {
   const hasAttachedFiles = attachedFiles.length > 0
   const isGeneralTutor = !selectedClassId
@@ -247,6 +249,7 @@ export default function TutorLanding({
           selectedClassId={selectedClassId}
           lastAssistantMessage={lastChatMessage || undefined}
           hasExistingConversation={!!lastChatMessage}
+          gradeBand={gradeBand}
         />
       </div>
     </div>

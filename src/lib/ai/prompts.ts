@@ -139,6 +139,12 @@ export function getInstantStudyMapPrompt(params: {
   grade?: string | null
 }) {
   const gradeLine = params.grade ? `Student grade: ${params.grade}` : ''
+  const sectionLimit =
+    params.gradeBand === 'elementary'
+      ? 'Keep each section to 2-4 bullets max'
+      : params.gradeBand === 'middle'
+        ? 'Keep each section to 3-5 bullets max'
+        : 'Keep each section to 4-6 bullets max'
   return `You are a study coach.
 Grade band: ${gradeBandSummary(params.gradeBand)}. ${gradeLine}
 
@@ -156,7 +162,7 @@ Use ONLY these headers (include all that apply):
 
 Rules:
 - Use bullet points under each header
-- Keep each section to 3-5 bullets max
+- ${sectionLimit}
 - Keep language simple and scannable`
 }
 
@@ -166,17 +172,21 @@ export function getConfusionMapPrompt(params: {
   grade?: string | null
 }) {
   const gradeLine = params.grade ? `Student grade: ${params.grade}` : ''
+  const nodeCount =
+    params.gradeBand === 'elementary' ? 3 : params.gradeBand === 'middle' ? 4 : 5
   return `You are a learning coach helping a confused student.
 Grade band: ${gradeBandSummary(params.gradeBand)}. ${gradeLine}
 
 Content:
 ${params.content}
 
-Create a very small concept map with EXACTLY 3 nodes (no more), in this format:
+Create a very small concept map with EXACTLY ${nodeCount} nodes (no more), in this format:
 ### Map
 - Node 1
 - Node 2
 - Node 3
+${nodeCount >= 4 ? '- Node 4' : ''}
+${nodeCount >= 5 ? '- Node 5' : ''}
 
 Then include a single clarifying question on its own line in this format:
 Clarifying question: <question>
@@ -279,6 +289,34 @@ Return a short plan with:
 2) Then this (time blocks)
 3) Stop point for tonight
 4) Quick check-in question`
+}
+
+export function getStudyGuidePrompt(params: {
+  title: string
+  itemsText: string
+  gradeBand?: GradeBand
+  grade?: string | null
+}) {
+  const gradeLine = params.grade ? `Student grade: ${params.grade}` : ''
+  return `You are a study coach turning saved learning items into a short study guide.
+Grade band: ${gradeBandSummary(params.gradeBand)}. ${gradeLine}
+
+Topic: ${params.title}
+
+Saved items (notes + outputs):
+${params.itemsText}
+
+Create a study guide in markdown with these sections:
+## Quick Map
+## Key Ideas
+## Practice Prompts
+## Common Traps
+## Fast Review Checklist
+
+Rules:
+- Keep it concise and scannable
+- Use bullet points under each header
+- Match the grade band tone and vocabulary`
 }
 
 export function getStrictModePrompt() {

@@ -3,19 +3,50 @@
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { MessageSquare, FileText, Settings, Activity, GraduationCap, BookOpen } from 'lucide-react'
+import { MessageSquare, FileText, Settings, Activity, GraduationCap, BookOpen, Shield, Sparkles, Folder } from 'lucide-react'
 import { createBrowserClient } from '@supabase/ssr'
 import HistoryButton from './HistoryButton'
 import { useActiveProfile } from '@/contexts/ActiveProfileContext'
 
-const NAV_ITEMS = [
-  { label: 'Tutor Workspace', href: '/tutor', icon: MessageSquare },
-  { label: 'My Classes', href: '/classes', icon: GraduationCap },
-  { label: 'Sources', href: '/sources', icon: FileText },
-  { label: 'Dashboard', href: '/readiness', icon: Activity },
-  { label: 'Vocabulary Bank', href: '/dictionary', icon: BookOpen },
-  { label: 'Settings', href: '/settings', icon: Settings },
-]
+const NAV_ITEMS_BY_BAND = {
+  elementary: [
+    { label: 'Home', href: '/app/elementary', icon: Sparkles },
+    { label: 'Spelling', href: '/tutor?mode=spelling', icon: BookOpen },
+    { label: 'Reading', href: '/tutor?mode=reading', icon: BookOpen },
+    { label: 'Homework Help', href: '/tutor?mode=homework', icon: MessageSquare },
+    { label: 'Upload', href: '/sources', icon: FileText },
+    { label: 'Settings', href: '/settings', icon: Settings },
+  ],
+  middle: [
+    { label: 'Home', href: '/app/middle', icon: Sparkles },
+    { label: 'Study Topics', href: '/study-topics', icon: Folder },
+    { label: 'Study Map', href: '/tutor?tool=study-map', icon: MessageSquare },
+    { label: 'Practice', href: '/tutor?tool=practice', icon: Activity },
+    { label: 'Writing', href: '/tutor?tool=writing', icon: BookOpen },
+    { label: 'Uploads', href: '/sources', icon: FileText },
+    { label: 'Progress', href: '/readiness', icon: Activity },
+    { label: 'Settings', href: '/settings', icon: Settings },
+  ],
+  high: [
+    { label: 'Home', href: '/app/high', icon: Sparkles },
+    { label: 'Study Topics', href: '/study-topics', icon: Folder },
+    { label: 'Study Maps', href: '/tutor?tool=study-map', icon: MessageSquare },
+    { label: 'Practice / Review', href: '/tutor?tool=practice', icon: Activity },
+    { label: 'Exam Sheets', href: '/tutor?tool=exam', icon: BookOpen },
+    { label: 'Writing Lab', href: '/tutor?tool=writing', icon: BookOpen },
+    { label: 'Uploads', href: '/sources', icon: FileText },
+    { label: 'Progress', href: '/readiness', icon: Activity },
+    { label: 'Settings', href: '/settings', icon: Settings },
+  ],
+  default: [
+    { label: 'Tutor Workspace', href: '/tutor', icon: MessageSquare },
+    { label: 'My Classes', href: '/classes', icon: GraduationCap },
+    { label: 'Sources', href: '/sources', icon: FileText },
+    { label: 'Dashboard', href: '/readiness', icon: Activity },
+    { label: 'Vocabulary Bank', href: '/dictionary', icon: BookOpen },
+    { label: 'Settings', href: '/settings', icon: Settings },
+  ],
+} as const
 
 interface SidebarProps {
   onNavigate?: () => void
@@ -71,6 +102,10 @@ export default function Sidebar({ onNavigate }: SidebarProps = {}) {
     return null
   }
 
+  const navItems = gradeBand && gradeBand in NAV_ITEMS_BY_BAND
+    ? NAV_ITEMS_BY_BAND[gradeBand as keyof typeof NAV_ITEMS_BY_BAND]
+    : NAV_ITEMS_BY_BAND.default
+
   return (
     <aside className="flex w-full h-full flex-col bg-gradient-to-br from-slate-950 via-teal-900 to-emerald-950 text-teal-100">
       {/* Sidebar Content */}
@@ -85,7 +120,7 @@ export default function Sidebar({ onNavigate }: SidebarProps = {}) {
         
         {/* Nav Container - Increased padding */}
         <nav className="flex-1 space-y-2">
-          {NAV_ITEMS.map((item) => {
+          {navItems.map((item) => {
             const isActive = pathname === item.href || 
               (item.href === '/classes' && pathname.startsWith('/classes')) ||
               (item.href === '/dictionary' && pathname.startsWith('/dictionary'))
@@ -111,8 +146,16 @@ export default function Sidebar({ onNavigate }: SidebarProps = {}) {
         </nav>
         
         {/* History Button - Moved from TutorHeader */}
-        <div className="mt-4 pt-4 border-t border-teal-900/50">
+        <div className="mt-4 pt-4 border-t border-teal-900/50 space-y-2">
           <HistoryButton onNavigate={onNavigate} />
+          <Link
+            href="/parent"
+            onClick={onNavigate}
+            className="group flex items-center gap-3 rounded-lg px-4 py-3 text-sm font-medium transition-all duration-200 text-teal-200 hover:bg-gradient-to-r hover:from-teal-900/50 hover:to-emerald-900/50 hover:text-white"
+          >
+            <Shield className="h-5 w-5" />
+            Parent Dashboard
+          </Link>
         </div>
         
         {/* User Profile / Footer */}

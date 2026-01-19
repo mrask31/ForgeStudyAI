@@ -46,3 +46,24 @@ export interface ExamPlan {
   updatedAt: string
 }
 
+export interface StudyTopic {
+  id: string
+  profileId: string
+  title: string
+  gradeBand: 'middle' | 'high'
+  createdAt: string
+  updatedAt: string
+  itemsCount?: number
+}
+
+export interface StudyTopicItem {
+  id: string
+  topicId: string
+  profileId: string
+  itemType: 'chat' | 'map' | 'exam' | 'practice' | 'custom'
+  itemRef?: string | null
+  sourceText: string
+  createdAt: string
+  updatedAt: string
+}
+

@@ -64,30 +64,29 @@ export default function ParentDashboardPage() {
     loadStatus()
   }, [])
 
+  const loadSubscription = async () => {
+    try {
+      const res = await fetch('/api/stripe/subscription', { credentials: 'include' })
+      if (res.ok) {
+        const data = await res.json()
+        setSubscriptionData(data)
+      }
+    } catch (error) {
+      console.error('[Parent Dashboard] Failed to load subscription:', error)
+    }
+  }
+
+  const loadProfiles = async () => {
+    try {
+      const studentProfiles = await getStudentProfiles()
+      setProfiles(studentProfiles)
+    } catch (error) {
+      console.error('[Parent Dashboard] Failed to load profiles:', error)
+    }
+  }
+
   useEffect(() => {
     if (!isUnlocked) return
-
-    const loadProfiles = async () => {
-      try {
-        const studentProfiles = await getStudentProfiles()
-        setProfiles(studentProfiles)
-      } catch (error) {
-        console.error('[Parent Dashboard] Failed to load profiles:', error)
-      }
-    }
-
-    const loadSubscription = async () => {
-      try {
-        const res = await fetch('/api/stripe/subscription', { credentials: 'include' })
-        if (res.ok) {
-          const data = await res.json()
-          setSubscriptionData(data)
-        }
-      } catch (error) {
-        console.error('[Parent Dashboard] Failed to load subscription:', error)
-      }
-    }
-
     loadProfiles()
     loadSubscription()
   }, [isUnlocked])
@@ -330,6 +329,13 @@ export default function ParentDashboardPage() {
               )}
               <span className="text-sm font-semibold text-slate-900">{subscriptionLabel}</span>
             </div>
+            <button
+              onClick={loadSubscription}
+              className="mt-3 text-xs font-semibold text-teal-700 hover:text-teal-800"
+              disabled={isCanceling}
+            >
+              Refresh status
+            </button>
             {subscriptionData?.subscription?.trialEndDate && (
               <p className="text-xs text-emerald-700 mt-2">
                 Trial ends {subscriptionData.subscription.trialEndDate}

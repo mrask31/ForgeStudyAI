@@ -1,9 +1,11 @@
 'use client'
 
 import { useEffect, useMemo, useState } from 'react'
-import { FileText } from 'lucide-react'
+import { FileText, FolderPlus } from 'lucide-react'
 import ReactMarkdown, { type Components } from 'react-markdown'
 import ToolPanel from '@/components/ui/tool-panel'
+import SaveToTopicModal from '@/components/study-topics/SaveToTopicModal'
+import { useActiveProfileSummary } from '@/hooks/useActiveProfileSummary'
 
 interface ExamSheetModalProps {
   isOpen: boolean
@@ -27,6 +29,8 @@ export default function ExamSheetModal({
   const [isLoading, setIsLoading] = useState(false)
   const [markdown, setMarkdown] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
+  const { summary: activeProfile } = useActiveProfileSummary()
+  const [isSaveOpen, setIsSaveOpen] = useState(false)
   const normalizedMarkdown = useMemo(() => {
     if (!markdown) return ''
     let value = markdown.replace(/\r\n/g, '\n')
@@ -176,74 +180,99 @@ export default function ExamSheetModal({
 
   if (!isOpen) return null
 
-  return (
-    <ToolPanel
-      isOpen={isOpen}
-      onClose={onClose}
-      title="Exam Sheet"
-      icon={<FileText className="w-5 h-5 text-indigo-600" />}
-    >
-      <div className="space-y-4">
-        {isLoading && <p className="text-sm text-slate-600">Generating exam sheet...</p>}
-        {error && <p className="text-sm text-red-600">{error}</p>}
-        {!isLoading && !error && !markdown && (
-          <p className="text-sm text-slate-600">No exam sheet available yet.</p>
-        )}
-        {!isLoading && !error && markdown && (
-          <>
-            {topic && (
-              <div className="inline-flex items-center gap-2 rounded-full border border-indigo-100 bg-indigo-50 px-3 py-1 text-xs font-medium text-indigo-800">
-                Topic: {topic}
-              </div>
-            )}
-            {parsedContent.title && (
-              <h1 className="text-base font-semibold text-slate-900">{parsedContent.title}</h1>
-            )}
-            {parsedContent.sections.length > 0 ? (
-              <div className="space-y-4">
-                <div className="rounded-lg border border-slate-200 bg-slate-50 px-4 py-3">
-                  <p className="text-xs font-semibold uppercase tracking-wide text-slate-600 mb-2">
-                    Contents
-                  </p>
-                  <ul className="space-y-1 text-xs text-slate-600">
-                    {parsedContent.sections.map((section) => {
-                      const id = slugify(section.title)
-                      return (
-                        <li key={id}>
-                          <a href={`#${id}`} className="hover:text-slate-900">
-                            {section.title}
-                          </a>
-                        </li>
-                      )
-                    })}
-                  </ul>
-                </div>
+  const canSaveToTopic = !!activeProfile && !!profileId && (activeProfile.gradeBand === 'middle' || activeProfile.gradeBand === 'high')
+  const sheetText = normalizedMarkdown || markdown || ''
 
-                {parsedContent.sections.map((section) => {
-                  const id = slugify(section.title)
-                  const isChecklist = /must[-\s]?know/i.test(section.title)
-                  return (
-                    <section key={id} id={id} className="rounded-xl border border-slate-200 bg-white px-4 py-3">
-                      <h2 className="text-xs font-semibold uppercase tracking-wide text-slate-600 mb-2">
-                        {section.title}
-                      </h2>
-                      <div className="max-w-none text-sm text-slate-700">
-                        <ReactMarkdown components={getSectionComponents(isChecklist)}>
-                          {section.content}
-                        </ReactMarkdown>
-                      </div>
-                    </section>
-                  )
-                })}
-              </div>
-            ) : (
-              <div className="max-w-none text-sm text-slate-700">
-                <ReactMarkdown components={markdownComponents}>{normalizedMarkdown}</ReactMarkdown>
-              </div>
-            )}
-          </>
-        )}
-      </div>
-    </ToolPanel>
+  return (
+    <>
+      <ToolPanel
+        isOpen={isOpen}
+        onClose={onClose}
+        title="Exam Sheet"
+        icon={<FileText className="w-5 h-5 text-indigo-600" />}
+      >
+        <div className="space-y-4">
+          {isLoading && <p className="text-sm text-slate-600">Generating exam sheet...</p>}
+          {error && <p className="text-sm text-red-600">{error}</p>}
+          {!isLoading && !error && !markdown && (
+            <p className="text-sm text-slate-600">No exam sheet available yet.</p>
+          )}
+          {!isLoading && !error && markdown && (
+            <>
+              {canSaveToTopic && sheetText && (
+                <button
+                  type="button"
+                  onClick={() => setIsSaveOpen(true)}
+                  className="inline-flex items-center gap-2 rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-xs font-semibold text-emerald-700 hover:bg-emerald-100 transition-colors"
+                >
+                  <FolderPlus className="w-4 h-4" />
+                  Save to Study Topics
+                </button>
+              )}
+              {topic && (
+                <div className="inline-flex items-center gap-2 rounded-full border border-indigo-100 bg-indigo-50 px-3 py-1 text-xs font-medium text-indigo-800">
+                  Topic: {topic}
+                </div>
+              )}
+              {parsedContent.title && (
+                <h1 className="text-base font-semibold text-slate-900">{parsedContent.title}</h1>
+              )}
+              {parsedContent.sections.length > 0 ? (
+                <div className="space-y-4">
+                  <div className="rounded-lg border border-slate-200 bg-slate-50 px-4 py-3">
+                    <p className="text-xs font-semibold uppercase tracking-wide text-slate-600 mb-2">
+                      Contents
+                    </p>
+                    <ul className="space-y-1 text-xs text-slate-600">
+                      {parsedContent.sections.map((section) => {
+                        const id = slugify(section.title)
+                        return (
+                          <li key={id}>
+                            <a href={`#${id}`} className="hover:text-slate-900">
+                              {section.title}
+                            </a>
+                          </li>
+                        )
+                      })}
+                    </ul>
+                  </div>
+
+                  {parsedContent.sections.map((section) => {
+                    const id = slugify(section.title)
+                    const isChecklist = /must[-\s]?know/i.test(section.title)
+                    return (
+                      <section key={id} id={id} className="rounded-xl border border-slate-200 bg-white px-4 py-3">
+                        <h2 className="text-xs font-semibold uppercase tracking-wide text-slate-600 mb-2">
+                          {section.title}
+                        </h2>
+                        <div className="max-w-none text-sm text-slate-700">
+                          <ReactMarkdown components={getSectionComponents(isChecklist)}>
+                            {section.content}
+                          </ReactMarkdown>
+                        </div>
+                      </section>
+                    )
+                  })}
+                </div>
+              ) : (
+                <div className="max-w-none text-sm text-slate-700">
+                  <ReactMarkdown components={markdownComponents}>{normalizedMarkdown}</ReactMarkdown>
+                </div>
+              )}
+            </>
+          )}
+        </div>
+      </ToolPanel>
+      {canSaveToTopic && activeProfile && sheetText && (
+        <SaveToTopicModal
+          isOpen={isSaveOpen}
+          onClose={() => setIsSaveOpen(false)}
+          profileId={activeProfile.id}
+          itemType="exam"
+          itemRef={messageId || null}
+          sourceText={sheetText}
+        />
+      )}
+    </>
   )
 }

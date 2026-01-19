@@ -1,7 +1,6 @@
 'use client'
 
-import ReactMarkdown from 'react-markdown'
-import { FileIcon, ClipboardCheck, Map, Bookmark, Star, AlertCircle, CheckCircle2 } from 'lucide-react'
+import { FileIcon, ClipboardCheck, Map, Bookmark, Star, AlertCircle, CheckCircle2, FolderPlus } from 'lucide-react'
 import { useTutorContext } from './TutorContext'
 import { createBrowserClient } from '@supabase/ssr'
 import { setTopicSummaryAndStudiedAt } from '@/lib/api/notebook'
@@ -10,6 +9,8 @@ import type { TutorEvidenceItem } from './TutorEvidencePanel'
 import FollowUpPrompts from './FollowUpPrompts'
 import { useState, useEffect } from 'react'
 import MessageWithMedicalTerms from './MessageWithMedicalTerms'
+import SaveToTopicModal from '@/components/study-topics/SaveToTopicModal'
+import { useActiveProfileSummary } from '@/hooks/useActiveProfileSummary'
 
 export interface ChatMessage {
   id: string
@@ -66,9 +67,13 @@ export default function ChatMessageList({
   onSendMessage,
 }: ChatMessageListProps) {
   const tutorContext = useTutorContext()
+  const { summary: activeProfile } = useActiveProfileSummary()
   const [isTogglingHelp, setIsTogglingHelp] = useState<boolean>(false)
   const [savedClipId, setSavedClipId] = useState<string | null>(null)
   const [showMapId, setShowMapId] = useState<string | null>(null)
+  const [saveToTopicPayload, setSaveToTopicPayload] = useState<{ messageId: string; content: string } | null>(null)
+
+  const canSaveToTopic = !!activeProfile && (activeProfile.gradeBand === 'middle' || activeProfile.gradeBand === 'high')
 
   // Track which messages are flagged (per message, not per chat)
   const [flaggedMessages, setFlaggedMessages] = useState<Set<string>>(new Set())
@@ -312,6 +317,18 @@ export default function ChatMessageList({
                         </>
                       )}
                     </button>
+                    {canSaveToTopic && activeProfile && (
+                      <button
+                        onClick={() => {
+                          setSaveToTopicPayload({ messageId: m.id, content: m.content })
+                        }}
+                        className="flex items-center gap-1 px-2 py-1 text-xs rounded-lg text-slate-500 hover:text-emerald-600 hover:bg-emerald-50 transition-all duration-200"
+                        title="Save to Study Topics"
+                      >
+                        <FolderPlus className="w-3 h-3" />
+                        <span>Topic</span>
+                      </button>
+                    )}
                     {chatId && (
                       <button
                         onClick={() => handleToggleNeedsHelp(m.id)}
@@ -435,6 +452,17 @@ export default function ChatMessageList({
           </div>
         )}
       </div>
+
+      {canSaveToTopic && activeProfile && saveToTopicPayload && (
+        <SaveToTopicModal
+          isOpen={!!saveToTopicPayload}
+          onClose={() => setSaveToTopicPayload(null)}
+          profileId={activeProfile.id}
+          itemType="chat"
+          itemRef={saveToTopicPayload.messageId}
+          sourceText={saveToTopicPayload.content}
+        />
+      )}
     </div>
   )
 }

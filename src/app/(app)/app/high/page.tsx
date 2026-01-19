@@ -1,7 +1,7 @@
 'use client'
 
 import Link from 'next/link'
-import { GraduationCap, ClipboardList, Timer } from 'lucide-react'
+import { GraduationCap, ClipboardList, Timer, FileText, BookOpenCheck, PenSquare } from 'lucide-react'
 import { useActiveProfile } from '@/contexts/ActiveProfileContext'
 
 export default function HighDashboardPage() {
@@ -18,13 +18,22 @@ export default function HighDashboardPage() {
                   ForgeHigh • Grades 9–12
                 </div>
                 <h1 className="text-3xl sm:text-4xl font-bold text-slate-900 mb-3">
-                  Focused support for higher-level coursework
+                  Performance + precision for serious study
                 </h1>
                 <p className="text-slate-600 text-base sm:text-lg max-w-2xl">
-                  Clear explanations, exam prep, and writing support so students feel ready.
+                  Fast, focused support for exams, essays, and mastery.
                 </p>
               </div>
               <div className="flex flex-col gap-3">
+                <div className="rounded-2xl border border-emerald-100 bg-emerald-50/70 px-5 py-4">
+                  <p className="text-xs font-semibold text-emerald-800 uppercase tracking-wide mb-2">Start here</p>
+                  <Link
+                    href="/study-topics"
+                    className="inline-flex items-center justify-center w-full px-6 py-3 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 text-white font-semibold shadow-lg hover:from-emerald-700 hover:to-teal-700 transition-all"
+                  >
+                    Build a study topic
+                  </Link>
+                </div>
                 <Link
                   href="/tutor"
                   className="inline-flex items-center justify-center px-6 py-3 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 text-white font-semibold shadow-lg hover:from-emerald-700 hover:to-teal-700 transition-all"
@@ -35,7 +44,7 @@ export default function HighDashboardPage() {
                   href="/sources"
                   className="inline-flex items-center justify-center px-6 py-3 rounded-xl border-2 border-slate-200 text-slate-700 font-semibold hover:bg-slate-50 transition-colors"
                 >
-                  Add course materials
+                  Upload course materials
                 </Link>
               </div>
             </div>
@@ -46,25 +55,31 @@ export default function HighDashboardPage() {
             )}
           </section>
 
-          <section className="grid gap-4 md:grid-cols-3">
+          <section className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
             {[
               {
-                title: 'Continue where you left off',
-                description: 'Return to your last session with quick context.',
-                href: '/tutor',
-                action: 'Resume session',
+                title: 'Build a study topic',
+                description: 'Group maps, practice, and notes in one place.',
+                href: '/study-topics',
+                action: 'Open topics',
               },
               {
-                title: 'Start a new map',
-                description: 'Build a fresh concept map for today’s subject.',
+                title: 'Continue last topic',
+                description: 'Pick up where you left off with the last subject.',
                 href: '/tutor',
-                action: 'Start a new map',
+                action: 'Continue topic',
               },
               {
-                title: 'Tonight’s plan',
-                description: 'Create a short study plan for what’s due next.',
+                title: 'Generate exam sheet',
+                description: 'Create a one-page review from today’s work.',
                 href: '/tutor',
-                action: 'Build a plan',
+                action: 'Generate sheet',
+              },
+              {
+                title: 'Start mixed review',
+                description: 'Quick practice to surface weak spots fast.',
+                href: '/tutor',
+                action: 'Start review',
               },
             ].map((item) => (
               <div
@@ -83,22 +98,27 @@ export default function HighDashboardPage() {
             ))}
           </section>
 
-          <section className="grid gap-6 md:grid-cols-3">
+          <section className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
             {[
               {
-                icon: ClipboardList,
-                title: 'Assignment breakdowns',
-                description: 'Turn rubrics into checklists and make long projects feel manageable.',
+                icon: FileText,
+                title: 'Instant Study Map',
+                description: 'Turn a topic into a fast, structured plan.',
+              },
+              {
+                icon: BookOpenCheck,
+                title: 'Exam Sheet Builder',
+                description: 'Generate a printable sheet for test prep.',
               },
               {
                 icon: Timer,
-                title: 'Exam preparation',
-                description: 'Targeted practice with time-boxed strategy and review.',
+                title: 'Practice Tests',
+                description: 'Timed review with common traps.',
               },
               {
-                icon: GraduationCap,
-                title: 'College-ready writing',
-                description: 'Strengthen essays with clear structure and feedback loops.',
+                icon: PenSquare,
+                title: 'Writing Lab',
+                description: 'Thesis, outline, and revision maps.',
               },
             ].map((item) => (
               <div
@@ -115,14 +135,14 @@ export default function HighDashboardPage() {
           </section>
 
           <section className="rounded-3xl border border-slate-200/70 bg-white/90 p-8 sm:p-10 shadow-lg shadow-slate-200/40">
-            <h2 className="text-2xl font-semibold text-slate-900 mb-3">Support for college readiness</h2>
+            <h2 className="text-2xl font-semibold text-slate-900 mb-3">Focus on fastest wins</h2>
             <p className="text-slate-600 mb-4">
-              We help students map out the next step, stay accountable, and build confidence with every session.
+              Prioritize what moves your grade the most with clear next steps.
             </p>
             <div className="grid gap-3 text-sm text-slate-600">
-              <div>Quick goal setting to prioritize what matters most.</div>
-              <div>Guided practice with feedback prompts and reflection.</div>
-              <div>Session recaps parents can review together.</div>
+              <div>Keep topics tight and map the weakest areas first.</div>
+              <div>Commit to answers before checking logic.</div>
+              <div>Use exam sheets to consolidate midterm and final prep.</div>
             </div>
           </section>
         </div>

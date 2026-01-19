@@ -11,6 +11,7 @@ import { useState, useEffect, useCallback, useRef } from 'react'
 import { useSearchParams, useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import type { ChatMessage } from '@/components/tutor/ChatMessageList'
+import { useActiveProfileSummary } from '@/hooks/useActiveProfileSummary'
 
 // Component that uses useSearchParams - must be wrapped in Suspense
 function TutorPageContent() {
@@ -22,6 +23,7 @@ function TutorPageContent() {
   const tokens = getDensityTokens(density)
   const router = useRouter()
   const searchParams = useSearchParams()
+  const { summary: activeProfileSummary } = useActiveProfileSummary()
   
   // State hooks
   const [strictMode, setStrictMode] = useState(false)
@@ -40,6 +42,7 @@ function TutorPageContent() {
   const isResolvingRef = useRef(false) // Prevent infinite loops from router.replace
   const lastResolvedParamsRef = useRef<string>('') // Track last resolved params to prevent re-resolution
   const skipAutoResumeRef = useRef(false) // Track if we should skip auto-resume (e.g., after "New Chat" click)
+  const hasManualToneRef = useRef(false)
   
   // URL params
   const intentParam = searchParams.get('intent')
@@ -57,6 +60,11 @@ function TutorPageContent() {
       files: files.map(f => ({ id: f.id, name: f.name, document_type: f.document_type }))
     })
     setAttachedFiles(files)
+  }, [])
+
+  const handleStrictModeChange = useCallback((next: boolean) => {
+    hasManualToneRef.current = true
+    setStrictMode(next)
   }, [])
 
   // Handler to detach a single file
@@ -209,6 +217,17 @@ function TutorPageContent() {
       hasAttachedFiles
     })
   }, [attachedFiles, attachedContext, attachedTypes, hasAttachedFiles])
+
+  useEffect(() => {
+    if (hasManualToneRef.current) return
+    if (!activeProfileSummary?.gradeBand) return
+
+    if (activeProfileSummary.gradeBand === 'high') {
+      setStrictMode(true)
+    } else {
+      setStrictMode(false)
+    }
+  }, [activeProfileSummary?.gradeBand])
 
   useEffect(() => {
     if (searchParams.get('mode') === 'notes') {
@@ -728,7 +747,7 @@ function TutorPageContent() {
         <div className="flex-shrink-0 bg-slate-50 pt-safe-t pb-2 z-40">
           <TutorHeader
             strictMode={strictMode}
-            onStrictModeChange={setStrictMode}
+            onStrictModeChange={handleStrictModeChange}
             currentSessionId={resolvedChatId}
             onStartNewSession={async () => {
               // Clear the resolved session to show landing page
@@ -757,6 +776,7 @@ function TutorPageContent() {
                   attachedContext={attachedContext}
                   selectedClassId={tutorContext.selectedClassId}
                   selectedClass={tutorContext.selectedClass}
+                  gradeBand={activeProfileSummary?.gradeBand}
                 />
               </div>
               {/* Chat input docked at bottom for landing page */}
@@ -779,7 +799,7 @@ function TutorPageContent() {
             <TutorSession
               sessionId={resolvedChatId || undefined}
               strictMode={strictMode}
-              onStrictModeChange={setStrictMode}
+              onStrictModeChange={handleStrictModeChange}
               onSessionCreated={handleSessionCreated}
               attachedFiles={attachedFiles}
               onDetachFile={handleDetachFile}

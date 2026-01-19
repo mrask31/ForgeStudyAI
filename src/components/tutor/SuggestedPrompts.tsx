@@ -1,7 +1,16 @@
 'use client'
 
 import { useEffect } from 'react'
-import { GENERAL_TUTOR_PROMPTS, CLASS_TUTOR_PROMPTS, TUTOR_PROMPTS, REFLECTION_PROMPTS, NOTES_PROMPTS } from '@/lib/constants'
+import {
+  GENERAL_TUTOR_PROMPTS,
+  CLASS_TUTOR_PROMPTS,
+  ELEMENTARY_TUTOR_PROMPTS,
+  MIDDLE_TUTOR_PROMPTS,
+  HIGH_TUTOR_PROMPTS,
+  TUTOR_PROMPTS,
+  REFLECTION_PROMPTS,
+  NOTES_PROMPTS,
+} from '@/lib/constants'
 
 type Mode = 'tutor' | 'reflections' | 'notes'
 
@@ -45,6 +54,7 @@ interface SuggestedPromptsProps {
   selectedClassId?: string // Class ID to determine if prompts should be class-specific
   lastAssistantMessage?: string // Last assistant message from conversation to generate contextual prompts
   hasExistingConversation?: boolean // Whether there's an active conversation with messages
+  gradeBand?: 'elementary' | 'middle' | 'high'
 }
 
 // Generate contextual prompts from last assistant message (similar to FollowUpPrompts logic)
@@ -118,7 +128,20 @@ function generateContextualPrompts(lastMessage: string): string[] {
   return uniquePrompts.slice(0, 5)
 }
 
-export default function SuggestedPrompts({ mode, onPromptSelect, isVisible, isCompact = false, onSend, hasAttachedFiles = false, attachedContext = 'none', hasActiveExam = false, selectedClassId, lastAssistantMessage, hasExistingConversation = false }: SuggestedPromptsProps) {
+export default function SuggestedPrompts({
+  mode,
+  onPromptSelect,
+  isVisible,
+  isCompact = false,
+  onSend,
+  hasAttachedFiles = false,
+  attachedContext = 'none',
+  hasActiveExam = false,
+  selectedClassId,
+  lastAssistantMessage,
+  hasExistingConversation = false,
+  gradeBand,
+}: SuggestedPromptsProps) {
   if (!isVisible) return null
 
   // Logging for debugging
@@ -160,7 +183,17 @@ export default function SuggestedPrompts({ mode, onPromptSelect, isVisible, isCo
       prompts = REFLECTION_PROMPTS
     } else {
       // Use General Tutor prompts if no class selected, Class prompts if class is selected
-      prompts = selectedClassId ? CLASS_TUTOR_PROMPTS : GENERAL_TUTOR_PROMPTS
+      if (selectedClassId) {
+        prompts = CLASS_TUTOR_PROMPTS
+      } else if (gradeBand === 'elementary') {
+        prompts = ELEMENTARY_TUTOR_PROMPTS
+      } else if (gradeBand === 'middle') {
+        prompts = MIDDLE_TUTOR_PROMPTS
+      } else if (gradeBand === 'high') {
+        prompts = HIGH_TUTOR_PROMPTS
+      } else {
+        prompts = GENERAL_TUTOR_PROMPTS
+      }
     }
   }
   
