@@ -302,7 +302,7 @@ export default function SpellingEnginePanel({
             </div>
             <button
               type="button"
-              onClick={handleStartWarmup}
+              onClick={() => handleStartWarmup()}
               className="px-3 py-2 rounded-lg text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200 hover:bg-emerald-100"
             >
               Continue
