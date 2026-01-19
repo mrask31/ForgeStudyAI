@@ -12,7 +12,7 @@ import {
   SheetTrigger 
 } from '@/components/ui/sheet'
 import { Checkbox } from '@/components/ui/checkbox'
-import { MessageSquare, FileText, Stethoscope, Brain } from 'lucide-react'
+import { MessageSquare, FileText, Sparkles, Brain } from 'lucide-react'
 import { listClasses } from '@/lib/api/classes'
 import { StudentClass } from '@/lib/types'
 import { createBrowserClient } from '@supabase/ssr'
@@ -38,7 +38,7 @@ const getSessionIcon = (sessionType: string | null) => {
     case 'reflection':
       return Brain
     case 'snapshot':
-      return Stethoscope
+      return Sparkles
     case 'question':
       return MessageSquare
     case 'notes':

@@ -1,7 +1,7 @@
 'use client'
 
 import { useChat } from '@ai-sdk/react'
-import { Send, Stethoscope, User, Brain, FileText, Pill, Paperclip, FileIcon, ClipboardCheck, Bookmark, Map, Star, AlertCircle } from 'lucide-react'
+import { Send, BookOpenCheck, User, Brain, FileText, Pill, Paperclip, FileIcon, ClipboardCheck, Bookmark, Map, Star, AlertCircle } from 'lucide-react'
 import { useEffect, useState, useMemo, useCallback, useRef } from 'react'
 import ReactMarkdown from 'react-markdown'
 import MessageWithMedicalTerms from '../tutor/MessageWithMedicalTerms'
@@ -552,10 +552,10 @@ export default function ClinicalTutorWorkspace({
       prompt: 'Help me understand this concept: ',
     },
     {
-      icon: Stethoscope,
-      title: 'Work through a case',
-      description: 'Practice clinical reasoning.',
-      prompt: "Let's work through a clinical scenario. ",
+      icon: BookOpenCheck,
+      title: 'Work through an example',
+      description: 'Practice step-by-step reasoning.',
+      prompt: "Let's work through a practice example. ",
     },
     {
       icon: FileText,
@@ -615,7 +615,7 @@ export default function ClinicalTutorWorkspace({
       <div className="flex flex-col gap-4">
         {isLoadingHistory ? (
           <div className="h-full flex flex-col items-center justify-center text-[#4A5568] space-y-4">
-            <Stethoscope className="w-12 h-12 animate-pulse text-[#4A5568]" />
+            <BookOpenCheck className="w-12 h-12 animate-pulse text-[#4A5568]" />
             <p className="text-sm">Loading session...</p>
           </div>
         ) : showLanding ? (

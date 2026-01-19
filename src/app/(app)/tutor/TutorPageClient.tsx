@@ -49,6 +49,11 @@ function TutorPageContent() {
   const sessionIdParam = searchParams.get('sessionId') || searchParams.get('chatId') || searchParams.get('id')
   const classIdParam = searchParams.get('classId') // Get classId from URL
   const messageIdParam = searchParams.get('messageId') // Get messageId from URL for scrolling
+  const modeParam = searchParams.get('mode')
+
+  const entryMode = modeParam && ['spelling', 'reading', 'homework'].includes(modeParam)
+    ? (modeParam as 'spelling' | 'reading' | 'homework')
+    : null
   
   // Note: classId sync is handled by TutorContext itself (see TutorContext.tsx useEffect)
   // No need to sync here - it would create infinite loops
@@ -319,7 +324,15 @@ function TutorPageContent() {
         return
       }
 
-      // PRIORITY 0.5: If topicId or examId is present but no sessionId, start fresh (don't auto-resume)
+      // PRIORITY 0.5: If entry mode is set, start fresh without auto-resume
+      if (entryMode && !sessionIdParam && !intentParam) {
+        setResolvedChatId(null)
+        setIsResolving(false)
+        isResolvingRef.current = false
+        return
+      }
+
+      // PRIORITY 0.75: If topicId or examId is present but no sessionId, start fresh (don't auto-resume)
       // But still render TutorSession (it will create session on first message)
       if ((tutorContext.selectedTopicId || tutorContext.activeExamId) && !sessionIdParam && !intentParam) {
         console.log('[Tutor] Topic/exam context active, starting fresh (session will be created on first message)')
@@ -670,7 +683,7 @@ function TutorPageContent() {
       resolveSession()
     }
             // eslint-disable-next-line react-hooks/exhaustive-deps
-          }, [intentParam, sessionIdParam, classIdParam]) // Use classIdParam from URL instead of context to prevent loops
+          }, [intentParam, sessionIdParam, classIdParam, entryMode]) // Use classIdParam from URL instead of context to prevent loops
 
   useEffect(() => {
     if (resolvedChatId && !isResolving) {
@@ -690,6 +703,16 @@ function TutorPageContent() {
       fetchMetadata()
     }
   }, [resolvedChatId, isResolving])
+
+  useEffect(() => {
+    if (!entryMode || resolvedChatId || isResolving) return
+    const prefillMap: Record<typeof entryMode, string> = {
+      spelling: 'Help me practice spelling words. Start with 5 words and a quick check.',
+      reading: 'Help me practice reading comprehension with a short passage and 2-3 questions.',
+      homework: 'Help me plan my homework steps and get started with the first problem.',
+    }
+    handleInstantStart(prefillMap[entryMode])
+  }, [entryMode, resolvedChatId, isResolving, handleInstantStart])
 
   // ============================================
   // SINGLE RETURN - Conditional rendering only

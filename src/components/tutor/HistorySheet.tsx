@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useMemo } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
-import { Clock, ChevronDown, ChevronUp, GraduationCap, Trash2, MessageSquare, FileText, Stethoscope, Brain } from 'lucide-react'
+import { Clock, ChevronDown, ChevronUp, GraduationCap, Trash2, MessageSquare, FileText, Sparkles, Brain } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet'
 import { Checkbox } from '@/components/ui/checkbox'
@@ -27,7 +27,7 @@ const getSessionIcon = (sessionType: string | null) => {
     case 'reflection':
       return Brain
     case 'snapshot':
-      return Stethoscope
+      return Sparkles
     case 'question':
       return MessageSquare
     case 'notes':
