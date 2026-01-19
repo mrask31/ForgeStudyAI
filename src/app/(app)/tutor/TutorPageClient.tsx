@@ -812,6 +812,7 @@ function TutorPageContent() {
                   gradeBand={activeProfileSummary?.gradeBand}
                   mode={entryMode ?? 'tutor'}
                   profileId={activeProfileSummary?.id ?? null}
+                  sessionActive={showSession}
                 />
                 {showSession && (
                   <div className="mt-6">

@@ -7,6 +7,7 @@ import ProofStrip from '@/components/elementary/ProofStrip'
 import SpellingEnginePanel from '@/components/elementary/SpellingEnginePanel'
 import ReadingEnginePanel from '@/components/elementary/ReadingEnginePanel'
 import HomeworkEnginePanel from '@/components/elementary/HomeworkEnginePanel'
+import GradeBand35SpellingLayout from '@/components/elementary/GradeBand35SpellingLayout'
 
 type TutorLandingMode = 'tutor' | 'spelling' | 'reading' | 'homework'
 
@@ -19,6 +20,7 @@ interface TutorLandingProps {
   gradeBand?: 'elementary' | 'middle' | 'high'
   mode?: TutorLandingMode
   profileId?: string | null
+  sessionActive?: boolean
 }
 
 const MODE_CONFIG: Record<Exclude<TutorLandingMode, 'tutor'>, {
@@ -112,6 +114,7 @@ export default function TutorLanding({
   gradeBand,
   mode = 'tutor',
   profileId = null,
+  sessionActive = false,
 }: TutorLandingProps) {
   const hasAttachedFiles = attachedFiles.length > 0
   const isGeneralTutor = !selectedClassId
@@ -293,6 +296,15 @@ export default function TutorLanding({
     if (!isGeneralTutor || mode === 'tutor') {
       return null
     }
+    if (gradeBand === 'elementary' && mode === 'spelling' && profileId) {
+      return (
+        <GradeBand35SpellingLayout
+          profileId={profileId}
+          hasSession={sessionActive}
+          onStartSession={onStartSession}
+        />
+      )
+    }
     if (!profileId) {
       return (
         <div className="mt-4 sm:mt-6 w-full max-w-2xl text-left">
@@ -370,24 +382,26 @@ export default function TutorLanding({
       </div>
 
       {/* Suggestion Chips - Mode-aware */}
-      <div className="w-full">
-        <SuggestedPrompts 
-          mode="tutor" 
-          onPromptSelect={(prompt) => {
-            // On landing, clicking a suggestion starts a session
-            handleSuggestionClick(prompt)
-          }}
-          onSend={handleSuggestionClick}
-          isVisible={true}
-          isCompact={false}
-          hasAttachedFiles={hasAttachedFiles}
-          attachedContext={attachedContext}
-          selectedClassId={selectedClassId}
-          lastAssistantMessage={lastChatMessage || undefined}
-          hasExistingConversation={!!lastChatMessage}
-          gradeBand={gradeBand}
-        />
-      </div>
+      {!(gradeBand === 'elementary' && mode === 'spelling') && (
+        <div className="w-full">
+          <SuggestedPrompts 
+            mode="tutor" 
+            onPromptSelect={(prompt) => {
+              // On landing, clicking a suggestion starts a session
+              handleSuggestionClick(prompt)
+            }}
+            onSend={handleSuggestionClick}
+            isVisible={true}
+            isCompact={false}
+            hasAttachedFiles={hasAttachedFiles}
+            attachedContext={attachedContext}
+            selectedClassId={selectedClassId}
+            lastAssistantMessage={lastChatMessage || undefined}
+            hasExistingConversation={!!lastChatMessage}
+            gradeBand={gradeBand}
+          />
+        </div>
+      )}
     </div>
   )
 }

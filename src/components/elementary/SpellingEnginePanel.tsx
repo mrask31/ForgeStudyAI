@@ -5,6 +5,16 @@ import { useEffect, useMemo, useState } from 'react'
 interface SpellingEnginePanelProps {
   profileId: string
   onStartSession: (prompt: string) => void
+  onListStatusChange?: (info: { hasList: boolean; listId?: string; listTitle?: string; listCount?: number }) => void
+  showContinueCard?: boolean
+  showEnterList?: boolean
+  showUseLastListButton?: boolean
+  showWordGroups?: boolean
+  showPracticeModes?: boolean
+  startButtonLabel?: string
+  practiceModesTitle?: string
+  practiceModesDescription?: string
+  wordGroupsLabel?: string
 }
 
 type SpellingWord = { id: string; word: string; pattern?: string | null; is_mastered?: boolean }
@@ -30,7 +40,20 @@ function groupWords(words: SpellingWord[]) {
   return groups
 }
 
-export default function SpellingEnginePanel({ profileId, onStartSession }: SpellingEnginePanelProps) {
+export default function SpellingEnginePanel({
+  profileId,
+  onStartSession,
+  onListStatusChange,
+  showContinueCard = true,
+  showEnterList = true,
+  showUseLastListButton = false,
+  showWordGroups = true,
+  showPracticeModes = true,
+  startButtonLabel = 'Start practice',
+  practiceModesTitle = 'Practice modes',
+  practiceModesDescription,
+  wordGroupsLabel = 'Word groups (the map)',
+}: SpellingEnginePanelProps) {
   const [listInput, setListInput] = useState('')
   const [lists, setLists] = useState<SpellingList[]>([])
   const [isSaving, setIsSaving] = useState(false)
@@ -44,6 +67,20 @@ export default function SpellingEnginePanel({ profileId, onStartSession }: Spell
 
   const activeList = lists[0]
   const wordGroups = useMemo(() => groupWords(activeList?.spelling_words || []), [activeList])
+
+  useEffect(() => {
+    if (!onListStatusChange) return
+    if (!activeList) {
+      onListStatusChange({ hasList: false })
+      return
+    }
+    onListStatusChange({
+      hasList: true,
+      listId: activeList.id,
+      listTitle: activeList.title,
+      listCount: activeList.spelling_words.length,
+    })
+  }, [activeList, onListStatusChange])
 
   useEffect(() => {
     const loadLists = async () => {
@@ -176,7 +213,7 @@ export default function SpellingEnginePanel({ profileId, onStartSession }: Spell
 
   return (
     <div className="space-y-4">
-      {activeList && (
+      {showContinueCard && activeList && (
         <div className="p-4 bg-white border border-slate-200 rounded-xl shadow-sm">
           <div className="flex items-center justify-between gap-3">
             <div>
@@ -194,74 +231,96 @@ export default function SpellingEnginePanel({ profileId, onStartSession }: Spell
           </div>
         </div>
       )}
-      <div className="p-4 sm:p-6 bg-white border border-slate-200 rounded-xl shadow-sm">
-        <h3 className="text-base sm:text-lg font-semibold text-slate-900 mb-2">Enter your list</h3>
-        <p className="text-sm text-slate-600 mb-4">Paste words (one per line) or separate with commas.</p>
-        <textarea
-          value={listInput}
-          onChange={(event) => setListInput(event.target.value)}
-          placeholder="soccer, hockey, galaxy..."
-          className="w-full min-h-[96px] rounded-lg border border-slate-200 px-3 py-2 text-sm"
-        />
-        <button
-          type="button"
-          onClick={handleSaveList}
-          disabled={isSaving}
-          className="mt-3 px-4 py-2 rounded-lg text-sm font-semibold bg-emerald-600 text-white hover:bg-emerald-700 disabled:opacity-60"
-        >
-          {isSaving ? 'Saving...' : 'Start practice'}
-        </button>
-      </div>
+      {showEnterList && (
+        <div className="p-4 sm:p-6 bg-white border border-slate-200 rounded-xl shadow-sm">
+          <h3 className="text-base sm:text-lg font-semibold text-slate-900 mb-2">Enter your list</h3>
+          <p className="text-sm text-slate-600 mb-4">Paste words (one per line) or separate with commas.</p>
+          <textarea
+            value={listInput}
+            onChange={(event) => setListInput(event.target.value)}
+            placeholder="soccer, hockey, galaxy..."
+            className="w-full min-h-[96px] rounded-lg border border-slate-200 px-3 py-2 text-sm"
+          />
+          <div className="mt-3 flex flex-wrap gap-2">
+            <button
+              type="button"
+              onClick={handleSaveList}
+              disabled={isSaving}
+              className="px-4 py-2 rounded-lg text-sm font-semibold bg-emerald-600 text-white hover:bg-emerald-700 disabled:opacity-60"
+            >
+              {isSaving ? 'Saving...' : startButtonLabel}
+            </button>
+            {showUseLastListButton && activeList && (
+              <button
+                type="button"
+                onClick={handleStartWarmup}
+                className="px-4 py-2 rounded-lg text-sm font-semibold border border-emerald-200 text-emerald-700 hover:bg-emerald-50"
+              >
+                Use last list
+              </button>
+            )}
+          </div>
+        </div>
+      )}
 
-      <div className="p-4 sm:p-6 bg-white border border-slate-200 rounded-xl shadow-sm">
-        <h3 className="text-base sm:text-lg font-semibold text-slate-900 mb-2">Word groups (the map)</h3>
-        <div className="grid gap-3 sm:grid-cols-2">
-          {Object.keys(wordGroups).length === 0 ? (
-            <p className="text-sm text-slate-500">Add a list to see patterns.</p>
-          ) : (
-            Object.entries(wordGroups).map(([group, words]) => (
-              <div key={group} className="border border-slate-200 rounded-lg p-3">
-                <p className="text-xs font-semibold text-slate-600 mb-2">{group}</p>
-                <p className="text-sm text-slate-800">{words.map((w) => w.word).join(', ')}</p>
-              </div>
-            ))
+      {showWordGroups && (
+        <details className="p-4 sm:p-6 bg-white border border-slate-200 rounded-xl shadow-sm">
+          <summary className="text-base sm:text-lg font-semibold text-slate-900 cursor-pointer list-none">
+            {wordGroupsLabel}
+          </summary>
+          <div className="grid gap-3 sm:grid-cols-2 mt-4">
+            {Object.keys(wordGroups).length === 0 ? (
+              <p className="text-sm text-slate-500">Add a list to see patterns.</p>
+            ) : (
+              Object.entries(wordGroups).map(([group, words]) => (
+                <div key={group} className="border border-slate-200 rounded-lg p-3">
+                  <p className="text-xs font-semibold text-slate-600 mb-2">{group}</p>
+                  <p className="text-sm text-slate-800">{words.map((w) => w.word).join(', ')}</p>
+                </div>
+              ))
+            )}
+          </div>
+        </details>
+      )}
+
+      {showPracticeModes && (
+        <div className="p-4 sm:p-6 bg-white border border-slate-200 rounded-xl shadow-sm">
+          <h3 className="text-base sm:text-lg font-semibold text-slate-900 mb-2">{practiceModesTitle}</h3>
+          {practiceModesDescription && (
+            <p className="text-sm text-slate-600 mb-3">{practiceModesDescription}</p>
           )}
+          <div className="flex flex-wrap gap-2">
+            <button
+              type="button"
+              onClick={handleStartWarmup}
+              className="px-3 py-2 rounded-lg text-xs sm:text-sm font-medium bg-emerald-50 text-emerald-700 border border-emerald-200 hover:bg-emerald-100"
+            >
+              5-word warmup
+            </button>
+            <button
+              type="button"
+              onClick={handleMissedOnly}
+              className="px-3 py-2 rounded-lg text-xs sm:text-sm font-medium bg-emerald-50 text-emerald-700 border border-emerald-200 hover:bg-emerald-100"
+            >
+              Missed words only
+            </button>
+            <button
+              type="button"
+              onClick={handleFridayTest}
+              className="px-3 py-2 rounded-lg text-xs sm:text-sm font-medium bg-emerald-50 text-emerald-700 border border-emerald-200 hover:bg-emerald-100"
+            >
+              Friday test mode
+            </button>
+            <button
+              type="button"
+              onClick={handleSpeedRound}
+              className="px-3 py-2 rounded-lg text-xs sm:text-sm font-medium bg-emerald-50 text-emerald-700 border border-emerald-200 hover:bg-emerald-100"
+            >
+              Speed round (30s)
+            </button>
+          </div>
         </div>
-      </div>
-
-      <div className="p-4 sm:p-6 bg-white border border-slate-200 rounded-xl shadow-sm">
-        <h3 className="text-base sm:text-lg font-semibold text-slate-900 mb-3">Practice modes</h3>
-        <div className="flex flex-wrap gap-2">
-          <button
-            type="button"
-            onClick={handleStartWarmup}
-            className="px-3 py-2 rounded-lg text-xs sm:text-sm font-medium bg-emerald-50 text-emerald-700 border border-emerald-200 hover:bg-emerald-100"
-          >
-            5-word warmup
-          </button>
-          <button
-            type="button"
-            onClick={handleMissedOnly}
-            className="px-3 py-2 rounded-lg text-xs sm:text-sm font-medium bg-emerald-50 text-emerald-700 border border-emerald-200 hover:bg-emerald-100"
-          >
-            Missed words only
-          </button>
-          <button
-            type="button"
-            onClick={handleFridayTest}
-            className="px-3 py-2 rounded-lg text-xs sm:text-sm font-medium bg-emerald-50 text-emerald-700 border border-emerald-200 hover:bg-emerald-100"
-          >
-            Friday test mode
-          </button>
-          <button
-            type="button"
-            onClick={handleSpeedRound}
-            className="px-3 py-2 rounded-lg text-xs sm:text-sm font-medium bg-emerald-50 text-emerald-700 border border-emerald-200 hover:bg-emerald-100"
-          >
-            Speed round (30s)
-          </button>
-        </div>
-      </div>
+      )}
 
       {isTestOpen && activeList && (
         <div className="fixed inset-0 bg-black/40 flex items-center justify-center p-4 z-50">
