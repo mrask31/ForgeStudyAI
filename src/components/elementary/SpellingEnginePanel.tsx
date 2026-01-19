@@ -40,6 +40,7 @@ export default function SpellingEnginePanel({ profileId, onStartSession }: Spell
   const [speechSupported, setSpeechSupported] = useState(true)
   const [preferredVoice, setPreferredVoice] = useState<SpeechSynthesisVoice | null>(null)
   const [speakingWords, setSpeakingWords] = useState<Record<string, boolean>>({})
+  const [gradedResults, setGradedResults] = useState<Record<string, boolean> | null>(null)
 
   const activeList = lists[0]
   const wordGroups = useMemo(() => groupWords(activeList?.spelling_words || []), [activeList])
@@ -100,6 +101,7 @@ export default function SpellingEnginePanel({ profileId, onStartSession }: Spell
   const handleFridayTest = () => {
     if (!activeList || activeList.spelling_words.length === 0) return
     setIsTestOpen(true)
+    setGradedResults(null)
   }
 
   const handleSubmitTest = async () => {
@@ -114,9 +116,18 @@ export default function SpellingEnginePanel({ profileId, onStartSession }: Spell
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ profileId, results }),
     })
+    const resultMap = results.reduce<Record<string, boolean>>((acc, result) => {
+      acc[result.wordId] = result.correct
+      return acc
+    }, {})
+    setGradedResults(resultMap)
+  }
+
+  const handleCloseTest = () => {
     setIsTestOpen(false)
     setTestAnswers({})
     setRevealedWords({})
+    setGradedResults(null)
   }
 
   useEffect(() => {
@@ -264,6 +275,11 @@ export default function SpellingEnginePanel({ profileId, onStartSession }: Spell
                 Text-to-speech isn’t supported in this browser. Use “Show word” or ask a parent to read it aloud.
               </p>
             )}
+            {gradedResults && (
+              <div className="mb-4 rounded-lg border border-emerald-100 bg-emerald-50 px-3 py-2 text-sm text-emerald-800">
+                You got {Object.values(gradedResults).filter(Boolean).length} of {activeList.spelling_words.length} correct.
+              </div>
+            )}
             <div className="space-y-3 max-h-[50vh] overflow-y-auto">
               {activeList.spelling_words.map((word, index) => (
                 <div key={word.id} className="flex items-center gap-3">
@@ -294,7 +310,13 @@ export default function SpellingEnginePanel({ profileId, onStartSession }: Spell
                   <input
                     value={testAnswers[word.id] || ''}
                     onChange={(event) => setTestAnswers((prev) => ({ ...prev, [word.id]: event.target.value }))}
-                    className="flex-1 rounded-lg border border-slate-200 px-3 py-2 text-sm"
+                    className={`flex-1 rounded-lg border px-3 py-2 text-sm ${
+                      gradedResults
+                        ? gradedResults[word.id]
+                          ? 'border-emerald-200 bg-emerald-50'
+                          : 'border-rose-200 bg-rose-50'
+                        : 'border-slate-200'
+                    }`}
                     placeholder="Type spelling"
                   />
                 </div>
@@ -303,18 +325,20 @@ export default function SpellingEnginePanel({ profileId, onStartSession }: Spell
             <div className="mt-4 flex justify-end gap-2">
               <button
                 type="button"
-                onClick={() => setIsTestOpen(false)}
+                onClick={handleCloseTest}
                 className="px-4 py-2 rounded-lg text-sm border border-slate-200 text-slate-600"
               >
-                Cancel
+                Done
               </button>
-              <button
-                type="button"
-                onClick={handleSubmitTest}
-                className="px-4 py-2 rounded-lg text-sm font-semibold bg-emerald-600 text-white"
-              >
-                Grade test
-              </button>
+              {!gradedResults && (
+                <button
+                  type="button"
+                  onClick={handleSubmitTest}
+                  className="px-4 py-2 rounded-lg text-sm font-semibold bg-emerald-600 text-white"
+                >
+                  Grade test
+                </button>
+              )}
             </div>
           </div>
         </div>
