@@ -37,6 +37,8 @@ export default function SpellingEnginePanel({ profileId, onStartSession }: Spell
   const [isTestOpen, setIsTestOpen] = useState(false)
   const [testAnswers, setTestAnswers] = useState<Record<string, string>>({})
   const [revealedWords, setRevealedWords] = useState<Record<string, boolean>>({})
+  const [speechSupported, setSpeechSupported] = useState(true)
+  const [speakingWords, setSpeakingWords] = useState<Record<string, boolean>>({})
 
   const activeList = lists[0]
   const wordGroups = useMemo(() => groupWords(activeList?.spelling_words || []), [activeList])
@@ -116,14 +118,25 @@ export default function SpellingEnginePanel({ profileId, onStartSession }: Spell
     setRevealedWords({})
   }
 
-  const speakWord = (word: string) => {
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      setSpeechSupported('speechSynthesis' in window)
+    }
+  }, [])
+
+  const speakWord = (wordId: string, word: string) => {
     if (typeof window === 'undefined' || !('speechSynthesis' in window)) {
+      setSpeechSupported(false)
       return
     }
+    setSpeakingWords((prev) => ({ ...prev, [wordId]: true }))
     const utterance = new SpeechSynthesisUtterance(word)
     utterance.rate = 0.85
     window.speechSynthesis.cancel()
     window.speechSynthesis.speak(utterance)
+    window.setTimeout(() => {
+      setSpeakingWords((prev) => ({ ...prev, [wordId]: false }))
+    }, 1500)
   }
 
   return (
@@ -222,6 +235,11 @@ export default function SpellingEnginePanel({ profileId, onStartSession }: Spell
             <p className="text-sm text-slate-600 mb-4">
               Listen or ask a parent to read each word. Type the spelling without looking.
             </p>
+            {!speechSupported && (
+              <p className="text-xs text-amber-600 mb-3">
+                Text-to-speech isn’t supported in this browser. Use “Show word” or ask a parent to read it aloud.
+              </p>
+            )}
             <div className="space-y-3 max-h-[50vh] overflow-y-auto">
               {activeList.spelling_words.map((word, index) => (
                 <div key={word.id} className="flex items-center gap-3">
@@ -233,10 +251,11 @@ export default function SpellingEnginePanel({ profileId, onStartSession }: Spell
                       <div className="flex flex-col gap-1">
                         <button
                           type="button"
-                          onClick={() => speakWord(word.word)}
-                          className="text-xs text-emerald-600 hover:underline"
+                          onClick={() => speakWord(word.id, word.word)}
+                          disabled={!!speakingWords[word.id]}
+                          className="text-xs text-emerald-600 hover:underline disabled:text-slate-400"
                         >
-                          Say word
+                          {speakingWords[word.id] ? 'Say word...' : 'Say word'}
                         </button>
                         <button
                           type="button"
