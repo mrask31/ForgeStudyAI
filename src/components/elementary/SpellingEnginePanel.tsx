@@ -332,7 +332,7 @@ export default function SpellingEnginePanel({
             {showUseLastListButton && activeList && (
               <button
                 type="button"
-                onClick={handleStartWarmup}
+                onClick={() => handleStartWarmup(activeList)}
                 className="px-4 py-2 rounded-lg text-sm font-semibold border border-emerald-200 text-emerald-700 hover:bg-emerald-50"
               >
                 Use last list
