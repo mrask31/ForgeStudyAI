@@ -38,6 +38,7 @@ export default function SpellingEnginePanel({ profileId, onStartSession }: Spell
   const [testAnswers, setTestAnswers] = useState<Record<string, string>>({})
   const [revealedWords, setRevealedWords] = useState<Record<string, boolean>>({})
   const [speechSupported, setSpeechSupported] = useState(true)
+  const [preferredVoice, setPreferredVoice] = useState<SpeechSynthesisVoice | null>(null)
   const [speakingWords, setSpeakingWords] = useState<Record<string, boolean>>({})
 
   const activeList = lists[0]
@@ -119,8 +120,27 @@ export default function SpellingEnginePanel({ profileId, onStartSession }: Spell
   }
 
   useEffect(() => {
-    if (typeof window !== 'undefined') {
-      setSpeechSupported('speechSynthesis' in window)
+    if (typeof window === 'undefined') return
+    if (!('speechSynthesis' in window)) {
+      setSpeechSupported(false)
+      return
+    }
+    setSpeechSupported(true)
+
+    const pickVoice = () => {
+      const voices = window.speechSynthesis.getVoices()
+      if (!voices.length) return
+      const preferred = voices.find((voice) => /en-US/i.test(voice.lang) && /female|woman|zira|aria|samantha|jenny/i.test(voice.name))
+        || voices.find((voice) => /en-US/i.test(voice.lang))
+        || voices.find((voice) => /en/i.test(voice.lang))
+        || voices[0]
+      setPreferredVoice(preferred || null)
+    }
+
+    pickVoice()
+    window.speechSynthesis.addEventListener('voiceschanged', pickVoice)
+    return () => {
+      window.speechSynthesis.removeEventListener('voiceschanged', pickVoice)
     }
   }, [])
 
@@ -131,7 +151,11 @@ export default function SpellingEnginePanel({ profileId, onStartSession }: Spell
     }
     setSpeakingWords((prev) => ({ ...prev, [wordId]: true }))
     const utterance = new SpeechSynthesisUtterance(word)
-    utterance.rate = 0.85
+    if (preferredVoice) {
+      utterance.voice = preferredVoice
+    }
+    utterance.rate = 0.9
+    utterance.pitch = 1.05
     window.speechSynthesis.cancel()
     window.speechSynthesis.speak(utterance)
     window.setTimeout(() => {
