@@ -1,5 +1,4 @@
-'use client'
-
+import { Suspense } from 'react'
 import { AppShell } from '@/components/layout/AppShell'
 
 export default function AppRouteLayout({
@@ -8,8 +7,14 @@ export default function AppRouteLayout({
   children: React.ReactNode
 }) {
   return (
-    <AppShell variant="app">
-      {children}
-    </AppShell>
+    <Suspense fallback={
+      <div className="min-h-screen bg-slate-50 flex items-center justify-center">
+        <p className="text-slate-600 text-sm">Loading...</p>
+      </div>
+    }>
+      <AppShell variant="app">
+        {children}
+      </AppShell>
+    </Suspense>
   )
 }
