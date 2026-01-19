@@ -54,6 +54,15 @@ function TutorPageContent() {
   const entryMode = modeParam && ['spelling', 'reading', 'homework'].includes(modeParam)
     ? (modeParam as 'spelling' | 'reading' | 'homework')
     : null
+  const entryPrompt = useMemo(() => {
+    if (!entryMode) return ''
+    const prefillMap: Record<typeof entryMode, string> = {
+      spelling: 'Help me practice spelling words. Start with 5 words and a quick check.',
+      reading: 'Help me practice reading comprehension with a short passage and 2-3 questions.',
+      homework: 'Help me plan my homework steps and get started with the first problem.',
+    }
+    return prefillMap[entryMode]
+  }, [entryMode])
   
   // Note: classId sync is handled by TutorContext itself (see TutorContext.tsx useEffect)
   // No need to sync here - it would create infinite loops
@@ -704,15 +713,7 @@ function TutorPageContent() {
     }
   }, [resolvedChatId, isResolving])
 
-  useEffect(() => {
-    if (!entryMode || resolvedChatId || isResolving) return
-    const prefillMap: Record<typeof entryMode, string> = {
-      spelling: 'Help me practice spelling words. Start with 5 words and a quick check.',
-      reading: 'Help me practice reading comprehension with a short passage and 2-3 questions.',
-      homework: 'Help me plan my homework steps and get started with the first problem.',
-    }
-    handleInstantStart(prefillMap[entryMode])
-  }, [entryMode, resolvedChatId, isResolving, handleInstantStart])
+  // For entry modes, we prefill the input instead of auto-sending.
 
   // ============================================
   // SINGLE RETURN - Conditional rendering only
@@ -807,6 +808,7 @@ function TutorPageContent() {
                 <ChatInterface
                   sessionId={undefined}
                   onSend={handleInstantStart}
+                  initialPrompt={entryPrompt}
                   attachedFiles={attachedFiles}
                   attachedContext={attachedContext}
                   onDetach={handleDetachFile}
