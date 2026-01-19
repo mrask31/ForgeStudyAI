@@ -8,6 +8,8 @@ import SpellingEnginePanel from '@/components/elementary/SpellingEnginePanel'
 import ReadingEnginePanel from '@/components/elementary/ReadingEnginePanel'
 import HomeworkEnginePanel from '@/components/elementary/HomeworkEnginePanel'
 import GradeBand35SpellingLayout from '@/components/elementary/GradeBand35SpellingLayout'
+import GradeBand35ReadingLayout from '@/components/elementary/GradeBand35ReadingLayout'
+import GradeBand35HomeworkLayout from '@/components/elementary/GradeBand35HomeworkLayout'
 
 type TutorLandingMode = 'tutor' | 'spelling' | 'reading' | 'homework'
 
@@ -292,6 +294,27 @@ export default function TutorLanding({
     )
   }
 
+  const renderHelpContent = () => (
+    <div className="pt-2">
+      <SuggestedPrompts 
+        mode="tutor" 
+        onPromptSelect={(prompt) => {
+          // On landing, clicking a suggestion starts a session
+          handleSuggestionClick(prompt)
+        }}
+        onSend={handleSuggestionClick}
+        isVisible={true}
+        isCompact={true}
+        hasAttachedFiles={hasAttachedFiles}
+        attachedContext={attachedContext}
+        selectedClassId={selectedClassId}
+        lastAssistantMessage={lastChatMessage || undefined}
+        hasExistingConversation={!!lastChatMessage}
+        gradeBand={gradeBand}
+      />
+    </div>
+  )
+
   const getModePanel = () => {
     if (!isGeneralTutor || mode === 'tutor') {
       return null
@@ -302,6 +325,26 @@ export default function TutorLanding({
           profileId={profileId}
           hasSession={sessionActive}
           onStartSession={onStartSession}
+        />
+      )
+    }
+    if (gradeBand === 'elementary' && mode === 'reading' && profileId) {
+      return (
+        <GradeBand35ReadingLayout
+          profileId={profileId}
+          hasSession={sessionActive}
+          onStartSession={onStartSession}
+          helpContent={renderHelpContent()}
+        />
+      )
+    }
+    if (gradeBand === 'elementary' && mode === 'homework' && profileId) {
+      return (
+        <GradeBand35HomeworkLayout
+          profileId={profileId}
+          hasSession={sessionActive}
+          onStartSession={onStartSession}
+          helpContent={renderHelpContent()}
         />
       )
     }
@@ -382,7 +425,7 @@ export default function TutorLanding({
       </div>
 
       {/* Suggestion Chips - Mode-aware */}
-      {!(gradeBand === 'elementary' && mode === 'spelling') && (
+      {!(gradeBand === 'elementary' && (mode === 'spelling' || mode === 'reading' || mode === 'homework')) && (
         <div className="w-full">
           <SuggestedPrompts 
             mode="tutor" 
