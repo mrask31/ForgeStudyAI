@@ -801,6 +801,7 @@ function TutorPageContent() {
                   selectedClassId={tutorContext.selectedClassId}
                   selectedClass={tutorContext.selectedClass}
                   gradeBand={activeProfileSummary?.gradeBand}
+                  mode={entryMode ?? 'tutor'}
                 />
               </div>
               {/* Chat input docked at bottom for landing page */}

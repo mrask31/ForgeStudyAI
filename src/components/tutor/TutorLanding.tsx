@@ -3,6 +3,8 @@
 import { useState, useEffect } from 'react'
 import SuggestedPrompts from '@/components/tutor/SuggestedPrompts'
 
+type TutorLandingMode = 'tutor' | 'spelling' | 'reading' | 'homework'
+
 interface TutorLandingProps {
   onStartSession: (message: string) => Promise<void>
   attachedFiles?: { id: string, name: string, document_type: string | null }[]
@@ -10,6 +12,57 @@ interface TutorLandingProps {
   selectedClassId?: string // To differentiate General Tutor from class-specific
   selectedClass?: { code: string; name: string } | null // Class info for welcome message
   gradeBand?: 'elementary' | 'middle' | 'high'
+  mode?: TutorLandingMode
+}
+
+const MODE_CONFIG: Record<Exclude<TutorLandingMode, 'tutor'>, {
+  heading: string
+  subtext: string
+  steps: string[]
+  quickStarts: Array<{ label: string; prompt: string }>
+}> = {
+  spelling: {
+    heading: 'Spelling practice, one small step at a time.',
+    subtext: 'We will practice a short list, check your memory, and build confidence.',
+    steps: [
+      'Pick 5 words that match today’s level.',
+      'Say them, use them, and spell them once.',
+      'Do a quick check and fix the tough ones.',
+    ],
+    quickStarts: [
+      { label: 'Start a 5-word check', prompt: 'Give me 5 spelling words and a quick check.' },
+      { label: 'Practice sight words', prompt: 'Practice 5 sight words with me and then quiz me.' },
+      { label: 'Make it a game', prompt: 'Make spelling practice into a short game with 5 words.' },
+    ],
+  },
+  reading: {
+    heading: 'Reading coach for short passages and check-ins.',
+    subtext: 'We will read a short passage, answer a few questions, and summarize together.',
+    steps: [
+      'Read a short passage out loud or silently.',
+      'Answer 2-3 comprehension questions.',
+      'Summarize the main idea in one sentence.',
+    ],
+    quickStarts: [
+      { label: 'Short passage + questions', prompt: 'Give me a short passage and 3 questions.' },
+      { label: 'Main idea practice', prompt: 'Give me a short paragraph and ask for the main idea.' },
+      { label: 'Vocabulary check', prompt: 'Give me a short passage and 3 vocabulary questions.' },
+    ],
+  },
+  homework: {
+    heading: 'Homework help: plan first, then solve.',
+    subtext: 'We will organize tasks, choose the first step, and work through it together.',
+    steps: [
+      'List what is due and when it is due.',
+      'Break the first task into small steps.',
+      'Start the first step together.',
+    ],
+    quickStarts: [
+      { label: 'Plan tonight’s homework', prompt: 'Help me plan my homework steps for tonight.' },
+      { label: 'Start my first problem', prompt: 'Help me start my first homework problem step-by-step.' },
+      { label: 'Explain a tough question', prompt: 'Explain this homework question without giving the answer.' },
+    ],
+  },
 }
 
 export default function TutorLanding({ 
@@ -19,6 +72,7 @@ export default function TutorLanding({
   selectedClassId,
   selectedClass,
   gradeBand,
+  mode = 'tutor',
 }: TutorLandingProps) {
   const hasAttachedFiles = attachedFiles.length > 0
   const isGeneralTutor = !selectedClassId
@@ -35,6 +89,9 @@ export default function TutorLanding({
   }
 
   const getMainHeading = () => {
+    if (isGeneralTutor && mode !== 'tutor') {
+      return MODE_CONFIG[mode].heading
+    }
     if (isGeneralTutor) {
       return `${getGreeting()} I'm your Tutor — ready to help you learn!`
     }
@@ -146,6 +203,9 @@ export default function TutorLanding({
   }, [selectedClassId, isGeneralTutor, selectedClass])
 
   const getSubtext = () => {
+    if (isGeneralTutor && mode !== 'tutor') {
+      return MODE_CONFIG[mode].subtext
+    }
     if (isGeneralTutor) {
       return "I can help with coursework, practice questions, study strategies, and understanding concepts. Ask me anything!"
     }
@@ -153,6 +213,9 @@ export default function TutorLanding({
   }
 
   const getHelperText = () => {
+    if (mode !== 'tutor') {
+      return null
+    }
     if (!isGeneralTutor) {
       return null
     }
@@ -183,6 +246,45 @@ export default function TutorLanding({
         <p className="mt-4 text-xs text-slate-600 italic">
           💡 <strong>Tip:</strong> For class-specific help with your uploaded materials, select a class from the dropdown above.
         </p>
+      </div>
+    )
+  }
+
+  const getModePanel = () => {
+    if (!isGeneralTutor || mode === 'tutor') {
+      return null
+    }
+    const config = MODE_CONFIG[mode]
+    return (
+      <div className="mt-4 sm:mt-6 w-full max-w-2xl text-left">
+        <div className="p-4 sm:p-6 bg-white border border-slate-200 rounded-xl shadow-sm">
+          <h3 className="text-base sm:text-lg font-semibold text-slate-900 mb-2">
+            Guided session
+          </h3>
+          <p className="text-sm text-slate-600 mb-4">
+            Here is a simple flow we can follow:
+          </p>
+          <ol className="space-y-2 text-sm text-slate-700 mb-5">
+            {config.steps.map((step) => (
+              <li key={step} className="flex items-start gap-2">
+                <span className="text-emerald-600 mt-0.5">•</span>
+                <span>{step}</span>
+              </li>
+            ))}
+          </ol>
+          <div className="flex flex-wrap gap-2">
+            {config.quickStarts.map((item) => (
+              <button
+                key={item.label}
+                type="button"
+                onClick={() => onStartSession(item.prompt)}
+                className="px-3 py-2 rounded-lg text-xs sm:text-sm font-medium bg-emerald-50 text-emerald-700 border border-emerald-200 hover:bg-emerald-100 transition-colors"
+              >
+                {item.label}
+              </button>
+            ))}
+          </div>
+        </div>
       </div>
     )
   }
@@ -227,6 +329,9 @@ export default function TutorLanding({
           ) : null}
         </div>
       )}
+
+      {/* Guided panel for mode-specific entry */}
+      {getModePanel()}
 
       {/* Helper Text for General Tutor */}
       <div className="w-full max-w-2xl">

@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
-import { usePathname } from 'next/navigation'
+import { usePathname, useSearchParams } from 'next/navigation'
 import { MessageSquare, FileText, Settings, Activity, GraduationCap, BookOpen, Shield, Sparkles, Folder } from 'lucide-react'
 import { createBrowserClient } from '@supabase/ssr'
 import HistoryButton from './HistoryButton'
@@ -11,6 +11,7 @@ import { useActiveProfile } from '@/contexts/ActiveProfileContext'
 const NAV_ITEMS_BY_BAND = {
   elementary: [
     { label: 'Home', href: '/app/elementary', icon: Sparkles },
+    { label: 'AI Tutor', href: '/tutor', icon: MessageSquare },
     { label: 'Spelling', href: '/tutor?mode=spelling', icon: BookOpen },
     { label: 'Reading', href: '/tutor?mode=reading', icon: BookOpen },
     { label: 'Homework Help', href: '/tutor?mode=homework', icon: MessageSquare },
@@ -54,6 +55,7 @@ interface SidebarProps {
 
 export default function Sidebar({ onNavigate }: SidebarProps = {}) {
   const pathname = usePathname()
+  const searchParams = useSearchParams()
   const { activeProfileId } = useActiveProfile()
   const [studentName, setStudentName] = useState<string | null>(null)
   const [gradeBand, setGradeBand] = useState<string | null>(null)
@@ -121,9 +123,24 @@ export default function Sidebar({ onNavigate }: SidebarProps = {}) {
         {/* Nav Container - Increased padding */}
         <nav className="flex-1 space-y-2">
           {navItems.map((item) => {
-            const isActive = pathname === item.href || 
-              (item.href === '/classes' && pathname.startsWith('/classes')) ||
-              (item.href === '/dictionary' && pathname.startsWith('/dictionary'))
+            const isTutorRoute = item.href.startsWith('/tutor')
+            const isTutorPath = pathname === '/tutor'
+            const itemParams = isTutorRoute ? new URLSearchParams(item.href.split('?')[1] || '') : null
+            const itemMode = itemParams?.get('mode')
+            const itemTool = itemParams?.get('tool')
+            const currentMode = searchParams.get('mode')
+            const currentTool = searchParams.get('tool')
+            const isTutorActive = isTutorPath && (
+              (itemMode && currentMode === itemMode) ||
+              (itemTool && currentTool === itemTool) ||
+              (!itemMode && !itemTool && !currentMode && !currentTool)
+            )
+
+            const isActive = isTutorRoute
+              ? isTutorActive
+              : pathname === item.href ||
+                (item.href === '/classes' && pathname.startsWith('/classes')) ||
+                (item.href === '/dictionary' && pathname.startsWith('/dictionary'))
             const Icon = item.icon
 
             return (
