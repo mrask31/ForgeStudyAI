@@ -306,7 +306,7 @@ export default function TutorLanding({
     return (
       <div className="mt-4 sm:mt-6 w-full max-w-2xl text-left space-y-4">
         <MissionPanel profileId={profileId} mode={mode} onStart={onStartSession} />
-        <ProofStrip profileId={profileId} mode={mode} />
+        <ProofStrip profileId={profileId} mode={mode} onStartSession={onStartSession} />
         {mode === 'spelling' && (
           <SpellingEnginePanel profileId={profileId} onStartSession={onStartSession} />
         )}
