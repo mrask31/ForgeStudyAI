@@ -80,7 +80,7 @@ export default function GradeBand35SpellingLayout({
               onClick={handleChangeWords}
               className="text-sm text-emerald-700 hover:underline"
             >
-              Change words
+              Add / edit words
             </button>
           </div>
           <ProofStrip profileId={profileId} mode="spelling" onStartSession={onStartSession} />
@@ -92,6 +92,15 @@ export default function GradeBand35SpellingLayout({
           <div className="rounded-xl border border-slate-200 bg-white px-4 py-3">
             <p className="text-sm font-semibold text-slate-900">Practice in progress</p>
             <p className="text-xs text-slate-500">Keep going until the quick check is done.</p>
+          </div>
+          <div className="flex justify-end">
+            <button
+              type="button"
+              onClick={handleChangeWords}
+              className="text-sm text-emerald-700 hover:underline"
+            >
+              Add / edit words
+            </button>
           </div>
           <ProofStrip profileId={profileId} mode="spelling" onStartSession={onStartSession} />
         </div>

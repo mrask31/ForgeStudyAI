@@ -23,6 +23,8 @@ interface TutorSessionProps {
   onMessagesChange?: (messages: ChatMessage[]) => void // Callback to update messages in parent
   onTopicsChange?: (topics: NotebookTopic[]) => void // Callback to update topics in parent for header
   scrollToMessageId?: string // Optional message ID to scroll to when messages load
+  gradeBand?: 'elementary' | 'middle' | 'high'
+  mode?: 'tutor' | 'spelling' | 'reading' | 'homework'
 }
 
 export default function TutorSession({
@@ -35,7 +37,9 @@ export default function TutorSession({
   messages: propMessages = [],
   onMessagesChange: propOnMessagesChange,
   onTopicsChange,
-  scrollToMessageId
+  scrollToMessageId,
+  gradeBand,
+  mode = 'tutor',
 }: TutorSessionProps) {
   const router = useRouter()
   const tutorContext = useTutorContext()
@@ -84,6 +88,7 @@ export default function TutorSession({
   
   // Use localSessionId for rendering (will be updated when session is created)
   const sessionId = localSessionId
+  const hideChatInput = gradeBand === 'elementary' && mode === 'spelling'
 
   // Check for active binder files
   useEffect(() => {
@@ -652,28 +657,30 @@ export default function TutorSession({
       )}
 
       {/* Chat input docked at bottom */}
-      <div className="flex-shrink-0">
-        <ChatInterface
-          sessionId={sessionId}
-          onSend={handleSend}
-          initialPrompt={(() => {
-            if (tutorContext.selectedTopic) {
-              const classInfo = tutorContext.selectedClass
-                ? ` from ${tutorContext.selectedClass.code} — ${tutorContext.selectedClass.name}`
-                : ''
-              return `I want to study ${tutorContext.selectedTopic.title}${classInfo}. Please explain it step by step at my level and then quiz me with practice questions.`
-            }
-            return undefined
-          })()}
-          attachedFiles={attachedFiles}
-          attachedContext={attachedContext}
-          onDetach={onDetachFile}
-        />
-        {/* Disclaimer below chat box */}
-        <p className="text-[9px] text-slate-400 text-center mt-2 pb-2">
-          Educational use only. Not a medical device.
-        </p>
-      </div>
+      {!hideChatInput && (
+        <div className="flex-shrink-0">
+          <ChatInterface
+            sessionId={sessionId}
+            onSend={handleSend}
+            initialPrompt={(() => {
+              if (tutorContext.selectedTopic) {
+                const classInfo = tutorContext.selectedClass
+                  ? ` from ${tutorContext.selectedClass.code} — ${tutorContext.selectedClass.name}`
+                  : ''
+                return `I want to study ${tutorContext.selectedTopic.title}${classInfo}. Please explain it step by step at my level and then quiz me with practice questions.`
+              }
+              return undefined
+            })()}
+            attachedFiles={attachedFiles}
+            attachedContext={attachedContext}
+            onDetach={onDetachFile}
+          />
+          {/* Disclaimer below chat box */}
+          <p className="text-[9px] text-slate-400 text-center mt-2 pb-2">
+            Educational use only. Not a medical device.
+          </p>
+        </div>
+      )}
     </div>
   )
 }
