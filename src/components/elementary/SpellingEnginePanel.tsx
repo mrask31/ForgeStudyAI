@@ -116,6 +116,16 @@ export default function SpellingEnginePanel({ profileId, onStartSession }: Spell
     setRevealedWords({})
   }
 
+  const speakWord = (word: string) => {
+    if (typeof window === 'undefined' || !('speechSynthesis' in window)) {
+      return
+    }
+    const utterance = new SpeechSynthesisUtterance(word)
+    utterance.rate = 0.85
+    window.speechSynthesis.cancel()
+    window.speechSynthesis.speak(utterance)
+  }
+
   return (
     <div className="space-y-4">
       {activeList && (
@@ -220,13 +230,22 @@ export default function SpellingEnginePanel({ profileId, onStartSession }: Spell
                     {revealedWords[word.id] ? (
                       <span className="text-xs text-slate-500">{word.word}</span>
                     ) : (
-                      <button
-                        type="button"
-                        onClick={() => setRevealedWords((prev) => ({ ...prev, [word.id]: true }))}
-                        className="text-xs text-emerald-600 hover:underline"
-                      >
-                        Show word
-                      </button>
+                      <div className="flex flex-col gap-1">
+                        <button
+                          type="button"
+                          onClick={() => speakWord(word.word)}
+                          className="text-xs text-emerald-600 hover:underline"
+                        >
+                          Say word
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setRevealedWords((prev) => ({ ...prev, [word.id]: true }))}
+                          className="text-[10px] text-slate-400 hover:text-slate-500"
+                        >
+                          Show word
+                        </button>
+                      </div>
                     )}
                   </div>
                   <input
