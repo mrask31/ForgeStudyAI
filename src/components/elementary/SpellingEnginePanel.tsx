@@ -36,6 +36,7 @@ export default function SpellingEnginePanel({ profileId, onStartSession }: Spell
   const [isSaving, setIsSaving] = useState(false)
   const [isTestOpen, setIsTestOpen] = useState(false)
   const [testAnswers, setTestAnswers] = useState<Record<string, string>>({})
+  const [revealedWords, setRevealedWords] = useState<Record<string, boolean>>({})
 
   const activeList = lists[0]
   const wordGroups = useMemo(() => groupWords(activeList?.spelling_words || []), [activeList])
@@ -112,6 +113,7 @@ export default function SpellingEnginePanel({ profileId, onStartSession }: Spell
     })
     setIsTestOpen(false)
     setTestAnswers({})
+    setRevealedWords({})
   }
 
   return (
@@ -207,10 +209,26 @@ export default function SpellingEnginePanel({ profileId, onStartSession }: Spell
         <div className="fixed inset-0 bg-black/40 flex items-center justify-center p-4 z-50">
           <div className="bg-white rounded-xl shadow-xl max-w-lg w-full p-6">
             <h3 className="text-lg font-semibold text-slate-900 mb-4">Friday Test Mode</h3>
+            <p className="text-sm text-slate-600 mb-4">
+              Listen or ask a parent to read each word. Type the spelling without looking.
+            </p>
             <div className="space-y-3 max-h-[50vh] overflow-y-auto">
-              {activeList.spelling_words.map((word) => (
+              {activeList.spelling_words.map((word, index) => (
                 <div key={word.id} className="flex items-center gap-3">
-                  <span className="text-sm font-medium text-slate-700 w-24">Word {word.word}</span>
+                  <div className="w-24 text-sm font-medium text-slate-700 flex flex-col gap-1">
+                    <span>Word {index + 1}</span>
+                    {revealedWords[word.id] ? (
+                      <span className="text-xs text-slate-500">{word.word}</span>
+                    ) : (
+                      <button
+                        type="button"
+                        onClick={() => setRevealedWords((prev) => ({ ...prev, [word.id]: true }))}
+                        className="text-xs text-emerald-600 hover:underline"
+                      >
+                        Show word
+                      </button>
+                    )}
+                  </div>
                   <input
                     value={testAnswers[word.id] || ''}
                     onChange={(event) => setTestAnswers((prev) => ({ ...prev, [word.id]: event.target.value }))}
