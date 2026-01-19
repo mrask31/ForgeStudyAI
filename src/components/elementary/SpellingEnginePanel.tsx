@@ -6,6 +6,9 @@ interface SpellingEnginePanelProps {
   profileId: string
   onStartSession: (prompt: string) => void
   onListStatusChange?: (info: { hasList: boolean; listId?: string; listTitle?: string; listCount?: number }) => void
+  onAfterSave?: (list?: SpellingList) => void
+  autoStartOnSave?: boolean
+  autoStartCount?: number
   showContinueCard?: boolean
   showEnterList?: boolean
   showUseLastListButton?: boolean
@@ -44,6 +47,9 @@ export default function SpellingEnginePanel({
   profileId,
   onStartSession,
   onListStatusChange,
+  onAfterSave,
+  autoStartOnSave = false,
+  autoStartCount = 5,
   showContinueCard = true,
   showEnterList = true,
   showUseLastListButton = false,
@@ -109,7 +115,18 @@ export default function SpellingEnginePanel({
     setListInput('')
     const refreshed = await fetch(`/api/elementary/spelling/lists?profileId=${profileId}`)
     const payload = await refreshed.json()
-    setLists(payload?.lists || [])
+    const nextLists = payload?.lists || []
+    setLists(nextLists)
+    const nextActive = nextLists?.[0]
+    if (autoStartOnSave && nextActive?.spelling_words?.length) {
+      const startWords = nextActive.spelling_words.slice(0, autoStartCount).map((w: SpellingWord) => w.word)
+      if (startWords.length > 0) {
+        onStartSession(`Let’s practice these words: ${startWords.join(', ')}. Then do a quick check.`)
+      }
+    }
+    if (onAfterSave) {
+      onAfterSave(nextActive)
+    }
   }
 
   const handleStartWarmup = () => {

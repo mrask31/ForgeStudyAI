@@ -65,7 +65,9 @@ export default function GradeBand35SpellingLayout({
               showUseLastListButton={hasList}
               showWordGroups={false}
               showPracticeModes={false}
-              startButtonLabel="Start (5 words)"
+              startButtonLabel="Start practice"
+              autoStartOnSave
+              onAfterSave={() => setManualStep(3)}
             />
           </div>
         </div>
