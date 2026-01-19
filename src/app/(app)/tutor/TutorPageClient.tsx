@@ -802,11 +802,13 @@ function TutorPageContent() {
                   selectedClass={tutorContext.selectedClass}
                   gradeBand={activeProfileSummary?.gradeBand}
                   mode={entryMode ?? 'tutor'}
+                  profileId={activeProfileSummary?.id ?? null}
                 />
               </div>
               {/* Chat input docked at bottom for landing page */}
               <div className="flex-shrink-0 pt-4 sm:pt-6 bg-slate-50">
                 <ChatInterface
+                  key={`landing-${entryMode ?? 'tutor'}`}
                   sessionId={undefined}
                   onSend={handleInstantStart}
                   initialPrompt={entryPrompt}

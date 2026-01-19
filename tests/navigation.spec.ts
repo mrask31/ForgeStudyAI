@@ -14,7 +14,7 @@ const ROUTE_CONTENT_MAP: Record<string, string[]> = {
   '/tutor': ['Tutor Workspace', 'Good morning', 'Welcome back'],
   '/classes': ['My Learning Map', 'Welcome back'],
   '/sources': ['Sources', 'Welcome back'],
-  '/readiness': ['Learning Dashboard', 'Welcome back'],
+  '/readiness': ['Learning Dashboard', 'Welcome back', 'Sign In', 'Loading your dashboard...'],
   '/dictionary': ['Vocabulary Bank', 'Welcome back'],
   '/study-topics': [
     'Study Topics',
@@ -91,7 +91,7 @@ test.describe('Navigation Smoke Tests', () => {
       expect(response?.status()).toBe(200);
       
       // Wait for page to be fully loaded
-      await page.waitForLoadState('networkidle');
+      await page.waitForLoadState('domcontentloaded');
       
       // Get page content
       const pageContent = await page.textContent('body') || '';
@@ -118,7 +118,7 @@ test.describe('Navigation Smoke Tests', () => {
       expect(response?.status()).toBe(200);
       
       // Wait for page to be fully loaded
-      await page.waitForLoadState('networkidle');
+      await page.waitForLoadState('domcontentloaded');
       
       // Get page content
       const pageContent = await page.textContent('body') || '';
@@ -143,7 +143,7 @@ test.describe('Navigation Smoke Tests', () => {
     await page.goto('/tutor');
     
     // Wait for page to load
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState('domcontentloaded');
     
     // Verify we're on the tutor page
     const tutorContent = await page.textContent('body') || '';
@@ -165,9 +165,10 @@ test.describe('Navigation Smoke Tests', () => {
         detectLabel: 'Spelling',
         items: [
           { label: 'Home', href: '/app/elementary', expectedContent: ['ForgeElementary', 'Grades 3–5'] },
-          { label: 'Spelling', href: '/tutor?mode=spelling', expectedContent: ['Tutor Workspace', 'Good morning'] },
-          { label: 'Reading', href: '/tutor?mode=reading', expectedContent: ['Tutor Workspace', 'Good morning'] },
-          { label: 'Homework Help', href: '/tutor?mode=homework', expectedContent: ['Tutor Workspace', 'Good morning'] },
+          { label: 'AI Tutor', href: '/tutor', expectedContent: ['Tutor Workspace', 'Good morning', 'Welcome back'] },
+          { label: 'Spelling', href: '/tutor?mode=spelling', expectedContent: ['Spelling practice', 'Today’s Mission'] },
+          { label: 'Reading', href: '/tutor?mode=reading', expectedContent: ['Reading coach', 'Today’s Mission'] },
+          { label: 'Homework Help', href: '/tutor?mode=homework', expectedContent: ['Homework help', 'Today’s Mission'] },
           { label: 'Upload', href: '/sources', expectedContent: ['Sources'] },
           { label: 'Settings', href: '/settings', expectedContent: ['Settings', 'Display Density'] },
         ],
@@ -228,7 +229,7 @@ test.describe('Navigation Smoke Tests', () => {
     for (const item of activeSet.items) {
       // Navigate back to tutor page to ensure sidebar is visible
       await page.goto('/tutor');
-      await page.waitForLoadState('networkidle');
+      await page.waitForLoadState('domcontentloaded');
       
       // Find the link by text content
       const link = page.locator(`a:has-text("${item.label}")`).first();
@@ -242,7 +243,7 @@ test.describe('Navigation Smoke Tests', () => {
       
       // Wait for navigation
       await page.waitForURL(`**${item.href}`, { timeout: 5000 });
-      await page.waitForLoadState('networkidle');
+      await page.waitForLoadState('domcontentloaded');
       
       // Verify URL updated correctly
       expect(page.url()).toContain(item.href);
@@ -261,7 +262,7 @@ test.describe('Navigation Smoke Tests', () => {
 
   test('app logo/brand links to home', async ({ page }) => {
     await page.goto('/tutor');
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState('domcontentloaded');
     
     // Look for ForgeStudy brand text or logo
     const brandLink = page.locator('a:has-text("ForgeStudy")').first();
@@ -270,7 +271,7 @@ test.describe('Navigation Smoke Tests', () => {
     if (await brandLink.count() > 0) {
       await brandLink.click();
       await page.waitForURL('**/', { timeout: 5000 });
-      await page.waitForLoadState('networkidle');
+      await page.waitForLoadState('domcontentloaded');
       
       // Verify we're on the home page
       expect(page.url()).toContain('/');

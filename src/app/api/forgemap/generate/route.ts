@@ -163,7 +163,7 @@ export async function POST(req: Request) {
     // 6. Generate concept map using AI
     const baseContext = `${binderContext ? `\n${binderContext}\n` : ''}\nMessage Content:\n${messageContent}\n`
 
-    let mapPrompt = `You are a clinical reasoning tutor. Generate a structured Clinical Concept Map from the following message content.
+    let mapPrompt = `You are a learning coach. Generate a structured Concept Map from the following message content.
 
 ${baseContext}
 
@@ -171,12 +171,12 @@ Generate a concept map using ONLY these Markdown headers (use all that apply):
 ### 🔗 Cause → Effect
 ### ⚠️ Risks / Complications
 ### 🧭 Priorities (ABCs)
-### 🩺 Interventions
+### ✅ Action Steps
 ### 📈 Monitoring
 ### ✅ Why This Matters
 
 Rules:
-- Be concise and clinical
+- Be concise and student friendly
 - Focus on relationships and reasoning
 - Use bullet points under each header
 - Do NOT include headers that don't apply

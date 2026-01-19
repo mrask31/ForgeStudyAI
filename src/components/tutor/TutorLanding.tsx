@@ -2,6 +2,11 @@
 
 import { useState, useEffect } from 'react'
 import SuggestedPrompts from '@/components/tutor/SuggestedPrompts'
+import MissionPanel from '@/components/elementary/MissionPanel'
+import ProofStrip from '@/components/elementary/ProofStrip'
+import SpellingEnginePanel from '@/components/elementary/SpellingEnginePanel'
+import ReadingEnginePanel from '@/components/elementary/ReadingEnginePanel'
+import HomeworkEnginePanel from '@/components/elementary/HomeworkEnginePanel'
 
 type TutorLandingMode = 'tutor' | 'spelling' | 'reading' | 'homework'
 
@@ -13,12 +18,15 @@ interface TutorLandingProps {
   selectedClass?: { code: string; name: string } | null // Class info for welcome message
   gradeBand?: 'elementary' | 'middle' | 'high'
   mode?: TutorLandingMode
+  profileId?: string | null
 }
 
 const MODE_CONFIG: Record<Exclude<TutorLandingMode, 'tutor'>, {
   heading: string
   subtext: string
   steps: string[]
+  supplies: string[]
+  focusAreas: string[]
   quickStarts: Array<{ label: string; prompt: string }>
 }> = {
   spelling: {
@@ -28,6 +36,16 @@ const MODE_CONFIG: Record<Exclude<TutorLandingMode, 'tutor'>, {
       'Pick 5 words that match today’s level.',
       'Say them, use them, and spell them once.',
       'Do a quick check and fix the tough ones.',
+    ],
+    supplies: [
+      'A short word list (or ask me to pick one).',
+      'Paper and pencil for the quick check.',
+      'One sentence to use each word.',
+    ],
+    focusAreas: [
+      'Sound it out and break long words apart.',
+      'Say it, spell it, then check it.',
+      'Use the word in a sentence.',
     ],
     quickStarts: [
       { label: 'Start a 5-word check', prompt: 'Give me 5 spelling words and a quick check.' },
@@ -43,6 +61,16 @@ const MODE_CONFIG: Record<Exclude<TutorLandingMode, 'tutor'>, {
       'Answer 2-3 comprehension questions.',
       'Summarize the main idea in one sentence.',
     ],
+    supplies: [
+      'A short passage (or ask me for one).',
+      'One tricky word to explain.',
+      'Your best one-sentence summary.',
+    ],
+    focusAreas: [
+      'Find the main idea and key details.',
+      'Explain new words in simple terms.',
+      'Answer with evidence from the text.',
+    ],
     quickStarts: [
       { label: 'Short passage + questions', prompt: 'Give me a short passage and 3 questions.' },
       { label: 'Main idea practice', prompt: 'Give me a short paragraph and ask for the main idea.' },
@@ -56,6 +84,16 @@ const MODE_CONFIG: Record<Exclude<TutorLandingMode, 'tutor'>, {
       'List what is due and when it is due.',
       'Break the first task into small steps.',
       'Start the first step together.',
+    ],
+    supplies: [
+      'List the assignments that are due.',
+      'Paste one problem or question.',
+      'Estimate how long each task takes.',
+    ],
+    focusAreas: [
+      'Plan the order of tasks.',
+      'Solve step-by-step, one part at a time.',
+      'Check your work before moving on.',
     ],
     quickStarts: [
       { label: 'Plan tonight’s homework', prompt: 'Help me plan my homework steps for tonight.' },
@@ -73,6 +111,7 @@ export default function TutorLanding({
   selectedClass,
   gradeBand,
   mode = 'tutor',
+  profileId = null,
 }: TutorLandingProps) {
   const hasAttachedFiles = attachedFiles.length > 0
   const isGeneralTutor = !selectedClassId
@@ -254,37 +293,29 @@ export default function TutorLanding({
     if (!isGeneralTutor || mode === 'tutor') {
       return null
     }
-    const config = MODE_CONFIG[mode]
-    return (
-      <div className="mt-4 sm:mt-6 w-full max-w-2xl text-left">
-        <div className="p-4 sm:p-6 bg-white border border-slate-200 rounded-xl shadow-sm">
-          <h3 className="text-base sm:text-lg font-semibold text-slate-900 mb-2">
-            Guided session
-          </h3>
-          <p className="text-sm text-slate-600 mb-4">
-            Here is a simple flow we can follow:
-          </p>
-          <ol className="space-y-2 text-sm text-slate-700 mb-5">
-            {config.steps.map((step) => (
-              <li key={step} className="flex items-start gap-2">
-                <span className="text-emerald-600 mt-0.5">•</span>
-                <span>{step}</span>
-              </li>
-            ))}
-          </ol>
-          <div className="flex flex-wrap gap-2">
-            {config.quickStarts.map((item) => (
-              <button
-                key={item.label}
-                type="button"
-                onClick={() => onStartSession(item.prompt)}
-                className="px-3 py-2 rounded-lg text-xs sm:text-sm font-medium bg-emerald-50 text-emerald-700 border border-emerald-200 hover:bg-emerald-100 transition-colors"
-              >
-                {item.label}
-              </button>
-            ))}
+    if (!profileId) {
+      return (
+        <div className="mt-4 sm:mt-6 w-full max-w-2xl text-left">
+          <div className="p-4 sm:p-6 bg-white border border-amber-200 rounded-xl shadow-sm text-sm text-amber-700">
+            Select a student profile to start today’s mission.
           </div>
         </div>
+      )
+    }
+
+    return (
+      <div className="mt-4 sm:mt-6 w-full max-w-2xl text-left space-y-4">
+        <MissionPanel profileId={profileId} mode={mode} onStart={onStartSession} />
+        <ProofStrip profileId={profileId} mode={mode} />
+        {mode === 'spelling' && (
+          <SpellingEnginePanel profileId={profileId} onStartSession={onStartSession} />
+        )}
+        {mode === 'reading' && (
+          <ReadingEnginePanel profileId={profileId} onStartSession={onStartSession} />
+        )}
+        {mode === 'homework' && (
+          <HomeworkEnginePanel profileId={profileId} onStartSession={onStartSession} />
+        )}
       </div>
     )
   }
