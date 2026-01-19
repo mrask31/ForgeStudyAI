@@ -65,6 +65,7 @@ export default function SpellingEnginePanel({
   wordGroupsLabel = 'Word groups (the map)',
 }: SpellingEnginePanelProps) {
   const [listInput, setListInput] = useState('')
+  const [listTitle, setListTitle] = useState('')
   const [lists, setLists] = useState<SpellingList[]>([])
   const [selectedListId, setSelectedListId] = useState<string | null>(null)
   const [isSaving, setIsSaving] = useState(false)
@@ -123,11 +124,12 @@ export default function SpellingEnginePanel({
     const response = await fetch('/api/elementary/spelling/lists', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ profileId, words }),
+      body: JSON.stringify({ profileId, title: listTitle.trim() || undefined, words }),
     })
     setIsSaving(false)
     if (!response.ok) return
     setListInput('')
+    setListTitle('')
     const refreshed = await fetch(`/api/elementary/spelling/lists?profileId=${profileId}`)
     const payload = await refreshed.json()
     const nextLists = payload?.lists || []
@@ -312,8 +314,17 @@ export default function SpellingEnginePanel({
       )}
       {showEnterList && (
         <div className="p-4 sm:p-6 bg-white border border-slate-200 rounded-xl shadow-sm">
-          <h3 className="text-base sm:text-lg font-semibold text-slate-900 mb-2">Enter your list</h3>
-          <p className="text-sm text-slate-600 mb-4">Paste words (one per line) or separate with commas.</p>
+          <h3 className="text-base sm:text-lg font-semibold text-slate-900 mb-2">Create a list</h3>
+          <p className="text-sm text-slate-600 mb-4">Name your list, then add words.</p>
+          <div className="mb-3">
+            <label className="text-xs font-semibold text-slate-600">List name</label>
+            <input
+              value={listTitle}
+              onChange={(event) => setListTitle(event.target.value)}
+              placeholder="e.g., Week 3 - Long vowels"
+              className="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm"
+            />
+          </div>
           <textarea
             value={listInput}
             onChange={(event) => setListInput(event.target.value)}
