@@ -18,12 +18,7 @@ const NAV_ITEMS_BY_BAND = {
     { label: 'Settings', href: '/settings', icon: Settings },
   ],
   middle: [
-    { label: 'Home', href: '/app/middle', icon: Sparkles },
-    { label: 'Study Map', href: '/tutor?tool=study-map', icon: MessageSquare },
-    { label: 'Practice Mode', href: '/tutor?tool=practice', icon: Activity },
-    { label: 'Homework Helper', href: '/tutor?mode=homework', icon: MessageSquare },
-    { label: 'Reading', href: '/tutor?mode=reading', icon: BookOpen },
-    { label: 'Writing', href: '/tutor?tool=writing', icon: BookOpen },
+    { label: 'Study Hub', href: '/app/middle', icon: Sparkles },
     { label: 'Uploads', href: '/sources', icon: FileText },
     { label: 'Progress', href: '/readiness', icon: Activity },
     { label: 'Settings', href: '/settings', icon: Settings },

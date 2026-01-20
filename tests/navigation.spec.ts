@@ -175,14 +175,9 @@ test.describe('Navigation Smoke Tests', () => {
       },
       {
         key: 'middle',
-        detectLabel: 'Practice Mode',
+        detectLabel: 'Study Hub',
         items: [
-          { label: 'Home', href: '/app/middle', expectedContent: ['ForgeMiddle', 'Grades 6–8'] },
-          { label: 'Study Map', href: '/tutor?tool=study-map', expectedContent: ['Tutor Workspace', 'Good morning'] },
-          { label: 'Practice Mode', href: '/tutor?tool=practice', expectedContent: ['Tutor Workspace', 'Good morning'] },
-          { label: 'Homework Helper', href: '/tutor?mode=homework', expectedContent: ['Tutor Workspace', 'Good morning'] },
-          { label: 'Reading', href: '/tutor?mode=reading', expectedContent: ['Tutor Workspace', 'Good morning'] },
-          { label: 'Writing', href: '/tutor?tool=writing', expectedContent: ['Tutor Workspace', 'Good morning'] },
+          { label: 'Study Hub', href: '/app/middle', expectedContent: ['ForgeMiddle', 'Grades 6–8'] },
           { label: 'Uploads', href: '/sources', expectedContent: ['Sources'] },
           { label: 'Progress', href: '/readiness', expectedContent: ['Learning Dashboard'] },
           { label: 'Settings', href: '/settings', expectedContent: ['Settings', 'Display Density'] },

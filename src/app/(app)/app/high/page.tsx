@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from 'react'
 import Link from 'next/link'
-import { FileText, Layers, Map, Sparkles } from 'lucide-react'
+import { FileText, Layers, Map, Sparkles, PenLine, Atom } from 'lucide-react'
 import { useActiveProfile } from '@/contexts/ActiveProfileContext'
 import { Button } from '@/components/ui/button'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
@@ -258,7 +258,7 @@ export default function HighDashboardPage() {
             )}
           </section>
 
-          <section className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
+          <section className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
             {[
               {
                 icon: Layers,
@@ -287,6 +287,20 @@ export default function HighDashboardPage() {
                 description: 'Create a one-page review you can print.',
                 href: '/tutor?tool=exam',
                 action: 'Create a sheet',
+              },
+              {
+                icon: PenLine,
+                title: 'Essay architect',
+                description: 'Thesis, outline, evidence, and revision support.',
+                href: '/tutor?tool=writing',
+                action: 'Start writing',
+              },
+              {
+                icon: Atom,
+                title: 'STEM coach',
+                description: 'Advanced math + physics, step-by-step reasoning.',
+                href: '/tutor?tool=practice',
+                action: 'Work a problem',
               },
             ].map((item) => (
               <div
