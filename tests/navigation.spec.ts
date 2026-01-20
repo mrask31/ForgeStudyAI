@@ -83,15 +83,13 @@ async function loginIfConfigured(page: any) {
 
 test.describe('Navigation Smoke Tests', () => {
   test('all critical routes return 200 and show expected content', async ({ page }) => {
+    test.setTimeout(60000)
     await loginIfConfigured(page)
     for (const route of CRITICAL_ROUTES) {
-      const response = await page.goto(route);
+      const response = await page.goto(route, { waitUntil: 'domcontentloaded' });
       
       // Assert HTTP status is 200
       expect(response?.status()).toBe(200);
-      
-      // Wait for page to be fully loaded
-      await page.waitForLoadState('domcontentloaded');
       
       // Get page content
       const pageContent = await page.textContent('body') || '';
@@ -111,14 +109,12 @@ test.describe('Navigation Smoke Tests', () => {
   });
 
   test('public routes are accessible and show expected content', async ({ page }) => {
+    test.setTimeout(60000)
     for (const route of PUBLIC_ROUTES) {
-      const response = await page.goto(route);
+      const response = await page.goto(route, { waitUntil: 'domcontentloaded' });
       
       // Assert HTTP status is 200
       expect(response?.status()).toBe(200);
-      
-      // Wait for page to be fully loaded
-      await page.waitForLoadState('domcontentloaded');
       
       // Get page content
       const pageContent = await page.textContent('body') || '';

@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 
 interface SpellingEnginePanelProps {
   profileId: string
@@ -69,6 +69,8 @@ export default function SpellingEnginePanel({
   const [lists, setLists] = useState<SpellingList[]>([])
   const [selectedListId, setSelectedListId] = useState<string | null>(null)
   const [isSaving, setIsSaving] = useState(false)
+  const [pendingDelete, setPendingDelete] = useState<{ id: string; title: string } | null>(null)
+  const deleteTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const [isTestOpen, setIsTestOpen] = useState(false)
   const [testAnswers, setTestAnswers] = useState<Record<string, string>>({})
   const [revealedWords, setRevealedWords] = useState<Record<string, boolean>>({})
@@ -81,6 +83,8 @@ export default function SpellingEnginePanel({
     ? lists.find((list) => list.id === selectedListId) || lists[0]
     : lists[0]
   const wordGroups = useMemo(() => groupWords(activeList?.spelling_words || []), [activeList])
+  const activeWordCount = activeList?.spelling_words.length ?? 0
+  const hasEnoughWords = activeWordCount >= 5
 
   useEffect(() => {
     if (!onListStatusChange) return
@@ -113,6 +117,14 @@ export default function SpellingEnginePanel({
     }
     loadLists()
   }, [profileId])
+
+  useEffect(() => {
+    return () => {
+      if (deleteTimerRef.current) {
+        clearTimeout(deleteTimerRef.current)
+      }
+    }
+  }, [])
 
   const handleSaveList = async () => {
     if (!listInput.trim()) return
@@ -149,8 +161,7 @@ export default function SpellingEnginePanel({
     }
   }
 
-  const handleDeleteList = async (listId: string) => {
-    if (!window.confirm('Delete this list?')) return
+  const finalizeDelete = async (listId: string) => {
     const response = await fetch('/api/elementary/spelling/lists', {
       method: 'DELETE',
       headers: { 'Content-Type': 'application/json' },
@@ -169,6 +180,24 @@ export default function SpellingEnginePanel({
       const exists = nextLists.some((list: SpellingList) => list.id === current)
       return exists ? current : nextLists[0].id
     })
+  }
+
+  const handleDeleteList = (listId: string, title: string) => {
+    if (deleteTimerRef.current) {
+      clearTimeout(deleteTimerRef.current)
+    }
+    setPendingDelete({ id: listId, title })
+    deleteTimerRef.current = setTimeout(() => {
+      finalizeDelete(listId)
+      setPendingDelete(null)
+    }, 5000)
+  }
+
+  const handleUndoDelete = () => {
+    if (deleteTimerRef.current) {
+      clearTimeout(deleteTimerRef.current)
+    }
+    setPendingDelete(null)
   }
 
   const handleStartWarmup = (list: SpellingList | undefined = activeList) => {
@@ -292,6 +321,9 @@ export default function SpellingEnginePanel({
                   </option>
                 ))}
               </select>
+              <p className="mt-1 text-xs text-slate-500">
+                Selected: {activeList ? `${activeList.title} (${activeList.spelling_words.length} words)` : 'None'}
+              </p>
             </div>
           )}
           {lists.length === 0 ? (
@@ -301,27 +333,48 @@ export default function SpellingEnginePanel({
               {activeList ? (
                 <div className="flex items-center justify-between gap-3 rounded-lg border border-emerald-300 bg-emerald-50/40 px-3 py-2">
                   <div className="flex-1 text-left">
-                    <p className="text-sm font-semibold text-slate-900">{activeList.title}</p>
+                    <p className="text-sm font-semibold text-slate-900 truncate" title={activeList.title}>
+                      {activeList.title}
+                    </p>
                     <p className="text-xs text-slate-500">{activeList.spelling_words.length} words</p>
+                    {activeWordCount < 5 && (
+                      <p className="text-xs text-amber-600 mt-1">Add at least 5 words for warmup.</p>
+                    )}
                   </div>
                   <div className="flex items-center gap-2">
                     <button
                       type="button"
                       onClick={() => handleStartWarmup(activeList)}
-                      className="px-3 py-1.5 rounded-lg text-xs font-semibold bg-emerald-600 text-white hover:bg-emerald-700"
+                      disabled={!hasEnoughWords}
+                      className="px-3 py-1.5 rounded-lg text-xs font-semibold bg-emerald-600 text-white hover:bg-emerald-700 disabled:opacity-60"
                     >
                       Study
                     </button>
                     <button
                       type="button"
-                      onClick={() => handleDeleteList(activeList.id)}
-                      className="px-3 py-1.5 rounded-lg text-xs font-semibold border border-rose-200 text-rose-600 hover:bg-rose-50"
+                      onClick={() => handleDeleteList(activeList.id, activeList.title)}
+                      disabled={pendingDelete?.id === activeList.id}
+                      className="px-3 py-1.5 rounded-lg text-xs font-semibold border border-rose-200 text-rose-600 hover:bg-rose-50 disabled:opacity-60"
                     >
                       Delete
                     </button>
                   </div>
                 </div>
               ) : null}
+              {pendingDelete && (
+                <div className="flex items-center justify-between gap-2 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-700">
+                  <span>
+                    Deleting “{pendingDelete.title}” in 5s.
+                  </span>
+                  <button
+                    type="button"
+                    onClick={handleUndoDelete}
+                    className="font-semibold text-amber-700 hover:underline"
+                  >
+                    Undo
+                  </button>
+                </div>
+              )}
             </div>
           )}
         </div>
@@ -361,7 +414,7 @@ export default function SpellingEnginePanel({
             value={listInput}
             onChange={(event) => setListInput(event.target.value)}
             placeholder="soccer, hockey, galaxy..."
-            className="w-full min-h-[96px] rounded-lg border border-slate-200 px-3 py-2 text-sm"
+            className="w-full min-h-[120px] sm:min-h-[140px] rounded-lg border border-slate-200 px-3 py-2 text-sm resize-y"
           />
           <div className="mt-3 flex flex-wrap gap-2">
             <button
@@ -414,32 +467,39 @@ export default function SpellingEnginePanel({
           {practiceModesDescription && (
             <p className="text-sm text-slate-600 mb-3">{practiceModesDescription}</p>
           )}
+          {!activeList && (
+            <p className="text-sm text-slate-500 mb-3">Pick a list above to unlock practice.</p>
+          )}
           <div className="flex flex-wrap gap-2">
             <button
               type="button"
               onClick={() => handleStartWarmup()}
-              className="px-3 py-2 rounded-lg text-xs sm:text-sm font-medium bg-emerald-50 text-emerald-700 border border-emerald-200 hover:bg-emerald-100"
+              disabled={!hasEnoughWords}
+              className="px-3 py-2 rounded-lg text-xs sm:text-sm font-medium bg-emerald-50 text-emerald-700 border border-emerald-200 hover:bg-emerald-100 disabled:opacity-60"
             >
               5-word warmup
             </button>
             <button
               type="button"
               onClick={handleMissedOnly}
-              className="px-3 py-2 rounded-lg text-xs sm:text-sm font-medium bg-emerald-50 text-emerald-700 border border-emerald-200 hover:bg-emerald-100"
+              disabled={!activeList}
+              className="px-3 py-2 rounded-lg text-xs sm:text-sm font-medium bg-emerald-50 text-emerald-700 border border-emerald-200 hover:bg-emerald-100 disabled:opacity-60"
             >
               Missed words only
             </button>
             <button
               type="button"
               onClick={handleFridayTest}
-              className="px-3 py-2 rounded-lg text-xs sm:text-sm font-medium bg-emerald-50 text-emerald-700 border border-emerald-200 hover:bg-emerald-100"
+              disabled={!activeList}
+              className="px-3 py-2 rounded-lg text-xs sm:text-sm font-medium bg-emerald-50 text-emerald-700 border border-emerald-200 hover:bg-emerald-100 disabled:opacity-60"
             >
               Friday test mode
             </button>
             <button
               type="button"
               onClick={handleSpeedRound}
-              className="px-3 py-2 rounded-lg text-xs sm:text-sm font-medium bg-emerald-50 text-emerald-700 border border-emerald-200 hover:bg-emerald-100"
+              disabled={!activeList}
+              className="px-3 py-2 rounded-lg text-xs sm:text-sm font-medium bg-emerald-50 text-emerald-700 border border-emerald-200 hover:bg-emerald-100 disabled:opacity-60"
             >
               Speed round (30s)
             </button>
