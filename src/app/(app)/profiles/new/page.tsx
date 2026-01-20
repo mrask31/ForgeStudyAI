@@ -4,7 +4,6 @@ import { useSearchParams, useRouter } from 'next/navigation'
 import { useEffect, useState, Suspense } from 'react'
 import { createBrowserClient } from '@supabase/ssr'
 import { createStudentProfile, getStudentProfiles } from '@/app/actions/student-profiles'
-import { getParentPinStatus } from '@/app/actions/pins'
 import { useActiveProfile } from '@/contexts/ActiveProfileContext'
 import { FAMILY_MAX_PROFILES } from '@/lib/constants'
 import { GraduationCap, BookOpen, Sparkles } from 'lucide-react'
@@ -21,10 +20,6 @@ function NewProfileContent() {
   const [user, setUser] = useState<any>(null)
   const [isCheckingAuth, setIsCheckingAuth] = useState(true)
   const [authError, setAuthError] = useState<string | null>(null)
-  const [profileCount, setProfileCount] = useState<number | null>(null)
-  const [requiresParentPin, setRequiresParentPin] = useState(false)
-  const [requiresFamilyPlan, setRequiresFamilyPlan] = useState(false)
-  const [isCheckingPin, setIsCheckingPin] = useState(false)
   const { setActiveProfileId } = useActiveProfile()
 
   useEffect(() => {
@@ -62,42 +57,49 @@ function NewProfileContent() {
 
         // Check current profile count
         const profiles = await getStudentProfiles()
-        setProfileCount(profiles.length)
+        const existingProfiles = profiles.length
 
-        // If at max, redirect to profiles page
-        if (profiles.length >= FAMILY_MAX_PROFILES) {
-          router.replace('/profiles')
-        }
-
-        if (profiles.length >= 1) {
+        if (existingProfiles >= 1) {
           try {
             const subRes = await fetch('/api/stripe/subscription', { credentials: 'include' })
             if (subRes.ok) {
               const subData = await subRes.json()
               const planType = subData.planType || 'individual'
               if (planType !== 'family') {
-                setRequiresFamilyPlan(true)
+                router.replace('/profiles')
                 return
               }
             } else {
-              setRequiresFamilyPlan(true)
+              router.replace('/profiles')
               return
             }
           } catch (error) {
             console.error('[New Profile Page] Failed to check plan type:', error)
-            setRequiresFamilyPlan(true)
+            router.replace('/profiles')
             return
           }
 
-          setIsCheckingPin(true)
+          const stored = sessionStorage.getItem('parent_pin_unlocked')
+          if (!stored) {
+            router.replace('/parent')
+            return
+          }
           try {
-            const status = await getParentPinStatus()
-            setRequiresParentPin(!status.hasPin)
-          } catch (error) {
-            console.error('[New Profile Page] Failed to check parent PIN:', error)
-            setRequiresParentPin(true)
-          } finally {
-            setIsCheckingPin(false)
+            const parsed = JSON.parse(stored) as { timestamp: number }
+            if (Date.now() - parsed.timestamp > 30 * 60 * 1000) {
+              sessionStorage.removeItem('parent_pin_unlocked')
+              router.replace('/parent')
+              return
+            }
+          } catch {
+            sessionStorage.removeItem('parent_pin_unlocked')
+            router.replace('/parent')
+            return
+          }
+
+          if (existingProfiles >= FAMILY_MAX_PROFILES) {
+            router.replace('/parent')
+            return
           }
         }
       } catch (error) {
@@ -131,18 +133,6 @@ function NewProfileContent() {
     setIsSubmitting(true)
 
     try {
-      if (requiresFamilyPlan) {
-        setError('Family plan required to add another profile.')
-        setIsSubmitting(false)
-        return
-      }
-
-      if (requiresParentPin) {
-        setError('Parent PIN required to add another profile.')
-        setIsSubmitting(false)
-        return
-      }
-
       if (!band) {
         setError('Please select a grade level')
         setIsSubmitting(false)
@@ -195,87 +185,6 @@ function NewProfileContent() {
         <div className="text-center">
           <div className="text-slate-600">
             {authError || 'Redirecting to sign in...'}
-          </div>
-        </div>
-      </div>
-    )
-  }
-
-  if (profileCount !== null && profileCount >= FAMILY_MAX_PROFILES) {
-    return (
-      <div className="h-full bg-gradient-to-br from-slate-50 to-white flex items-center justify-center px-4">
-        <div className="max-w-2xl w-full text-center">
-          <div className="bg-amber-50 border border-amber-200 rounded-xl p-8">
-            <h2 className="text-2xl font-bold text-amber-900 mb-4">Maximum profiles reached</h2>
-            <p className="text-lg text-amber-800 mb-6">
-              Family plan supports up to {FAMILY_MAX_PROFILES} student profiles. You can manage existing profiles from the profiles page.
-            </p>
-            <button
-              onClick={() => router.push('/profiles')}
-              className="px-6 py-3 bg-gradient-to-r from-teal-700 to-teal-600 text-white rounded-lg font-semibold hover:from-teal-800 hover:to-teal-700 transition-colors shadow-md"
-            >
-              Back to Profiles
-            </button>
-          </div>
-        </div>
-      </div>
-    )
-  }
-
-  if (requiresFamilyPlan) {
-    return (
-      <div className="h-full bg-gradient-to-br from-slate-50 to-white flex items-center justify-center px-4">
-        <div className="max-w-2xl w-full text-center">
-          <div className="bg-white border border-slate-200 rounded-2xl p-8 shadow-lg">
-            <h2 className="text-2xl font-bold text-slate-900 mb-3">Family plan required</h2>
-            <p className="text-base text-slate-600 mb-6">
-              Your current plan allows one student profile. Upgrade to Family to add more.
-            </p>
-            <div className="flex flex-col sm:flex-row gap-3 justify-center">
-              <button
-                onClick={() => router.push('/profiles')}
-                className="px-6 py-3 border-2 border-slate-300 text-slate-700 rounded-xl font-semibold hover:bg-slate-50 transition-colors"
-              >
-                Back to profiles
-              </button>
-              <button
-                onClick={() => router.push('/parent')}
-                className="px-6 py-3 bg-gradient-to-r from-teal-700 to-teal-600 text-white rounded-xl font-semibold hover:from-teal-800 hover:to-teal-700 transition-colors shadow-md"
-              >
-                Manage subscription
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
-    )
-  }
-
-  if (requiresParentPin) {
-    return (
-      <div className="h-full bg-gradient-to-br from-slate-50 to-white flex items-center justify-center px-4">
-        <div className="max-w-2xl w-full text-center">
-          <div className="bg-white border border-slate-200 rounded-2xl p-8 shadow-lg">
-            <h2 className="text-2xl font-bold text-slate-900 mb-3">Set a parent PIN first</h2>
-            <p className="text-base text-slate-600 mb-6">
-              To add another student profile, the parent account needs a PIN. This protects billing and profile management.
-            </p>
-            <div className="flex flex-col sm:flex-row gap-3 justify-center">
-              <button
-                onClick={() => router.push('/profiles')}
-                className="px-6 py-3 border-2 border-slate-300 text-slate-700 rounded-xl font-semibold hover:bg-slate-50 transition-colors"
-                disabled={isCheckingPin}
-              >
-                Back to profiles
-              </button>
-              <button
-                onClick={() => router.push('/parent')}
-                className="px-6 py-3 bg-gradient-to-r from-teal-700 to-teal-600 text-white rounded-xl font-semibold hover:from-teal-800 hover:to-teal-700 transition-colors shadow-md"
-                disabled={isCheckingPin}
-              >
-                Set parent PIN
-              </button>
-            </div>
           </div>
         </div>
       </div>

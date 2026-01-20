@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from 'react'
 import Link from 'next/link'
-import { Shield, Lock, CreditCard, Users, CheckCircle, XCircle } from 'lucide-react'
+import { Shield, Lock, CreditCard, Users, CheckCircle, XCircle, Plus } from 'lucide-react'
 import {
   getParentPinStatus,
   setParentPin,
@@ -14,6 +14,7 @@ import {
 import { getStudentProfiles, type StudentProfile } from '@/app/actions/student-profiles'
 
 type SubscriptionData = {
+  planType?: string
   subscription: {
     id: string
     status: string
@@ -201,6 +202,11 @@ export default function ParentDashboardPage() {
     return ['trialing', 'active', 'past_due', 'incomplete'].includes(status)
   }, [subscriptionData])
 
+  const canAddProfile = useMemo(() => {
+    if (!subscriptionData) return false
+    return subscriptionData.planType === 'family' && profiles.length < 4
+  }, [subscriptionData, profiles.length])
+
   if (hasPin === null) {
     return (
       <div className="h-full bg-slate-50 flex items-center justify-center">
@@ -387,6 +393,23 @@ export default function ParentDashboardPage() {
             <p className="text-sm text-slate-600 mb-4">
               Manage student details, interests, and PIN protection.
             </p>
+            <div className="mb-4">
+              {canAddProfile ? (
+                <Link
+                  href="/profiles/new"
+                  className="inline-flex items-center gap-2 rounded-xl bg-emerald-600 px-4 py-2 text-xs font-semibold text-white hover:bg-emerald-700 transition-colors"
+                >
+                  <Plus className="w-4 h-4" />
+                  Add student profile
+                </Link>
+              ) : (
+                <div className="rounded-xl border border-slate-200 bg-slate-50 px-4 py-2 text-xs text-slate-600">
+                  {subscriptionData?.planType === 'family'
+                    ? 'Family plan limit reached. Remove a profile to add another.'
+                    : 'Upgrade to the Family plan to add more profiles.'}
+                </div>
+              )}
+            </div>
             <div className="space-y-4">
               {profiles.map((profile) => (
                 <div key={profile.id} className="rounded-xl border border-slate-200/70 p-4">

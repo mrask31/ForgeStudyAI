@@ -1,6 +1,7 @@
 import { createServerClient, type CookieOptions } from '@supabase/ssr'
 import { createClient } from '@supabase/supabase-js'
 import { NextResponse, type NextRequest } from 'next/server'
+import { FAMILY_MAX_PROFILES } from '@/lib/constants'
 
 export async function middleware(request: NextRequest) {
   // Wrap entire middleware in try/catch to prevent ANY crash
@@ -150,6 +151,73 @@ export async function middleware(request: NextRequest) {
       const redirectUrl = new URL('/login', request.url)
       redirectUrl.searchParams.set('redirect', pathname)
       return NextResponse.redirect(redirectUrl)
+    }
+
+    // Enforce profile creation guardrails for /profiles/new
+    if (user && pathname.startsWith('/profiles/new') && supabase) {
+      try {
+        const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY
+        let profileCount = 0
+        let parentPinHash: string | null = null
+
+        if (serviceRoleKey) {
+          const adminClient = createClient(supabaseUrl, serviceRoleKey)
+          const { count } = await adminClient
+            .from('student_profiles')
+            .select('id', { count: 'exact', head: true })
+            .eq('owner_id', user.id)
+          profileCount = count || 0
+
+          const { data: parentProfile } = await adminClient
+            .from('profiles')
+            .select('parent_pin_hash')
+            .eq('id', user.id)
+            .single()
+          parentPinHash = parentProfile?.parent_pin_hash || null
+        } else {
+          const { data } = await supabase
+            .from('student_profiles')
+            .select('id')
+            .eq('owner_id', user.id)
+          profileCount = (data || []).length
+
+          const { data: parentProfile } = await supabase
+            .from('profiles')
+            .select('parent_pin_hash')
+            .eq('id', user.id)
+            .single()
+          parentPinHash = parentProfile?.parent_pin_hash || null
+        }
+
+        if (profileCount >= 1) {
+          if (profileCount >= FAMILY_MAX_PROFILES) {
+            return NextResponse.redirect(new URL('/parent', request.url))
+          }
+
+          const subscriptionUrl = new URL('/api/stripe/subscription', request.url)
+          const subscriptionRes = await fetch(subscriptionUrl, {
+            headers: {
+              cookie: request.headers.get('cookie') || '',
+            },
+          })
+          if (subscriptionRes.ok) {
+            const data = await subscriptionRes.json()
+            const planType = data?.planType || 'individual'
+            if (planType !== 'family') {
+              return NextResponse.redirect(new URL('/profiles', request.url))
+            }
+          } else {
+            return NextResponse.redirect(new URL('/profiles', request.url))
+          }
+
+          if (!parentPinHash) {
+            return NextResponse.redirect(new URL('/parent', request.url))
+          }
+        }
+      } catch (error) {
+        console.error('[Middleware] Error enforcing profile creation guardrails:', error)
+        return NextResponse.redirect(new URL('/profiles', request.url))
+      }
     }
 
     // Check subscription status for authenticated users accessing protected routes
