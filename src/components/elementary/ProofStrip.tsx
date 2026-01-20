@@ -8,9 +8,10 @@ interface ProofStripProps {
   profileId: string
   mode: Mode
   onStartSession?: (prompt: string) => void
+  showStreak?: boolean
 }
 
-export default function ProofStrip({ profileId, mode, onStartSession }: ProofStripProps) {
+export default function ProofStrip({ profileId, mode, onStartSession, showStreak = true }: ProofStripProps) {
   const [streak, setStreak] = useState(0)
   const [timeToday, setTimeToday] = useState(0)
   const [proof, setProof] = useState<Record<string, number>>({})
@@ -57,42 +58,45 @@ export default function ProofStrip({ profileId, mode, onStartSession }: ProofStr
   }
 
   const isSpelling = mode === 'spelling'
+  const columns = showStreak ? 'sm:grid-cols-4' : 'sm:grid-cols-3'
 
   return (
     <>
-      <div className="grid gap-3 sm:grid-cols-4">
-      <div className="rounded-xl border border-slate-200 bg-white px-4 py-3">
-        <p className="text-xs text-slate-500">Streak</p>
-        <p className="text-lg font-semibold text-slate-900">{streak} days</p>
-      </div>
-      <div className="rounded-xl border border-slate-200 bg-white px-4 py-3">
-        <p className="text-xs text-slate-500">Time today</p>
-        <p className="text-lg font-semibold text-slate-900">{minutes} min</p>
-      </div>
-      <button
-        type="button"
-        onClick={isSpelling ? () => loadWords('mastered') : undefined}
-        className={`rounded-xl border border-slate-200 bg-white px-4 py-3 text-left ${
-          isSpelling ? 'hover:border-emerald-200 hover:bg-emerald-50/40 transition-colors' : ''
-        }`}
-      >
-        <p className="text-xs text-slate-500">{mode === 'homework' ? 'Completed' : 'Mastered'}</p>
-        <p className="text-lg font-semibold text-slate-900">
-          {mode === 'homework' ? proof.completed || 0 : proof.mastered || proof.passages || 0}
-        </p>
-      </button>
-      <button
-        type="button"
-        onClick={isSpelling ? () => loadWords('review') : undefined}
-        className={`rounded-xl border border-slate-200 bg-white px-4 py-3 text-left ${
-          isSpelling ? 'hover:border-emerald-200 hover:bg-emerald-50/40 transition-colors' : ''
-        }`}
-      >
-        <p className="text-xs text-slate-500">Review</p>
-        <p className="text-lg font-semibold text-slate-900">
-          {mode === 'homework' ? proof.pending || 0 : proof.review || proof.checks || 0}
-        </p>
-      </button>
+      <div className={`grid gap-3 ${columns}`}>
+      {showStreak && (
+        <div className="rounded-xl border border-slate-200 bg-white px-4 py-3">
+          <p className="text-xs text-slate-500">Streak</p>
+          <p className="text-lg font-semibold text-slate-900">{streak} days</p>
+        </div>
+      )}
+        <div className="rounded-xl border border-slate-200 bg-white px-4 py-3">
+          <p className="text-xs text-slate-500">Time today</p>
+          <p className="text-lg font-semibold text-slate-900">{minutes} min</p>
+        </div>
+        <button
+          type="button"
+          onClick={isSpelling ? () => loadWords('mastered') : undefined}
+          className={`rounded-xl border border-slate-200 bg-white px-4 py-3 text-left ${
+            isSpelling ? 'hover:border-emerald-200 hover:bg-emerald-50/40 transition-colors' : ''
+          }`}
+        >
+          <p className="text-xs text-slate-500">{mode === 'homework' ? 'Completed' : 'Mastered'}</p>
+          <p className="text-lg font-semibold text-slate-900">
+            {mode === 'homework' ? proof.completed || 0 : proof.mastered || proof.passages || 0}
+          </p>
+        </button>
+        <button
+          type="button"
+          onClick={isSpelling ? () => loadWords('review') : undefined}
+          className={`rounded-xl border border-slate-200 bg-white px-4 py-3 text-left ${
+            isSpelling ? 'hover:border-emerald-200 hover:bg-emerald-50/40 transition-colors' : ''
+          }`}
+        >
+          <p className="text-xs text-slate-500">Review</p>
+          <p className="text-lg font-semibold text-slate-900">
+            {mode === 'homework' ? proof.pending || 0 : proof.review || proof.checks || 0}
+          </p>
+        </button>
       </div>
 
       {isModalOpen && modalType && (

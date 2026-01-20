@@ -155,7 +155,7 @@ export default function GradeBand35ReadingLayout({
               </button>
             </div>
           </div>
-          <ProofStrip profileId={profileId} mode="reading" onStartSession={onStartSession} />
+          <ProofStrip profileId={profileId} mode="reading" onStartSession={onStartSession} showStreak={false} />
         </div>
       )}
 
@@ -195,7 +195,7 @@ export default function GradeBand35ReadingLayout({
               Vocabulary check
             </button>
           </div>
-          <ProofStrip profileId={profileId} mode="reading" onStartSession={onStartSession} />
+          <ProofStrip profileId={profileId} mode="reading" onStartSession={onStartSession} showStreak={false} />
           <div className="rounded-xl border border-slate-200 bg-white p-4">
             <p className="text-sm font-semibold text-slate-900">Hard words box</p>
             <p className="text-xs text-slate-500">
