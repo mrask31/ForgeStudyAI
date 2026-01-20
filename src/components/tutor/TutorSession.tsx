@@ -89,6 +89,7 @@ export default function TutorSession({
   // Use localSessionId for rendering (will be updated when session is created)
   const sessionId = localSessionId
   const hideChatInput = mode === 'spelling'
+  const deEmphasizeChatInput = gradeBand === 'elementary' && (mode === 'reading' || mode === 'homework')
 
   // Check for active binder files
   useEffect(() => {
@@ -658,7 +659,7 @@ export default function TutorSession({
 
       {/* Chat input docked at bottom */}
       {!hideChatInput && (
-        <div className="flex-shrink-0">
+        <div className={`flex-shrink-0 ${deEmphasizeChatInput ? 'opacity-80' : ''}`}>
           <ChatInterface
             sessionId={sessionId}
             onSend={handleSend}

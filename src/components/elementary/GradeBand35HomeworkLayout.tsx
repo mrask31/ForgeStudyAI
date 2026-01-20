@@ -69,7 +69,7 @@ export default function GradeBand35HomeworkLayout({
             onClick={() => router.push('/classes')}
             className="px-4 py-2 rounded-lg text-sm font-semibold border border-slate-200 text-slate-700 hover:bg-slate-50"
           >
-            Upload a worksheet
+            Upload a worksheet (from Uploads)
           </button>
         </div>
       )}
@@ -93,7 +93,7 @@ export default function GradeBand35HomeworkLayout({
         <div className="space-y-4">
           <div className="rounded-xl border border-slate-200 bg-white px-4 py-3">
             <p className="text-sm font-semibold text-slate-900">We are doing: {activeTaskTitle || 'Your first task'}</p>
-            <p className="text-xs text-slate-500">Step-by-step</p>
+            <p className="text-xs text-slate-500">Step: 1 of 3</p>
           </div>
           <div className="flex flex-wrap gap-2">
             <button

@@ -66,18 +66,18 @@ export default function GradeBand35ReadingLayout({
       {step === 1 && (
         <div className="space-y-4">
           {hasPassage && (
-            <div className="p-4 bg-white border border-slate-200 rounded-xl shadow-sm">
+            <div className="px-4 py-3 bg-white border border-slate-200 rounded-lg shadow-sm">
               <div className="flex items-center justify-between gap-3">
                 <div>
-                  <p className="text-xs uppercase text-slate-500 font-semibold">Continue last session</p>
-                  <p className="text-sm font-semibold text-slate-900">
+                  <p className="text-[11px] uppercase text-slate-500 font-semibold">Continue last session</p>
+                  <p className="text-sm font-semibold text-slate-900 truncate">
                     {passageTitle || 'Last saved passage'}
                   </p>
                 </div>
                 <button
                   type="button"
                   onClick={() => sendWithPassage('Continue with the passage and ask 2 quick questions.')}
-                  className="px-3 py-2 rounded-lg text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200 hover:bg-emerald-100"
+                  className="px-2.5 py-1.5 rounded-md text-[11px] font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200 hover:bg-emerald-100"
                 >
                   Continue
                 </button>
@@ -198,6 +198,12 @@ export default function GradeBand35ReadingLayout({
             </button>
           </div>
           <ProofStrip profileId={profileId} mode="reading" onStartSession={onStartSession} />
+          <div className="rounded-xl border border-slate-200 bg-white p-4">
+            <p className="text-sm font-semibold text-slate-900">Hard words box</p>
+            <p className="text-xs text-slate-500">
+              Ask the Hard words helper and we will list the tricky words here.
+            </p>
+          </div>
           <div className="rounded-xl border border-slate-200 bg-white p-4">
             <p className="text-sm font-semibold text-slate-900">Nice work!</p>
             <p className="text-xs text-slate-500">Hard words saved for next time.</p>
