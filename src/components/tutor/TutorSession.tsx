@@ -88,7 +88,7 @@ export default function TutorSession({
   
   // Use localSessionId for rendering (will be updated when session is created)
   const sessionId = localSessionId
-  const hideChatInput = gradeBand === 'elementary' && mode === 'spelling'
+  const hideChatInput = mode === 'spelling'
 
   // Check for active binder files
   useEffect(() => {

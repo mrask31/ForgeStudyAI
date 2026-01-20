@@ -64,7 +64,7 @@ function TutorPageContent() {
     return prefillMap[entryMode]
   }, [entryMode])
   const isEntryMode = !!entryMode
-  const isElementarySpelling = activeProfileSummary?.gradeBand === 'elementary' && entryMode === 'spelling'
+  const isSpellingEntryMode = entryMode === 'spelling'
   
   // Note: classId sync is handled by TutorContext itself (see TutorContext.tsx useEffect)
   // No need to sync here - it would create infinite loops
@@ -778,14 +778,14 @@ function TutorPageContent() {
       {/* Main chat column - centered with proper spacing */}
       <div className="flex-1 flex flex-col max-w-4xl mx-auto w-full px-3 sm:px-4 md:px-6 min-h-0 overflow-hidden">
         {/* Header - Fixed */}
-        {!isElementarySpelling && (
+        {!isSpellingEntryMode && (
           <div className="flex-shrink-0 bg-slate-50 pt-safe-t pb-2 z-40">
             <TutorHeader
               strictMode={strictMode}
               onStrictModeChange={handleStrictModeChange}
               currentSessionId={resolvedChatId}
-              hidePracticeControls={isElementarySpelling}
-              hideNewChat={isElementarySpelling}
+              hidePracticeControls={isSpellingEntryMode}
+              hideNewChat={isSpellingEntryMode}
               onStartNewSession={async () => {
                 // Clear the resolved session to show landing page
                 setResolvedChatId(null)
@@ -837,7 +837,7 @@ function TutorPageContent() {
                   </div>
                 )}
               </div>
-              {!showSession && !isElementarySpelling && (
+              {!showSession && !isSpellingEntryMode && (
                 <div className="flex-shrink-0 pt-4 sm:pt-6 bg-slate-50">
                   <ChatInterface
                     key={`landing-${entryMode ?? 'tutor'}`}
