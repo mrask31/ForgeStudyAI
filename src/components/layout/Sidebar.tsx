@@ -14,7 +14,6 @@ const NAV_ITEMS_BY_BAND = {
     { label: 'AI Tutor', href: '/tutor', icon: MessageSquare },
     { label: 'Spelling', href: '/tutor?mode=spelling', icon: BookOpen },
     { label: 'Reading', href: '/tutor?mode=reading', icon: BookOpen },
-    { label: 'Homework Help', href: '/tutor?mode=homework', icon: MessageSquare },
     { label: 'Upload', href: '/sources', icon: FileText },
     { label: 'Settings', href: '/settings', icon: Settings },
   ],
