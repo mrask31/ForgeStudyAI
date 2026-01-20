@@ -39,6 +39,7 @@ function TutorPageContent() {
   // Refs
   const prevTopicIdRef = useRef<string | undefined>(undefined)
   const prevExamIdRef = useRef<string | undefined>(undefined)
+  const prevToolRef = useRef<string | null>(null)
   const isResolvingRef = useRef(false) // Prevent infinite loops from router.replace
   const lastResolvedParamsRef = useRef<string>('') // Track last resolved params to prevent re-resolution
   const skipAutoResumeRef = useRef(false) // Track if we should skip auto-resume (e.g., after "New Chat" click)
@@ -50,6 +51,7 @@ function TutorPageContent() {
   const classIdParam = searchParams.get('classId') // Get classId from URL
   const messageIdParam = searchParams.get('messageId') // Get messageId from URL for scrolling
   const modeParam = searchParams.get('mode')
+  const toolParam = searchParams.get('tool')
 
   const entryMode = modeParam && ['spelling', 'reading', 'homework'].includes(modeParam)
     ? (modeParam as 'spelling' | 'reading' | 'homework')
@@ -65,6 +67,7 @@ function TutorPageContent() {
   }, [entryMode])
   const isEntryMode = !!entryMode
   const isSpellingEntryMode = entryMode === 'spelling'
+  const toolNeedsFreshChat = !!toolParam && ['study-map', 'practice', 'exam'].includes(toolParam)
   
   // Note: classId sync is handled by TutorContext itself (see TutorContext.tsx useEffect)
   // No need to sync here - it would create infinite loops
@@ -98,6 +101,9 @@ function TutorPageContent() {
     if (entryMode) {
       params.set('mode', entryMode)
     }
+    if (toolParam) {
+      params.set('tool', toolParam)
+    }
     if (chatId) {
       params.set('sessionId', chatId)
     }
@@ -105,7 +111,7 @@ function TutorPageContent() {
       params.set('classId', tutorContext.selectedClassId)
     }
     return `/tutor?${params.toString()}`
-  }, [entryMode, tutorContext.selectedClassId])
+  }, [entryMode, toolParam, tutorContext.selectedClassId])
 
   const handleNewSession = useCallback(async () => {
     const intent = 'new_question'
@@ -268,42 +274,51 @@ function TutorPageContent() {
     const currentTopicId = tutorContext.selectedTopicId
     const currentExamId = tutorContext.activeExamId
     const currentClassId = tutorContext.selectedClassId
+    const currentTool = toolParam
 
     // If topic, exam, or class changed, clear session to start fresh
     if (
       (currentTopicId && currentTopicId !== prevTopicIdRef.current) ||
       (currentExamId && currentExamId !== prevExamIdRef.current) ||
-      (currentClassId !== prevClassIdRef.current) // Class changed
+      (currentClassId !== prevClassIdRef.current) || // Class changed
+      (currentTool !== prevToolRef.current) // Tool changed
     ) {
       console.log('[Tutor] Context changed (topic, exam, or class), resetting session', {
         topicId: currentTopicId,
         examId: currentExamId,
         classId: currentClassId,
+        tool: currentTool,
         prevTopicId: prevTopicIdRef.current,
         prevExamId: prevExamIdRef.current,
         prevClassId: prevClassIdRef.current,
+        prevTool: prevToolRef.current,
       })
       
       // Clear resolved session to force fresh start
       setResolvedChatId(null)
       setAttachedFiles([]) // Clear attached files when context changes
+      if (currentTool !== prevToolRef.current) {
+        skipAutoResumeRef.current = true
+      }
       
       // Update refs
       prevTopicIdRef.current = currentTopicId
       prevExamIdRef.current = currentExamId
       prevClassIdRef.current = currentClassId
+      prevToolRef.current = currentTool
     } else {
       // Update refs even if no change (for initial mount)
       prevTopicIdRef.current = currentTopicId
       prevExamIdRef.current = currentExamId
       prevClassIdRef.current = currentClassId
+      prevToolRef.current = currentTool
     }
-  }, [tutorContext.selectedTopicId, tutorContext.activeExamId, tutorContext.selectedClassId])
+  }, [tutorContext.selectedTopicId, tutorContext.activeExamId, tutorContext.selectedClassId, toolParam])
 
   useEffect(() => {
     const resolveSession = async () => {
       // Create a unique key for this resolution attempt (include classId to detect class changes)
-      const paramsKey = `${intentParam || ''}-${sessionIdParam || ''}-${tutorContext.selectedClassId || ''}`
+      const paramsKey = `${intentParam || ''}-${sessionIdParam || ''}-${tutorContext.selectedClassId || ''}-${toolParam || ''}`
       
       // Prevent infinite loops: if we're already resolving the same params, skip
       if (isResolvingRef.current && lastResolvedParamsRef.current === paramsKey) {
@@ -348,6 +363,14 @@ function TutorPageContent() {
 
       // PRIORITY 0.5: If entry mode is set, start fresh without auto-resume
       if (entryMode && !sessionIdParam && !intentParam) {
+        setResolvedChatId(null)
+        setIsResolving(false)
+        isResolvingRef.current = false
+        return
+      }
+
+      // PRIORITY 0.75: If tool requires fresh session, start fresh (don't auto-resume)
+      if (toolNeedsFreshChat && !sessionIdParam && !intentParam) {
         setResolvedChatId(null)
         setIsResolving(false)
         isResolvingRef.current = false
@@ -609,6 +632,14 @@ function TutorPageContent() {
         setIsResolving(false)
         isResolvingRef.current = false
         skipAutoResumeRef.current = false // Reset flag after skipping
+        return
+      }
+
+      if (toolNeedsFreshChat) {
+        console.log('[Tutor] Tool requires fresh chat, skipping auto-resume:', toolParam)
+        setResolvedChatId(null)
+        setIsResolving(false)
+        isResolvingRef.current = false
         return
       }
       
