@@ -837,7 +837,7 @@ function TutorPageContent() {
                   </div>
                 )}
               </div>
-              {!showSession && !isSpellingEntryMode && (
+              {!showSession && !isEntryMode && (
                 <div className="flex-shrink-0 pt-4 sm:pt-6 bg-slate-50">
                   <ChatInterface
                     key={`landing-${entryMode ?? 'tutor'}`}
