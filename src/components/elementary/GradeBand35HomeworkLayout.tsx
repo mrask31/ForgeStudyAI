@@ -1,6 +1,6 @@
 'use client'
 
-import { ReactNode, useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import HomeworkEnginePanel from '@/components/elementary/HomeworkEnginePanel'
 
@@ -8,7 +8,6 @@ interface GradeBand35HomeworkLayoutProps {
   profileId: string
   hasSession: boolean
   onStartSession: (prompt: string) => void
-  helpContent?: ReactNode
 }
 
 type Step = 1 | 2 | 3
@@ -17,7 +16,6 @@ export default function GradeBand35HomeworkLayout({
   profileId,
   hasSession,
   onStartSession,
-  helpContent,
 }: GradeBand35HomeworkLayoutProps) {
   const router = useRouter()
   const [hasList, setHasList] = useState(false)
@@ -161,12 +159,6 @@ export default function GradeBand35HomeworkLayout({
         </div>
       )}
 
-      {helpContent && (
-        <details className="rounded-xl border border-slate-200 bg-white px-4 py-3">
-          <summary className="cursor-pointer text-sm font-semibold text-slate-700">Help</summary>
-          <div className="mt-3">{helpContent}</div>
-        </details>
-      )}
     </div>
   )
 }

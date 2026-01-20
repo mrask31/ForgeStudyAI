@@ -1,6 +1,6 @@
 'use client'
 
-import { ReactNode, useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import ProofStrip from '@/components/elementary/ProofStrip'
 import ReadingEnginePanel from '@/components/elementary/ReadingEnginePanel'
 
@@ -8,7 +8,6 @@ interface GradeBand35ReadingLayoutProps {
   profileId: string
   hasSession: boolean
   onStartSession: (prompt: string) => void
-  helpContent?: ReactNode
 }
 
 type Step = 1 | 2 | 3
@@ -17,7 +16,6 @@ export default function GradeBand35ReadingLayout({
   profileId,
   hasSession,
   onStartSession,
-  helpContent,
 }: GradeBand35ReadingLayoutProps) {
   const [hasPassage, setHasPassage] = useState(false)
   const [passageContent, setPassageContent] = useState<string | null>(null)
@@ -227,12 +225,6 @@ export default function GradeBand35ReadingLayout({
         </div>
       )}
 
-      {helpContent && (
-        <details className="rounded-xl border border-slate-200 bg-white px-4 py-3">
-          <summary className="cursor-pointer text-sm font-semibold text-slate-700">Help</summary>
-          <div className="mt-3">{helpContent}</div>
-        </details>
-      )}
     </div>
   )
 }

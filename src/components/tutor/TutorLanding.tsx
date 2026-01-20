@@ -294,27 +294,6 @@ export default function TutorLanding({
     )
   }
 
-  const renderHelpContent = () => (
-    <div className="pt-2">
-      <SuggestedPrompts 
-        mode="tutor" 
-        onPromptSelect={(prompt) => {
-          // On landing, clicking a suggestion starts a session
-          handleSuggestionClick(prompt)
-        }}
-        onSend={handleSuggestionClick}
-        isVisible={true}
-        isCompact={true}
-        hasAttachedFiles={hasAttachedFiles}
-        attachedContext={attachedContext}
-        selectedClassId={selectedClassId}
-        lastAssistantMessage={lastChatMessage || undefined}
-        hasExistingConversation={!!lastChatMessage}
-        gradeBand={gradeBand}
-      />
-    </div>
-  )
-
   const getModePanel = () => {
     if (!isGeneralTutor || mode === 'tutor') {
       return null
@@ -334,7 +313,6 @@ export default function TutorLanding({
           profileId={profileId}
           hasSession={sessionActive}
           onStartSession={onStartSession}
-          helpContent={renderHelpContent()}
         />
       )
     }
@@ -344,7 +322,6 @@ export default function TutorLanding({
           profileId={profileId}
           hasSession={sessionActive}
           onStartSession={onStartSession}
-          helpContent={renderHelpContent()}
         />
       )
     }
@@ -381,15 +358,19 @@ export default function TutorLanding({
 
   return (
     <div className="flex flex-col items-center justify-center gap-4 sm:gap-6 py-8 sm:py-12 text-center px-4">
-      {/* Primary Text */}
-      <h1 className="text-2xl sm:text-3xl font-semibold tracking-tight text-slate-900 max-w-2xl">
-        {getMainHeading()}
-      </h1>
+      {!(gradeBand === 'elementary' && mode !== 'tutor' && sessionActive) && (
+        <>
+          {/* Primary Text */}
+          <h1 className="text-2xl sm:text-3xl font-semibold tracking-tight text-slate-900 max-w-2xl">
+            {getMainHeading()}
+          </h1>
 
-      {/* Secondary Text */}
-      <p className="text-sm sm:text-base text-slate-600 max-w-xl">
-        {getSubtext()}
-      </p>
+          {/* Secondary Text */}
+          <p className="text-sm sm:text-base text-slate-600 max-w-xl">
+            {getSubtext()}
+          </p>
+        </>
+      )}
 
       {/* Class-specific Welcome Message */}
       {!isGeneralTutor && selectedClassId && (
