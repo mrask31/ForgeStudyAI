@@ -17,6 +17,7 @@ import SuggestedPrompts from '@/components/tutor/SuggestedPrompts'
 import ChatMessageList, { type ChatMessage } from '@/components/tutor/ChatMessageList'
 import { useTutorContext } from '@/components/tutor/TutorContext'
 import { useActiveProfile } from '@/contexts/ActiveProfileContext'
+import { useActiveProfileSummary } from '@/hooks/useActiveProfileSummary'
 import { setTopicSummaryAndStudiedAt } from '@/lib/api/notebook'
 import { createBrowserClient } from '@supabase/ssr'
 import FollowUpPrompts from '@/components/tutor/FollowUpPrompts'
@@ -90,6 +91,7 @@ export default function ClinicalTutorWorkspace({
   const [customError, setCustomError] = useState('')
   const tutorContext = useTutorContext()
   const { activeProfileId } = useActiveProfile()
+  const { summary: activeProfileSummary } = useActiveProfileSummary()
   const [savingToNotebook, setSavingToNotebook] = useState<string | null>(null) // messageId being saved
   const [flaggedMessages, setFlaggedMessages] = useState<Set<string>>(new Set())
   const [isTogglingHelp, setIsTogglingHelp] = useState<boolean>(false)
@@ -920,6 +922,7 @@ export default function ClinicalTutorWorkspace({
                         await onSendMessage(prompt)
                       }}
                       isLastMessage={isLastMessage}
+                      gradeBand={activeProfileSummary?.gradeBand}
                     />
                   )}
                 </article>

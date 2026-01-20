@@ -425,6 +425,7 @@ export default function ChatMessageList({
                     messageContent={m.content}
                     onPromptClick={onSendMessage}
                     isLastMessage={isLastMessage}
+                    gradeBand={activeProfile?.gradeBand}
                   />
                 )}
               </article>
