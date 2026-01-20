@@ -390,6 +390,9 @@ export default function SpellingEnginePanel({
           <summary className="text-base sm:text-lg font-semibold text-slate-900 cursor-pointer list-none">
             {wordGroupsLabel}
           </summary>
+          <p className="mt-2 text-sm text-slate-600">
+            We group words by spelling patterns so you can practice the same rule together.
+          </p>
           <div className="grid gap-3 sm:grid-cols-2 mt-4">
             {Object.keys(wordGroups).length === 0 ? (
               <p className="text-sm text-slate-500">Add a list to see patterns.</p>
