@@ -90,3 +90,39 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }
+
+export async function DELETE(req: Request) {
+  try {
+    const auth = await requireUser()
+    if ('error' in auth) {
+      return NextResponse.json({ error: auth.error }, { status: auth.status })
+    }
+    const { supabase, user } = auth
+    const body = await req.json()
+    const { profileId, listId } = body || {}
+    if (!profileId || !listId) {
+      return NextResponse.json({ error: 'profileId and listId are required' }, { status: 400 })
+    }
+
+    const profileCheck = await assertProfileOwnership(supabase, profileId, user.id)
+    if ('error' in profileCheck) {
+      return NextResponse.json({ error: profileCheck.error }, { status: profileCheck.status })
+    }
+
+    const { error } = await supabase
+      .from('spelling_lists')
+      .delete()
+      .eq('id', listId)
+      .eq('profile_id', profileId)
+
+    if (error) {
+      console.error('[Spelling Lists] Delete error:', error)
+      return NextResponse.json({ error: 'Failed to delete list' }, { status: 500 })
+    }
+
+    return NextResponse.json({ success: true })
+  } catch (error) {
+    console.error('[Spelling Lists] Error:', error)
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
+  }
+}

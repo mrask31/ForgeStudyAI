@@ -149,6 +149,28 @@ export default function SpellingEnginePanel({
     }
   }
 
+  const handleDeleteList = async (listId: string) => {
+    if (!window.confirm('Delete this list?')) return
+    const response = await fetch('/api/elementary/spelling/lists', {
+      method: 'DELETE',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ profileId, listId }),
+    })
+    if (!response.ok) return
+    const refreshed = await fetch(`/api/elementary/spelling/lists?profileId=${profileId}`)
+    const payload = await refreshed.json()
+    const nextLists = payload?.lists || []
+    setLists(nextLists)
+    if (nextLists.length === 0) {
+      setSelectedListId(null)
+      return
+    }
+    setSelectedListId((current) => {
+      const exists = nextLists.some((list: SpellingList) => list.id === current)
+      return exists ? current : nextLists[0].id
+    })
+  }
+
   const handleStartWarmup = (list: SpellingList | undefined = activeList) => {
     const words = (list?.spelling_words || []).slice(0, 5).map((w) => w.word)
     if (words.length === 0) return
@@ -256,40 +278,50 @@ export default function SpellingEnginePanel({
             <h3 className="text-base sm:text-lg font-semibold text-slate-900">{listLibraryTitle}</h3>
             <span className="text-xs text-slate-500">{lists.length} lists</span>
           </div>
+          {lists.length > 0 && (
+            <div>
+              <label className="text-xs font-semibold text-slate-600">Choose a list</label>
+              <select
+                value={activeList?.id || ''}
+                onChange={(event) => setSelectedListId(event.target.value)}
+                className="mt-1 w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm"
+              >
+                {lists.map((list) => (
+                  <option key={list.id} value={list.id}>
+                    {list.title}
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
           {lists.length === 0 ? (
             <p className="text-sm text-slate-500">No lists yet. Create one below.</p>
           ) : (
             <div className="grid gap-2">
-              {lists.map((list) => {
-                const isActive = list.id === activeList?.id
-                return (
-                  <div
-                    key={list.id}
-                    className={`flex items-center justify-between gap-3 rounded-lg border px-3 py-2 ${
-                      isActive ? 'border-emerald-300 bg-emerald-50/40' : 'border-slate-200'
-                    }`}
-                  >
+              {activeList ? (
+                <div className="flex items-center justify-between gap-3 rounded-lg border border-emerald-300 bg-emerald-50/40 px-3 py-2">
+                  <div className="flex-1 text-left">
+                    <p className="text-sm font-semibold text-slate-900">{activeList.title}</p>
+                    <p className="text-xs text-slate-500">{activeList.spelling_words.length} words</p>
+                  </div>
+                  <div className="flex items-center gap-2">
                     <button
                       type="button"
-                      onClick={() => setSelectedListId(list.id)}
-                      className="text-left flex-1"
-                    >
-                      <p className="text-sm font-semibold text-slate-900">{list.title}</p>
-                      <p className="text-xs text-slate-500">{list.spelling_words.length} words</p>
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setSelectedListId(list.id)
-                        handleStartWarmup(list)
-                      }}
+                      onClick={() => handleStartWarmup(activeList)}
                       className="px-3 py-1.5 rounded-lg text-xs font-semibold bg-emerald-600 text-white hover:bg-emerald-700"
                     >
                       Study
                     </button>
+                    <button
+                      type="button"
+                      onClick={() => handleDeleteList(activeList.id)}
+                      className="px-3 py-1.5 rounded-lg text-xs font-semibold border border-rose-200 text-rose-600 hover:bg-rose-50"
+                    >
+                      Delete
+                    </button>
                   </div>
-                )
-              })}
+                </div>
+              ) : null}
             </div>
           )}
         </div>
