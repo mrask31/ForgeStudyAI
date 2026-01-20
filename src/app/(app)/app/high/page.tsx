@@ -40,12 +40,6 @@ export default function HighDashboardPage() {
                 >
                   Start a session
                 </Link>
-                <Link
-                  href="/sources"
-                  className="inline-flex items-center justify-center px-6 py-3 rounded-xl border-2 border-slate-200 text-slate-700 font-semibold hover:bg-slate-50 transition-colors"
-                >
-                  Upload course materials
-                </Link>
               </div>
             </div>
             {!activeProfileId && (
@@ -64,10 +58,10 @@ export default function HighDashboardPage() {
                 action: 'Open topics',
               },
               {
-                title: 'Continue last topic',
-                description: 'Pick up where you left off with the last subject.',
-                href: '/tutor',
-                action: 'Continue topic',
+                title: 'Upload course materials',
+                description: 'Add notes, slides, or PDFs to fuel your sessions.',
+                href: '/sources',
+                action: 'Upload files',
               },
               {
                 title: 'Generate exam sheet',
