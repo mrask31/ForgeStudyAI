@@ -1,7 +1,7 @@
 'use client'
 
 import Link from 'next/link'
-import { Compass, Target, Layers, CalendarCheck, ClipboardList, PenLine, Folder } from 'lucide-react'
+import { Map, Sparkles, ClipboardList, BookOpen, PenLine } from 'lucide-react'
 import { useActiveProfile } from '@/contexts/ActiveProfileContext'
 
 export default function MiddleDashboardPage() {
@@ -18,20 +18,20 @@ export default function MiddleDashboardPage() {
                   ForgeMiddle • Grades 6–8
                 </div>
                 <h1 className="text-3xl sm:text-4xl font-bold text-slate-900 mb-3">
-                  Coach + organizer for busy weeks
+                  Your learning command center
                 </h1>
                 <p className="text-slate-600 text-base sm:text-lg max-w-2xl">
-                  Clear structure, smart prompts, and plans that turn panic into progress.
+                  Keep schoolwork on track with guided plans, practice, and homework help.
                 </p>
               </div>
               <div className="flex flex-col gap-3">
                 <div className="rounded-2xl border border-cyan-100 bg-cyan-50/70 px-5 py-4">
                   <p className="text-xs font-semibold text-cyan-800 uppercase tracking-wide mb-2">Start here</p>
                   <Link
-                    href="/study-topics"
+                    href="/tutor?tool=study-map"
                     className="inline-flex items-center justify-center w-full px-6 py-3 rounded-xl bg-gradient-to-r from-cyan-600 to-teal-600 text-white font-semibold shadow-lg hover:from-cyan-700 hover:to-teal-700 transition-all"
                   >
-                    Build a study topic
+                    Open a study map
                   </Link>
                 </div>
                 <Link
@@ -55,48 +55,28 @@ export default function MiddleDashboardPage() {
             )}
           </section>
 
-          <section className="rounded-3xl border border-cyan-100 bg-white/90 p-8 sm:p-10 shadow-lg shadow-slate-200/40">
-            <div className="flex items-center gap-3 mb-4">
-              <CalendarCheck className="w-5 h-5 text-cyan-700" />
-              <h2 className="text-2xl font-semibold text-slate-900">Tonight plan</h2>
-            </div>
-            <div className="grid gap-4 md:grid-cols-3 text-sm text-slate-600">
-              <div className="rounded-2xl border border-slate-200/70 bg-slate-50/70 p-4">
-                <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-2">What’s due</p>
-                <p>2 items due next (homework + reading).</p>
-              </div>
-              <div className="rounded-2xl border border-slate-200/70 bg-slate-50/70 p-4">
-                <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-2">Start here</p>
-                <p>Homework plan for math word problems.</p>
-              </div>
-              <div className="rounded-2xl border border-slate-200/70 bg-slate-50/70 p-4">
-                <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-2">Estimated time</p>
-                <p>35–45 minutes total.</p>
-              </div>
-            </div>
-          </section>
-
-          <section className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
+          <section className="grid gap-6 md:grid-cols-3">
             {[
               {
-                icon: Folder,
-                title: 'Study Topics',
-                description: 'Collect everything you need in one focused topic.',
-              },
-              {
-                icon: Compass,
+                icon: Map,
                 title: 'Study Map',
-                description: 'Turn topics into a clear step-by-step path.',
+                description: 'Turn assignments into a step-by-step plan.',
+                href: '/tutor?tool=study-map',
+                action: 'Build my map',
               },
               {
-                icon: Target,
-                title: 'Practice Ladder',
-                description: 'Build confidence from easy to challenge questions.',
+                icon: Sparkles,
+                title: 'Practice Mode',
+                description: 'Go from easy to challenge with guided practice.',
+                href: '/tutor?tool=practice',
+                action: 'Start practice',
               },
               {
                 icon: ClipboardList,
-                title: 'Homework Plan',
-                description: 'Break assignments into a simple plan.',
+                title: 'Homework Helper',
+                description: 'Break tonight’s homework into quick steps.',
+                href: '/tutor?mode=homework',
+                action: 'Plan homework',
               },
             ].map((item) => (
               <div
@@ -108,6 +88,12 @@ export default function MiddleDashboardPage() {
                 </div>
                 <h3 className="text-lg font-semibold text-slate-900 mb-2">{item.title}</h3>
                 <p className="text-sm text-slate-600">{item.description}</p>
+                <Link
+                  href={item.href}
+                  className="mt-4 inline-flex items-center gap-2 text-sm font-semibold text-cyan-700 hover:text-cyan-800"
+                >
+                  {item.action}
+                </Link>
               </div>
             ))}
           </section>
@@ -118,11 +104,15 @@ export default function MiddleDashboardPage() {
                 icon: PenLine,
                 title: 'Paragraph Builder',
                 description: 'Structure strong paragraphs with clear topic + evidence.',
+                href: '/tutor?tool=writing',
+                action: 'Build a paragraph',
               },
               {
-                icon: Layers,
-                title: 'Explain My Notes',
-                description: 'Turn class notes into a clean explanation and next steps.',
+                icon: BookOpen,
+                title: 'Reading Coach',
+                description: 'Get help understanding passages and questions.',
+                href: '/tutor?mode=reading',
+                action: 'Start reading',
               },
             ].map((item) => (
               <div
@@ -134,6 +124,12 @@ export default function MiddleDashboardPage() {
                 </div>
                 <h3 className="text-lg font-semibold text-slate-900 mb-2">{item.title}</h3>
                 <p className="text-sm text-slate-600">{item.description}</p>
+                <Link
+                  href={item.href}
+                  className="mt-4 inline-flex items-center gap-2 text-sm font-semibold text-cyan-700 hover:text-cyan-800"
+                >
+                  {item.action}
+                </Link>
               </div>
             ))}
           </section>

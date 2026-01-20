@@ -1,11 +1,114 @@
 'use client'
 
+import { useEffect, useMemo, useState } from 'react'
 import Link from 'next/link'
-import { GraduationCap, ClipboardList, Timer, FileText, BookOpenCheck, PenSquare } from 'lucide-react'
+import { FileText, Layers, Map, Sparkles } from 'lucide-react'
 import { useActiveProfile } from '@/contexts/ActiveProfileContext'
+import { Button } from '@/components/ui/button'
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
+import { useActiveProfileSummary } from '@/hooks/useActiveProfileSummary'
+import type { StudyTopic } from '@/lib/types'
+import ReactMarkdown from 'react-markdown'
 
 export default function HighDashboardPage() {
   const { activeProfileId } = useActiveProfile()
+  const { summary: activeProfile } = useActiveProfileSummary()
+  const [topics, setTopics] = useState<StudyTopic[]>([])
+  const [isLoading, setIsLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+  const [newTitle, setNewTitle] = useState('')
+  const [isCreating, setIsCreating] = useState(false)
+  const [isGuideOpen, setIsGuideOpen] = useState(false)
+  const [guideMarkdown, setGuideMarkdown] = useState<string | null>(null)
+  const [guideTitle, setGuideTitle] = useState<string | null>(null)
+  const [generatingTopicId, setGeneratingTopicId] = useState<string | null>(null)
+
+  const canUseTopics = useMemo(() => {
+    if (!activeProfile) return false
+    return activeProfile.gradeBand === 'high'
+  }, [activeProfile])
+
+  useEffect(() => {
+    if (!activeProfile?.id || !canUseTopics) {
+      setTopics([])
+      return
+    }
+    let isMounted = true
+    const load = async () => {
+      setIsLoading(true)
+      setError(null)
+      try {
+        const response = await fetch(`/api/study-topics?profileId=${activeProfile.id}`, {
+          credentials: 'include',
+        })
+        const payload = await response.json()
+        if (!response.ok) {
+          throw new Error(payload?.error || 'Failed to load study topics')
+        }
+        if (isMounted) {
+          setTopics(payload.topics || [])
+        }
+      } catch (err: any) {
+        if (isMounted) {
+          setError(err?.message || 'Failed to load study topics')
+        }
+      } finally {
+        if (isMounted) {
+          setIsLoading(false)
+        }
+      }
+    }
+    load()
+    return () => {
+      isMounted = false
+    }
+  }, [activeProfile?.id, canUseTopics])
+
+  const handleCreateTopic = async () => {
+    if (!activeProfile?.id || !newTitle.trim()) return
+    setIsCreating(true)
+    setError(null)
+    try {
+      const response = await fetch('/api/study-topics', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ profileId: activeProfile.id, title: newTitle.trim() }),
+      })
+      const payload = await response.json()
+      if (!response.ok) {
+        throw new Error(payload?.error || 'Failed to create topic')
+      }
+      setTopics((prev) => [payload.topic, ...prev])
+      setNewTitle('')
+    } catch (err: any) {
+      setError(err?.message || 'Failed to create topic')
+    } finally {
+      setIsCreating(false)
+    }
+  }
+
+  const handleGenerateGuide = async (topic: StudyTopic) => {
+    setGeneratingTopicId(topic.id)
+    setError(null)
+    try {
+      const response = await fetch(`/api/study-topics/${topic.id}/generate`, {
+        method: 'POST',
+        credentials: 'include',
+      })
+      const payload = await response.json()
+      if (!response.ok) {
+        throw new Error(payload?.error || 'Failed to generate study guide')
+      }
+      setGuideMarkdown(payload?.guide?.markdown || '')
+      setGuideTitle(payload?.guide?.title || topic.title)
+      setIsGuideOpen(true)
+    } catch (err: any) {
+      setError(err?.message || 'Failed to generate study guide')
+    } finally {
+      setGeneratingTopicId(null)
+    }
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-emerald-50">
@@ -18,27 +121,27 @@ export default function HighDashboardPage() {
                   ForgeHigh • Grades 9–12
                 </div>
                 <h1 className="text-3xl sm:text-4xl font-bold text-slate-900 mb-3">
-                  Performance + precision for serious study
+                  Study hub for grades 9–12
                 </h1>
                 <p className="text-slate-600 text-base sm:text-lg max-w-2xl">
-                  Fast, focused support for exams, essays, and mastery.
+                  Keep every class moving with topics, maps, practice, and exam sheets.
                 </p>
               </div>
               <div className="flex flex-col gap-3">
                 <div className="rounded-2xl border border-emerald-100 bg-emerald-50/70 px-5 py-4">
                   <p className="text-xs font-semibold text-emerald-800 uppercase tracking-wide mb-2">Start here</p>
                   <Link
-                    href="/study-topics"
+                    href="#study-topics"
                     className="inline-flex items-center justify-center w-full px-6 py-3 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 text-white font-semibold shadow-lg hover:from-emerald-700 hover:to-teal-700 transition-all"
                   >
-                    Build a study topic
+                    Open study topics
                   </Link>
                 </div>
                 <Link
-                  href="/tutor"
-                  className="inline-flex items-center justify-center px-6 py-3 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 text-white font-semibold shadow-lg hover:from-emerald-700 hover:to-teal-700 transition-all"
+                  href="/sources"
+                  className="inline-flex items-center justify-center px-6 py-3 rounded-xl border-2 border-slate-200 text-slate-700 font-semibold hover:bg-slate-50 transition-colors"
                 >
-                  Start a session
+                  Upload course materials
                 </Link>
               </div>
             </div>
@@ -49,37 +152,44 @@ export default function HighDashboardPage() {
             )}
           </section>
 
-          <section className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+          <section className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
             {[
               {
+                icon: Layers,
                 title: 'Build a study topic',
                 description: 'Group maps, practice, and notes in one place.',
-                href: '/study-topics',
+                href: '#study-topics',
                 action: 'Open topics',
               },
               {
-                title: 'Upload course materials',
-                description: 'Add notes, slides, or PDFs to fuel your sessions.',
-                href: '/sources',
-                action: 'Upload files',
+                icon: Map,
+                title: 'Study map',
+                description: 'Turn a class unit into a step-by-step plan.',
+                href: '/tutor?tool=study-map',
+                action: 'Build a map',
               },
               {
-                title: 'Generate exam sheet',
-                description: 'Create a one-page review from today’s work.',
-                href: '/tutor',
-                action: 'Generate sheet',
+                icon: Sparkles,
+                title: 'Practice mode',
+                description: 'Mix easy and challenge questions to prep fast.',
+                href: '/tutor?tool=practice',
+                action: 'Start practice',
               },
               {
-                title: 'Start mixed review',
-                description: 'Quick practice to surface weak spots fast.',
-                href: '/tutor',
-                action: 'Start review',
+                icon: FileText,
+                title: 'Exam sheets',
+                description: 'Create a one-page review you can print.',
+                href: '/tutor?tool=exam',
+                action: 'Create a sheet',
               },
             ].map((item) => (
               <div
                 key={item.title}
                 className="rounded-2xl border border-emerald-100 bg-white/90 p-6 shadow-md shadow-slate-200/40"
               >
+                <div className="w-12 h-12 rounded-2xl bg-emerald-100 text-emerald-700 flex items-center justify-center mb-4">
+                  <item.icon className="w-6 h-6" />
+                </div>
                 <h3 className="text-lg font-semibold text-slate-900 mb-2">{item.title}</h3>
                 <p className="text-sm text-slate-600 mb-4">{item.description}</p>
                 <Link
@@ -92,55 +202,87 @@ export default function HighDashboardPage() {
             ))}
           </section>
 
-          <section className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
-            {[
-              {
-                icon: FileText,
-                title: 'Instant Study Map',
-                description: 'Turn a topic into a fast, structured plan.',
-              },
-              {
-                icon: BookOpenCheck,
-                title: 'Exam Sheet Builder',
-                description: 'Generate a printable sheet for test prep.',
-              },
-              {
-                icon: Timer,
-                title: 'Practice Tests',
-                description: 'Timed review with common traps.',
-              },
-              {
-                icon: PenSquare,
-                title: 'Writing Lab',
-                description: 'Thesis, outline, and revision maps.',
-              },
-            ].map((item) => (
-              <div
-                key={item.title}
-                className="rounded-2xl border border-slate-200/70 bg-white/80 p-6 shadow-md shadow-slate-200/40"
-              >
-                <div className="w-12 h-12 rounded-2xl bg-emerald-100 text-emerald-700 flex items-center justify-center mb-4">
-                  <item.icon className="w-6 h-6" />
-                </div>
-                <h3 className="text-lg font-semibold text-slate-900 mb-2">{item.title}</h3>
-                <p className="text-sm text-slate-600">{item.description}</p>
+          <section id="study-topics" className="rounded-3xl border border-slate-200/70 bg-white/95 p-8 sm:p-10 shadow-lg shadow-slate-200/40">
+            <div className="flex flex-col gap-6 sm:flex-row sm:items-center sm:justify-between mb-6">
+              <div>
+                <h2 className="text-2xl font-semibold text-slate-900">Study topics</h2>
+                <p className="text-slate-600 mt-2">
+                  Save tutor outputs, maps, and practice items into focused topics.
+                </p>
               </div>
-            ))}
-          </section>
-
-          <section className="rounded-3xl border border-slate-200/70 bg-white/90 p-8 sm:p-10 shadow-lg shadow-slate-200/40">
-            <h2 className="text-2xl font-semibold text-slate-900 mb-3">Focus on fastest wins</h2>
-            <p className="text-slate-600 mb-4">
-              Prioritize what moves your grade the most with clear next steps.
-            </p>
-            <div className="grid gap-3 text-sm text-slate-600">
-              <div>Keep topics tight and map the weakest areas first.</div>
-              <div>Commit to answers before checking logic.</div>
-              <div>Use exam sheets to consolidate midterm and final prep.</div>
+              <div className="flex flex-col gap-2 w-full sm:w-auto">
+                <input
+                  type="text"
+                  value={newTitle}
+                  onChange={(e) => setNewTitle(e.target.value)}
+                  placeholder="New topic title"
+                  className="w-full sm:w-64 rounded-xl border border-slate-200 px-4 py-2 text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                />
+                <Button onClick={handleCreateTopic} disabled={isCreating || !newTitle.trim()}>
+                  {isCreating ? 'Creating...' : 'Create topic'}
+                </Button>
+              </div>
             </div>
+
+            {!activeProfileId && (
+              <div className="mb-6 rounded-2xl border border-amber-200/70 bg-amber-50 px-4 py-3 text-sm text-amber-800">
+                Choose a student profile to tailor pacing and assignments.
+              </div>
+            )}
+
+            {error && (
+              <div className="mb-6 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+                {error}
+              </div>
+            )}
+
+            {isLoading ? (
+              <p className="text-slate-600">Loading topics...</p>
+            ) : topics.length === 0 ? (
+              <div className="rounded-2xl border border-slate-200 bg-white/80 p-8 text-center">
+                <p className="text-slate-600">No study topics yet. Create your first topic to start collecting items.</p>
+              </div>
+            ) : (
+              <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+                {topics.map((topic) => (
+                  <div key={topic.id} className="rounded-2xl border border-slate-200 bg-white/90 p-6 shadow-md">
+                    <div className="flex items-start justify-between gap-4">
+                      <div>
+                        <h3 className="text-lg font-semibold text-slate-900">{topic.title}</h3>
+                        <p className="text-xs text-slate-500 mt-1">
+                          {topic.itemsCount ?? 0} saved items
+                        </p>
+                      </div>
+                    </div>
+                    <Button
+                      className="mt-4 w-full"
+                      onClick={() => handleGenerateGuide(topic)}
+                      disabled={generatingTopicId === topic.id}
+                    >
+                      {generatingTopicId === topic.id ? 'Generating...' : 'Generate study guide'}
+                    </Button>
+                  </div>
+                ))}
+              </div>
+            )}
           </section>
         </div>
       </div>
+
+      <Dialog open={isGuideOpen} onOpenChange={(open) => !open && setIsGuideOpen(false)}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>{guideTitle || 'Study Guide'}</DialogTitle>
+          </DialogHeader>
+          {guideMarkdown ? (
+            <div className="prose prose-slate max-w-none text-sm text-slate-700">
+              <ReactMarkdown>{guideMarkdown}</ReactMarkdown>
+            </div>
+          ) : (
+            <p className="text-sm text-slate-600">No guide available yet.</p>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }

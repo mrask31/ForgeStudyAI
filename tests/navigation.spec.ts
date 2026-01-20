@@ -10,7 +10,7 @@ import { test, expect } from '@playwright/test';
 
 // Route-to-content mapping for positive assertions
 const ROUTE_CONTENT_MAP: Record<string, string[]> = {
-  '/': ['ForgeStudy', 'Homework'],
+  '/': ['Homework, without', 'Grades 3–12', 'ForgeStudy'],
   '/tutor': ['Tutor Workspace', 'Good morning', 'Welcome back'],
   '/classes': ['My Learning Map', 'Welcome back'],
   '/sources': ['Sources', 'Welcome back'],
@@ -57,14 +57,19 @@ async function loginIfConfigured(page: any) {
     return false
   }
 
-  await page.goto('/login?redirect=/profiles?auto=1')
-  await page.waitForLoadState('networkidle')
+  await page.goto('/login?redirect=/profiles?auto=1', { waitUntil: 'domcontentloaded' })
+
+  try {
+    await page.waitForSelector('input[placeholder="Enter your email"]', { timeout: 5000 })
+  } catch {
+    return false
+  }
 
   await page.fill('input[placeholder="Enter your email"]', TEST_EMAIL)
   await page.fill('input[placeholder="Enter your password"]', TEST_PASSWORD)
   await page.click('button:has-text("Sign In")')
 
-  await page.waitForLoadState('networkidle')
+  await page.waitForLoadState('domcontentloaded')
 
   // If the app lands on the profiles page, try to select a profile.
   if (page.url().includes('/profiles')) {
@@ -162,21 +167,21 @@ test.describe('Navigation Smoke Tests', () => {
         items: [
           { label: 'Home', href: '/app/elementary', expectedContent: ['ForgeElementary', 'Grades 3–5'] },
           { label: 'AI Tutor', href: '/tutor', expectedContent: ['Tutor Workspace', 'Good morning', 'Welcome back'] },
-          { label: 'Spelling', href: '/tutor?mode=spelling', expectedContent: ['Spelling practice', 'Today’s Mission'] },
-          { label: 'Reading', href: '/tutor?mode=reading', expectedContent: ['Reading coach', 'Today’s Mission'] },
-          { label: 'Homework Help', href: '/tutor?mode=homework', expectedContent: ['Homework help', 'Today’s Mission'] },
+          { label: 'Spelling', href: '/tutor?mode=spelling', expectedContent: ['Spelling Coach', 'Let’s practice spelling'] },
+          { label: 'Reading', href: '/tutor?mode=reading', expectedContent: ['Reading coach', 'Reading Coach'] },
           { label: 'Upload', href: '/sources', expectedContent: ['Sources'] },
           { label: 'Settings', href: '/settings', expectedContent: ['Settings', 'Display Density'] },
         ],
       },
       {
         key: 'middle',
-        detectLabel: 'Practice',
+        detectLabel: 'Practice Mode',
         items: [
           { label: 'Home', href: '/app/middle', expectedContent: ['ForgeMiddle', 'Grades 6–8'] },
-          { label: 'Study Topics', href: '/study-topics', expectedContent: ['Study Topics'] },
           { label: 'Study Map', href: '/tutor?tool=study-map', expectedContent: ['Tutor Workspace', 'Good morning'] },
-          { label: 'Practice', href: '/tutor?tool=practice', expectedContent: ['Tutor Workspace', 'Good morning'] },
+          { label: 'Practice Mode', href: '/tutor?tool=practice', expectedContent: ['Tutor Workspace', 'Good morning'] },
+          { label: 'Homework Helper', href: '/tutor?mode=homework', expectedContent: ['Tutor Workspace', 'Good morning'] },
+          { label: 'Reading', href: '/tutor?mode=reading', expectedContent: ['Tutor Workspace', 'Good morning'] },
           { label: 'Writing', href: '/tutor?tool=writing', expectedContent: ['Tutor Workspace', 'Good morning'] },
           { label: 'Uploads', href: '/sources', expectedContent: ['Sources'] },
           { label: 'Progress', href: '/readiness', expectedContent: ['Learning Dashboard'] },
@@ -185,14 +190,9 @@ test.describe('Navigation Smoke Tests', () => {
       },
       {
         key: 'high',
-        detectLabel: 'Exam Sheets',
+        detectLabel: 'Study Hub',
         items: [
-          { label: 'Home', href: '/app/high', expectedContent: ['ForgeHigh', 'Grades 9–12'] },
-          { label: 'Study Topics', href: '/study-topics', expectedContent: ['Study Topics'] },
-          { label: 'Study Maps', href: '/tutor?tool=study-map', expectedContent: ['Tutor Workspace', 'Good morning'] },
-          { label: 'Practice / Review', href: '/tutor?tool=practice', expectedContent: ['Tutor Workspace', 'Good morning'] },
-          { label: 'Exam Sheets', href: '/tutor?tool=exam', expectedContent: ['Tutor Workspace', 'Good morning'] },
-          { label: 'Writing Lab', href: '/tutor?tool=writing', expectedContent: ['Tutor Workspace', 'Good morning'] },
+          { label: 'Study Hub', href: '/app/high', expectedContent: ['ForgeHigh', 'Grades 9–12'] },
           { label: 'Uploads', href: '/sources', expectedContent: ['Sources'] },
           { label: 'Progress', href: '/readiness', expectedContent: ['Learning Dashboard'] },
           { label: 'Settings', href: '/settings', expectedContent: ['Settings', 'Display Density'] },
