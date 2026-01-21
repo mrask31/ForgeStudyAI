@@ -31,7 +31,7 @@ export default function MedicalMathCalculator({ isOpen, onClose }: MedicalMathCa
         const profiles = await getStudentProfiles()
         const match = profiles.find((profile) => profile.id === activeProfileId)
         if (!match || !isMounted) return
-        setActiveLevel(match.grade_band === 'elementary' ? 'middle' : match.grade_band)
+        setActiveLevel(match.grade_band)
       } catch (err) {
         console.warn('[Calculator] Failed to load profile, defaulting to middle.', err)
       }
