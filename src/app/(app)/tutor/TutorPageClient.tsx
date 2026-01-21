@@ -911,9 +911,6 @@ function TutorPageContent() {
                     onDetach={handleDetachFile}
                     messages={[]}
                   />
-                  <p className="text-[9px] text-slate-400 text-center mt-2 pb-2">
-                    Educational use only. Not a medical device.
-                  </p>
                 </div>
               )}
             </>
@@ -943,9 +940,6 @@ function TutorPageContent() {
                   onDetach={handleDetachFile}
                   messages={[]}
                 />
-                <p className="text-[9px] text-slate-400 text-center mt-2 pb-2">
-                  Educational use only. Not a medical device.
-                </p>
               </div>
             </>
           ) : showSession ? (

@@ -106,16 +106,27 @@ export default function HomePage() {
             </div>
           </div>
 
-          {/* Right: Product Preview Image */}
+          {/* Right: Product Preview Collage */}
           <div className="relative">
-            <div className="relative aspect-[4/3] w-full overflow-hidden rounded-2xl border-2 border-slate-200 shadow-2xl">
-              <Image
-                src="/binder-preview.png"
-                alt="ForgeStudy study workspace preview"
-                fill
-                className="object-cover"
-                priority
-              />
+            <div className="grid grid-cols-2 gap-4 rounded-2xl border-2 border-slate-200 bg-white p-4 shadow-2xl">
+              <div className="relative aspect-[4/5] overflow-hidden rounded-xl border border-slate-200">
+                <Image
+                  src="/Hero1.png"
+                  alt="ForgeStudy study workflow preview"
+                  fill
+                  className="object-cover"
+                  priority
+                />
+              </div>
+              <div className="relative aspect-[4/5] overflow-hidden rounded-xl border border-slate-200">
+                <Image
+                  src="/Hero2.png"
+                  alt="ForgeStudy study tools preview"
+                  fill
+                  className="object-cover"
+                  priority
+                />
+              </div>
             </div>
             <div className="absolute -z-10 -inset-4 bg-gradient-to-r from-teal-200/20 to-cyan-200/20 rounded-3xl blur-2xl"></div>
           </div>
