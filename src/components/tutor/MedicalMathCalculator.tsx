@@ -151,14 +151,11 @@ export default function MedicalMathCalculator({ isOpen, onClose }: MedicalMathCa
           <Input
             value={expression}
             onChange={(e) => setExpression(e.target.value)}
-            placeholder={activeLevel === 'elementary'
-              ? 'Example: 12 + 5 * 3'
-              : activeLevel === 'middle'
-                ? 'Example: (5^2) + sqrt(81)'
-                : 'Example: sin(0.5) + log(100)'}
+            placeholder={activeLevel === 'middle'
+              ? 'Example: (5^2) + sqrt(81)'
+              : 'Example: sin(0.5) + log(100)'}
           />
           <div className="text-[11px] text-slate-500">
-            {activeLevel === 'elementary' && 'Allowed: + − × ÷ ( )'}
             {activeLevel === 'middle' && 'Allowed: + − × ÷ ( ) ^ sqrt()'}
             {activeLevel === 'high' && 'Allowed: + − × ÷ ( ) ^ sqrt() sin() cos() tan() log() ln() pi e'}
           </div>
