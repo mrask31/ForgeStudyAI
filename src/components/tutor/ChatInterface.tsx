@@ -125,8 +125,12 @@ export default function ChatInterface({
         </div>
       )}
 
-      {/* Calculator Button - Above input on desktop */}
-      <div className="px-2 mb-2 flex justify-center md:justify-start">
+      {/* Chat Input Dock */}
+      <form 
+        onSubmit={handleSubmit}
+        className="rounded-full bg-white shadow-lg border border-slate-200 px-4 py-2 flex items-center gap-3"
+      >
+        {/* Calculator Toggle */}
         <button
           type="button"
           onClick={(e) => {
@@ -134,25 +138,17 @@ export default function ChatInterface({
             e.stopPropagation()
             setIsCalculatorOpen(!isCalculatorOpen)
           }}
-          className={`
-            flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all duration-200
-            ${isCalculatorOpen
-              ? 'bg-emerald-100 text-emerald-700 border border-emerald-200'
-              : 'bg-white/80 text-slate-600 hover:bg-white hover:text-emerald-600 border border-slate-200 hover:border-emerald-200 shadow-sm'
-            }
-          `}
+          className={`rounded-full p-2 transition-all duration-200 ${
+            isCalculatorOpen
+              ? 'bg-emerald-100 text-emerald-700'
+              : 'text-slate-400 hover:bg-slate-50 hover:text-emerald-600'
+          }`}
           aria-label="Toggle calculator"
+          aria-pressed={isCalculatorOpen}
+          title="Calculator"
         >
-          <Calculator className="w-3.5 h-3.5" />
-          <span>Calculator</span>
+          <Calculator className="h-5 w-5" />
         </button>
-      </div>
-
-      {/* Chat Input Dock */}
-      <form 
-        onSubmit={handleSubmit}
-        className="rounded-full bg-white shadow-lg border border-slate-200 px-4 py-2 flex items-center gap-3"
-      >
         {/* Paperclip */}
         <button 
           type="button"
