@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
+import Image from 'next/image'
 import {
   GraduationCap,
   BookOpen,
@@ -105,55 +106,17 @@ export default function HomePage() {
             </div>
           </div>
 
-          {/* Right: Product Preview Panel - Readiness Dashboard Mock */}
+          {/* Right: Product Preview Image */}
           <div className="relative">
-            <div className="bg-gradient-to-br from-white to-slate-50 rounded-2xl border-2 border-slate-200 shadow-2xl p-6 sm:p-8">
-              {/* Mock Dashboard Header */}
-              <div className="flex items-center justify-between mb-6 pb-4 border-b border-slate-200">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 bg-gradient-to-br from-teal-500 to-cyan-600 rounded-lg"></div>
-                  <div>
-                    <div className="h-4 bg-slate-700 rounded w-28 mb-2 font-semibold text-slate-900">Readiness Dashboard</div>
-                    <div className="h-3 bg-slate-400 rounded w-40"></div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Mock Dashboard Sections */}
-              <div className="space-y-4 mb-6">
-                {/* Tonight's Focus */}
-                <div className="bg-gradient-to-r from-cyan-50 to-teal-50 rounded-xl p-4 border border-cyan-200">
-                  <div className="text-xs font-semibold text-cyan-900 mb-2">Tonight's Focus</div>
-                  <div className="h-3 bg-cyan-200 rounded w-32 mb-2"></div>
-                  <div className="h-2 bg-cyan-100 rounded w-24"></div>
-                </div>
-
-                {/* Progress Cards */}
-                <div className="grid grid-cols-2 gap-3">
-                  {[1, 2, 3, 4].map((i) => (
-                    <div key={i} className="bg-white rounded-xl p-3 border border-slate-200">
-                      <div className="h-2.5 bg-slate-300 rounded w-16 mb-2"></div>
-                      <div className="h-6 bg-teal-100 rounded w-full mb-1"></div>
-                      <div className="h-1.5 bg-slate-100 rounded w-20"></div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              {/* Mock Ask Question Input */}
-              <div className="bg-white rounded-xl p-4 border-2 border-teal-300 shadow-sm">
-                <div className="flex items-center gap-3">
-                  <MessageSquare className="w-5 h-5 text-teal-600" />
-                  <div className="flex-1 h-10 bg-slate-100 rounded-lg"></div>
-                  <div className="w-10 h-10 bg-gradient-to-r from-teal-600 to-cyan-600 rounded-lg flex items-center justify-center">
-                    <ArrowRight className="w-5 h-5 text-white" />
-                  </div>
-                </div>
-                <p className="text-xs text-slate-500 mt-3 text-center">Ask a question</p>
-              </div>
+            <div className="relative aspect-[4/3] w-full overflow-hidden rounded-2xl border-2 border-slate-200 shadow-2xl">
+              <Image
+                src="/hero-chat-preview.png"
+                alt="ForgeStudy study workflow preview"
+                fill
+                className="object-cover"
+                priority
+              />
             </div>
-            
-            {/* Decorative gradient overlay */}
             <div className="absolute -z-10 -inset-4 bg-gradient-to-r from-teal-200/20 to-cyan-200/20 rounded-3xl blur-2xl"></div>
           </div>
         </div>

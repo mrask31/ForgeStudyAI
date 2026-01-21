@@ -676,10 +676,6 @@ export default function TutorSession({
             attachedContext={attachedContext}
             onDetach={onDetachFile}
           />
-          {/* Disclaimer below chat box */}
-          <p className="text-[9px] text-slate-400 text-center mt-2 pb-2">
-            Educational use only. Not a medical device.
-          </p>
         </div>
       )}
     </div>
