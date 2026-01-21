@@ -69,16 +69,16 @@ export default function HistoryButton({ onNavigate }: HistoryButtonProps) {
   const [classes, setClasses] = useState<StudentClass[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [isHistoryOpen, setIsHistoryOpen] = useState(false)
-  const [expandedClasses, setExpandedClasses] = useState<Set<string>>(new Set<string>())
+  const [expandedGroups, setExpandedGroups] = useState<Set<string>>(new Set<string>())
   
   // Toggle class expansion
-  const toggleClass = (classId: string) => {
-    setExpandedClasses((prev) => {
+  const toggleGroup = (groupId: string) => {
+    setExpandedGroups((prev) => {
       const newSet = new Set(prev)
-      if (newSet.has(classId)) {
-        newSet.delete(classId)
+      if (newSet.has(groupId)) {
+        newSet.delete(groupId)
       } else {
-        newSet.add(classId)
+        newSet.add(groupId)
       }
       return newSet
     })
@@ -93,6 +93,8 @@ export default function HistoryButton({ onNavigate }: HistoryButtonProps) {
     const fetchData = async () => {
       setIsLoading(true)
       try {
+        await fetch('/api/chats/backfill-tools', { method: 'POST', credentials: 'include' })
+
         // Fetch chats
         const chatsResponse = await fetch('/api/chats/list?includeArchived=true', {
           credentials: 'include',
@@ -138,7 +140,40 @@ export default function HistoryButton({ onNavigate }: HistoryButtonProps) {
     return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
   }
 
-  // Group chats by class and time
+  const getToolKey = (chat: Chat) => {
+    const entryMode = chat.metadata?.entryMode
+    if (entryMode && ['spelling', 'reading', 'homework'].includes(entryMode)) {
+      return entryMode
+    }
+    const tool = chat.metadata?.tool
+    if (tool && ['study-map', 'practice', 'exam', 'writing'].includes(tool)) {
+      return tool
+    }
+    return 'general'
+  }
+
+  const getToolLabel = (toolKey: string) => {
+    switch (toolKey) {
+      case 'study-map':
+        return 'Study Map'
+      case 'practice':
+        return 'Practice Mode'
+      case 'exam':
+        return 'Exam Sheets'
+      case 'writing':
+        return 'Writing Lab'
+      case 'spelling':
+        return 'Spelling'
+      case 'reading':
+        return 'Reading'
+      case 'homework':
+        return 'Homework Helper'
+      default:
+        return 'General Tutor'
+    }
+  }
+
+  // Group chats by tool/class and time
   const groupedChats = useMemo(() => {
     const now = new Date()
     const today = new Date(now.getFullYear(), now.getMonth(), now.getDate())
@@ -153,23 +188,25 @@ export default function HistoryButton({ onNavigate }: HistoryButtonProps) {
       classMap.set(cls.id, { code: cls.code, name: cls.name })
     })
 
-    const chatsByClass = new Map<string, Chat[]>()
+    const chatsByGroup = new Map<string, { toolKey: string; classId: string; chats: Chat[] }>()
     
     chats.forEach((chat) => {
       const classId = chat.metadata?.classId || chat.metadata?.class_id || 'general'
-      if (!chatsByClass.has(classId)) {
-        chatsByClass.set(classId, [])
+      const toolKey = getToolKey(chat)
+      const groupId = `${toolKey}:${classId}`
+      if (!chatsByGroup.has(groupId)) {
+        chatsByGroup.set(groupId, { toolKey, classId, chats: [] })
       }
-      chatsByClass.get(classId)!.push(chat)
+      chatsByGroup.get(groupId)!.chats.push(chat)
     })
 
     const result: Array<{
-      classLabel: string
-      classId: string
+      label: string
+      groupId: string
       timeGroups: Array<{ label: string; chats: Chat[] }>
     }> = []
 
-    chatsByClass.forEach((classChats, classId) => {
+    chatsByGroup.forEach((group) => {
       const timeGroups: Array<{ label: string; chats: Chat[] }> = [
         { label: 'Today', chats: [] },
         { label: 'Yesterday', chats: [] },
@@ -177,7 +214,7 @@ export default function HistoryButton({ onNavigate }: HistoryButtonProps) {
         { label: 'Older', chats: [] },
       ]
 
-      classChats.forEach((chat) => {
+      group.chats.forEach((chat) => {
         const chatDate = new Date(chat.updated_at)
         if (chatDate >= today) {
           timeGroups[0].chats.push(chat)
@@ -192,21 +229,22 @@ export default function HistoryButton({ onNavigate }: HistoryButtonProps) {
 
       const filteredTimeGroups = timeGroups.filter(group => group.chats.length > 0)
       if (filteredTimeGroups.length > 0) {
-        // Get class name from map, or fallback to classId
-        let classLabel = 'General Tutor'
-        if (classId !== 'general') {
-          const classInfo = classMap.get(classId)
+        const toolLabel = getToolLabel(group.toolKey)
+        let classLabel: string | null = null
+        if (group.classId !== 'general') {
+          const classInfo = classMap.get(group.classId)
           if (classInfo) {
             classLabel = `${classInfo.code} - ${classInfo.name}`
           } else {
             // Fallback if class not found (might have been deleted)
-            classLabel = `Class ${classId.substring(0, 8)}...`
+            classLabel = `Class ${group.classId.substring(0, 8)}...`
           }
         }
+        const label = classLabel ? `${toolLabel} • ${classLabel}` : toolLabel
         
         result.push({
-          classLabel,
-          classId,
+          label,
+          groupId: `${group.toolKey}:${group.classId}`,
           timeGroups: filteredTimeGroups,
         })
       }
@@ -215,10 +253,19 @@ export default function HistoryButton({ onNavigate }: HistoryButtonProps) {
     return result
   }, [chats, classes])
 
-  const handleChatClick = (chatId: string, mode: string = 'tutor') => {
-    const url = mode === 'reflections'
-      ? `/tutor?mode=reflections&sessionId=${chatId}`
-      : `/tutor?mode=${mode}&sessionId=${chatId}`
+  const handleChatClick = (chat: Chat) => {
+    const params = new URLSearchParams()
+    if (chat.session_type === 'reflection') {
+      params.set('mode', 'reflections')
+    } else if (chat.metadata?.entryMode) {
+      params.set('mode', chat.metadata.entryMode)
+    } else if (chat.metadata?.tool) {
+      params.set('tool', chat.metadata.tool)
+    } else {
+      params.set('mode', 'tutor')
+    }
+    params.set('sessionId', chat.id)
+    const url = `/tutor?${params.toString()}`
     router.push(url)
     setIsHistoryOpen(false)
     onNavigate?.()
@@ -301,14 +348,14 @@ export default function HistoryButton({ onNavigate }: HistoryButtonProps) {
           ) : (
             <div className="space-y-4">
               {groupedChats.map((group) => {
-                const isExpanded = expandedClasses.has(group.classId)
+                const isExpanded = expandedGroups.has(group.groupId)
                 const totalChats = group.timeGroups.reduce((sum, tg) => sum + tg.chats.length, 0)
                 
                 return (
-                  <div key={group.classId} className="border border-slate-200 rounded-lg overflow-hidden">
+                  <div key={group.groupId} className="border border-slate-200 rounded-lg overflow-hidden">
                     {/* Class Header - Clickable to expand/collapse */}
                     <button
-                      onClick={() => toggleClass(group.classId)}
+                      onClick={() => toggleGroup(group.groupId)}
                       className="w-full flex items-center justify-between px-4 py-3 bg-slate-50 hover:bg-slate-100 transition-colors"
                     >
                       <div className="flex items-center gap-2">
@@ -318,7 +365,7 @@ export default function HistoryButton({ onNavigate }: HistoryButtonProps) {
                           <ChevronRight className="w-4 h-4 text-slate-500 flex-shrink-0" />
                         )}
                         <h3 className="text-sm font-semibold text-slate-700">
-                          {group.classLabel}
+                          {group.label}
                         </h3>
                         <span className="text-xs text-slate-500 bg-slate-200 px-2 py-0.5 rounded-full">
                           {totalChats}
@@ -337,8 +384,6 @@ export default function HistoryButton({ onNavigate }: HistoryButtonProps) {
                                 const Icon = getSessionIcon(chat.session_type)
                                 const badge = getSessionBadge(chat.session_type)
                                 const isSelected = selectedChatIds.has(chat.id)
-                                const mode = chat.session_type === 'reflection' ? 'reflections' : 'tutor'
-
                                 return (
                                   <div
                                     key={chat.id}
@@ -372,7 +417,7 @@ export default function HistoryButton({ onNavigate }: HistoryButtonProps) {
                                       onClick={(e) => e.stopPropagation()}
                                     />
                                     <button
-                                      onClick={() => handleChatClick(chat.id, mode)}
+                                      onClick={() => handleChatClick(chat)}
                                       className="flex-1 text-left min-w-0 flex items-center gap-2"
                                     >
                                       <Icon className="w-4 h-4 flex-shrink-0 text-slate-500" />

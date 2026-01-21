@@ -257,6 +257,8 @@ export async function POST(req: Request) {
     // For class/topic context
     const classId = body.classId as string | undefined
     const topicId = body.topicId as string | undefined
+    const tool = body.tool as string | undefined
+    const entryMode = body.entryMode as string | undefined
 
     console.log('[Resolve API] POST request:', { intent, hasReflection: !!reflectionText, hasSnapshot: !!snapshotText, noteIdsCount: selectedNoteIds.length })
 
@@ -386,6 +388,12 @@ export async function POST(req: Request) {
         metadata.topicId = topicId
         // Also store as topicTerm for backward compatibility
         metadata.topicTerm = topicId
+      }
+      if (tool && ['study-map', 'practice', 'exam', 'writing'].includes(tool)) {
+        metadata.tool = tool
+      }
+      if (entryMode && ['spelling', 'reading', 'homework'].includes(entryMode)) {
+        metadata.entryMode = entryMode
       }
 
       const { data: newChat, error: createError } = await supabase

@@ -121,7 +121,11 @@ function TutorPageContent() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
-        body: JSON.stringify({ intent }),
+        body: JSON.stringify({
+          intent,
+          ...(toolParam && { tool: toolParam }),
+          ...(entryMode && { entryMode }),
+        }),
       })
 
       if (!resolveResponse.ok) {
@@ -143,7 +147,7 @@ function TutorPageContent() {
       console.error('[TutorPage] Failed to create new session:', error)
       setError('Failed to create session. Please try again.')
     }
-  }, [router, buildTutorUrl])
+  }, [router, buildTutorUrl, toolParam, entryMode])
   
   const handleInstantStart = useCallback(async (message: string) => {
     if (!message.trim()) return
@@ -163,6 +167,8 @@ function TutorPageContent() {
           // Include classId and topicId if present (for Notebook context)
           ...(tutorContext.selectedClassId && { classId: tutorContext.selectedClassId }),
           ...(tutorContext.selectedTopicId && { topicId: tutorContext.selectedTopicId }),
+          ...(toolParam && { tool: toolParam }),
+          ...(entryMode && { entryMode }),
         }),
       })
 
@@ -197,7 +203,7 @@ function TutorPageContent() {
       console.error('[TutorPage] Failed to start session:', error)
       setError('Failed to start session. Please try again.')
     }
-  }, [attachedFiles, tutorContext.selectedClassId, tutorContext.selectedTopicId, router, buildTutorUrl])
+  }, [attachedFiles, tutorContext.selectedClassId, tutorContext.selectedTopicId, router, buildTutorUrl, toolParam, entryMode])
 
   // Unified send handler for both landing and session states
   const handleSendMessage = useCallback(async (message: string) => {
@@ -562,6 +568,12 @@ function TutorPageContent() {
           }
           if (effectiveTopicId) {
             payload.topicId = effectiveTopicId
+          }
+          if (toolParam) {
+            payload.tool = toolParam
+          }
+          if (entryMode) {
+            payload.entryMode = entryMode
           }
 
           const response = await fetch('/api/chats/resolve', {
