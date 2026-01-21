@@ -443,7 +443,7 @@ export async function POST(req: Request) {
 
   let activeProfile: {
     display_name: string | null;
-    grade_band: 'elementary' | 'middle' | 'high';
+    grade_band: 'middle' | 'high';
     grade: string | null;
     interests: string | null;
   } | null = null;
@@ -457,7 +457,8 @@ export async function POST(req: Request) {
     if (profileError) {
       console.warn('[CHAT] Failed to load active profile:', profileError);
     } else if (profileData) {
-      activeProfile = profileData as any;
+      const normalizedBand = profileData.grade_band === 'elementary' ? 'middle' : profileData.grade_band
+      activeProfile = { ...profileData, grade_band: normalizedBand } as any;
     }
   }
 

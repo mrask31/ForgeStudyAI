@@ -12,7 +12,7 @@ export default function DictionaryPage() {
   const [savedFilter, setSavedFilter] = useState<'all' | 'saved' | 'not-saved'>('all')
   const [savedWords, setSavedWords] = useState<Set<string>>(() => new Set<string>())
   const [savedWordIds, setSavedWordIds] = useState<Map<string, string>>(() => new Map<string, string>())
-  const [gradeBand, setGradeBand] = useState<'elementary' | 'middle' | 'high' | null>(null)
+  const [gradeBand, setGradeBand] = useState<'middle' | 'high' | null>(null)
   const { activeProfileId } = useActiveProfile()
 
   useEffect(() => {
@@ -37,7 +37,7 @@ export default function DictionaryPage() {
           .eq('id', activeProfileId)
           .eq('owner_id', user.id)
           .single()
-        setGradeBand(profile?.grade_band || null)
+          setGradeBand(profile?.grade_band === 'elementary' ? 'middle' : profile?.grade_band || null)
       } catch (error) {
         console.error('[Vocabulary Bank] Error loading grade band:', error)
         setGradeBand(null)

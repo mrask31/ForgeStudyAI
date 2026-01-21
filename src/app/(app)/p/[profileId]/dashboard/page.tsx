@@ -334,15 +334,14 @@ export default function ProfileDashboard() {
   }
 
   const getGradeBandLabel = (band: string) => {
-    switch (band) {
+    const normalizedBand = band === 'elementary' ? 'middle' : band
+    switch (normalizedBand) {
       case 'high':
         return 'High School'
       case 'middle':
         return 'Middle School'
-      case 'elementary':
-        return 'Elementary'
       default:
-        return band
+        return normalizedBand
     }
   }
 

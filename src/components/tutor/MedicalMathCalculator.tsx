@@ -8,7 +8,7 @@ import { useActiveProfile } from '@/contexts/ActiveProfileContext'
 import { getStudentProfiles } from '@/app/actions/student-profiles'
 import ToolPanel from '@/components/ui/tool-panel'
 
-type CalculatorLevel = 'elementary' | 'middle' | 'high'
+type CalculatorLevel = 'middle' | 'high'
 
 interface MedicalMathCalculatorProps {
   isOpen: boolean
@@ -17,7 +17,7 @@ interface MedicalMathCalculatorProps {
 
 export default function MedicalMathCalculator({ isOpen, onClose }: MedicalMathCalculatorProps) {
   const { activeProfileId } = useActiveProfile()
-  const [activeLevel, setActiveLevel] = useState<CalculatorLevel>('elementary')
+  const [activeLevel, setActiveLevel] = useState<CalculatorLevel>('middle')
   const [expression, setExpression] = useState('')
   const [result, setResult] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
@@ -31,9 +31,9 @@ export default function MedicalMathCalculator({ isOpen, onClose }: MedicalMathCa
         const profiles = await getStudentProfiles()
         const match = profiles.find((profile) => profile.id === activeProfileId)
         if (!match || !isMounted) return
-        setActiveLevel(match.grade_band)
+        setActiveLevel(match.grade_band === 'elementary' ? 'middle' : match.grade_band)
       } catch (err) {
-        console.warn('[Calculator] Failed to load profile, defaulting to elementary.', err)
+        console.warn('[Calculator] Failed to load profile, defaulting to middle.', err)
       }
     }
 
@@ -50,8 +50,7 @@ export default function MedicalMathCalculator({ isOpen, onClose }: MedicalMathCa
 
   const levelLabel = useMemo(() => {
     if (activeLevel === 'middle') return 'Middle (6–8)'
-    if (activeLevel === 'high') return 'High (9–12)'
-    return 'Elementary (3–5)'
+    return 'High (9–12)'
   }, [activeLevel])
 
   const buildExpression = (value: string, level: CalculatorLevel) => {
@@ -61,15 +60,9 @@ export default function MedicalMathCalculator({ isOpen, onClose }: MedicalMathCa
     const tokens = cleaned.match(/[a-z]+/g) || []
     const allowedTokens = level === 'high'
       ? ['sin', 'cos', 'tan', 'log', 'ln', 'sqrt', 'pi', 'e']
-      : level === 'middle'
-        ? ['sqrt', 'pi', 'e']
-        : []
+      : ['sqrt', 'pi', 'e']
 
     if (tokens.some((token) => !allowedTokens.includes(token))) {
-      return null
-    }
-
-    if (level === 'elementary' && !/^[0-9+\-*/().\s]+$/.test(cleaned)) {
       return null
     }
 

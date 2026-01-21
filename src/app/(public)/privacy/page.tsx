@@ -9,7 +9,7 @@ export default function PrivacyPage() {
           <section>
             <h2 className="text-2xl font-semibold text-slate-900 mb-4">1. Introduction</h2>
             <p className="text-slate-600 leading-relaxed mb-4">
-              This Privacy Policy describes how MJR Intelligence Group LLC ("we," "our," or "us") collects, uses, and protects your personal information when you use ForgeStudy Platform, our AI-powered study companion for Grades 3–12 students.
+              This Privacy Policy describes how MJR Intelligence Group LLC ("we," "our," or "us") collects, uses, and protects your personal information when you use ForgeStudy Platform, our AI-powered study companion for Grades 6–12 students.
             </p>
             <p className="text-slate-600 leading-relaxed">
               By using ForgeStudy Platform, you agree to the collection and use of information in accordance with this policy.
@@ -28,7 +28,7 @@ export default function PrivacyPage() {
               <div>
                 <h3 className="text-lg font-semibold text-slate-800 mb-2">Student Profile Information</h3>
                 <p className="text-slate-600 leading-relaxed">
-                  For each student profile (Grades 3–12), we collect grade level and learning preferences. Student data is used solely to support personalized learning experiences and is managed by the parent account holder.
+                  For each student profile (Grades 6–12), we collect grade level and learning preferences. Student data is used solely to support personalized learning experiences and is managed by the parent account holder.
                 </p>
               </div>
               <div>
@@ -58,7 +58,7 @@ export default function PrivacyPage() {
               We use student and parent data <strong>only to support learning</strong>. Specifically, we use information to:
             </p>
             <ul className="space-y-2 text-slate-600 leading-relaxed">
-              <li>• Provide personalized AI-powered tutoring and step-by-step explanations for Grades 3–12 students</li>
+              <li>• Provide personalized AI-powered tutoring and step-by-step explanations for Grades 6–12 students</li>
               <li>• Generate learning content tailored to each student's grade level and coursework</li>
               <li>• Track progress and help students build confidence and independence</li>
               <li>• Enable parent account management of multiple student profiles (up to 4 students per family account)</li>
@@ -147,11 +147,11 @@ export default function PrivacyPage() {
           <section>
             <h2 className="text-2xl font-semibold text-slate-900 mb-4">8. Age Requirement and Parent-Managed Accounts</h2>
             <p className="text-slate-600 leading-relaxed mb-4">
-              ForgeStudy Platform is designed for Grades 3–12 students. All accounts are parent-managed, meaning:
+              ForgeStudy Platform is designed for Grades 6–12 students. All accounts are parent-managed, meaning:
             </p>
             <ul className="space-y-2 text-slate-600 leading-relaxed mb-4">
               <li>• Parents create and manage the primary account</li>
-              <li>• Parents create and control student profiles for their children (Grades 3–12)</li>
+              <li>• Parents create and control student profiles for their children (Grades 6–12)</li>
               <li>• Parents have full visibility and control over student data and learning activity</li>
               <li>• Students access the platform through profiles managed by their parent account</li>
             </ul>

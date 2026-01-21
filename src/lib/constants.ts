@@ -10,13 +10,6 @@ export const GENERAL_TUTOR_PROMPTS = [
   'Can you help me check my work?',
 ]
 
-export const ELEMENTARY_TUTOR_PROMPTS = [
-  'Help me understand this with a simple example.',
-  'Can you explain this in short steps?',
-  'Give me a quick practice question.',
-  'Check my work and show me one hint.',
-]
-
 export const MIDDLE_TUTOR_PROMPTS = [
   'Make a short study map for this topic.',
   'Give me a practice ladder from easy to hard.',

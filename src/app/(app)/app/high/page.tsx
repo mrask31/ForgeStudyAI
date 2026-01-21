@@ -227,10 +227,10 @@ export default function HighDashboardPage() {
                   ForgeHigh • Grades 9–12
                 </div>
                 <h1 className="text-3xl sm:text-4xl font-bold text-slate-900 mb-3">
-                  Study hub for grades 9–12
+                  Your study hub for Grades 9–12
                 </h1>
                 <p className="text-slate-600 text-base sm:text-lg max-w-2xl">
-                  Keep every class moving with topics, maps, practice, and exam sheets.
+                  Build a Study Topic, map the unit, practice efficiently, and prove mastery.
                 </p>
               </div>
               <div className="flex flex-col gap-3">
@@ -262,43 +262,43 @@ export default function HighDashboardPage() {
             {[
               {
                 icon: Layers,
-                title: 'Build a study topic',
-                description: 'Group maps, practice, and notes in one place.',
+                title: 'Study topics',
+                description: 'Group maps, practice, and notes into one place to show progress.',
                 href: '#study-topics',
                 action: 'Open topics',
               },
               {
                 icon: Map,
                 title: 'Study map',
-                description: 'Turn a class unit into a step-by-step plan.',
+                description: 'Turn a class unit into a plan you can explain back.',
                 href: '/tutor?tool=study-map',
                 action: 'Build a map',
               },
               {
                 icon: Sparkles,
                 title: 'Practice mode',
-                description: 'Mix easy and challenge questions to prep fast.',
+                description: 'Mix easy and challenge questions to prove readiness.',
                 href: '/tutor?tool=practice',
                 action: 'Start practice',
               },
               {
                 icon: FileText,
                 title: 'Exam sheets',
-                description: 'Create a one-page review you can print.',
+                description: 'Create a printable review sheet for proof-ready study.',
                 href: '/tutor?tool=exam',
                 action: 'Create a sheet',
               },
               {
                 icon: PenLine,
                 title: 'Essay architect',
-                description: 'Thesis, outline, evidence, and revision support.',
+                description: 'Build thesis, outline, and evidence with revision guidance.',
                 href: '/tutor?tool=writing',
                 action: 'Start writing',
               },
               {
                 icon: Atom,
                 title: 'STEM coach',
-                description: 'Advanced math + physics, step-by-step reasoning.',
+                description: 'Advanced math + physics with step-by-step reasoning checks.',
                 href: '/tutor?tool=practice',
                 action: 'Work a problem',
               },

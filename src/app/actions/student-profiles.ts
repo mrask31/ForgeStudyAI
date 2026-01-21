@@ -10,7 +10,7 @@ export interface StudentProfile {
   id: string
   owner_id: string
   display_name: string
-  grade_band: 'elementary' | 'middle' | 'high'
+  grade_band: 'middle' | 'high'
   grade: string | null
   interests: string | null
   has_pin?: boolean
@@ -62,8 +62,10 @@ export async function getStudentProfiles(): Promise<StudentProfile[]> {
 
   return (profiles || []).map((profile) => {
     const { pin_hash, ...rest } = profile as any
+    const normalizedBand = rest.grade_band === 'elementary' ? 'middle' : rest.grade_band
     return {
       ...rest,
+      grade_band: normalizedBand,
       has_pin: Boolean(pin_hash),
     } as StudentProfile
   })
@@ -101,8 +103,10 @@ export async function getStudentProfile(profileId: string): Promise<StudentProfi
   }
 
   const { pin_hash, ...rest } = profile as any
+  const normalizedBand = rest.grade_band === 'elementary' ? 'middle' : rest.grade_band
   return {
     ...rest,
+    grade_band: normalizedBand,
     has_pin: Boolean(pin_hash),
   } as StudentProfile
 }
@@ -113,7 +117,7 @@ export async function getStudentProfile(profileId: string): Promise<StudentProfi
  */
 export async function createStudentProfile(data: {
   display_name: string
-  grade_band: 'elementary' | 'middle' | 'high'
+  grade_band: 'middle' | 'high'
   grade?: string | null
   interests?: string | null
 }): Promise<StudentProfile> {
@@ -168,7 +172,7 @@ export async function createStudentProfile(data: {
   }
 
   // Validate grade_band
-  if (!['elementary', 'middle', 'high'].includes(data.grade_band)) {
+  if (!['middle', 'high'].includes(data.grade_band)) {
     throw new Error('Invalid grade band')
   }
 
@@ -257,7 +261,7 @@ export async function updateStudentProfile(
   profileId: string,
   data: {
     display_name?: string
-    grade_band?: 'elementary' | 'middle' | 'high'
+    grade_band?: 'middle' | 'high'
     grade?: string | null
     interests?: string | null
   }
@@ -285,7 +289,7 @@ export async function updateStudentProfile(
   }
 
   if (data.grade_band !== undefined) {
-    if (!['elementary', 'middle', 'high'].includes(data.grade_band)) {
+    if (!['middle', 'high'].includes(data.grade_band)) {
       throw new Error('Invalid grade band')
     }
     updateData.grade_band = data.grade_band

@@ -48,7 +48,7 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'Message content required' }, { status: 400 })
     }
 
-    let gradeBand: 'elementary' | 'middle' | 'high' | undefined
+    let gradeBand: 'middle' | 'high' | undefined
     let grade: string | null = null
     if (profileId) {
       const { data: profile } = await supabase
@@ -57,7 +57,7 @@ export async function POST(req: Request) {
         .eq('id', profileId)
         .eq('owner_id', user.id)
         .single()
-      gradeBand = profile?.grade_band || undefined
+      gradeBand = profile?.grade_band === 'elementary' ? 'middle' : profile?.grade_band || undefined
       grade = profile?.grade || null
     }
 

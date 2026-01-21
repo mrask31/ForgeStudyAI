@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import { createBrowserClient } from '@supabase/ssr'
-import { GraduationCap, BookOpen, Sparkles } from 'lucide-react'
+import { GraduationCap, BookOpen } from 'lucide-react'
 import { getStudentProfile, updateStudentProfile, type StudentProfile } from '@/app/actions/student-profiles'
 
 export default function EditProfilePage() {
@@ -13,7 +13,7 @@ export default function EditProfilePage() {
 
   const [profile, setProfile] = useState<StudentProfile | null>(null)
   const [displayName, setDisplayName] = useState('')
-  const [band, setBand] = useState<'high' | 'middle' | 'elementary' | null>(null)
+  const [band, setBand] = useState<'high' | 'middle' | null>(null)
   const [grade, setGrade] = useState('')
   const [interests, setInterests] = useState('')
   const [isLoading, setIsLoading] = useState(true)
@@ -58,7 +58,6 @@ export default function EditProfilePage() {
   }, [profileId, router])
 
   const gradeOptions = useMemo(() => {
-    if (band === 'elementary') return ['3', '4', '5']
     if (band === 'middle') return ['6', '7', '8']
     if (band === 'high') return ['9', '10', '11', '12']
     return []
@@ -149,7 +148,6 @@ export default function EditProfilePage() {
               </p>
               <div className="grid grid-cols-3 gap-4">
                 {[
-                  { value: 'elementary', label: 'Elementary', sublabel: 'Grades 3–5', icon: Sparkles },
                   { value: 'middle', label: 'Middle School', sublabel: 'Grades 6–8', icon: BookOpen },
                   { value: 'high', label: 'High School', sublabel: 'Grades 9–12', icon: GraduationCap },
                 ].map(({ value, label, sublabel, icon: Icon }) => (
@@ -157,7 +155,7 @@ export default function EditProfilePage() {
                     key={value}
                     type="button"
                     onClick={() => {
-                      setBand(value as 'high' | 'middle' | 'elementary')
+                      setBand(value as 'high' | 'middle')
                       setGrade('')
                     }}
                     disabled={isSaving}

@@ -56,7 +56,7 @@ export default function SignupPage() {
         localStorage.setItem('forgenursing-pending-plan', plan)
       }
       const band = params.get('band')
-      if (band && (band === 'high' || band === 'middle' || band === 'elementary')) {
+      if (band && (band === 'high' || band === 'middle')) {
         localStorage.setItem('forgestudy-pending-band', band)
       }
     }
@@ -531,7 +531,7 @@ export default function SignupPage() {
                 </div>
                 <div>
                   <div className="font-semibold text-slate-900 text-sm mb-1">Create a student profile in minutes</div>
-                  <div className="text-xs text-slate-600">Quick setup for Grades 3–12</div>
+                  <div className="text-xs text-slate-600">Quick setup for Grades 6–12</div>
                 </div>
               </div>
               <div className="flex items-start gap-3 text-left">
@@ -569,7 +569,7 @@ export default function SignupPage() {
                   Start your free preview
                 </h1>
                 <p className="text-sm text-slate-600">
-                  Get set up in minutes. Built for Grades 3–12.
+                  Get set up in minutes. Built for Grades 6–12.
                 </p>
               </div>
 

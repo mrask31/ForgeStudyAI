@@ -6,22 +6,13 @@ interface FollowUpPromptsProps {
   messageContent: string
   onPromptClick: (prompt: string) => void
   isLastMessage?: boolean // Only show on the last assistant message
-  gradeBand?: 'elementary' | 'middle' | 'high'
+  gradeBand?: 'middle' | 'high'
 }
 
 // Generate contextual follow-up prompts based on message content
-function generateFollowUpPrompts(content: string, gradeBand?: 'elementary' | 'middle' | 'high'): string[] {
+function generateFollowUpPrompts(content: string, gradeBand?: 'middle' | 'high'): string[] {
   const prompts: string[] = []
   const lowerContent = content.toLowerCase()
-
-  if (gradeBand === 'elementary') {
-    return [
-      'Ask me 2 easy questions about this',
-      'What is the main idea in one sentence?',
-      'Pick 2 hard words and explain them',
-      'Can you give me a quick summary?'
-    ]
-  }
 
   // STATIC PROMPTS (always available)
   const staticPrompts = [

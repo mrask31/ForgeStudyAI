@@ -123,7 +123,7 @@ export default function ThreeFeatures() {
               <Target className="w-7 h-7 text-indigo-600" />
             </div>
             <div>
-              <h4 className="font-bold text-slate-900 mb-2 hidden sm:block">✔ AI tutor for Grades 3–12</h4>
+              <h4 className="font-bold text-slate-900 mb-2 hidden sm:block">✔ AI tutor for Grades 6–12</h4>
               <h4 className="font-bold text-slate-900 mb-2 sm:hidden">AI tutor</h4>
               <p className="text-slate-700 text-sm hidden sm:block">
                 Uses your own notes & materials

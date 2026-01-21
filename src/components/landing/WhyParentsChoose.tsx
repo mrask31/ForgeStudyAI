@@ -50,7 +50,7 @@ export default function WhyParentsChoose({ className = '', showCloser = true }: 
           </div>
           <div>
             <div className="font-semibold text-slate-900 text-sm sm:text-base mb-1">
-              Designed for real schoolwork — Grades 3–12
+              Designed for real schoolwork — Grades 6–12
             </div>
           </div>
         </div>

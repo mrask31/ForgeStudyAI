@@ -195,7 +195,7 @@ export default function LandingPageContent({ gradeBand }: LandingPageContentProp
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12 bg-slate-50">
         <div className="text-center">
           <p className="text-xs sm:text-sm text-slate-600 max-w-3xl mx-auto">
-            <span className="hidden sm:inline">ForgeStudy Platform supplements your Grades 3–12 education by providing guided help aligned with your coursework. It does not replace instruction or classroom learning.</span>
+            <span className="hidden sm:inline">ForgeStudy Platform supplements your Grades 6–12 education by providing guided help aligned with your coursework. It does not replace instruction or classroom learning.</span>
             <span className="sm:hidden">Supplemental study tool — not a replacement for instruction.</span>
           </p>
         </div>

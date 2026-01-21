@@ -9,14 +9,6 @@ import HistoryButton from './HistoryButton'
 import { useActiveProfile } from '@/contexts/ActiveProfileContext'
 
 const NAV_ITEMS_BY_BAND = {
-  elementary: [
-    { label: 'Home', href: '/app/elementary', icon: Sparkles },
-    { label: 'AI Tutor', href: '/tutor', icon: MessageSquare },
-    { label: 'Spelling', href: '/tutor?mode=spelling', icon: BookOpen },
-    { label: 'Reading', href: '/tutor?mode=reading', icon: BookOpen },
-    { label: 'Upload', href: '/sources', icon: FileText },
-    { label: 'Settings', href: '/settings', icon: Settings },
-  ],
   middle: [
     { label: 'Study Hub', href: '/app/middle', icon: Sparkles },
     { label: 'Uploads', href: '/sources', icon: FileText },
@@ -70,7 +62,8 @@ export default function Sidebar({ onNavigate }: SidebarProps = {}) {
 
           if (studentProfile) {
             setStudentName(studentProfile.display_name || null)
-            setGradeBand(studentProfile.grade_band || null)
+            const normalizedBand = studentProfile.grade_band === 'elementary' ? 'middle' : studentProfile.grade_band
+            setGradeBand(normalizedBand || null)
           } else {
             setStudentName(null)
             setGradeBand(null)
@@ -88,7 +81,6 @@ export default function Sidebar({ onNavigate }: SidebarProps = {}) {
   }, [activeProfileId])
 
   const gradeBandLabel = (band: string | null) => {
-    if (band === 'elementary') return 'Grades 3–5'
     if (band === 'middle') return 'Grades 6–8'
     if (band === 'high') return 'Grades 9–12'
     return null

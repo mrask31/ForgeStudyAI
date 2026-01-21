@@ -10,7 +10,7 @@ import { test, expect } from '@playwright/test';
 
 // Route-to-content mapping for positive assertions
 const ROUTE_CONTENT_MAP: Record<string, string[]> = {
-  '/': ['Homework, without', 'Grades 3–12', 'ForgeStudy'],
+  '/': ['Turn confusion into a plan', 'Grades 6–12', 'ForgeStudy'],
   '/tutor': ['Tutor Workspace', 'Good morning', 'Welcome back'],
   '/classes': ['My Learning Map', 'Welcome back'],
   '/sources': ['Sources', 'Welcome back'],

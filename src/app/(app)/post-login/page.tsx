@@ -2,12 +2,6 @@ import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { getStudentProfiles } from '@/app/actions/student-profiles'
 
-const getBandRoute = (band: 'elementary' | 'middle' | 'high') => {
-  if (band === 'middle') return '/app/middle'
-  if (band === 'high') return '/app/high'
-  return '/app/elementary'
-}
-
 export default async function PostLoginPage() {
   const supabase = createClient()
 

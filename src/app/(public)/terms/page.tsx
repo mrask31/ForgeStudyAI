@@ -9,7 +9,7 @@ export default function TermsPage() {
           <section>
             <h2 className="text-2xl font-semibold text-slate-900 mb-4">1. Agreement to Terms</h2>
             <p className="text-slate-600 leading-relaxed mb-4">
-              These Terms of Service ("Terms") constitute a legally binding agreement between you and MJR Intelligence Group LLC ("we," "our," or "us") governing your use of ForgeStudy Platform, an AI-powered study companion for Grades 3–12 students.
+              These Terms of Service ("Terms") constitute a legally binding agreement between you and MJR Intelligence Group LLC ("we," "our," or "us") governing your use of ForgeStudy Platform, an AI-powered study companion for Grades 6–12 students.
             </p>
             <p className="text-slate-600 leading-relaxed">
               By accessing or using ForgeStudy Platform, you agree to be bound by these Terms. If you do not agree to these Terms, you may not use the service.
@@ -19,11 +19,11 @@ export default function TermsPage() {
           <section>
             <h2 className="text-2xl font-semibold text-slate-900 mb-4">2. Eligibility and Parent/Guardian Responsibility</h2>
             <p className="text-slate-600 leading-relaxed mb-4">
-              ForgeStudy Platform is designed for Grades 3–12 students. All accounts are parent-managed, meaning:
+              ForgeStudy Platform is designed for Grades 6–12 students. All accounts are parent-managed, meaning:
             </p>
             <ul className="space-y-2 text-slate-600 leading-relaxed mb-4 ml-4">
               <li>• Parents or legal guardians create and manage the primary account</li>
-              <li>• Parents create and control student profiles for their children (Grades 3–12)</li>
+              <li>• Parents create and control student profiles for their children (Grades 6–12)</li>
               <li>• Parents are responsible for supervising their children's use of the platform</li>
               <li>• Parents are responsible for ensuring their children use the service appropriately and in accordance with these Terms</li>
             </ul>
@@ -35,7 +35,7 @@ export default function TermsPage() {
           <section>
             <h2 className="text-2xl font-semibold text-slate-900 mb-4">3. Educational Use and Acceptable Use</h2>
             <p className="text-slate-600 leading-relaxed mb-4">
-              ForgeStudy Platform is designed exclusively for educational purposes to support Grades 3–12 students in understanding coursework and improving study skills. The service is intended to supplement, not replace, formal instruction, classroom learning, and academic support.
+              ForgeStudy Platform is designed exclusively for educational purposes to support Grades 6–12 students in understanding coursework and improving study skills. The service is intended to supplement, not replace, formal instruction, classroom learning, and academic support.
             </p>
             <p className="text-slate-600 leading-relaxed mb-4">
               <strong>Acceptable Use:</strong> ForgeStudy Platform should be used to:
@@ -98,7 +98,7 @@ export default function TermsPage() {
               To use ForgeStudy Platform, you must:
             </p>
             <ul className="space-y-2 text-slate-600 leading-relaxed ml-4">
-              <li>• Be a parent or legal guardian creating accounts for Grades 3–12 students</li>
+              <li>• Be a parent or legal guardian creating accounts for Grades 6–12 students</li>
               <li>• Provide accurate and complete registration information</li>
               <li>• Maintain the security of your account credentials</li>
               <li>• Notify us immediately of any unauthorized access to your account</li>
@@ -131,7 +131,7 @@ export default function TermsPage() {
               You agree not to:
             </p>
             <ul className="space-y-2 text-slate-600 leading-relaxed ml-4">
-              <li>• Use ForgeStudy Platform for any purpose other than educational learning support for Grades 3–12 students</li>
+              <li>• Use ForgeStudy Platform for any purpose other than educational learning support for Grades 6–12 students</li>
               <li>• Use the service to cheat, plagiarize, or violate academic integrity policies</li>
               <li>• Attempt to reverse engineer, decompile, or extract source code from the service</li>
               <li>• Use automated systems (bots, scrapers) to access or interact with the service</li>
@@ -151,7 +151,7 @@ export default function TermsPage() {
               You retain ownership of any educational content you upload to the platform. However, you grant us a license to use, store, and process your content solely to provide the ForgeStudy Platform service and improve our educational algorithms.
             </p>
             <p className="text-slate-600 leading-relaxed">
-              You may not copy, modify, distribute, sell, or lease any part of the ForgeStudy Platform service without our prior written consent. You may use the service only for your personal, non-commercial educational purposes for Grades 3–12 students.
+              You may not copy, modify, distribute, sell, or lease any part of the ForgeStudy Platform service without our prior written consent. You may use the service only for your personal, non-commercial educational purposes for Grades 6–12 students.
             </p>
           </section>
 

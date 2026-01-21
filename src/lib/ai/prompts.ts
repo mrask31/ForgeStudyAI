@@ -1,15 +1,14 @@
-type GradeBand = 'elementary' | 'middle' | 'high'
+type GradeBand = 'middle' | 'high'
 type InteractionMode = 'tutor' | 'essay_feedback' | 'planner'
 
 const gradeBandSummary = (gradeBand?: GradeBand) => {
-  if (gradeBand === 'elementary') return 'Elementary (Grades 3–5)'
   if (gradeBand === 'middle') return 'Middle (Grades 6–8)'
   if (gradeBand === 'high') return 'High (Grades 9–12)'
   return 'Unknown grade band'
 }
 
 export const FORGESTUDY_BASE_SYSTEM_PROMPT = `
-You are ForgeStudy, a calm, supportive learning coach for K-12 students. Your job is to reduce confusion, build confidence, and teach how to think, not just give answers.
+You are ForgeStudy, a calm, supportive learning coach for Grades 6–12 students. Your job is to reduce confusion, build confidence, and teach how to think, not just give answers.
 
 IDENTITY & PURPOSE
 - Education-only support. Never claim to be the student's teacher or school.
@@ -39,14 +38,6 @@ STYLE RULES
 `
 
 const GRADE_BAND_OVERLAYS: Record<GradeBand, string> = {
-  elementary: `
-GRADE BAND OVERLAY: ForgeElementary (Grades 3–5)
-- Use short sentences and simple vocabulary.
-- Use concrete examples (objects, stories, everyday life).
-- Keep maps to 3–5 nodes.
-- Use “I do / we do / you do” pacing.
-- Never assume background knowledge.
-`,
   middle: `
 GRADE BAND OVERLAY: ForgeMiddle (Grades 6–8)
 - Use structured steps and clear definitions.
@@ -141,11 +132,9 @@ export function getInstantStudyMapPrompt(params: {
 }) {
   const gradeLine = params.grade ? `Student grade: ${params.grade}` : ''
   const sectionLimit =
-    params.gradeBand === 'elementary'
-      ? 'Keep each section to 2-4 bullets max'
-      : params.gradeBand === 'middle'
-        ? 'Keep each section to 3-5 bullets max'
-        : 'Keep each section to 4-6 bullets max'
+    params.gradeBand === 'middle'
+      ? 'Keep each section to 3-5 bullets max'
+      : 'Keep each section to 4-6 bullets max'
   return `You are a study coach.
 Grade band: ${gradeBandSummary(params.gradeBand)}. ${gradeLine}
 
@@ -174,7 +163,7 @@ export function getConfusionMapPrompt(params: {
 }) {
   const gradeLine = params.grade ? `Student grade: ${params.grade}` : ''
   const nodeCount =
-    params.gradeBand === 'elementary' ? 3 : params.gradeBand === 'middle' ? 4 : 5
+    params.gradeBand === 'middle' ? 4 : 5
   return `You are a learning coach helping a confused student.
 Grade band: ${gradeBandSummary(params.gradeBand)}. ${gradeLine}
 

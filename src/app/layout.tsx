@@ -11,7 +11,7 @@ const inter = Inter({
 
 export const metadata: Metadata = {
   title: "ForgeStudy Platform",
-  description: "AI study companion for Grades 3–12",
+  description: "AI study companion for Grades 6–12",
 };
 
 export default function RootLayout({

@@ -6,12 +6,12 @@ import { createBrowserClient } from '@supabase/ssr'
 import { createStudentProfile, getStudentProfiles } from '@/app/actions/student-profiles'
 import { useActiveProfile } from '@/contexts/ActiveProfileContext'
 import { FAMILY_MAX_PROFILES } from '@/lib/constants'
-import { GraduationCap, BookOpen, Sparkles } from 'lucide-react'
+import { GraduationCap, BookOpen } from 'lucide-react'
 
 function NewProfileContent() {
   const searchParams = useSearchParams()
   const router = useRouter()
-  const [band, setBand] = useState<'high' | 'middle' | 'elementary' | null>(null)
+  const [band, setBand] = useState<'high' | 'middle' | null>(null)
   const [displayName, setDisplayName] = useState('')
   const [grade, setGrade] = useState('')
   const [interests, setInterests] = useState('')
@@ -51,8 +51,8 @@ function NewProfileContent() {
 
         // Read band from query params
         const bandParam = searchParams.get('band')
-        if (bandParam && ['high', 'middle', 'elementary'].includes(bandParam)) {
-          setBand(bandParam as 'high' | 'middle' | 'elementary')
+        if (bandParam && ['high', 'middle'].includes(bandParam)) {
+          setBand(bandParam as 'high' | 'middle')
         }
 
         // Check current profile count
@@ -114,10 +114,8 @@ function NewProfileContent() {
     loadData()
   }, [searchParams, router])
 
-  const getBandRoute = (bandValue: 'high' | 'middle' | 'elementary') => {
+  const getBandRoute = (bandValue: 'high' | 'middle') => {
     switch (bandValue) {
-      case 'elementary':
-        return '/app/elementary'
       case 'middle':
         return '/app/middle'
       case 'high':
@@ -191,9 +189,7 @@ function NewProfileContent() {
     )
   }
 
-  const gradeOptions = band === 'elementary' 
-    ? ['3', '4', '5']
-    : band === 'middle'
+  const gradeOptions = band === 'middle'
     ? ['6', '7', '8']
     : ['9', '10', '11', '12']
 
@@ -205,7 +201,7 @@ function NewProfileContent() {
             Create a student profile
           </h1>
           <p className="text-lg text-slate-600 mb-2">
-            Set up personalized learning support for Grades 3–12
+            Set up personalized learning support for Grades 6–12
           </p>
           <p className="text-sm text-slate-500 mb-8">
             ForgeStudy helps students understand their work step-by-step, building confidence and independence.
@@ -241,15 +237,14 @@ function NewProfileContent() {
                 ForgeStudy adapts its teaching style to match each grade band
               </p>
               <div className="grid grid-cols-3 gap-4">
-                {[
-                  { value: 'elementary', label: 'Elementary', sublabel: 'Grades 3–5', icon: Sparkles },
-                  { value: 'middle', label: 'Middle School', sublabel: 'Grades 6–8', icon: BookOpen },
-                  { value: 'high', label: 'High School', sublabel: 'Grades 9–12', icon: GraduationCap },
-                ].map(({ value, label, sublabel, icon: Icon }) => (
+              {[
+                { value: 'middle', label: 'Middle School', sublabel: 'Grades 6–8', icon: BookOpen },
+                { value: 'high', label: 'High School', sublabel: 'Grades 9–12', icon: GraduationCap },
+              ].map(({ value, label, sublabel, icon: Icon }) => (
                   <button
                     key={value}
                     type="button"
-                    onClick={() => setBand(value as 'high' | 'middle' | 'elementary')}
+                    onClick={() => setBand(value as 'high' | 'middle')}
                     disabled={isSubmitting}
                     className={`
                       p-4 rounded-xl border-2 transition-all duration-200

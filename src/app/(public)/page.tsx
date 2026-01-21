@@ -2,10 +2,17 @@
 
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
-import { 
-  GraduationCap, BookOpen, Sparkles, ArrowRight, Shield, Users, 
-  Target, CheckCircle2, TrendingUp, Brain, MessageSquare, 
-  ChevronRight
+import {
+  GraduationCap,
+  BookOpen,
+  ArrowRight,
+  Users,
+  Target,
+  CheckCircle2,
+  TrendingUp,
+  Brain,
+  MessageSquare,
+  ChevronRight,
 } from 'lucide-react'
 import { Accordion } from '@/components/ui/accordion'
 
@@ -26,7 +33,7 @@ export default function HomePage() {
     },
     {
       question: "How does ForgeStudy adapt by grade?",
-      answer: "ForgeStudy adapts its teaching style, vocabulary, and complexity to match each student's grade band. Elementary students get fun, engaging explanations with visual concepts. Middle school students receive structured guidance. High school students get advanced support aligned with college-prep coursework."
+      answer: "ForgeStudy adapts its teaching style, vocabulary, and complexity to match each student's grade band. Middle school students receive structured guidance and study foundations. High school students get advanced support aligned with college-prep coursework."
     },
     {
       question: "Can parents manage multiple students?",
@@ -34,7 +41,7 @@ export default function HomePage() {
     },
     {
       question: "What happens after I sign up?",
-      answer: "After signing up, you'll create your first student profile (choosing the grade band). If you have one profile, you'll go straight to that student's dashboard. If you create multiple profiles, you'll see a profile selector (like Netflix) to choose which student to work with."
+      answer: "After signing up, you'll create your first student profile (Grades 6–8 or Grades 9–12). If you have one profile, you'll go straight to that student's dashboard. If you create multiple profiles, you'll see a profile selector to choose which student to work with."
     },
     {
       question: "Can I cancel anytime?",
@@ -54,13 +61,14 @@ export default function HomePage() {
           {/* Left: Text Content */}
           <div className="text-center lg:text-left">
             <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold text-slate-900 mb-6 leading-tight tracking-tight">
-              Homework, without<br className="hidden sm:block" /> the nightly struggle.
+              Turn confusion into a plan
+              <br className="hidden sm:block" /> in minutes.
             </h1>
             <p className="text-lg sm:text-xl md:text-2xl text-slate-700 mb-4 leading-relaxed max-w-2xl mx-auto lg:mx-0 font-medium">
-              ForgeStudy helps students in Grades 3–12 understand their work step-by-step — building confidence, independence, and better study habits.
+              ForgeStudy is the study companion for Grades 6–12 that maps what to learn, builds a path, and keeps students practicing until they can prove it.
             </p>
             <p className="text-sm sm:text-base text-slate-500 mb-8 leading-relaxed max-w-2xl mx-auto lg:mx-0">
-              Built for real learning. Designed for families.
+              Map → Path → Practice → Prove → Review. Built for real learning, built for families.
             </p>
             
             {/* CTAs */}
@@ -242,33 +250,20 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* Grade Bands - Informational Only */}
+      {/* Grade Bands */}
       <section className="py-16 sm:py-20 md:py-24 bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12 sm:mb-16">
             <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold text-slate-900 mb-4 tracking-tight">
-              Support for Every Grade Level
+              Built for Grades 6–12
             </h2>
             <p className="text-lg sm:text-xl text-slate-600 max-w-2xl mx-auto">
-              Tailored learning support from elementary through high school
+              Two tailored experiences designed for the way middle and high schoolers learn.
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 sm:gap-8 max-w-5xl mx-auto">
-            {/* Elementary - Non-clickable */}
-            <div className="bg-white border-2 border-slate-200 rounded-2xl p-8 shadow-sm hover:shadow-md transition-shadow">
-              <div className="flex flex-col items-center text-center">
-                <div className="w-16 h-16 bg-gradient-to-br from-teal-500 to-cyan-600 rounded-xl flex items-center justify-center mb-4 shadow-md">
-                  <Sparkles className="w-8 h-8 text-white" />
-                </div>
-                <h3 className="text-2xl font-bold text-slate-900 mb-3">Elementary</h3>
-                <p className="text-slate-600 leading-relaxed">
-                  Grades 3–5. Structured support with reading, math, and foundational skills that build independent learning habits.
-                </p>
-              </div>
-            </div>
-
-            {/* Middle School - Non-clickable */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 sm:gap-8 max-w-4xl mx-auto">
+            {/* Middle School */}
             <div className="bg-white border-2 border-slate-200 rounded-2xl p-8 shadow-sm hover:shadow-md transition-shadow">
               <div className="flex flex-col items-center text-center">
                 <div className="w-16 h-16 bg-gradient-to-br from-teal-500 to-cyan-600 rounded-xl flex items-center justify-center mb-4 shadow-md">
@@ -276,12 +271,12 @@ export default function HomePage() {
                 </div>
                 <h3 className="text-2xl font-bold text-slate-900 mb-3">Middle School</h3>
                 <p className="text-slate-600 leading-relaxed">
-                  Grades 6–8. Study guides, homework help, and concept explanations that support growing independence.
+                  Grades 6–8. Study maps, practice sessions, and clear explanations that build confidence and habits.
                 </p>
               </div>
             </div>
 
-            {/* High School - Non-clickable */}
+            {/* High School */}
             <div className="bg-white border-2 border-slate-200 rounded-2xl p-8 shadow-sm hover:shadow-md transition-shadow">
               <div className="flex flex-col items-center text-center">
                 <div className="w-16 h-16 bg-gradient-to-br from-teal-500 to-cyan-600 rounded-xl flex items-center justify-center mb-4 shadow-md">
@@ -289,7 +284,7 @@ export default function HomePage() {
                 </div>
                 <h3 className="text-2xl font-bold text-slate-900 mb-3">High School</h3>
                 <p className="text-slate-600 leading-relaxed">
-                  Grades 9–12. Advanced coursework support, essay help, and exam preparation for college readiness.
+                  Grades 9–12. Advanced coursework support, essay help, and exam prep that prepares for college.
                 </p>
               </div>
             </div>
@@ -302,25 +297,25 @@ export default function HomePage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12 sm:mb-16">
             <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold text-slate-900 mb-4 tracking-tight">
-              How It Works
+              The ForgeStudy loop
             </h2>
             <p className="text-lg sm:text-xl text-slate-600 max-w-2xl mx-auto">
-              Get started in minutes
+              Map → Path → Practice → Prove → Review
             </p>
           </div>
 
           <div className="max-w-5xl mx-auto">
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
+            <div className="grid grid-cols-1 md:grid-cols-5 gap-6">
               {/* Step 1 */}
               <div className="text-center relative">
                 <div className="w-16 h-16 bg-gradient-to-br from-teal-500 to-cyan-600 rounded-full flex items-center justify-center mx-auto mb-4 text-white text-2xl font-bold shadow-lg">
                   1
                 </div>
-                <h3 className="text-lg font-bold text-slate-900 mb-2">Create account</h3>
+                <h3 className="text-lg font-bold text-slate-900 mb-2">Map</h3>
                 <p className="text-sm text-slate-600 leading-relaxed">
-                  Sign up with email. Quick and secure.
+                  Turn any topic into a clear Study Map of what matters.
                 </p>
-                <ChevronRight className="hidden md:block absolute top-8 -right-4 w-6 h-6 text-slate-300" />
+                <ChevronRight className="hidden md:block absolute top-8 -right-3 w-6 h-6 text-slate-300" />
               </div>
 
               {/* Step 2 */}
@@ -328,11 +323,11 @@ export default function HomePage() {
                 <div className="w-16 h-16 bg-gradient-to-br from-teal-500 to-cyan-600 rounded-full flex items-center justify-center mx-auto mb-4 text-white text-2xl font-bold shadow-lg">
                   2
                 </div>
-                <h3 className="text-lg font-bold text-slate-900 mb-2">Add student profile(s)</h3>
+                <h3 className="text-lg font-bold text-slate-900 mb-2">Path</h3>
                 <p className="text-sm text-slate-600 leading-relaxed">
-                  Create profiles during onboarding or add more later.
+                  Get a step-by-step plan tailored to the student.
                 </p>
-                <ChevronRight className="hidden md:block absolute top-8 -right-4 w-6 h-6 text-slate-300" />
+                <ChevronRight className="hidden md:block absolute top-8 -right-3 w-6 h-6 text-slate-300" />
               </div>
 
               {/* Step 3 */}
@@ -340,24 +335,33 @@ export default function HomePage() {
                 <div className="w-16 h-16 bg-gradient-to-br from-teal-500 to-cyan-600 rounded-full flex items-center justify-center mx-auto mb-4 text-white text-2xl font-bold shadow-lg">
                   3
                 </div>
-                <h3 className="text-lg font-bold text-slate-900 mb-2">Land in dashboard</h3>
-                <p className="text-sm text-slate-600 leading-relaxed mb-1">
-                  Students land in the Readiness dashboard.
+                <h3 className="text-lg font-bold text-slate-900 mb-2">Practice</h3>
+                <p className="text-sm text-slate-600 leading-relaxed">
+                  Practice Mode and Exam Sheets build confidence fast.
                 </p>
-                <p className="text-xs text-slate-500 leading-relaxed">
-                  Personalized dashboards automatically.
-                </p>
-                <ChevronRight className="hidden md:block absolute top-8 -right-4 w-6 h-6 text-slate-300" />
+                <ChevronRight className="hidden md:block absolute top-8 -right-3 w-6 h-6 text-slate-300" />
               </div>
 
               {/* Step 4 */}
-              <div className="text-center">
+              <div className="text-center relative">
                 <div className="w-16 h-16 bg-gradient-to-br from-teal-500 to-cyan-600 rounded-full flex items-center justify-center mx-auto mb-4 text-white text-2xl font-bold shadow-lg">
                   4
                 </div>
-                <h3 className="text-lg font-bold text-slate-900 mb-2">Switch profiles anytime</h3>
+                <h3 className="text-lg font-bold text-slate-900 mb-2">Prove</h3>
                 <p className="text-sm text-slate-600 leading-relaxed">
-                  Multiple students? Use the profile selector to switch between learners.
+                  Demonstrate mastery with checks that show growth.
+                </p>
+                <ChevronRight className="hidden md:block absolute top-8 -right-3 w-6 h-6 text-slate-300" />
+              </div>
+
+              {/* Step 5 */}
+              <div className="text-center">
+                <div className="w-16 h-16 bg-gradient-to-br from-teal-500 to-cyan-600 rounded-full flex items-center justify-center mx-auto mb-4 text-white text-2xl font-bold shadow-lg">
+                  5
+                </div>
+                <h3 className="text-lg font-bold text-slate-900 mb-2">Review</h3>
+                <p className="text-sm text-slate-600 leading-relaxed">
+                  Review progress and plan the next focused session.
                 </p>
               </div>
             </div>

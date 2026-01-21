@@ -4,7 +4,7 @@ import { Suspense, useEffect, useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { createBrowserClient } from '@supabase/ssr'
 import { getStudentProfiles, type StudentProfile, deleteStudentProfile } from '@/app/actions/student-profiles'
-import { GraduationCap, BookOpen, Sparkles, Trash2, Plus, User, Lock } from 'lucide-react'
+import { GraduationCap, BookOpen, Trash2, Plus, User, Lock } from 'lucide-react'
 import Link from 'next/link'
 import { useActiveProfile } from '@/contexts/ActiveProfileContext'
 import { verifyStudentProfilePin } from '@/app/actions/pins'
@@ -23,8 +23,6 @@ function ProfilesPageContent() {
 
   const getBandRoute = (band: StudentProfile['grade_band']) => {
     switch (band) {
-      case 'elementary':
-        return '/app/elementary'
       case 'middle':
         return '/app/middle'
       case 'high':
@@ -111,8 +109,6 @@ function ProfilesPageContent() {
         return GraduationCap
       case 'middle':
         return BookOpen
-      case 'elementary':
-        return Sparkles
       default:
         return User
     }
@@ -124,8 +120,6 @@ function ProfilesPageContent() {
         return 'High School'
       case 'middle':
         return 'Middle School'
-      case 'elementary':
-        return 'Elementary'
       default:
         return band
     }
@@ -229,7 +223,7 @@ function ProfilesPageContent() {
             Select a student profile to continue
           </p>
           <p className="text-sm text-slate-500 max-w-2xl mx-auto">
-            Each student gets personalized step-by-step support for Grades 3–12
+            Each student gets personalized step-by-step support for Grades 6–12
           </p>
         </div>
 
@@ -296,7 +290,7 @@ function ProfilesPageContent() {
                 </div>
                 <h2 className="text-xl font-bold text-slate-900 mb-1">Add Profile</h2>
                 <p className="text-sm text-slate-600">Create a new student profile</p>
-                <p className="text-xs text-slate-500 mt-1">Grades 3–12</p>
+                <p className="text-xs text-slate-500 mt-1">Grades 6–12</p>
               </div>
             </Link>
           )}
@@ -323,7 +317,7 @@ function ProfilesPageContent() {
           <div className="max-w-2xl mx-auto text-center">
             <div className="bg-amber-50 border border-amber-200 rounded-xl p-6">
               <p className="text-sm font-medium text-amber-800">
-                You've reached the maximum of 4 profiles. Family plan supports up to 4 student profiles for Grades 3–12.
+                You've reached the maximum of 4 profiles. Family plan supports up to 4 student profiles for Grades 6–12.
               </p>
             </div>
           </div>

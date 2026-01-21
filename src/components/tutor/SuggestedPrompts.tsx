@@ -4,7 +4,6 @@ import { useEffect } from 'react'
 import {
   GENERAL_TUTOR_PROMPTS,
   CLASS_TUTOR_PROMPTS,
-  ELEMENTARY_TUTOR_PROMPTS,
   MIDDLE_TUTOR_PROMPTS,
   HIGH_TUTOR_PROMPTS,
   TUTOR_PROMPTS,
@@ -54,7 +53,7 @@ interface SuggestedPromptsProps {
   selectedClassId?: string // Class ID to determine if prompts should be class-specific
   lastAssistantMessage?: string // Last assistant message from conversation to generate contextual prompts
   hasExistingConversation?: boolean // Whether there's an active conversation with messages
-  gradeBand?: 'elementary' | 'middle' | 'high'
+  gradeBand?: 'middle' | 'high'
 }
 
 // Generate contextual prompts from last assistant message (similar to FollowUpPrompts logic)
@@ -185,8 +184,6 @@ export default function SuggestedPrompts({
       // Use General Tutor prompts if no class selected, Class prompts if class is selected
       if (selectedClassId) {
         prompts = CLASS_TUTOR_PROMPTS
-      } else if (gradeBand === 'elementary') {
-        prompts = ELEMENTARY_TUTOR_PROMPTS
       } else if (gradeBand === 'middle') {
         prompts = MIDDLE_TUTOR_PROMPTS
       } else if (gradeBand === 'high') {

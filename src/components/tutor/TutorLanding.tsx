@@ -2,14 +2,6 @@
 
 import { useState, useEffect } from 'react'
 import SuggestedPrompts from '@/components/tutor/SuggestedPrompts'
-import MissionPanel from '@/components/elementary/MissionPanel'
-import ProofStrip from '@/components/elementary/ProofStrip'
-import SpellingEnginePanel from '@/components/elementary/SpellingEnginePanel'
-import ReadingEnginePanel from '@/components/elementary/ReadingEnginePanel'
-import HomeworkEnginePanel from '@/components/elementary/HomeworkEnginePanel'
-import GradeBand35SpellingLayout from '@/components/elementary/GradeBand35SpellingLayout'
-import GradeBand35ReadingLayout from '@/components/elementary/GradeBand35ReadingLayout'
-import GradeBand35HomeworkLayout from '@/components/elementary/GradeBand35HomeworkLayout'
 
 type TutorLandingMode = 'tutor' | 'spelling' | 'reading' | 'homework'
 type TutorTool = 'study-map' | 'practice' | 'exam' | 'writing'
@@ -20,7 +12,7 @@ interface TutorLandingProps {
   attachedContext?: 'none' | 'syllabus' | 'textbook' | 'mixed'
   selectedClassId?: string // To differentiate General Tutor from class-specific
   selectedClass?: { code: string; name: string } | null // Class info for welcome message
-  gradeBand?: 'elementary' | 'middle' | 'high'
+  gradeBand?: 'middle' | 'high'
   mode?: TutorLandingMode
   tool?: TutorTool | null
   profileId?: string | null
@@ -371,56 +363,30 @@ export default function TutorLanding({
     if (!isGeneralTutor || mode === 'tutor') {
       return null
     }
-    if (gradeBand === 'elementary' && mode === 'spelling' && profileId) {
-      return (
-        <GradeBand35SpellingLayout
-          profileId={profileId}
-          hasSession={sessionActive}
-          onStartSession={onStartSession}
-        />
-      )
-    }
-    if (gradeBand === 'elementary' && mode === 'reading' && profileId) {
-      return (
-        <GradeBand35ReadingLayout
-          profileId={profileId}
-          hasSession={sessionActive}
-          onStartSession={onStartSession}
-        />
-      )
-    }
-    if (gradeBand === 'elementary' && mode === 'homework' && profileId) {
-      return (
-        <GradeBand35HomeworkLayout
-          profileId={profileId}
-          hasSession={sessionActive}
-          onStartSession={onStartSession}
-        />
-      )
-    }
     if (!profileId) {
       return (
         <div className="mt-4 sm:mt-6 w-full max-w-2xl text-left">
           <div className="p-4 sm:p-6 bg-white border border-amber-200 rounded-xl shadow-sm text-sm text-amber-700">
-            Select a student profile to start today’s mission.
+            Select a student profile to start.
           </div>
         </div>
       )
     }
 
+    const config = MODE_CONFIG[mode]
     return (
       <div className="mt-4 sm:mt-6 w-full max-w-2xl text-left space-y-4">
-        <MissionPanel profileId={profileId} mode={mode} onStart={onStartSession} />
-        <ProofStrip profileId={profileId} mode={mode} onStartSession={onStartSession} />
-        {mode === 'spelling' && (
-          <SpellingEnginePanel profileId={profileId} onStartSession={onStartSession} />
-        )}
-        {mode === 'reading' && (
-          <ReadingEnginePanel profileId={profileId} onStartSession={onStartSession} />
-        )}
-        {mode === 'homework' && (
-          <HomeworkEnginePanel profileId={profileId} onStartSession={onStartSession} />
-        )}
+        <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+          <p className="text-sm font-semibold text-slate-900 mb-2">How this works</p>
+          <ul className="space-y-2 text-sm text-slate-700">
+            {config.steps.map((step) => (
+              <li key={step} className="flex items-start gap-2">
+                <span className="text-emerald-600 mt-0.5">•</span>
+                <span>{step}</span>
+              </li>
+            ))}
+          </ul>
+        </div>
       </div>
     )
   }
@@ -431,7 +397,7 @@ export default function TutorLanding({
 
   return (
     <div className="flex flex-col items-center justify-center gap-4 sm:gap-6 py-8 sm:py-12 text-center px-4">
-      {!(gradeBand === 'elementary' && mode !== 'tutor' && sessionActive) && (
+      {!(mode !== 'tutor' && sessionActive) && (
         <>
           {/* Primary Text */}
           <h1 className="text-2xl sm:text-3xl font-semibold tracking-tight text-slate-900 max-w-2xl">
@@ -479,7 +445,7 @@ export default function TutorLanding({
       </div>
 
       {/* Suggestion Chips - Mode-aware */}
-      {!(gradeBand === 'elementary' && (mode === 'spelling' || mode === 'reading' || mode === 'homework')) && (
+      {mode === 'tutor' && (
         <div className="w-full">
           <SuggestedPrompts 
             mode="tutor" 

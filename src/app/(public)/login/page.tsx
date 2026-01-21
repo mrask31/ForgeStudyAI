@@ -172,7 +172,7 @@ export default function LoginPage() {
                 Homework help that teaches — not cheats.
               </h2>
               <p className="text-base text-slate-600 leading-relaxed">
-                Step-by-step support for Grades 3–12 that builds real understanding.
+                Step-by-step support for Grades 6–12 that builds real understanding.
               </p>
             </div>
             

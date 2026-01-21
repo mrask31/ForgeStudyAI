@@ -49,12 +49,12 @@ export default function Hero({ user }: HeroProps) {
               <div className="p-0.5 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-md">
                 <MessageSquare className="w-3 h-3 text-white" />
               </div>
-              AI Study Companion for Grades 3–12
+              AI Study Companion for Grades 6–12
             </div>
             
             <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold bg-gradient-to-r from-slate-900 via-indigo-900 to-slate-900 bg-clip-text text-transparent tracking-tight mb-4 sm:mb-6 leading-tight pb-1">
-              <span className="hidden sm:inline">Your AI Study Companion for Grades 3–12</span>
-              <span className="sm:hidden">AI Study Companion for Grades 3–12</span>
+              <span className="hidden sm:inline">Your AI Study Companion for Grades 6–12</span>
+              <span className="sm:hidden">AI Study Companion for Grades 6–12</span>
             </h1>
             
             <p className="text-base sm:text-lg md:text-xl text-slate-700 mb-6 sm:mb-8 leading-relaxed font-medium">

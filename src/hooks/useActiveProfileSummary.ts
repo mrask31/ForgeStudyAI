@@ -7,7 +7,7 @@ import { useActiveProfile } from '@/contexts/ActiveProfileContext'
 export type ActiveProfileSummary = {
   id: string
   displayName: string | null
-  gradeBand: 'elementary' | 'middle' | 'high'
+  gradeBand: 'middle' | 'high'
   grade: string | null
 }
 
@@ -56,10 +56,11 @@ export function useActiveProfileSummary() {
         }
 
         if (isMounted) {
+          const normalizedBand = profile.grade_band === 'elementary' ? 'middle' : profile.grade_band
           setSummary({
             id: profile.id,
             displayName: profile.display_name || null,
-            gradeBand: profile.grade_band,
+            gradeBand: normalizedBand,
             grade: profile.grade || null,
           })
         }

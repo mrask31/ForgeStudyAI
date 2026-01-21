@@ -63,7 +63,7 @@ export default function BeliefValidation() {
           ForgeStudy Platform helps you understand concepts step-by-step — clearly, calmly, and effectively. No gimmicks. No pressure. Just meaningful learning.
         </p>
         <p className="text-base sm:text-lg md:text-xl mb-6 sm:mb-8 text-white/95 leading-relaxed sm:hidden">
-          AI study companion designed for Grades 3–12 students.
+          AI study companion designed for Grades 6–12 students.
         </p>
         <Link
           href="/signup"

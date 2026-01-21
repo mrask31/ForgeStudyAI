@@ -23,7 +23,7 @@ interface TutorSessionProps {
   onMessagesChange?: (messages: ChatMessage[]) => void // Callback to update messages in parent
   onTopicsChange?: (topics: NotebookTopic[]) => void // Callback to update topics in parent for header
   scrollToMessageId?: string // Optional message ID to scroll to when messages load
-  gradeBand?: 'elementary' | 'middle' | 'high'
+  gradeBand?: 'middle' | 'high'
   mode?: 'tutor' | 'spelling' | 'reading' | 'homework'
 }
 
@@ -89,7 +89,7 @@ export default function TutorSession({
   // Use localSessionId for rendering (will be updated when session is created)
   const sessionId = localSessionId
   const hideChatInput = mode === 'spelling'
-  const deEmphasizeChatInput = gradeBand === 'elementary' && (mode === 'reading' || mode === 'homework')
+  const deEmphasizeChatInput = false
 
   // Check for active binder files
   useEffect(() => {

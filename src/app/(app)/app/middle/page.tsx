@@ -18,10 +18,13 @@ export default function MiddleDashboardPage() {
                   ForgeMiddle • Grades 6–8
                 </div>
                 <h1 className="text-3xl sm:text-4xl font-bold text-slate-900 mb-3">
-                  Your learning command center
+                  Your study hub for Grades 6–8
                 </h1>
                 <p className="text-slate-600 text-base sm:text-lg max-w-2xl">
-                  Keep schoolwork on track with guided plans, practice, and homework help.
+                  Build a Study Map, practice what matters, and keep homework on track.
+                </p>
+                <p className="text-sm text-slate-500 mt-2">
+                  If you’re not sure, start a Study Map.
                 </p>
               </div>
               <div className="flex flex-col gap-3">
