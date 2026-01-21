@@ -110,8 +110,8 @@ export default function HomePage() {
           <div className="relative">
             <div className="relative aspect-[4/3] w-full overflow-hidden rounded-2xl border-2 border-slate-200 shadow-2xl">
               <Image
-                src="/hero-chat-preview.png"
-                alt="ForgeStudy study workflow preview"
+                src="/binder-preview.png"
+                alt="ForgeStudy study workspace preview"
                 fill
                 className="object-cover"
                 priority
