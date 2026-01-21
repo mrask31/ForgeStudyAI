@@ -5,6 +5,8 @@ import { useRouter, useSearchParams } from 'next/navigation'
 import { Plus } from 'lucide-react'
 import { createBrowserClient } from '@supabase/ssr'
 import { Button } from '@/components/ui/button'
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
+import { Input } from '@/components/ui/input'
 import { useTutorContext } from './TutorContext'
 import ExamModeDialog from './ExamModeDialog'
 import { ExamPlan, StudentClass, NotebookTopic } from '@/lib/types'
@@ -31,6 +33,8 @@ export default function TutorHeader({
   const searchParams = useSearchParams()
   const [isExamDialogOpen, setIsExamDialogOpen] = useState(false)
   const [activeExam, setActiveExam] = useState<ExamPlan | null>(null)
+  const [isTitleDialogOpen, setIsTitleDialogOpen] = useState(false)
+  const [titleDraft, setTitleDraft] = useState('')
   const tutorContext = useTutorContext()
 
 
@@ -76,36 +80,8 @@ export default function TutorHeader({
               size="sm"
               onClick={async () => {
                 if (!currentSessionId) return
-                
-                // Archive the current chat
-                try {
-                  const archiveRes = await fetch('/api/chats/archive', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    credentials: 'include',
-                    body: JSON.stringify({ chatId: currentSessionId }),
-                  })
-                  
-                  if (!archiveRes.ok) {
-                    console.error('[TutorHeader] Failed to archive chat')
-                    // Continue anyway - don't block user
-                  }
-                } catch (error) {
-                  console.error('[TutorHeader] Error archiving chat:', error)
-                  // Continue anyway - don't block user
-                }
-                
-                // Clear session and show landing page
-                if (onStartNewSession) {
-                  onStartNewSession()
-                } else {
-                  // Fallback: navigate to clear session
-                  const params = new URLSearchParams(searchParams.toString())
-                  params.delete('sessionId')
-                  params.delete('chatId')
-                  params.delete('id')
-                  router.push(`/tutor?${params.toString()}`)
-                }
+                setTitleDraft('')
+                setIsTitleDialogOpen(true)
               }}
               className="flex-shrink-0 flex items-center gap-1.5 bg-gradient-to-r from-emerald-600 to-teal-600 text-white border-0 shadow-md shadow-emerald-500/30 hover:from-emerald-700 hover:to-teal-700 hover:shadow-lg hover:shadow-emerald-500/40 transition-all duration-200 font-semibold px-3 py-1.5 text-xs sm:text-sm whitespace-nowrap"
             >
@@ -116,6 +92,99 @@ export default function TutorHeader({
           )}
         </div>
       </header>
+      <Dialog open={isTitleDialogOpen} onOpenChange={setIsTitleDialogOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Title this chat</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-3">
+            <Input
+              value={titleDraft}
+              onChange={(event) => setTitleDraft(event.target.value)}
+              placeholder="e.g., Essay draft on the American Revolution"
+            />
+            <div className="flex items-center justify-end gap-2">
+              <Button
+                variant="outline"
+                onClick={() => setIsTitleDialogOpen(false)}
+              >
+                Cancel
+              </Button>
+              <Button
+                onClick={async () => {
+                  if (!currentSessionId) return
+                  const trimmed = titleDraft.trim()
+                  if (trimmed) {
+                    try {
+                      await fetch('/api/chats/update-title', {
+                        method: 'PATCH',
+                        headers: { 'Content-Type': 'application/json' },
+                        credentials: 'include',
+                        body: JSON.stringify({ chatId: currentSessionId, title: trimmed }),
+                      })
+                    } catch (error) {
+                      console.error('[TutorHeader] Failed to update chat title:', error)
+                    }
+                  }
+
+                  try {
+                    await fetch('/api/chats/archive', {
+                      method: 'POST',
+                      headers: { 'Content-Type': 'application/json' },
+                      credentials: 'include',
+                      body: JSON.stringify({ chatId: currentSessionId }),
+                    })
+                  } catch (error) {
+                    console.error('[TutorHeader] Error archiving chat:', error)
+                  }
+
+                  setIsTitleDialogOpen(false)
+
+                  if (onStartNewSession) {
+                    onStartNewSession()
+                  } else {
+                    const params = new URLSearchParams(searchParams.toString())
+                    params.delete('sessionId')
+                    params.delete('chatId')
+                    params.delete('id')
+                    router.push(`/tutor?${params.toString()}`)
+                  }
+                }}
+              >
+                Save & Start New
+              </Button>
+              <Button
+                variant="ghost"
+                onClick={async () => {
+                  if (!currentSessionId) return
+                  try {
+                    await fetch('/api/chats/archive', {
+                      method: 'POST',
+                      headers: { 'Content-Type': 'application/json' },
+                      credentials: 'include',
+                      body: JSON.stringify({ chatId: currentSessionId }),
+                    })
+                  } catch (error) {
+                    console.error('[TutorHeader] Error archiving chat:', error)
+                  }
+                  setIsTitleDialogOpen(false)
+                  if (onStartNewSession) {
+                    onStartNewSession()
+                  } else {
+                    const params = new URLSearchParams(searchParams.toString())
+                    params.delete('sessionId')
+                    params.delete('chatId')
+                    params.delete('id')
+                    router.push(`/tutor?${params.toString()}`)
+                  }
+                }}
+              >
+                Skip title
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
       {/* Exam Mode Dialog - outside header for portal rendering */}
       {tutorContext.selectedClassId && (
         <ExamModeDialog

@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useMemo, useState } from 'react'
-import { FileText, FolderPlus } from 'lucide-react'
+import { FileText, FolderPlus, Download, Printer } from 'lucide-react'
 import ReactMarkdown, { type Components } from 'react-markdown'
 import ToolPanel from '@/components/ui/tool-panel'
 import SaveToTopicModal from '@/components/study-topics/SaveToTopicModal'
@@ -29,6 +29,7 @@ export default function ExamSheetModal({
   const [isLoading, setIsLoading] = useState(false)
   const [markdown, setMarkdown] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
+  const [isDownloading, setIsDownloading] = useState(false)
   const { summary: activeProfile } = useActiveProfileSummary()
   const [isSaveOpen, setIsSaveOpen] = useState(false)
   const normalizedMarkdown = useMemo(() => {
@@ -182,6 +183,74 @@ export default function ExamSheetModal({
 
   const canSaveToTopic = !!activeProfile && !!profileId && (activeProfile.gradeBand === 'middle' || activeProfile.gradeBand === 'high')
   const sheetText = normalizedMarkdown || markdown || ''
+  const handlePrint = () => {
+    if (!sheetText) return
+    const newWindow = window.open('', '_blank', 'width=900,height=700')
+    if (!newWindow) return
+    newWindow.document.write(`
+      <html>
+        <head>
+          <title>Exam Sheet</title>
+          <style>
+            body { font-family: "Inter", Arial, sans-serif; color: #0f172a; margin: 32px; }
+            h1, h2, h3 { color: #0f172a; margin-top: 20px; }
+            p { line-height: 1.6; }
+            ul { padding-left: 20px; }
+            li { margin-bottom: 6px; }
+          </style>
+        </head>
+        <body>
+          <div>${sheetText.replace(/\n/g, '<br/>')}</div>
+        </body>
+      </html>
+    `)
+    newWindow.document.close()
+    newWindow.focus()
+    newWindow.print()
+  }
+
+  const handleDownload = async () => {
+    if (!sheetText) return
+    setIsDownloading(true)
+    try {
+      const [{ default: html2canvas }, { jsPDF }] = await Promise.all([
+        import('html2canvas'),
+        import('jspdf'),
+      ])
+      const temp = document.createElement('div')
+      temp.style.width = '816px'
+      temp.style.padding = '32px'
+      temp.style.background = '#ffffff'
+      temp.style.color = '#0f172a'
+      temp.style.position = 'fixed'
+      temp.style.left = '-9999px'
+      temp.innerHTML = sheetText.replace(/\n/g, '<br/>')
+      document.body.appendChild(temp)
+      const canvas = await html2canvas(temp, {
+        backgroundColor: '#ffffff',
+        scale: 2,
+        windowWidth: temp.scrollWidth,
+      })
+      const imgData = canvas.toDataURL('image/png')
+      const pdf = new jsPDF({ orientation: 'p', unit: 'pt', format: 'letter' })
+      const pageWidth = pdf.internal.pageSize.getWidth()
+      const imgHeight = (canvas.height * pageWidth) / canvas.width
+      let heightLeft = imgHeight
+      let position = 0
+      pdf.addImage(imgData, 'PNG', 0, position, pageWidth, imgHeight)
+      heightLeft -= pdf.internal.pageSize.getHeight()
+      while (heightLeft > 0) {
+        position = heightLeft - imgHeight
+        pdf.addPage()
+        pdf.addImage(imgData, 'PNG', 0, position, pageWidth, imgHeight)
+        heightLeft -= pdf.internal.pageSize.getHeight()
+      }
+      pdf.save('exam-sheet.pdf')
+      document.body.removeChild(temp)
+    } finally {
+      setIsDownloading(false)
+    }
+  }
 
   return (
     <>
@@ -199,16 +268,35 @@ export default function ExamSheetModal({
           )}
           {!isLoading && !error && markdown && (
             <>
-              {canSaveToTopic && sheetText && (
+              <div className="flex flex-wrap items-center gap-2">
                 <button
                   type="button"
-                  onClick={() => setIsSaveOpen(true)}
-                  className="inline-flex items-center gap-2 rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-xs font-semibold text-emerald-700 hover:bg-emerald-100 transition-colors"
+                  onClick={handlePrint}
+                  className="inline-flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 transition-colors"
                 >
-                  <FolderPlus className="w-4 h-4" />
-                  Save to Study Topics
+                  <Printer className="w-4 h-4" />
+                  Print
                 </button>
-              )}
+                <button
+                  type="button"
+                  onClick={handleDownload}
+                  disabled={isDownloading}
+                  className="inline-flex items-center gap-2 rounded-lg border border-indigo-200 bg-indigo-50 px-3 py-2 text-xs font-semibold text-indigo-700 hover:bg-indigo-100 transition-colors disabled:opacity-60"
+                >
+                  <Download className="w-4 h-4" />
+                  {isDownloading ? 'Preparing...' : 'Download PDF'}
+                </button>
+                {canSaveToTopic && sheetText && (
+                  <button
+                    type="button"
+                    onClick={() => setIsSaveOpen(true)}
+                    className="inline-flex items-center gap-2 rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-xs font-semibold text-emerald-700 hover:bg-emerald-100 transition-colors"
+                  >
+                    <FolderPlus className="w-4 h-4" />
+                    Save to Study Topics
+                  </button>
+                )}
+              </div>
               {topic && (
                 <div className="inline-flex items-center gap-2 rounded-full border border-indigo-100 bg-indigo-50 px-3 py-1 text-xs font-medium text-indigo-800">
                   Topic: {topic}

@@ -12,6 +12,7 @@ import GradeBand35ReadingLayout from '@/components/elementary/GradeBand35Reading
 import GradeBand35HomeworkLayout from '@/components/elementary/GradeBand35HomeworkLayout'
 
 type TutorLandingMode = 'tutor' | 'spelling' | 'reading' | 'homework'
+type TutorTool = 'study-map' | 'practice' | 'exam' | 'writing'
 
 interface TutorLandingProps {
   onStartSession: (message: string) => Promise<void>
@@ -21,6 +22,7 @@ interface TutorLandingProps {
   selectedClass?: { code: string; name: string } | null // Class info for welcome message
   gradeBand?: 'elementary' | 'middle' | 'high'
   mode?: TutorLandingMode
+  tool?: TutorTool | null
   profileId?: string | null
   sessionActive?: boolean
 }
@@ -107,6 +109,49 @@ const MODE_CONFIG: Record<Exclude<TutorLandingMode, 'tutor'>, {
   },
 }
 
+const TOOL_CONFIG: Record<TutorTool, {
+  heading: string
+  subtext: string
+  bullets: string[]
+}> = {
+  'study-map': {
+    heading: 'Study Map: build a plan from your materials.',
+    subtext: 'Share what you are studying and I will turn it into a step-by-step path.',
+    bullets: [
+      'Turn a unit into a clear study plan.',
+      'Break big topics into checkpoints.',
+      'Highlight what to study first and why.',
+    ],
+  },
+  practice: {
+    heading: 'Practice Mode: sharpen skills with guided sets.',
+    subtext: 'Tell me the topic and I will build practice from easy to challenge.',
+    bullets: [
+      'Generate practice questions by difficulty.',
+      'Explain misses step-by-step.',
+      'Track what to review next.',
+    ],
+  },
+  exam: {
+    heading: 'Exam Sheets: turn sessions into a one-page review.',
+    subtext: 'I can summarize your session into a printable study sheet.',
+    bullets: [
+      'Summarize key concepts and formulas.',
+      'Create quick review checklists.',
+      'Build exam-ready prompt sets.',
+    ],
+  },
+  writing: {
+    heading: 'Essay Architect: build strong essays fast.',
+    subtext: 'Get help with thesis, outline, evidence, and revisions.',
+    bullets: [
+      'Craft a clear thesis statement.',
+      'Outline paragraphs with evidence.',
+      'Polish drafts with targeted feedback.',
+    ],
+  },
+}
+
 export default function TutorLanding({ 
   onStartSession,
   attachedFiles = [],
@@ -115,6 +160,7 @@ export default function TutorLanding({
   selectedClass,
   gradeBand,
   mode = 'tutor',
+  tool = null,
   profileId = null,
   sessionActive = false,
 }: TutorLandingProps) {
@@ -135,6 +181,9 @@ export default function TutorLanding({
   const getMainHeading = () => {
     if (isGeneralTutor && mode !== 'tutor') {
       return MODE_CONFIG[mode].heading
+    }
+    if (isGeneralTutor && tool) {
+      return TOOL_CONFIG[tool].heading
     }
     if (isGeneralTutor) {
       return `${getGreeting()} I'm your Tutor — ready to help you learn!`
@@ -250,6 +299,9 @@ export default function TutorLanding({
     if (isGeneralTutor && mode !== 'tutor') {
       return MODE_CONFIG[mode].subtext
     }
+    if (isGeneralTutor && tool) {
+      return TOOL_CONFIG[tool].subtext
+    }
     if (isGeneralTutor) {
       return "I can help with coursework, practice questions, study strategies, and understanding concepts. Ask me anything!"
     }
@@ -262,6 +314,27 @@ export default function TutorLanding({
     }
     if (!isGeneralTutor) {
       return null
+    }
+    if (tool) {
+      return (
+        <div className="mt-6 p-6 bg-gradient-to-br from-emerald-50 to-slate-50 border border-emerald-200 rounded-xl max-w-2xl">
+          <h3 className="text-lg font-semibold text-slate-900 mb-3 flex items-center gap-2">
+            <span className="text-emerald-600">💡</span>
+            What I can do in {TOOL_CONFIG[tool].heading.split(':')[0]}:
+          </h3>
+          <ul className="space-y-2 text-sm text-slate-700">
+            {TOOL_CONFIG[tool].bullets.map((item) => (
+              <li key={item} className="flex items-start gap-2">
+                <span className="text-emerald-600 mt-0.5">•</span>
+                <span>{item}</span>
+              </li>
+            ))}
+          </ul>
+          <p className="mt-4 text-xs text-slate-600 italic">
+            💡 <strong>Tip:</strong> Share your topic or upload materials to get a stronger plan.
+          </p>
+        </div>
+      )
     }
     return (
       <div className="mt-6 p-6 bg-gradient-to-br from-indigo-50 to-sky-50 border border-indigo-200 rounded-xl max-w-2xl">

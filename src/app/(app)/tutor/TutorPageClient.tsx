@@ -67,7 +67,6 @@ function TutorPageContent() {
   }, [entryMode])
   const isEntryMode = !!entryMode
   const isSpellingEntryMode = entryMode === 'spelling'
-  const toolNeedsFreshChat = !!toolParam && ['study-map', 'practice', 'exam'].includes(toolParam)
   
   // Note: classId sync is handled by TutorContext itself (see TutorContext.tsx useEffect)
   // No need to sync here - it would create infinite loops
@@ -303,9 +302,6 @@ function TutorPageContent() {
       // Clear resolved session to force fresh start
       setResolvedChatId(null)
       setAttachedFiles([]) // Clear attached files when context changes
-      if (currentTool !== prevToolRef.current) {
-        skipAutoResumeRef.current = true
-      }
       
       // Update refs
       prevTopicIdRef.current = currentTopicId
@@ -375,8 +371,38 @@ function TutorPageContent() {
         return
       }
 
-      // PRIORITY 0.75: If tool requires fresh session, start fresh (don't auto-resume)
-      if (toolNeedsFreshChat && !sessionIdParam && !intentParam) {
+      // PRIORITY 0.75: If tool is present, resume last chat for that tool (unless new chat intent)
+      if (toolParam && !sessionIdParam && !intentParam) {
+        if (skipAutoResumeRef.current) {
+          console.log('[Tutor] Skipping tool resume - user requested new chat')
+          setResolvedChatId(null)
+          setIsResolving(false)
+          isResolvingRef.current = false
+          skipAutoResumeRef.current = false
+          return
+        }
+
+        try {
+          const listUrl = tutorContext.selectedClassId
+            ? `/api/chats/list?classId=${tutorContext.selectedClassId}`
+            : '/api/chats/list?classId=null'
+          const response = await fetch(listUrl, { credentials: 'include' })
+          if (response.ok) {
+            const data = await response.json()
+            const chats = data.chats || []
+            const matching = chats.filter((chat: any) => chat.metadata?.tool === toolParam)
+            if (matching.length > 0) {
+              const mostRecent = matching[0]
+              lastResolvedParamsRef.current = `${intentParam || ''}-${mostRecent.id}-${tutorContext.selectedClassId || ''}-${toolParam}`
+              isResolvingRef.current = false
+              router.replace(buildTutorUrl(mostRecent.id))
+              return
+            }
+          }
+        } catch (error) {
+          console.error('[Tutor] Tool resume error:', error)
+        }
+
         setResolvedChatId(null)
         setIsResolving(false)
         isResolvingRef.current = false
@@ -647,14 +673,6 @@ function TutorPageContent() {
         return
       }
 
-      if (toolNeedsFreshChat) {
-        console.log('[Tutor] Tool requires fresh chat, skipping auto-resume:', toolParam)
-        setResolvedChatId(null)
-        setIsResolving(false)
-        isResolvingRef.current = false
-        return
-      }
-      
       try {
         console.log('[Tutor] No session specified, attempting auto-resume for classId:', tutorContext.selectedClassId || 'General Tutor')
         
@@ -859,6 +877,7 @@ function TutorPageContent() {
                   selectedClass={tutorContext.selectedClass}
                   gradeBand={activeProfileSummary?.gradeBand}
                   mode={entryMode ?? 'tutor'}
+                  tool={toolParam as 'study-map' | 'practice' | 'exam' | 'writing' | null}
                   profileId={activeProfileSummary?.id ?? null}
                   sessionActive={showSession}
                 />
@@ -909,6 +928,7 @@ function TutorPageContent() {
                   selectedClass={tutorContext.selectedClass}
                   gradeBand={activeProfileSummary?.gradeBand}
                   mode={entryMode ?? 'tutor'}
+                  tool={toolParam as 'study-map' | 'practice' | 'exam' | 'writing' | null}
                   profileId={activeProfileSummary?.id ?? null}
                 />
               </div>
