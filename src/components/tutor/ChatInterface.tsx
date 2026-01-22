@@ -130,25 +130,6 @@ export default function ChatInterface({
         onSubmit={handleSubmit}
         className="rounded-full bg-white shadow-lg border border-slate-200 px-4 py-2 flex items-center gap-3"
       >
-        {/* Calculator Toggle */}
-        <button
-          type="button"
-          onClick={(e) => {
-            e.preventDefault()
-            e.stopPropagation()
-            setIsCalculatorOpen(!isCalculatorOpen)
-          }}
-          className={`rounded-full p-2 transition-all duration-200 ${
-            isCalculatorOpen
-              ? 'bg-emerald-100 text-emerald-700'
-              : 'text-slate-400 hover:bg-slate-50 hover:text-emerald-600'
-          }`}
-          aria-label="Toggle calculator"
-          aria-pressed={isCalculatorOpen}
-          title="Calculator"
-        >
-          <Calculator className="h-5 w-5" />
-        </button>
         {/* Paperclip */}
         <button 
           type="button"
@@ -174,6 +155,26 @@ export default function ChatInterface({
             }
           }}
         />
+
+        {/* Calculator Toggle */}
+        <button
+          type="button"
+          onClick={(e) => {
+            e.preventDefault()
+            e.stopPropagation()
+            setIsCalculatorOpen(!isCalculatorOpen)
+          }}
+          className={`rounded-full p-2 transition-all duration-200 ${
+            isCalculatorOpen
+              ? 'bg-emerald-100 text-emerald-700'
+              : 'text-slate-400 hover:bg-slate-50 hover:text-emerald-600'
+          }`}
+          aria-label="Toggle calculator"
+          aria-pressed={isCalculatorOpen}
+          title="Calculator"
+        >
+          <Calculator className="h-5 w-5" />
+        </button>
 
         {/* Send Button - Circular with gradient */}
         <button 
