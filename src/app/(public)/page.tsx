@@ -54,8 +54,34 @@ export default function HomePage() {
     }
   ]
 
+  const faqSchema = {
+    '@context': 'https://schema.org',
+    '@type': 'FAQPage',
+    mainEntity: faqItems.map((item) => ({
+      '@type': 'Question',
+      name: item.question,
+      acceptedAnswer: {
+        '@type': 'Answer',
+        text: item.answer,
+      },
+    })),
+  }
+
+  const orgSchema = {
+    '@context': 'https://schema.org',
+    '@type': 'Organization',
+    name: 'ForgeStudy',
+    url: 'https://www.forgestudyai.com',
+  }
+
   return (
     <div className="min-h-screen bg-white">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify([orgSchema, faqSchema]),
+        }}
+      />
       {/* Hero Section */}
       <section className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-12 sm:pt-20 pb-16 sm:pb-24 bg-gradient-to-br from-white via-slate-50/30 to-white">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-16 items-center">
@@ -66,10 +92,10 @@ export default function HomePage() {
               <br className="hidden sm:block" /> in minutes.
             </h1>
             <p className="text-lg sm:text-xl md:text-2xl text-slate-700 mb-4 leading-relaxed max-w-2xl mx-auto lg:mx-0 font-medium">
-              ForgeStudy is the study companion for Grades 6–12 that maps what to learn, builds a path, and keeps students practicing until they can prove it.
+              ForgeStudy is the AI study companion for Grades 6–12 that maps what to learn, builds a path, and keeps students practicing until they can prove it.
             </p>
             <p className="text-sm sm:text-base text-slate-500 mb-8 leading-relaxed max-w-2xl mx-auto lg:mx-0">
-              Map → Path → Practice → Prove → Review. Built for real learning, built for families.
+              Map → Path → Practice → Prove → Review. Homework help, study guides, and test prep that build confident, independent learners.
             </p>
             
             {/* CTAs */}
@@ -185,6 +211,9 @@ export default function HomePage() {
             <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold text-slate-900 mb-4 tracking-tight">
               Why ForgeStudy?
             </h2>
+            <p className="text-base sm:text-lg text-slate-600 max-w-3xl mx-auto">
+              Built for Grades 6–12 study skills, homework help, and exam prep — with AI guidance that teaches thinking, not copying.
+            </p>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 sm:gap-8">

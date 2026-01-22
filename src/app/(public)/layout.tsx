@@ -3,14 +3,50 @@ import PublicLayout from '@/components/layout/PublicLayout'
 import { AppShell } from '@/components/layout/AppShell'
 
 export const metadata: Metadata = {
-  title: 'ForgeStudy | Study help for Grades 6–12',
+  metadataBase: new URL('https://www.forgestudyai.com'),
+  title: 'ForgeStudy | AI Study Help for Grades 6–12',
   description:
-    'ForgeStudy helps Grades 6–12 students map what to learn, practice with confidence, and prove mastery. Built for families and real learning.',
+    'ForgeStudy is an AI study companion for Grades 6–12 with study maps, practice, and exam prep. Built for families who want confident, independent learners.',
+  alternates: {
+    canonical: '/',
+  },
+  keywords: [
+    'AI study help',
+    'homework help',
+    'study guide',
+    'test prep',
+    'middle school tutoring',
+    'high school tutoring',
+    'study maps',
+    'practice questions',
+    'exam prep',
+    'Grades 6-12',
+  ],
+  robots: {
+    index: true,
+    follow: true,
+  },
   openGraph: {
-    title: 'ForgeStudy | Study help for Grades 6–12',
+    title: 'ForgeStudy | AI Study Help for Grades 6–12',
     description:
-      'ForgeStudy helps Grades 6–12 students map what to learn, practice with confidence, and prove mastery. Built for families and real learning.',
+      'ForgeStudy is an AI study companion for Grades 6–12 with study maps, practice, and exam prep. Built for families who want confident, independent learners.',
     type: 'website',
+    url: '/',
+    images: [
+      {
+        url: '/Hero1.png',
+        width: 1200,
+        height: 630,
+        alt: 'ForgeStudy study workflow preview',
+      },
+    ],
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'ForgeStudy | AI Study Help for Grades 6–12',
+    description:
+      'ForgeStudy is an AI study companion for Grades 6–12 with study maps, practice, and exam prep.',
+    images: ['/Hero1.png'],
   },
 }
 
