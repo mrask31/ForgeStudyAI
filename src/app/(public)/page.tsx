@@ -108,7 +108,7 @@ export default function HomePage() {
 
           {/* Right: Product Preview Collage */}
           <div className="relative">
-            <div className="relative w-full">
+            <div className="relative w-full overflow-hidden sm:overflow-visible">
               <div className="relative aspect-[4/3] overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-2xl">
                 <Image
                   src="/Hero1.png"
@@ -118,7 +118,7 @@ export default function HomePage() {
                   priority
                 />
               </div>
-              <div className="absolute -bottom-8 -right-6 w-[58%] overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-xl hidden sm:block">
+              <div className="absolute bottom-2 right-2 w-[62%] translate-x-1 translate-y-2 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-xl sm:-bottom-8 sm:-right-6 sm:w-[58%] sm:translate-x-0 sm:translate-y-0 hidden sm:block">
                 <Image
                   src="/Hero2.png"
                   alt="ForgeStudy study tools preview"
@@ -128,7 +128,7 @@ export default function HomePage() {
                   priority
                 />
               </div>
-              <div className="absolute -bottom-6 -right-3 w-[62%] overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-xl sm:hidden">
+              <div className="absolute bottom-2 right-2 w-[68%] translate-x-1 translate-y-2 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-xl sm:hidden">
                 <Image
                   src="/Hero2.png"
                   alt="ForgeStudy study tools preview"

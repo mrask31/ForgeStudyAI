@@ -128,7 +128,7 @@ export default function ChatInterface({
       {/* Chat Input Dock */}
       <form 
         onSubmit={handleSubmit}
-        className="rounded-full bg-white shadow-lg border border-slate-200 px-4 py-2 flex items-center gap-3"
+        className="rounded-full bg-white shadow-lg border border-slate-200 px-3 sm:px-4 py-2 flex items-center gap-2 sm:gap-3"
       >
         {/* Paperclip */}
         <button 
@@ -164,7 +164,7 @@ export default function ChatInterface({
             e.stopPropagation()
             setIsCalculatorOpen(!isCalculatorOpen)
           }}
-          className={`rounded-full p-2 transition-all duration-200 ${
+          className={`rounded-full p-1.5 sm:p-2 transition-all duration-200 ${
             isCalculatorOpen
               ? 'bg-emerald-100 text-emerald-700'
               : 'text-slate-400 hover:bg-slate-50 hover:text-emerald-600'
