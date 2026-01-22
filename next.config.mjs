@@ -10,6 +10,16 @@ const nextConfig = {
     eslint: {
         ignoreDuringBuilds: true,
     },
+    async redirects() {
+        return [
+            {
+                source: "/:path*",
+                has: [{ type: "host", value: "forgestudyai.com" }],
+                destination: "https://www.forgestudyai.com/:path*",
+                permanent: true,
+            },
+        ];
+    },
 };
 
 export default nextConfig;
