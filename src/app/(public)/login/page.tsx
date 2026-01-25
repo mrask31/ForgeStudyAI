@@ -1,5 +1,8 @@
 'use client'
 
+export const dynamic = 'force-dynamic'
+export const revalidate = 0
+
 import { useState, useEffect, useMemo } from 'react'
 import { createBrowserClient } from '@supabase/ssr'
 import { useRouter } from 'next/navigation'
@@ -38,6 +41,89 @@ export default function LoginPage() {
 
     return createBrowserClient(supabaseUrl, supabaseAnonKey)
   }, [])
+
+  const debugAuth = process.env.NEXT_PUBLIC_DEBUG_AUTH === 'true'
+  const debugLog = (...args: any[]) => {
+    if (debugAuth) {
+      console.debug('[AuthDebug]', ...args)
+    }
+  }
+
+  const clearSupabaseStorage = () => {
+    if (typeof window === 'undefined') return
+    const clearStore = (store: Storage) => {
+      const keysToRemove: string[] = []
+      for (let i = 0; i < store.length; i += 1) {
+        const key = store.key(i)
+        if (!key) continue
+        if (key.toLowerCase().includes('supabase') || key.toLowerCase().includes('sb-')) {
+          keysToRemove.push(key)
+        }
+      }
+      keysToRemove.forEach((key) => store.removeItem(key))
+    }
+    try {
+      clearStore(window.localStorage)
+      clearStore(window.sessionStorage)
+    } catch (error) {
+      debugLog('storage-clear-error', error)
+    }
+
+    try {
+      document.cookie.split(';').forEach((cookie) => {
+        const name = cookie.split('=')[0]?.trim()
+        if (!name) return
+        const lower = name.toLowerCase()
+        if (lower.includes('supabase') || lower.startsWith('sb-')) {
+          document.cookie = `${name}=; Max-Age=0; path=/`
+        }
+      })
+    } catch (error) {
+      debugLog('cookie-clear-error', error)
+    }
+  }
+
+  const resetSession = () => {
+    clearSupabaseStorage()
+    if (typeof window !== 'undefined') {
+      window.location.assign('/login')
+    }
+  }
+
+  const isRecoverableAuthError = (err: unknown) => {
+    const message =
+      typeof err === 'string'
+        ? err
+        : err instanceof Error
+          ? err.message
+          : (err as any)?.message || ''
+    const normalized = message.toLowerCase()
+    return [
+      'invalid',
+      'expired',
+      'session',
+      'refresh token',
+      'jwt',
+      'storage',
+      'localstorage',
+      'auth session missing',
+    ].some((token) => normalized.includes(token))
+  }
+
+  const signInWithTimeout = async () => {
+    const signInPromise = supabase.auth.signInWithPassword({
+      email: email.trim(),
+      password,
+    })
+
+    const timeoutPromise = new Promise<never>((_, reject) => {
+      setTimeout(() => {
+        reject(new Error('Sign in timed out. Please try again.'))
+      }, 12000)
+    })
+
+    return Promise.race([signInPromise, timeoutPromise])
+  }
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -102,58 +188,47 @@ export default function LoginPage() {
     setLoading(true)
     setMessage(null)
     try {
-      console.log('[Login] Attempting to sign in...', { email: email.trim() })
+      debugLog('sign-in-start', { email: email.trim() })
 
-      const signInPromise = supabase.auth.signInWithPassword({
-        email: email.trim(),
-        password,
-      })
-
-      const timeoutPromise = new Promise<never>((_, reject) => {
-        setTimeout(() => {
-          reject(
-            new Error(
-              `Login timed out. Please check your connection or Supabase URL (${supabaseUrl || 'missing'}).`
-            )
-          )
-        }, 10000)
-      })
-
-      const { data, error } = await Promise.race([signInPromise, timeoutPromise])
-
-      // On error: Set isLoading back to false, store error state, show human-readable message
-      if (error) {
-        console.error('[Login] Supabase sign-in error:', error)
-        setMessage({ 
-          text: error.message || 'Login failed. Please check your email and password.', 
-          type: 'error' 
-        })
-        return // Exit early, finally block will set loading to false
+      const attemptSignIn = async (attempt: number): Promise<any> => {
+        try {
+          const { data, error } = (await signInWithTimeout()) as any
+          debugLog('sign-in-response', { attempt, hasUser: Boolean(data?.user), error })
+          if (error) {
+            throw error
+          }
+          if (!data || !data.user) {
+            throw new Error('Login failed: No user data returned. Please try again.')
+          }
+          return data
+        } catch (err) {
+          const isTimeout = err instanceof Error && err.message.toLowerCase().includes('timed out')
+          debugLog('sign-in-error', { attempt, error: err })
+          if (!isTimeout && isRecoverableAuthError(err) && attempt === 0) {
+            debugLog('sign-in-retry-after-clear')
+            clearSupabaseStorage()
+            return attemptSignIn(1)
+          }
+          throw err
+        }
       }
 
-      if (!data || !data.user) {
-        console.error('[Login] No user data returned from sign-in')
-        setMessage({ 
-          text: 'Login failed: No user data returned. Please try again.', 
-          type: 'error' 
-        })
-        return // Exit early, finally block will set loading to false
-      }
+      await attemptSignIn(0)
 
-      console.log('[Login] Sign in successful, redirecting', { redirect })
+      debugLog('sign-in-success', { redirect })
       router.replace(redirect || '/post-login')
     } catch (err) {
       // In catch: console.error for debugging, show user-friendly error
-      console.error('[Login] Unexpected login error:', err)
-      const errorMessage = err instanceof Error 
-        ? err.message 
+      debugLog('sign-in-final-error', err)
+      const errorMessage = err instanceof Error
+        ? err.message
         : 'Something went wrong. Please try again.'
       setMessage({ 
         text: errorMessage, 
         type: 'error' 
       })
     } finally {
-      console.log('[Login] Login flow complete, stopping loader')
+      debugLog('sign-in-complete')
       setLoading(false)
     }
   }
