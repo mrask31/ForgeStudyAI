@@ -68,6 +68,10 @@ export default function ChatInterface({
     
     const message = inputValue.trim()
     
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new CustomEvent('tutor-scroll-to-bottom', { detail: { behavior: 'smooth' } }))
+    }
+
     // Call onSend and only clear input on success
     try {
       await onSend(message)

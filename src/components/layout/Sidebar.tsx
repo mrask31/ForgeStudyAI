@@ -13,12 +13,14 @@ const NAV_ITEMS_BY_BAND = {
     { label: 'Study Hub', href: '/app/middle', icon: Sparkles },
     { label: 'Uploads', href: '/sources', icon: FileText },
     { label: 'Progress', href: '/readiness', icon: Activity },
+    { label: 'How it Works', href: '/help', icon: Shield },
     { label: 'Settings', href: '/settings', icon: Settings },
   ],
   high: [
     { label: 'Study Hub', href: '/app/high', icon: Sparkles },
     { label: 'Uploads', href: '/sources', icon: FileText },
     { label: 'Progress', href: '/readiness', icon: Activity },
+    { label: 'How it Works', href: '/help', icon: Shield },
     { label: 'Settings', href: '/settings', icon: Settings },
   ],
   default: [
@@ -27,6 +29,7 @@ const NAV_ITEMS_BY_BAND = {
     { label: 'Sources', href: '/sources', icon: FileText },
     { label: 'Dashboard', href: '/readiness', icon: Activity },
     { label: 'Vocabulary Bank', href: '/dictionary', icon: BookOpen },
+    { label: 'How it Works', href: '/help', icon: Shield },
     { label: 'Settings', href: '/settings', icon: Settings },
   ],
 } as const

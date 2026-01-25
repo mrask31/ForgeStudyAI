@@ -592,6 +592,24 @@ export default function TutorSession({
     }
   }, [])
 
+  // Force scroll to bottom when a send event fires
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+    const handleForceScroll = (event: Event) => {
+      const container = scrollContainerRef.current
+      if (!container) return
+      const behavior =
+        (event as CustomEvent<{ behavior?: ScrollBehavior }>).detail?.behavior || 'smooth'
+      shouldAutoScrollRef.current = true
+      container.scrollTo({ top: container.scrollHeight, behavior })
+    }
+
+    window.addEventListener('tutor-scroll-to-bottom', handleForceScroll as EventListener)
+    return () => {
+      window.removeEventListener('tutor-scroll-to-bottom', handleForceScroll as EventListener)
+    }
+  }, [])
+
   const handleScrollToBottom = () => {
     if (!scrollContainerRef.current) return
     shouldAutoScrollRef.current = true
