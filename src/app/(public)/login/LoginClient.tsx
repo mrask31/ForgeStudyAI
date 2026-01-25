@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useMemo } from 'react'
+import { useState, useEffect, useMemo, useRef } from 'react'
 import { createBrowserClient } from '@supabase/ssr'
 import { useRouter } from 'next/navigation'
 import { Mail, Lock, ArrowRight, Loader2, MessageSquare, BookOpen, GraduationCap, Shield } from 'lucide-react'
@@ -13,6 +13,7 @@ export default function LoginClient() {
   const [message, setMessage] = useState<{ text: string; type: 'error' | 'success' } | null>(null)
   const [redirect, setRedirect] = useState('/post-login')
   const [showVerificationSuccess, setShowVerificationSuccess] = useState(false)
+  const hasClearedStaleSession = useRef(false)
   
   const router = useRouter()
 
@@ -123,6 +124,39 @@ export default function LoginClient() {
   }
 
   useEffect(() => {
+    const handlePageShow = (event: PageTransitionEvent) => {
+      if (event.persisted) {
+        clearSupabaseStorage()
+        window.location.reload()
+      }
+    }
+    window.addEventListener('pageshow', handlePageShow)
+    return () => {
+      window.removeEventListener('pageshow', handlePageShow)
+    }
+  }, [])
+
+  useEffect(() => {
+    const isBackForward =
+      typeof performance !== 'undefined' &&
+      performance.getEntriesByType('navigation')[0] instanceof PerformanceNavigationTiming &&
+      (performance.getEntriesByType('navigation')[0] as PerformanceNavigationTiming).type === 'back_forward'
+
+    if (isBackForward) {
+      clearSupabaseStorage()
+      window.location.reload()
+    }
+  }, [])
+
+  const hasSupabaseCookie = () => {
+    if (typeof document === 'undefined') return false
+    return document.cookie.split(';').some((cookie) => {
+      const name = cookie.split('=')[0]?.trim().toLowerCase() || ''
+      return name.startsWith('sb-') || name.includes('supabase')
+    })
+  }
+
+  useEffect(() => {
     if (typeof window !== 'undefined') {
       const params = new URLSearchParams(window.location.search)
       const redirectParam = params.get('redirect')
@@ -171,6 +205,12 @@ export default function LoginClient() {
       if (session) {
         console.log('[Login] Session exists, redirecting to /post-login')
         router.replace('/post-login')
+        return
+      }
+
+      if (!hasClearedStaleSession.current && hasSupabaseCookie()) {
+        hasClearedStaleSession.current = true
+        clearSupabaseStorage()
       }
     }
 
@@ -194,15 +234,15 @@ export default function LoginClient() {
           if (error) {
             throw error
           }
-          if (!data || !data.user) {
-            throw new Error('Login failed: No user data returned. Please try again.')
+          if (!data || !data.user || !data.session) {
+            throw new Error('Login failed: No session returned. Please try again.')
           }
           return data
         } catch (err) {
           const isTimeout = err instanceof Error && err.message.toLowerCase().includes('timed out')
           debugLog('sign-in-error', { attempt, error: err })
-          if (!isTimeout && isRecoverableAuthError(err) && attempt === 0) {
-            debugLog('sign-in-retry-after-clear')
+          if ((isTimeout || isRecoverableAuthError(err)) && attempt === 0) {
+            debugLog('sign-in-retry-after-clear', { reason: isTimeout ? 'timeout' : 'recoverable' })
             clearSupabaseStorage()
             return attemptSignIn(1)
           }
