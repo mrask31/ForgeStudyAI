@@ -88,48 +88,65 @@ const publicRoutes = [
   '/reset',
   '/reset-password',
   '/auth/callback',
+  '/auth/confirm',
+  '/auth/reset',
   '/privacy',
   '/terms',
-  '/billing/payment-required',
-  '/checkout',
   '/middle',
-  '/high'
+  '/high',
+  '/elementary',
 ]
+const isPublicRoute = publicRoutes.includes(pathname) || pathname.startsWith('/auth/')
+```
+
+### Billing/Checkout Routes (Always Accessible)
+```typescript
+const billingRoutes = ['/billing', '/checkout']
+const isBillingRoute = billingRoutes.some(route => pathname.startsWith(route))
+```
+
+### Auth-Only Routes (Auth Required, NO Subscription Check)
+```typescript
+const authOnlyRoutes = [
+  '/profiles',
+  '/profiles/',
+  '/post-login',
+  '/p/',
+]
+const isAuthOnlyRoute = authOnlyRoutes.some(route => 
+  route.endsWith('/') ? pathname.startsWith(route) : pathname === route
+)
 ```
 
 ### Protected Routes (Auth + Subscription Required)
 ```typescript
-const protectedRoutes = [
-  '/clinical-desk',
-  '/tutor',
-  '/binder',
-  '/readiness',
-  '/settings',
-  '/classes',
-  '/profiles',
-  '/post-login',
-  '/p/',
-  '/sources',
-  '/app/middle',
-  '/app/high'
-]
+const isProtectedRoute = pathname.startsWith('/app/') || 
+                        pathname.startsWith('/tutor') ||
+                        pathname.startsWith('/clinical-desk') ||
+                        pathname.startsWith('/binder') ||
+                        pathname.startsWith('/readiness') ||
+                        pathname.startsWith('/settings') ||
+                        pathname.startsWith('/classes') ||
+                        pathname.startsWith('/sources') ||
+                        pathname.startsWith('/dictionary') ||
+                        pathname.startsWith('/help') ||
+                        pathname.startsWith('/library') ||
+                        pathname.startsWith('/study-topics') ||
+                        pathname.startsWith('/parent') ||
+                        pathname.startsWith('/proof-history')
 ```
 
-### Auth-Only Routes (Auth Required, Subscription Bypassed)
+### Middleware Logic Flow
 ```typescript
-const isAuthOnlyRoute = 
-  pathname === '/profiles' || 
-  pathname.startsWith('/profiles/') || 
-  pathname === '/post-login' ||
-  pathname.startsWith('/p/')
-```
-
-### Billing Routes (Always Accessible)
-```typescript
-const billingRoutes = [
-  '/billing',
-  '/checkout'
-]
+// 1. Check if route is public → allow access
+// 2. Check if route is billing → allow access
+// 3. Check if user is authenticated → if not, redirect to /login
+// 4. Check if route is auth-only → allow access (skip subscription check)
+// 5. Check if route is protected:
+//    a. Check subscription status using hasSubscriptionAccess()
+//    b. If no access → redirect to /checkout
+//    c. If has access → check profile creation guardrails
+//    d. Allow access
 ```
 
 ---
@@ -244,6 +261,67 @@ CREATE INDEX idx_profiles_stripe_subscription_id ON profiles(stripe_subscription
 3. customer.subscription.deleted:
    - Updates subscription_status to 'canceled'
 ```
+
+---
+
+## Hardening Pass Completion Status
+
+### ✅ Completed Changes
+
+1. **Middleware Refactoring**
+   - ✅ Consolidated duplicate subscription check logic
+   - ✅ Changed redirect from `/billing/payment-required` to `/checkout`
+   - ✅ Separated subscription check from profile creation guardrails
+   - ✅ Added clear section comments for maintainability
+   - ✅ Maintained all existing functionality
+
+2. **Billing Success Page Enhancement**
+   - ✅ Added subscription status verification before redirect
+   - ✅ Polls subscription status until webhook completes
+   - ✅ Prevents redirect to `/profiles/new` before subscription is active
+   - ✅ Handles errors gracefully with fallback timeout
+
+3. **Auth Callback Resilience**
+   - ✅ Added runtime fallback for onboarding fields
+   - ✅ Retries profile upsert without onboarding fields if columns don't exist
+   - ✅ Prevents auth flow breakage if migration not run
+   - ✅ Logs warnings for debugging
+
+4. **Documentation**
+   - ✅ Created comprehensive `SECURITY_TEST_CHECKLIST.md` (100+ tests)
+   - ✅ Updated `FORGENURSING_AUTH_MIGRATION_SUMMARY.md` with final logic
+   - ✅ Documented all route categories and middleware flow
+
+### 🎯 Verification Checklist
+
+- ✅ No duplicate subscription check code in middleware
+- ✅ All redirects use `/checkout` (not `/billing/payment-required`)
+- ✅ Subscription check happens before profile guardrails
+- ✅ Billing success page verifies subscription before redirect
+- ✅ Auth callback handles missing onboarding columns gracefully
+- ✅ Comprehensive test checklist created for manual testing
+
+### 📋 Next Steps
+
+1. **Run Database Migration**
+   ```sql
+   -- Execute supabase_profiles_onboarding_fields.sql in Supabase SQL Editor
+   ```
+
+2. **Manual Testing**
+   - Follow `SECURITY_TEST_CHECKLIST.md` for comprehensive testing
+   - Focus on redirect loop prevention tests
+   - Verify subscription gating works correctly
+
+3. **Deploy to Staging**
+   - Test with real Stripe test mode
+   - Verify webhook delivery and timing
+   - Monitor for any redirect loops
+
+4. **Deploy to Production**
+   - Monitor error logs closely
+   - Check Stripe webhook logs
+   - Verify no user-facing issues
 
 ---
 

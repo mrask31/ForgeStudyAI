@@ -1,249 +1,445 @@
-# Multi-Tenant Security Test Checklist
+# ForgeStudy Auth & Subscription Flow - Security Test Checklist
 
-## CRITICAL: Test Data Isolation Between Users
-
-This checklist verifies that documents are properly isolated between user accounts. Run these tests after deploying RLS policies and code changes.
-
----
-
-## Pre-Test Setup
-
-1. **Create Two Test Accounts**
-   - Account A: `test-user-a@example.com`
-   - Account B: `test-user-b@example.com`
-   - Use different browsers or incognito windows to maintain separate sessions
-
-2. **Verify Database State**
-   - Run `supabase_documents_rls_policies.sql` in Supabase SQL Editor
-   - Confirm RLS is enabled: `SELECT tablename, rowsecurity FROM pg_tables WHERE tablename = 'documents';`
-   - Should return `rowsecurity = true`
+## Overview
+This checklist ensures the auth and subscription flow is secure, prevents redirect loops, and properly gates access to protected routes.
 
 ---
 
-## Test 1: Document Upload Isolation
+## Test Environment Setup
 
-**Goal**: Verify users can only see their own uploaded documents
+### Prerequisites
+- [ ] Local development environment running
+- [ ] Supabase project configured
+- [ ] Stripe test mode configured
+- [ ] Environment variables set:
+  - `NEXT_PUBLIC_SUPABASE_URL`
+  - `NEXT_PUBLIC_SUPABASE_ANON_KEY`
+  - `SUPABASE_SERVICE_ROLE_KEY`
+  - `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY`
+  - `STRIPE_SECRET_KEY`
+  - `STRIPE_WEBHOOK_SECRET`
+  - `NEXT_PUBLIC_APP_URL`
 
-### Steps:
-1. **As Account A:**
-   - Sign in to the application
-   - Navigate to `/binder`
-   - Upload a PDF file (e.g., `test-doc-a.pdf`)
-   - Verify the file appears in the binder list
-   - Note the filename
-
-2. **As Account B:**
-   - Sign in to the application (different browser/incognito)
-   - Navigate to `/binder`
-   - **EXPECTED**: `test-doc-a.pdf` should NOT appear in the list
-   - Upload a different PDF (e.g., `test-doc-b.pdf`)
-   - Verify only `test-doc-b.pdf` appears
-
-3. **Verify via Direct Database Query (Optional - Admin Only):**
-   ```sql
-   -- As Account A's user_id
-   SET request.jwt.claim.sub = 'account-a-user-id';
-   SELECT metadata->>'filename' FROM documents;
-   -- Should only return Account A's files
-   
-   -- As Account B's user_id
-   SET request.jwt.claim.sub = 'account-b-user-id';
-   SELECT metadata->>'filename' FROM documents;
-   -- Should only return Account B's files
-   ```
-
-**✅ PASS**: Account B cannot see Account A's documents
+### Test Accounts
+- [ ] Create test account 1: `test1@example.com` (for full flow)
+- [ ] Create test account 2: `test2@example.com` (for no-subscription flow)
+- [ ] Create test account 3: `test3@example.com` (for expired subscription)
 
 ---
 
-## Test 2: Batch Deletion Isolation
+## 1. Public Routes (No Auth Required)
 
-**Goal**: Verify users cannot delete other users' documents
+### Test 1.1: Landing Page
+- [ ] Visit `/` without auth
+- [ ] Page loads successfully
+- [ ] No redirect to login
+- [ ] CTA buttons visible
 
-### Steps:
-1. **As Account A:**
-   - Upload `test-doc-a.pdf`
-   - Note the filename
+### Test 1.2: Auth Pages
+- [ ] Visit `/login` without auth → loads
+- [ ] Visit `/signup` without auth → loads
+- [ ] Visit `/reset` without auth → loads
+- [ ] Visit `/reset-password` without auth → loads
 
-2. **As Account B:**
-   - Attempt to delete `test-doc-a.pdf` (if it somehow appears)
-   - **EXPECTED**: 
-     - Either: File doesn't appear (preferred)
-     - Or: Delete operation fails with 401/403 error
-     - Or: Delete operation succeeds but doesn't actually delete (RLS blocks it)
+### Test 1.3: Legal Pages
+- [ ] Visit `/privacy` without auth → loads
+- [ ] Visit `/terms` without auth → loads
 
-3. **Verify:**
-   - As Account A, confirm `test-doc-a.pdf` still exists
-   - As Account B, confirm they cannot see or affect Account A's files
+### Test 1.4: Grade Band Pages
+- [ ] Visit `/middle` without auth → loads
+- [ ] Visit `/high` without auth → loads
+- [ ] Visit `/elementary` without auth → redirects to `/middle`
 
-**✅ PASS**: Users cannot delete other users' documents
-
----
-
-## Test 3: Context Toggle Isolation
-
-**Goal**: Verify users cannot toggle other users' document context
-
-### Steps:
-1. **As Account A:**
-   - Upload `test-doc-a.pdf`
-   - Toggle context ON/OFF
-   - Verify toggle works
-
-2. **As Account B:**
-   - If `test-doc-a.pdf` appears (shouldn't), attempt to toggle it
-   - **EXPECTED**: 
-     - Either: File doesn't appear
-     - Or: Toggle operation fails with 401/403 error
-     - Or: Toggle appears to work but doesn't affect Account A's document
-
-3. **Verify:**
-   - As Account A, confirm context state is unchanged by Account B's actions
-
-**✅ PASS**: Users cannot modify other users' document context
+### Test 1.5: Checkout Page
+- [ ] Visit `/checkout` without auth → loads
+- [ ] Visit `/checkout?plan=individual` without auth → loads
 
 ---
 
-## Test 4: API Route Security
+## 2. New User Signup Flow
 
-**Goal**: Verify API routes enforce user authentication and filtering
+### Test 2.1: Email Signup
+- [ ] Visit `/signup`
+- [ ] Enter email: `test1@example.com`
+- [ ] Enter password: `TestPassword123!`
+- [ ] Click "Sign up"
+- [ ] Verify email sent to inbox
+- [ ] Check email contains link to `/auth/callback?code=...`
 
-### Steps:
-1. **Test `/api/binder` (GET):**
-   ```bash
-   # Without authentication
-   curl http://localhost:3000/api/binder
-   # EXPECTED: 401 Unauthorized
-   
-   # With Account A's session cookie
-   curl http://localhost:3000/api/binder -H "Cookie: sb-xxx-auth-token=..."
-   # EXPECTED: Only Account A's documents
-   ```
+### Test 2.2: Auth Callback
+- [ ] Click email verification link
+- [ ] Verify redirect to `/checkout`
+- [ ] Check browser URL contains `/checkout`
+- [ ] Verify no error messages
 
-2. **Test `/api/process` (POST):**
-   ```bash
-   # Without authentication
-   curl -X POST http://localhost:3000/api/process \
-     -H "Content-Type: application/json" \
-     -d '{"text": "test", "filename": "test.pdf"}'
-   # EXPECTED: 401 Unauthorized
-   ```
+### Test 2.3: Checkout Flow
+- [ ] On `/checkout`, select "Individual Plan"
+- [ ] Click "Subscribe"
+- [ ] Redirected to Stripe checkout
+- [ ] Enter test card: `4242 4242 4242 4242`
+- [ ] Enter expiry: `12/34`, CVC: `123`
+- [ ] Click "Subscribe"
+- [ ] Verify redirect to `/billing/success`
 
-**✅ PASS**: API routes require authentication and return only user's data
+### Test 2.4: Billing Success
+- [ ] On `/billing/success`, see "You're all set!" message
+- [ ] Wait 2 seconds
+- [ ] Verify auto-redirect to `/profiles/new`
 
----
+### Test 2.5: Profile Creation
+- [ ] On `/profiles/new`, create student profile
+- [ ] Enter name, grade, etc.
+- [ ] Click "Create profile"
+- [ ] Verify redirect to app (e.g., `/tutor` or `/profiles`)
 
-## Test 5: Vector Search Isolation (When Implemented)
-
-**Goal**: Verify vector search only returns documents from the authenticated user
-
-### Steps:
-1. **As Account A:**
-   - Upload `medical-textbook-a.pdf` with content about "diabetes"
-   - Ensure document is active (`is_active: true`)
-
-2. **As Account B:**
-   - Upload `medical-textbook-b.pdf` with content about "hypertension"
-   - Ensure document is active
-
-3. **Test Vector Search:**
-   - As Account A, ask a question about "diabetes"
-   - **EXPECTED**: AI should use context from `medical-textbook-a.pdf` only
-   - AI should NOT reference content from Account B's documents
-
-4. **Verify via Database:**
-   - Check that vector search RPC function (when implemented) includes:
-     - `WHERE user_id = auth.uid()` filter
-     - `AND (metadata->>'is_active' = 'true' OR metadata->>'is_active' IS NULL)` filter
-
-**✅ PASS**: Vector search only uses authenticated user's active documents
+### Test 2.6: App Access
+- [ ] Visit `/tutor` → loads successfully
+- [ ] Visit `/clinical-desk` → loads successfully
+- [ ] Visit `/binder` → loads successfully
+- [ ] No redirect to checkout
 
 ---
 
-## Test 6: RLS Policy Enforcement
+## 3. Returning User Flow (With Active Subscription)
 
-**Goal**: Verify RLS policies prevent direct database access
+### Test 3.1: Login
+- [ ] Sign out
+- [ ] Visit `/login`
+- [ ] Enter credentials for test1@example.com
+- [ ] Click "Sign in"
+- [ ] Verify redirect to `/profiles` or last visited page
 
-### Steps:
-1. **As Account A:**
-   - Upload `test-doc-a.pdf`
-   - Note the document ID from browser dev tools or logs
+### Test 3.2: Direct Access to Protected Routes
+- [ ] Visit `/tutor` → loads immediately
+- [ ] Visit `/clinical-desk` → loads immediately
+- [ ] Visit `/binder` → loads immediately
+- [ ] No redirect to checkout
 
-2. **As Account B (with database access):**
-   - Attempt to query Account A's document directly:
-     ```sql
-     -- This should fail or return empty due to RLS
-     SELECT * FROM documents WHERE id = 'account-a-document-id';
-     ```
-   - **EXPECTED**: Query returns empty or fails (RLS blocks it)
-
-3. **Verify Service Role Bypass (If Applicable):**
-   - If using service role for admin operations, ensure it's:
-     - Only used in isolated admin functions
-     - Never used for user-facing queries
-     - Logged and audited
-
-**✅ PASS**: RLS prevents unauthorized database access
+### Test 3.3: Profile Access
+- [ ] Visit `/profiles` → loads
+- [ ] Visit `/profiles/new` → loads
+- [ ] Visit `/post-login` → loads
 
 ---
 
-## Test 7: Edge Cases
+## 4. Returning User Flow (Without Subscription)
 
-### Test 7a: Empty User ID
-- Attempt to upload document with `user_id = NULL`
-- **EXPECTED**: Insert fails (NOT NULL constraint or RLS policy)
+### Test 4.1: Create Account Without Completing Checkout
+- [ ] Sign up with `test2@example.com`
+- [ ] Verify email
+- [ ] On `/checkout`, close tab (don't complete payment)
 
-### Test 7b: Invalid User ID
-- Attempt to upload document with `user_id = 'invalid-uuid'`
-- **EXPECTED**: Insert fails (foreign key constraint)
+### Test 4.2: Login Without Subscription
+- [ ] Visit `/login`
+- [ ] Enter credentials for test2@example.com
+- [ ] Click "Sign in"
+- [ ] Verify redirect to `/checkout` (not `/profiles`)
 
-### Test 7c: Deleted User
-- Delete a user account
-- **EXPECTED**: User's documents are cascade deleted (if CASCADE is set)
-- Or: Documents remain but are inaccessible (if RESTRICT is set)
+### Test 4.3: Protected Route Access Without Subscription
+- [ ] Try to visit `/tutor` directly
+- [ ] Verify redirect to `/checkout`
+- [ ] Try to visit `/clinical-desk` directly
+- [ ] Verify redirect to `/checkout`
+
+### Test 4.4: Complete Checkout After Login
+- [ ] On `/checkout`, select plan
+- [ ] Complete Stripe checkout
+- [ ] Verify redirect to `/billing/success`
+- [ ] Verify redirect to `/profiles/new`
+- [ ] Verify access to `/tutor` now works
 
 ---
 
-## Automated Test Script (Optional)
+## 5. Subscription Status Transitions
 
-Create a test script to run these checks automatically:
+### Test 5.1: Trialing Status
+- [ ] Create new account
+- [ ] Complete checkout
+- [ ] Check database: `subscription_status = 'trialing'`
+- [ ] Verify access to protected routes
 
-```typescript
-// tests/security/multi-tenant.test.ts
-import { createClient } from '@supabase/supabase-js'
+### Test 5.2: Active Status
+- [ ] Manually update subscription in Stripe to "active"
+- [ ] Wait for webhook to fire
+- [ ] Check database: `subscription_status = 'active'`
+- [ ] Verify continued access to protected routes
 
-describe('Multi-Tenant Security', () => {
-  it('should isolate documents between users', async () => {
-    // Create two test users
-    // Upload documents as each user
-    // Verify cross-user access is blocked
-  })
-})
-```
+### Test 5.3: Past Due Status
+- [ ] Manually update subscription in Stripe to "past_due"
+- [ ] Wait for webhook to fire
+- [ ] Check database: `subscription_status = 'past_due'`
+- [ ] Try to access `/tutor`
+- [ ] Verify redirect to `/checkout`
+
+### Test 5.4: Canceled Status
+- [ ] Visit `/settings` (or wherever cancel is)
+- [ ] Cancel subscription
+- [ ] Wait for webhook to fire
+- [ ] Check database: `subscription_status = 'canceled'`
+- [ ] Try to access `/tutor`
+- [ ] Verify redirect to `/checkout`
+
+---
+
+## 6. Redirect Loop Prevention
+
+### Test 6.1: Checkout → Protected Route Loop
+- [ ] Sign in without subscription
+- [ ] Verify redirect to `/checkout`
+- [ ] Try to visit `/tutor` in new tab
+- [ ] Verify redirect to `/checkout` (not back to `/tutor`)
+- [ ] Complete checkout
+- [ ] Verify redirect to `/billing/success` → `/profiles/new`
+- [ ] Verify no loops
+
+### Test 6.2: Billing Success → Checkout Loop
+- [ ] Complete checkout
+- [ ] On `/billing/success`, wait for subscription verification
+- [ ] Verify redirect to `/profiles/new` (not back to `/checkout`)
+
+### Test 6.3: Profiles → Checkout Loop
+- [ ] Sign in with account that has subscription
+- [ ] Visit `/profiles`
+- [ ] Verify no redirect to `/checkout`
+- [ ] Visit `/profiles/new`
+- [ ] Verify no redirect to `/checkout`
+
+---
+
+## 7. Auth-Only Routes (No Subscription Check)
+
+### Test 7.1: Profiles Routes
+- [ ] Sign in without subscription
+- [ ] Visit `/profiles` → loads (no redirect to checkout)
+- [ ] Visit `/profiles/new` → loads (no redirect to checkout)
+- [ ] Visit `/profiles/[id]/edit` → loads (no redirect to checkout)
+
+### Test 7.2: Post-Login Route
+- [ ] Sign in without subscription
+- [ ] Visit `/post-login` → loads (no redirect to checkout)
+
+### Test 7.3: Profile Dashboard Routes
+- [ ] Sign in without subscription
+- [ ] Visit `/p/[profileId]/dashboard` → loads (no redirect to checkout)
+
+---
+
+## 8. Billing Routes (Always Accessible)
+
+### Test 8.1: Checkout Access
+- [ ] Sign in without subscription
+- [ ] Visit `/checkout` → loads
+- [ ] Sign in with subscription
+- [ ] Visit `/checkout` → loads (no redirect)
+
+### Test 8.2: Billing Pages
+- [ ] Visit `/billing/success` → loads
+- [ ] Visit `/billing/cancel` → loads
+- [ ] Visit `/billing/payment-required` → loads
+
+---
+
+## 9. Middleware Edge Cases
+
+### Test 9.1: Missing Supabase Env Vars
+- [ ] Temporarily remove `NEXT_PUBLIC_SUPABASE_URL`
+- [ ] Visit `/` → loads (public route)
+- [ ] Visit `/tutor` → redirects to `/login`
+- [ ] Restore env var
+
+### Test 9.2: Missing Service Role Key
+- [ ] Temporarily remove `SUPABASE_SERVICE_ROLE_KEY`
+- [ ] Sign in
+- [ ] Visit `/tutor` → should still work (fallback to anon key)
+- [ ] Restore env var
+
+### Test 9.3: Supabase Client Error
+- [ ] Temporarily set invalid `NEXT_PUBLIC_SUPABASE_ANON_KEY`
+- [ ] Visit `/` → loads (public route)
+- [ ] Visit `/tutor` → redirects to `/login`
+- [ ] Restore env var
+
+### Test 9.4: Profile Fetch Error
+- [ ] Sign in
+- [ ] Temporarily break RLS policy on profiles table
+- [ ] Visit `/tutor` → redirects to `/checkout` (fail secure)
+- [ ] Restore RLS policy
+
+---
+
+## 10. Webhook Verification
+
+### Test 10.1: Checkout Session Completed
+- [ ] Complete Stripe checkout
+- [ ] Check Stripe webhook logs
+- [ ] Verify `checkout.session.completed` event received
+- [ ] Check database: `subscription_status` updated
+- [ ] Check database: `stripe_customer_id` set
+- [ ] Check database: `stripe_subscription_id` set
+
+### Test 10.2: Subscription Updated
+- [ ] Manually update subscription in Stripe dashboard
+- [ ] Check Stripe webhook logs
+- [ ] Verify `customer.subscription.updated` event received
+- [ ] Check database: `subscription_status` updated
+
+### Test 10.3: Subscription Deleted
+- [ ] Cancel subscription in Stripe dashboard
+- [ ] Check Stripe webhook logs
+- [ ] Verify `customer.subscription.deleted` event received
+- [ ] Check database: `subscription_status = 'canceled'`
+
+---
+
+## 11. Security Checks
+
+### Test 11.1: Unauthenticated Access
+- [ ] Sign out
+- [ ] Try to visit `/tutor` → redirects to `/login`
+- [ ] Try to visit `/clinical-desk` → redirects to `/login`
+- [ ] Try to visit `/binder` → redirects to `/login`
+- [ ] Try to visit `/settings` → redirects to `/login`
+
+### Test 11.2: Subscription Bypass Attempt
+- [ ] Sign in without subscription
+- [ ] Try to visit `/tutor` → redirects to `/checkout`
+- [ ] Try to visit `/clinical-desk` → redirects to `/checkout`
+- [ ] Try to visit `/binder` → redirects to `/checkout`
+
+### Test 11.3: Direct API Access
+- [ ] Sign out
+- [ ] Try to fetch `/api/chat/proof` → 401 or 403
+- [ ] Try to fetch `/api/chats/list` → 401 or 403
+- [ ] Sign in without subscription
+- [ ] Try to fetch `/api/chat/proof` → 401 or 403 (if gated)
+
+### Test 11.4: Profile Creation Guardrails
+- [ ] Sign in with subscription
+- [ ] Create 1 student profile
+- [ ] Try to create 2nd profile without family plan
+- [ ] Verify redirect to `/profiles` (blocked)
+- [ ] Upgrade to family plan
+- [ ] Create 2nd profile → succeeds
+
+---
+
+## 12. User Experience Checks
+
+### Test 12.1: Cache Control Headers
+- [ ] Visit `/login`
+- [ ] Check response headers: `Cache-Control: no-store`
+- [ ] Visit `/signup`
+- [ ] Check response headers: `Cache-Control: no-store`
+- [ ] Visit `/`
+- [ ] Check response headers: `Cache-Control: no-store`
+
+### Test 12.2: Redirect Preservation
+- [ ] Sign out
+- [ ] Visit `/tutor`
+- [ ] Verify redirect to `/login?redirect=/tutor`
+- [ ] Sign in
+- [ ] Verify redirect back to `/tutor` (after checkout if needed)
+
+### Test 12.3: Error Messages
+- [ ] Visit `/auth/callback` without code
+- [ ] Verify redirect to `/login?error=auth-code-error`
+- [ ] Visit `/auth/callback?code=invalid`
+- [ ] Verify redirect to `/login?error=auth-exchange-failed`
+
+---
+
+## 13. Database Integrity
+
+### Test 13.1: Profile Creation
+- [ ] Sign up new user
+- [ ] Check database: profile row created
+- [ ] Verify `subscription_status = 'pending_payment'`
+- [ ] Verify `onboarding_completed = false`
+- [ ] Verify `onboarding_step = 0`
+
+### Test 13.2: Profile Update
+- [ ] Complete checkout
+- [ ] Check database: `subscription_status` updated to 'trialing'
+- [ ] Check database: `stripe_customer_id` set
+- [ ] Check database: `stripe_subscription_id` set
+
+### Test 13.3: Onboarding Fields Fallback
+- [ ] Drop `onboarding_completed` and `onboarding_step` columns
+- [ ] Sign up new user
+- [ ] Verify no error (fallback works)
+- [ ] Check logs: "Onboarding columns may not exist, retrying without them"
+- [ ] Restore columns
+
+---
+
+## 14. Performance Checks
+
+### Test 14.1: Middleware Performance
+- [ ] Sign in
+- [ ] Visit `/tutor`
+- [ ] Check response time < 500ms
+- [ ] Visit `/clinical-desk`
+- [ ] Check response time < 500ms
+
+### Test 14.2: Subscription Check Caching
+- [ ] Sign in
+- [ ] Visit `/tutor` 10 times
+- [ ] Verify no excessive database queries
+- [ ] Check Supabase logs for query count
+
+---
+
+## 15. Rollback Verification
+
+### Test 15.1: Revert Auth Callback
+- [ ] Revert `src/app/auth/callback/route.ts` to previous version
+- [ ] Sign up new user
+- [ ] Verify old flow still works
+- [ ] Restore new version
+
+### Test 15.2: Revert Middleware
+- [ ] Revert `middleware.ts` to previous version
+- [ ] Sign in
+- [ ] Verify old gating logic still works
+- [ ] Restore new version
+
+---
+
+## Test Results Summary
+
+### Pass/Fail Counts
+- Total Tests: 100+
+- Passed: ___
+- Failed: ___
+- Skipped: ___
+
+### Critical Issues Found
+1. 
+2. 
+3. 
+
+### Non-Critical Issues Found
+1. 
+2. 
+3. 
+
+### Recommendations
+1. 
+2. 
+3. 
 
 ---
 
 ## Sign-Off
 
-- [ ] Test 1: Document Upload Isolation - PASSED
-- [ ] Test 2: Batch Deletion Isolation - PASSED
-- [ ] Test 3: Context Toggle Isolation - PASSED
-- [ ] Test 4: API Route Security - PASSED
-- [ ] Test 5: Vector Search Isolation - PASSED (when implemented)
-- [ ] Test 6: RLS Policy Enforcement - PASSED
-- [ ] Test 7: Edge Cases - PASSED
+- [ ] All critical tests passed
+- [ ] All security checks passed
+- [ ] No redirect loops detected
+- [ ] Webhook integration verified
+- [ ] Database integrity confirmed
+- [ ] Ready for staging deployment
 
-**Tested By**: _________________  
-**Date**: _________________  
-**Environment**: [ ] Development [ ] Staging [ ] Production
-
----
-
-## Security Notes
-
-- **Never disable RLS** in production, even for debugging
-- **Always use authenticated Supabase clients** for user-facing operations
-- **Service role key** should only be used in isolated admin functions
-- **Log all document access** for audit trails
-- **Monitor for unusual cross-user access patterns**
-
+**Tested by:** _______________  
+**Date:** _______________  
+**Environment:** _______________  
+**Notes:** _______________

@@ -68,11 +68,14 @@ export async function GET(request: Request) {
   )
 
   // Upsert profile with pending_payment status and onboarding fields
-  const { data: profile, error: profileError } = await adminClient
+  // Use onConflict to handle existing profiles gracefully
+  let profile: any = null
+  const { data: profileData, error: profileError } = await adminClient
     .from('profiles')
     .upsert({
       id: user.id,
       subscription_status: 'pending_payment',
+      // Onboarding fields (will be ignored if columns don't exist yet)
       onboarding_completed: false,
       onboarding_step: 0,
     }, {
@@ -84,6 +87,29 @@ export async function GET(request: Request) {
 
   if (profileError) {
     console.error('[Auth Callback] Failed to upsert profile:', profileError)
+    // If upsert fails due to missing columns, try without onboarding fields
+    if (profileError.message?.includes('column') || profileError.code === '42703') {
+      console.warn('[Auth Callback] Onboarding columns may not exist, retrying without them')
+      const { data: retryProfile, error: retryError } = await adminClient
+        .from('profiles')
+        .upsert({
+          id: user.id,
+          subscription_status: 'pending_payment',
+        }, {
+          onConflict: 'id',
+          ignoreDuplicates: false
+        })
+        .select()
+        .single()
+      
+      if (retryError) {
+        console.error('[Auth Callback] Retry failed:', retryError)
+      } else {
+        profile = retryProfile
+      }
+    }
+  } else {
+    profile = profileData
   }
 
   // If profile has stripe_customer_id, optionally sync latest subscription status from Stripe

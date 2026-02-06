@@ -4,29 +4,68 @@ import { useEffect, useState, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { CheckCircle, ArrowRight, Loader2, UserPlus } from 'lucide-react'
 import Link from 'next/link'
+import { createClient } from '@/lib/supabaseClient'
+import { hasSubscriptionAccess } from '@/lib/subscription-access'
 
 function BillingSuccessContent() {
   const searchParams = useSearchParams()
   const router = useRouter()
   const sessionId = searchParams.get('session_id')
   const [loading, setLoading] = useState(true)
+  const [subscriptionVerified, setSubscriptionVerified] = useState(false)
 
   useEffect(() => {
-    // Give Stripe a moment to process the session
+    // Verify subscription status before proceeding
+    async function verifySubscription() {
+      try {
+        const supabase = createClient()
+        const { data: { user } } = await supabase.auth.getUser()
+        
+        if (!user) {
+          // No user, redirect to login
+          router.replace('/login')
+          return
+        }
+
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('subscription_status')
+          .eq('id', user.id)
+          .single()
+
+        if (profile && hasSubscriptionAccess(profile.subscription_status)) {
+          setSubscriptionVerified(true)
+        } else {
+          // Subscription not active yet, wait a bit longer
+          console.log('[Billing Success] Subscription not active yet, waiting...')
+          setTimeout(verifySubscription, 1000)
+          return
+        }
+      } catch (error) {
+        console.error('[Billing Success] Error verifying subscription:', error)
+        // On error, proceed anyway after timeout
+        setTimeout(() => setSubscriptionVerified(true), 2000)
+      }
+    }
+
+    // Give Stripe webhook a moment to process
     const timer = setTimeout(() => {
-      setLoading(false)
+      verifySubscription()
     }, 2000)
 
     return () => clearTimeout(timer)
-  }, [])
+  }, [router])
 
   useEffect(() => {
-    if (loading) return
+    if (!subscriptionVerified) return
+    setLoading(false)
+    
     const redirectTimer = setTimeout(() => {
       router.replace('/profiles/new')
     }, 2000)
+    
     return () => clearTimeout(redirectTimer)
-  }, [loading, router])
+  }, [subscriptionVerified, router])
 
   if (loading) {
     return (
