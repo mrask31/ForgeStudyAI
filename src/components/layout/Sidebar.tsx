@@ -151,6 +151,14 @@ export default function Sidebar({ onNavigate }: SidebarProps = {}) {
         <div className="mt-4 pt-4 border-t border-teal-900/50 space-y-2">
           <HistoryButton onNavigate={onNavigate} />
           <Link
+            href="/proof-history"
+            onClick={onNavigate}
+            className="group flex items-center gap-3 rounded-lg px-4 py-3 text-sm font-medium transition-all duration-200 text-teal-200 hover:bg-gradient-to-r hover:from-teal-900/50 hover:to-emerald-900/50 hover:text-white"
+          >
+            <Folder className="h-5 w-5" />
+            Proof History
+          </Link>
+          <Link
             href="/parent"
             onClick={onNavigate}
             className="group flex items-center gap-3 rounded-lg px-4 py-3 text-sm font-medium transition-all duration-200 text-teal-200 hover:bg-gradient-to-r hover:from-teal-900/50 hover:to-emerald-900/50 hover:text-white"

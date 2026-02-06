@@ -27,6 +27,86 @@ type SubscriptionData = {
 const PIN_UNLOCK_KEY = 'parent_pin_unlocked'
 const PIN_UNLOCK_TTL_MS = 30 * 60 * 1000
 
+// Weekly Summary Component (Feature C: Parent Actionables)
+function WeeklySummary({ profiles }: { profiles: StudentProfile[] }) {
+  const [insights, setInsights] = useState<Array<{ concept: string; sentence: string }>>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [dismissed, setDismissed] = useState<Set<string>>(new Set());
+
+  useEffect(() => {
+    const loadInsights = async () => {
+      if (profiles.length === 0) {
+        setIsLoading(false);
+        return;
+      }
+
+      try {
+        // Load insights for all profiles
+        const allInsights: Array<{ concept: string; sentence: string; profileName: string }> = [];
+
+        for (const profile of profiles) {
+          const res = await fetch(`/api/parent/weekly-summary?studentId=${profile.id}`, {
+            credentials: 'include',
+          });
+
+          if (res.ok) {
+            const data = await res.json();
+            for (const insight of data.insights || []) {
+              allInsights.push({
+                ...insight,
+                profileName: profile.display_name,
+              });
+            }
+          }
+        }
+
+        setInsights(allInsights);
+      } catch (error) {
+        console.error('[Weekly Summary] Load error:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    loadInsights();
+  }, [profiles]);
+
+  const visibleInsights = insights.filter(
+    (insight) => !dismissed.has(`${insight.concept}`)
+  );
+
+  if (isLoading) {
+    return <p className="text-sm text-slate-600">Loading weekly summary...</p>;
+  }
+
+  if (visibleInsights.length === 0) {
+    return (
+      <p className="text-sm text-slate-600">
+        No patterns to report this week.
+      </p>
+    );
+  }
+
+  return (
+    <div className="space-y-2">
+      {visibleInsights.map((insight, index) => (
+        <div
+          key={index}
+          className="flex items-start justify-between gap-4 rounded-lg border border-slate-200 bg-white px-4 py-3"
+        >
+          <p className="text-sm text-slate-700">{insight.sentence}</p>
+          <button
+            onClick={() => setDismissed(new Set([...dismissed, insight.concept]))}
+            className="text-xs text-slate-400 hover:text-slate-600 flex-shrink-0"
+          >
+            Dismiss
+          </button>
+        </div>
+      ))}
+    </div>
+  );
+}
+
 export default function ParentDashboardPage() {
   const [hasPin, setHasPin] = useState<boolean | null>(null)
   const [isUnlocked, setIsUnlocked] = useState(false)
@@ -461,10 +541,8 @@ export default function ParentDashboardPage() {
         </div>
 
         <div className="mt-8 rounded-2xl border border-emerald-100 bg-emerald-50/50 p-6">
-          <h3 className="text-lg font-semibold text-slate-900 mb-2">Weekly snapshot</h3>
-          <p className="text-sm text-slate-600">
-            Student activity snapshots will appear here after a few study sessions.
-          </p>
+          <h3 className="text-lg font-semibold text-slate-900 mb-2">This Week</h3>
+          <WeeklySummary profiles={profiles} />
         </div>
       </div>
 
