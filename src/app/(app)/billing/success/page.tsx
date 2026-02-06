@@ -15,14 +15,21 @@ function BillingSuccessContent() {
   const [subscriptionVerified, setSubscriptionVerified] = useState(false)
 
   useEffect(() => {
+    const MAX_ATTEMPTS = 10 // Max 10 attempts
+    const POLL_INTERVAL = 1000 // 1 second between attempts
+    const INITIAL_DELAY = 2000 // 2 second initial delay
+    let attemptCount = 0
+
     // Verify subscription status before proceeding
     async function verifySubscription() {
+      attemptCount++
+      
       try {
         const supabase = createClient()
         const { data: { user } } = await supabase.auth.getUser()
         
         if (!user) {
-          // No user, redirect to login
+          console.error('[Billing Success] No user found, redirecting to login')
           router.replace('/login')
           return
         }
@@ -34,24 +41,35 @@ function BillingSuccessContent() {
           .single()
 
         if (profile && hasSubscriptionAccess(profile.subscription_status)) {
+          console.log('[Billing Success] Subscription verified:', profile.subscription_status)
           setSubscriptionVerified(true)
-        } else {
-          // Subscription not active yet, wait a bit longer
-          console.log('[Billing Success] Subscription not active yet, waiting...')
-          setTimeout(verifySubscription, 1000)
           return
+        }
+
+        // Subscription not active yet
+        if (attemptCount < MAX_ATTEMPTS) {
+          console.log(`[Billing Success] Attempt ${attemptCount}/${MAX_ATTEMPTS}: Subscription not active yet, retrying...`)
+          setTimeout(verifySubscription, POLL_INTERVAL)
+        } else {
+          console.warn('[Billing Success] Max attempts reached, proceeding anyway')
+          setSubscriptionVerified(true)
         }
       } catch (error) {
         console.error('[Billing Success] Error verifying subscription:', error)
-        // On error, proceed anyway after timeout
-        setTimeout(() => setSubscriptionVerified(true), 2000)
+        // On error, proceed anyway if max attempts reached
+        if (attemptCount >= MAX_ATTEMPTS) {
+          console.warn('[Billing Success] Error after max attempts, proceeding anyway')
+          setSubscriptionVerified(true)
+        } else {
+          setTimeout(verifySubscription, POLL_INTERVAL)
+        }
       }
     }
 
-    // Give Stripe webhook a moment to process
+    // Give Stripe webhook initial time to process
     const timer = setTimeout(() => {
       verifySubscription()
-    }, 2000)
+    }, INITIAL_DELAY)
 
     return () => clearTimeout(timer)
   }, [router])
