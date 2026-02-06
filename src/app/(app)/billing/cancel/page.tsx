@@ -51,11 +51,11 @@ export default function BillingCancelPage() {
             </button>
             
             <Link
-              href="/"
+              href="/checkout"
               className="block w-full text-sm text-slate-600 hover:text-slate-900 transition-colors"
             >
               <ArrowLeft className="w-4 h-4 inline mr-1" />
-              Back to Pricing
+              Back to Checkout
             </Link>
           </div>
 

@@ -157,7 +157,11 @@ export default function SignupClient() {
       return
     }
 
-    const callbackUrl = `${baseUrl}/auth/confirm`
+    // Use /auth/callback (not /auth/confirm) to match ForgeNursing flow
+    let callbackUrl = `${baseUrl}/auth/callback`
+    if (plan && allowedPlans.includes(plan)) {
+      callbackUrl += `?plan=${plan}`
+    }
 
     try {
       console.log('[Signup] Attempting to create account...', { email: email.trim() })
