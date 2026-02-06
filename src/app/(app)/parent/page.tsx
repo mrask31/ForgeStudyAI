@@ -96,7 +96,11 @@ function WeeklySummary({ profiles }: { profiles: StudentProfile[] }) {
         >
           <p className="text-sm text-slate-700">{insight.sentence}</p>
           <button
-            onClick={() => setDismissed(new Set([...dismissed, insight.concept]))}
+            onClick={() => {
+              const newDismissed = new Set(dismissed);
+              newDismissed.add(insight.concept);
+              setDismissed(newDismissed);
+            }}
             className="text-xs text-slate-400 hover:text-slate-600 flex-shrink-0"
           >
             Dismiss
