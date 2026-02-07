@@ -1,7 +1,6 @@
 import { createServerClient, type CookieOptions } from '@supabase/ssr'
 import { createClient } from '@supabase/supabase-js'
 import { NextResponse, type NextRequest } from 'next/server'
-import { FAMILY_MAX_PROFILES } from '@/lib/constants'
 import { hasSubscriptionAccess } from '@/lib/subscription-access'
 
 export async function middleware(request: NextRequest) {
@@ -285,18 +284,15 @@ export async function middleware(request: NextRequest) {
     }
 
     // 5. All other routes (default allow for authenticated users)
-    return response
-
-    // Add aggressive cache control headers for login, signup, and landing pages to prevent 304 issues
+    // Add cache control headers for login, signup, and landing pages
     if (pathname === '/login' || pathname === '/signup' || pathname === '/') {
       response.headers.set('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate, max-age=0')
       response.headers.set('Pragma', 'no-cache')
       response.headers.set('Expires', '0')
       response.headers.set('X-Cache-Control', 'no-cache')
-      // Add a unique header to force fresh requests
       response.headers.set('X-Timestamp', Date.now().toString())
     }
-
+    
     return response
   } catch (error) {
     // CRITICAL: If middleware crashes, log error but ALWAYS return a response
