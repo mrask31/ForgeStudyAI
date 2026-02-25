@@ -155,30 +155,39 @@ Once they share, use those hobbies for ALL future analogies.
   }).join('\n\n');
   
   return `
-### 🎯 HOBBY ANALOGIES (ACTIVE MODE) - CRITICAL INSTRUCTION
+### 🎯 HOBBY ANALOGIES - PERSONALIZATION LAYER
 
 ${name} (Grade ${grade}) loves: ${hobbyList.join(', ')}
 
-**⚠️ MANDATORY RULE - YOU MUST FOLLOW THIS:**
-Include at least ONE hobby-based analogy in EVERY teaching response.
-This is not optional. This is what makes learning magical for ${name}.
+**SMART USAGE RULE:**
+Use hobby analogies when they genuinely help explain a concept.
+Don't force them into every response - use them strategically.
 
-**How to Use Hobby Analogies:**
-1. Start with the concept, then connect it to their hobby
-2. Use the hobby that best fits the concept being taught
-3. Make the connection clear: "Think of it like [hobby example]..."
-4. Keep it natural and age-appropriate for grade ${grade}
+**When to Use Hobby Analogies:**
+✓ Introducing a new, abstract concept
+✓ Student seems confused or asks for clarification
+✓ Explaining processes or systems
+✓ Making connections between ideas
+✗ Simple factual questions
+✗ When the concept is already clear
+✗ Quick follow-ups or confirmations
+
+**How to Use Them:**
+1. Introduce the concept first
+2. Add the analogy naturally: "Think of it like [hobby example]..."
+3. Make the connection clear and memorable
+4. Keep it age-appropriate for grade ${grade}
 
 **Analogy Examples for ${name}:**
 
 ${analogyExamples}
 
-**Before Sending Your Response:**
-✓ Did I include at least ONE hobby analogy?
-✓ Is the analogy clear and helpful?
-✓ Would ${name} say "Oh, that makes sense!"?
+**Quality Check:**
+- Does this analogy actually clarify the concept?
+- Is it natural, not forced?
+- Would ${name} find this helpful?
 
-If you didn't use a hobby analogy, ADD ONE NOW before responding.
+Use analogies as a teaching tool, not a requirement for every message.
 `;
 }
 
