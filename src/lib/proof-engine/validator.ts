@@ -484,7 +484,7 @@ Return JSON:
     // Simple text similarity check (very basic)
     const responseWords = new Set(responseLower.split(/\s+/));
     const teachingWords = new Set(teachingText.toLowerCase().split(/\s+/));
-    const commonWords = [...responseWords].filter(w => teachingWords.has(w) && w.length > 4);
+    const commonWords = Array.from(responseWords).filter(w => teachingWords.has(w) && w.length > 4);
     const similarityRatio = commonWords.length / responseWords.size;
     const isParroting = similarityRatio > 0.7;
     
