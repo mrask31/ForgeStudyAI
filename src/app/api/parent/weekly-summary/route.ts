@@ -91,7 +91,7 @@ export async function GET(req: Request) {
     // Generate insights (deterministic, neutral)
     const insights: Array<{ concept: string; sentence: string }> = [];
 
-    for (const [concept, stats] of conceptStats.entries()) {
+    for (const [concept, stats] of Array.from(conceptStats.entries())) {
       // Pattern: 3+ retries OR multiple retries without pass
       if (stats.retryCount >= 3 || (stats.retryCount >= 2 && !stats.hasPass)) {
         insights.push({
