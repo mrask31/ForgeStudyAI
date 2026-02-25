@@ -200,16 +200,17 @@ export async function middleware(request: NextRequest) {
 
     // 4. Protected routes (/app/*) require auth + subscription + profile
     if (isProtectedRoute && supabase) {
-      // 4a. Check subscription status
+      // 4a. Check subscription status and trial
       try {
         const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY
         let subscriptionStatus: string | undefined
+        let trialEndsAt: string | null | undefined
         
         if (serviceRoleKey) {
           const adminClient = createClient(supabaseUrl, serviceRoleKey)
           const { data: profile, error } = await adminClient
             .from('profiles')
-            .select('subscription_status')
+            .select('subscription_status, trial_ends_at')
             .eq('id', user.id)
             .single()
           
@@ -218,10 +219,11 @@ export async function middleware(request: NextRequest) {
             return NextResponse.redirect(new URL('/checkout', request.url))
           }
           subscriptionStatus = profile?.subscription_status
+          trialEndsAt = profile?.trial_ends_at
         } else {
           const { data: profile, error } = await supabase
             .from('profiles')
-            .select('subscription_status')
+            .select('subscription_status, trial_ends_at')
             .eq('id', user.id)
             .single()
           
@@ -230,9 +232,14 @@ export async function middleware(request: NextRequest) {
             return NextResponse.redirect(new URL('/checkout', request.url))
           }
           subscriptionStatus = profile?.subscription_status
+          trialEndsAt = profile?.trial_ends_at
         }
 
-        if (!hasSubscriptionAccess(subscriptionStatus)) {
+        // Check if trial is active (trial_ends_at is in the future)
+        const isTrialActive = trialEndsAt && new Date(trialEndsAt) > new Date()
+
+        // Allow access if subscription is active OR trial is active
+        if (!hasSubscriptionAccess(subscriptionStatus) && !isTrialActive) {
           return NextResponse.redirect(new URL('/checkout', request.url))
         }
       } catch (error) {
