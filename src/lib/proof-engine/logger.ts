@@ -283,7 +283,7 @@ export class ProofEventLogger {
       const now = Date.now();
       const expired: string[] = [];
 
-      for (const [hash, entry] of this.retryBuffer.entries()) {
+      for (const [hash, entry] of Array.from(this.retryBuffer.entries())) {
         if (now - entry.timestamp > this.RETRY_TTL) {
           expired.push(hash);
         }
