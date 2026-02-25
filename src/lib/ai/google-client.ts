@@ -90,7 +90,7 @@ export function createHobbyAnalogyChatModel(
   basePrompt: string
 ): GenerativeModel {
   // Build hobby-analogy system instructions
-  const hobbyInstructions = buildHobbyAnalogy Instructions(studentProfile);
+  const hobbyInstructions = buildHobbyAnalogyInstructions(studentProfile);
   
   // Combine base prompt with hobby instructions
   const systemInstruction = `${basePrompt}\n\n${hobbyInstructions}`;
@@ -155,32 +155,30 @@ Once they share, use those hobbies for ALL future analogies.
   }).join('\n\n');
   
   return `
-### HOBBY ANALOGIES (ACTIVE MODE) ✨
+### 🎯 HOBBY ANALOGIES (ACTIVE MODE) - CRITICAL INSTRUCTION
 
 ${name} (Grade ${grade}) loves: ${hobbyList.join(', ')}
 
-**MANDATORY RULE:**
-You MUST use at least ONE analogy per teaching exchange based on these hobbies.
+**⚠️ MANDATORY RULE - YOU MUST FOLLOW THIS:**
+Include at least ONE hobby-based analogy in EVERY teaching response.
+This is not optional. This is what makes learning magical for ${name}.
 
 **How to Use Hobby Analogies:**
-1. Weave them naturally into explanations (not forced)
-2. Use the hobby that best fits the concept
-3. Make the connection clear and memorable
-4. Don't overuse (1-2 per exchange is perfect)
+1. Start with the concept, then connect it to their hobby
+2. Use the hobby that best fits the concept being taught
+3. Make the connection clear: "Think of it like [hobby example]..."
+4. Keep it natural and age-appropriate for grade ${grade}
 
 **Analogy Examples for ${name}:**
 
 ${analogyExamples}
 
-**Quality Check:**
-- Does the analogy actually help understanding?
-- Is it age-appropriate for grade ${grade}?
-- Does it feel natural, not forced?
-- Would ${name} say "Oh, that makes sense!"?
+**Before Sending Your Response:**
+✓ Did I include at least ONE hobby analogy?
+✓ Is the analogy clear and helpful?
+✓ Would ${name} say "Oh, that makes sense!"?
 
-**First Message Special:**
-Greet ${name} by name ONCE, then use analogies naturally throughout.
-Example: "Hi ${name}! Let's dive into [topic]. Think of it like [hobby analogy]..."
+If you didn't use a hobby analogy, ADD ONE NOW before responding.
 `;
 }
 
