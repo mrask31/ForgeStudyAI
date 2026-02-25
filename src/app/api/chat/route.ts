@@ -5,6 +5,7 @@ import { retrieveLearningContext } from '@/app/actions/learning-sources';
 import { createServerClient, type CookieOptions } from '@supabase/ssr';
 import { cookies } from 'next/headers';
 import OpenAI from 'openai';
+import { createHobbyAnalogyChatModel } from '@/lib/ai/google-client';
 
 const openaiEmbeddings = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
@@ -642,10 +643,20 @@ FORMATTING RULES:
 - If student materials were provided, include a "Sources:" line with filenames.
 `;
 
+  // Create Google AI model with hobby analogies
+  const hobbyModel = createHobbyAnalogyChatModel(
+    activeProfile || {
+      display_name: null,
+      interests: null,
+      grade_band: 'middle',
+      grade: null,
+    },
+    systemPrompt
+  );
+
   const result = await streamText({
-    model: openai('gpt-4o') as any,
+    model: hobbyModel as any,
     messages: messagesWithBinder,
-    system: systemPrompt,
   });
 
   // Return response with file summaries in metadata for UI display
