@@ -332,12 +332,5 @@ export async function streamGeminiResponse(
 }
 
 // ============================================
-// Exports
+// Note: Exports are declared inline above
 // ============================================
-
-export {
-  geminiFlash,
-  geminiUltra,
-  createHobbyAnalogyChatModel,
-  streamGeminiResponse,
-};
