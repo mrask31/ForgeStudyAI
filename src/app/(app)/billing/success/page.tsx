@@ -4,7 +4,7 @@ import { useEffect, useState, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { CheckCircle, ArrowRight, Loader2, UserPlus } from 'lucide-react'
 import Link from 'next/link'
-import { createClient } from '@/lib/supabaseClient'
+import { createBrowserClient } from '@supabase/ssr'
 import { hasSubscriptionAccess } from '@/lib/subscription-access'
 
 function BillingSuccessContent() {
@@ -25,7 +25,10 @@ function BillingSuccessContent() {
       attemptCount++
       
       try {
-        const supabase = createClient()
+        const supabase = createBrowserClient(
+          process.env.NEXT_PUBLIC_SUPABASE_URL!,
+          process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+        )
         const { data: { user } } = await supabase.auth.getUser()
         
         if (!user) {
