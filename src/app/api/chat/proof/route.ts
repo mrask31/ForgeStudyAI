@@ -97,9 +97,17 @@ const RuntimeConversationStateSchema = z.object({
 
 type RuntimeConversationState = z.infer<typeof RuntimeConversationStateSchema>;
 
-const openaiClient = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-});
+// Lazy-initialize OpenAI client to avoid build-time errors
+let openaiClient: OpenAI | null = null;
+
+function getOpenAIClient(): OpenAI {
+  if (!openaiClient) {
+    openaiClient = new OpenAI({
+      apiKey: process.env.OPENAI_API_KEY,
+    });
+  }
+  return openaiClient;
+}
 
 export const maxDuration = 30;
 
@@ -145,7 +153,7 @@ async function callTutorAI(
  * @returns AI response text
  */
 async function callEvaluationAI(prompt: string): Promise<string> {
-  const response = await openaiClient.chat.completions.create({
+  const response = await getOpenAIClient().chat.completions.create({
     model: 'gpt-4o-mini',
     messages: [{ role: 'user', content: prompt }],
     temperature: 0, // DETERMINISTIC: No randomness in evaluation
