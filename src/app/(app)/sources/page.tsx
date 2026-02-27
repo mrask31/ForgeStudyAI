@@ -16,6 +16,7 @@ import {
 import { getStudentProfiles, type StudentProfile } from '@/app/actions/student-profiles'
 import StudyMapPanel from '@/components/forgemap/StudyMapPanel'
 import HomeworkPlanModal from '@/components/homework/HomeworkPlanModal'
+import { ForgeInboxBanner } from '@/components/inbox/ForgeInboxBanner'
 
 type TabKey = 'syllabus' | 'weekly' | 'photos'
 
@@ -77,6 +78,7 @@ export default function SourcesPage() {
   const [sources, setSources] = useState<any[]>([])
   const [items, setItems] = useState<any[]>([])
   const [profiles, setProfiles] = useState<StudentProfile[]>([])
+  const [activeProfileData, setActiveProfileData] = useState<StudentProfile | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [searchQuery, setSearchQuery] = useState('')
   const [profileScope, setProfileScope] = useState<'active' | 'all'>('active')
@@ -181,6 +183,15 @@ export default function SourcesPage() {
       setSources(sourcesData)
       setItems(itemsData)
       setProfiles(profileData)
+      
+      // Find the active profile data
+      if (activeProfileId) {
+        const activeProfile = profileData.find(p => p.id === activeProfileId)
+        setActiveProfileData(activeProfile || null)
+      } else {
+        setActiveProfileData(null)
+      }
+      
       setSelectedItemIds((prev) => {
         const validIds = new Set(itemsData.map((item) => item.id))
         return prev.filter((id) => validIds.has(id))
@@ -196,7 +207,7 @@ export default function SourcesPage() {
   useEffect(() => {
     loadSources()
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [effectiveProfileId])
+  }, [effectiveProfileId, activeProfileId])
 
   const handleSignedUrl = async (fileUrl: string) => {
     if (signedUrls[fileUrl]) {
@@ -454,6 +465,14 @@ export default function SourcesPage() {
             Add real class materials so the tutor can personalize explanations and practice.
           </p>
         </div>
+
+        {/* Forge Inbox Banner */}
+        {activeProfileData && (
+          <ForgeInboxBanner 
+            inboxEmail={activeProfileData.inbox_email || null}
+            studentName={activeProfileData.display_name}
+          />
+        )}
 
         <div className="flex flex-wrap items-center gap-3 mb-6">
           <div className="flex items-center gap-2 rounded-full bg-white border border-slate-200 px-3 py-2 text-sm text-slate-600">

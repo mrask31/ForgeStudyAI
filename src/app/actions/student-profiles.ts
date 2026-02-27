@@ -13,6 +13,7 @@ export interface StudentProfile {
   grade_band: 'middle' | 'high'
   grade: string | null
   interests: string | null
+  inbox_email?: string | null
   has_pin?: boolean
   created_at: string
   updated_at: string
@@ -51,7 +52,7 @@ export async function getStudentProfiles(): Promise<StudentProfile[]> {
   // Get the user's profile id (which matches auth.uid())
   const { data: profiles, error } = await supabase
     .from('student_profiles')
-    .select('id, owner_id, display_name, grade_band, grade, interests, created_at, updated_at, pin_hash')
+    .select('id, owner_id, display_name, grade_band, grade, interests, inbox_email, created_at, updated_at, pin_hash')
     .eq('owner_id', user.id)
     .order('created_at', { ascending: true })
 

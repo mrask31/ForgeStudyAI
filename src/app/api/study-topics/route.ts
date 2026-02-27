@@ -102,6 +102,8 @@ export async function POST(req: Request) {
         profile_id: profileId,
         title: title.trim(),
         grade_band: profileCheck.profile.grade_band,
+        orbit_state: 1, // CRITICAL: Manual topic creation = immediate visibility
+        mastery_score: 0, // Default mastery score
       })
       .select()
       .single()

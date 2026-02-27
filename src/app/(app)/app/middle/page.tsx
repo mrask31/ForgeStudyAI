@@ -5,36 +5,52 @@ import { Sparkles } from 'lucide-react'
 import { useActiveProfile } from '@/contexts/ActiveProfileContext'
 import { ConceptGalaxy } from '@/components/galaxy/ConceptGalaxy'
 import { GalaxyLegend } from '@/components/galaxy/GalaxyLegend'
+import { SmartCTA } from '@/components/galaxy/SmartCTA'
+import { DecontaminationBanner } from '@/components/galaxy/DecontaminationBanner'
 import { useEffect, useState } from 'react'
-import { getStudyTopicsWithMastery } from '@/app/actions/study-topics'
+import { getStudyTopicsWithMastery, getQuarantinedTopicsCount } from '@/app/actions/study-topics'
+import { calculateSmartCTA, type SmartCTAResult } from '@/lib/smart-cta'
+import { useUser } from '@/contexts/UserContext'
 
 export default function MiddleDashboardPage() {
   const { activeProfileId } = useActiveProfile()
+  const { user } = useUser()
   const [topics, setTopics] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
+  const [smartCTA, setSmartCTA] = useState<SmartCTAResult | null>(null)
+  const [quarantinedCount, setQuarantinedCount] = useState(0)
 
   useEffect(() => {
-    async function loadTopics() {
-      if (!activeProfileId) {
+    async function loadData() {
+      if (!activeProfileId || !user) {
         setLoading(false)
         return
       }
       
       try {
-        const data = await getStudyTopicsWithMastery(activeProfileId)
-        setTopics(data)
+        const [topicsData, ctaData, quarantinedData] = await Promise.all([
+          getStudyTopicsWithMastery(activeProfileId),
+          calculateSmartCTA(user.id, activeProfileId),
+          getQuarantinedTopicsCount(activeProfileId)
+        ])
+        setTopics(topicsData)
+        setSmartCTA(ctaData)
+        setQuarantinedCount(quarantinedData)
       } catch (error) {
-        console.error('[Study Hub] Error loading topics:', error)
+        console.error('[Study Hub] Error loading data:', error)
       } finally {
         setLoading(false)
       }
     }
     
-    loadTopics()
-  }, [activeProfileId])
+    loadData()
+  }, [activeProfileId, user])
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-cyan-50">
+      {/* Decontamination Banner */}
+      <DecontaminationBanner quarantinedCount={quarantinedCount} />
+      
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-12 sm:py-16">
         <div className="flex flex-col gap-10">
           <section className="rounded-3xl border border-slate-200/70 bg-white/90 shadow-xl shadow-slate-200/40 p-8 sm:p-10">
@@ -51,13 +67,6 @@ export default function MiddleDashboardPage() {
                 </p>
               </div>
               <div className="flex flex-col gap-3">
-                <Link
-                  href="/tutor"
-                  className="inline-flex items-center justify-center px-6 py-3 rounded-xl bg-gradient-to-r from-teal-600 to-cyan-600 text-white font-semibold shadow-lg hover:from-teal-700 hover:to-cyan-700 transition-all"
-                >
-                  <Sparkles className="w-5 h-5 mr-2" />
-                  Start Studying
-                </Link>
                 <Link
                   href="/sources"
                   className="inline-flex items-center justify-center px-6 py-3 rounded-xl border-2 border-slate-200 text-slate-700 font-semibold hover:bg-slate-50 transition-colors"
@@ -88,7 +97,18 @@ export default function MiddleDashboardPage() {
                 <div className="text-slate-400">Loading your galaxy...</div>
               </div>
             ) : (
-              <ConceptGalaxy topics={topics} />
+              <>
+                <ConceptGalaxy topics={topics} />
+                {smartCTA && (
+                  <SmartCTA 
+                    label={smartCTA.label}
+                    action={smartCTA.action}
+                    reason={smartCTA.reason}
+                    topicId={smartCTA.topicId}
+                    orbitState={smartCTA.orbitState}
+                  />
+                )}
+              </>
             )}
           </section>
         </div>
