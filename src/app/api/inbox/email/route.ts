@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
-import { GoogleGenerativeAI } from '@google/generative-ai';
+import { GoogleGenerativeAI, SchemaType } from '@google/generative-ai';
 
 // Initialize Gemini AI
 const genAI = new GoogleGenerativeAI(process.env.GOOGLE_AI_API_KEY || '');
@@ -339,32 +339,32 @@ async function analyzeDocument(
       generationConfig: {
         responseMimeType: 'application/json',
         responseSchema: {
-          type: 'object',
+          type: SchemaType.OBJECT,
           properties: {
             subject: {
-              type: 'string',
+              type: SchemaType.STRING,
               description: 'The overarching academic subject of the document (e.g., Biology, Pre-Algebra, World History).',
             },
             micro_missions: {
-              type: 'array',
+              type: SchemaType.ARRAY,
               description: 'The document fractured into actionable, non-threatening 5-15 minute study tasks.',
               items: {
-                type: 'object',
+                type: SchemaType.OBJECT,
                 properties: {
                   title: {
-                    type: 'string',
+                    type: SchemaType.STRING,
                     description: 'A highly specific, kid-friendly action title (e.g., "Learn the 4 Stages of Mitosis", NOT just "Mitosis").',
                   },
                   context: {
-                    type: 'string',
+                    type: SchemaType.STRING,
                     description: '1-2 sentences explaining exactly what the student needs to understand from this specific chunk.',
                   },
                   estimated_minutes: {
-                    type: 'integer',
+                    type: SchemaType.INTEGER,
                     description: 'Must be between 5 and 15.',
                   },
                   is_reference_only: {
-                    type: 'boolean',
+                    type: SchemaType.BOOLEAN,
                     description: 'Set to true ONLY if this chunk of text is just a syllabus, schedule, or administrative fluff that requires no actual studying.',
                   },
                 },
