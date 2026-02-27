@@ -310,8 +310,8 @@ This sprint transforms the constellation selection into a functional synthesis s
 
 ## Tasks
 
-- [ ] 9. Implement session initialization (The Bridge)
-  - [ ] 9.1 Wire up "Weave Thesis" button in ConceptGalaxy
+- [x] 9. Implement session initialization (The Bridge)
+  - [x] 9.1 Wire up "Weave Thesis" button in ConceptGalaxy
     - Remove placeholder console.log from handleWeaveThesis
     - Implement POST request to /api/loom/sessions with selectedConstellation
     - Show loading state on button during API call
@@ -319,7 +319,7 @@ This sprint transforms the constellation selection into a functional synthesis s
     - Handle error: Display toast with error message
     - _Requirements: 2.1, 2.4_
 
-  - [ ] 9.2 Implement POST /api/loom/sessions endpoint
+  - [x] 9.2 Implement POST /api/loom/sessions endpoint
     - Parse request body: { topicIds: string[] }
     - Validate topicIds array length (2-4) and orbit_state = 2 for all topics
     - Query proof_events table for historical learning transcripts (limit 10 most recent per topic)
@@ -327,7 +327,7 @@ This sprint transforms the constellation selection into a functional synthesis s
     - Return session object: { id, selectedTopicIds, status, createdAt }
     - _Requirements: 2.1, 2.2, 2.3, 2.5, 2.6, 10.5, 16.3_
 
-  - [ ] 9.3 Create /loom/[session_id]/page.tsx route
+  - [x] 9.3 Create /loom/[session_id]/page.tsx route
     - Create dynamic route at app/(app)/loom/[session_id]/page.tsx
     - Fetch session data from /api/loom/sessions/[id]
     - Verify session belongs to authenticated user (403 if not)
@@ -342,8 +342,8 @@ This sprint transforms the constellation selection into a functional synthesis s
     - Test session creation and database record
     - _Requirements: 2.1, 2.2, 2.3, 2.6, 16.3_
 
-- [ ] 10. Build Loom Workspace UI (The Arena)
-  - [ ] 10.1 Create LoomWorkspace component
+- [x] 10. Build Loom Workspace UI (The Arena)
+  - [x] 10.1 Create LoomWorkspace component
     - Create component at components/loom/LoomWorkspace.tsx
     - Accept props: session (LoomSession), topics (Topic[])
     - Implement split-screen layout: 40% left panel, 60% right panel
@@ -351,7 +351,7 @@ This sprint transforms the constellation selection into a functional synthesis s
     - Make layout responsive (stack vertically on mobile)
     - _Requirements: 8.1_
 
-  - [ ] 10.2 Create LockedConstellation component
+  - [x] 10.2 Create LockedConstellation component
     - Create component at components/loom/LockedConstellation.tsx
     - Accept props: topics (Topic[]), selectedTopicIds (string[])
     - Render static constellation using react-force-graph-2d (no interactions)
@@ -360,7 +360,7 @@ This sprint transforms the constellation selection into a functional synthesis s
     - Disable zoom, pan, and drag interactions
     - _Requirements: 8.2_
 
-  - [ ] 10.3 Create OutlineBoard component
+  - [x] 10.3 Create OutlineBoard component
     - Create component at components/loom/OutlineBoard.tsx
     - Accept props: crystallizedThreads (string[])
     - Render ordered list with Roman numerals (I, II, III, IV, V, VI)
@@ -369,7 +369,7 @@ This sprint transforms the constellation selection into a functional synthesis s
     - Style with dark academia theme (slate-900 background, amber accents)
     - _Requirements: 4.3, 4.4, 8.3_
 
-  - [ ] 10.4 Create SocraticChat component
+  - [x] 10.4 Create SocraticChat component
     - Create component at components/loom/SocraticChat.tsx
     - Accept props: transcript (Message[]), onSendMessage (callback), isLocked (boolean)
     - Render chat messages with alternating student/AI styling
@@ -379,7 +379,7 @@ This sprint transforms the constellation selection into a functional synthesis s
     - Show typing indicator during AI response
     - _Requirements: 8.4, 8.5, 8.6_
 
-  - [ ] 10.5 Integrate components into LoomWorkspace
+  - [x] 10.5 Integrate components into LoomWorkspace
     - Left panel: LockedConstellation (top) + OutlineBoard (bottom)
     - Right panel: SocraticChat (full height)
     - Pass session state to child components

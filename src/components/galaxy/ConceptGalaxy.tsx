@@ -49,6 +49,7 @@ export function ConceptGalaxy({ topics }: ConceptGalaxyProps) {
   // Constellation state management
   const [selectedConstellation, setSelectedConstellation] = useState<string[]>([]);
   const [showLoomDock, setShowLoomDock] = useState(false);
+  const [isCreatingSession, setIsCreatingSession] = useState(false);
 
   // Update dimensions on mount and resize
   useEffect(() => {
@@ -130,10 +131,39 @@ export function ConceptGalaxy({ topics }: ConceptGalaxyProps) {
     setSelectedConstellation(prev => [...prev, node.id]);
   };
 
-  const handleWeaveThesis = () => {
-    console.log('[Sprint 1] Weave Thesis clicked with constellation:', selectedConstellation);
-    // Sprint 2 will implement session initialization
-    toast.info('Session initialization coming in Sprint 2');
+  const handleWeaveThesis = async () => {
+    setIsCreatingSession(true);
+    
+    try {
+      // POST to /api/loom/sessions with selected constellation
+      const response = await fetch('/api/loom/sessions', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          topicIds: selectedConstellation,
+        }),
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || 'Failed to create synthesis session');
+      }
+
+      const data = await response.json();
+      const sessionId = data.session.id;
+
+      console.log('[Loom] Session created:', sessionId);
+
+      // Navigate to /loom/[session_id]
+      router.push(`/loom/${sessionId}`);
+
+    } catch (error: any) {
+      console.error('[Loom] Failed to create session:', error);
+      toast.error(error.message || 'Failed to start synthesis session');
+      setIsCreatingSession(false);
+    }
   };
 
   if (topics.length === 0) {
@@ -225,10 +255,20 @@ export function ConceptGalaxy({ topics }: ConceptGalaxyProps) {
             </div>
             <button
               onClick={handleWeaveThesis}
-              className="px-6 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg font-medium transition-colors flex items-center gap-2"
+              disabled={isCreatingSession}
+              className="px-6 py-2 bg-indigo-600 hover:bg-indigo-700 disabled:bg-indigo-800 disabled:cursor-not-allowed text-white rounded-lg font-medium transition-colors flex items-center gap-2"
             >
-              <span>🕸️</span>
-              <span>Weave Thesis</span>
+              {isCreatingSession ? (
+                <>
+                  <span className="animate-spin">⏳</span>
+                  <span>Initializing...</span>
+                </>
+              ) : (
+                <>
+                  <span>🕸️</span>
+                  <span>Weave Thesis</span>
+                </>
+              )}
             </button>
           </div>
         </div>
