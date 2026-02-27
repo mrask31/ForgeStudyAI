@@ -7,9 +7,17 @@ import { cookies } from 'next/headers';
 import OpenAI from 'openai';
 import { createHobbyAnalogyChatModel } from '@/lib/ai/google-client';
 
-const openaiEmbeddings = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-});
+// Lazy-initialize OpenAI client to avoid build-time errors
+let openaiEmbeddings: OpenAI | null = null;
+
+function getOpenAIEmbeddings(): OpenAI {
+  if (!openaiEmbeddings) {
+    openaiEmbeddings = new OpenAI({
+      apiKey: process.env.OPENAI_API_KEY,
+    });
+  }
+  return openaiEmbeddings;
+}
 
 export const maxDuration = 30;
 
@@ -145,7 +153,7 @@ async function retrieveBinderContext(
 ): Promise<BinderContextResult> {
   try {
     // 1) Generate embedding from user's question
-    const embeddingResponse = await openaiEmbeddings.embeddings.create({
+    const embeddingResponse = await getOpenAIEmbeddings().embeddings.create({
       model: 'text-embedding-3-small',
       input: ragQuery,
     });
