@@ -1,7 +1,7 @@
 'use client';
 
 import { createContext, useContext, useEffect, useState } from 'react';
-import { createClient } from '@/lib/supabase/client';
+import { supabase } from '@/lib/supabaseClient';
 import type { User } from '@supabase/supabase-js';
 
 interface UserContextType {
@@ -19,8 +19,6 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const supabase = createClient();
-
     // Get initial user
     supabase.auth.getUser().then(({ data: { user } }) => {
       setUser(user);
