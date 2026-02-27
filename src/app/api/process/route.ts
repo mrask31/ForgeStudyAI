@@ -3,9 +3,17 @@ import { createServerClient, type CookieOptions } from '@supabase/ssr';
 import { cookies } from 'next/headers';
 import OpenAI from 'openai';
 
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-});
+// Lazy-initialize OpenAI client to avoid build-time errors
+let openaiClient: OpenAI | null = null;
+
+function getOpenAIClient(): OpenAI {
+  if (!openaiClient) {
+    openaiClient = new OpenAI({
+      apiKey: process.env.OPENAI_API_KEY,
+    });
+  }
+  return openaiClient;
+}
 
 export const runtime = 'nodejs'; 
 
@@ -87,7 +95,7 @@ export async function POST(req: Request) {
         const batch = chunks.slice(i, i + batchSize);
         
         await Promise.all(batch.map(async (chunk: string, chunkIndex: number) => {
-            const embeddingResponse = await openai.embeddings.create({
+            const embeddingResponse = await getOpenAIClient().embeddings.create({
                 model: 'text-embedding-3-small', 
                 input: chunk,
             });

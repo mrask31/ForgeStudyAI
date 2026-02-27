@@ -10,6 +10,18 @@ export const dynamic = 'force-dynamic'
 
 type SupabaseServerClient = ReturnType<typeof createServerClient>
 
+// Lazy-initialize OpenAI client to avoid build-time errors
+let openaiClient: OpenAI | null = null
+
+function getOpenAIClient(): OpenAI {
+  if (!openaiClient) {
+    openaiClient = new OpenAI({
+      apiKey: process.env.OPENAI_API_KEY,
+    })
+  }
+  return openaiClient
+}
+
 // Helper to generate deterministic message_id
 function generateMessageId(chatId: string | null, content: string): string {
   const crypto = require('crypto')
@@ -28,12 +40,10 @@ async function retrieveBinderContextForMap(
 ): Promise<string> {
   try {
     // Use OpenAI embeddings API directly
-    const openaiClient = new OpenAI({
-      apiKey: process.env.OPENAI_API_KEY,
-    })
+    const openaiClientInstance = getOpenAIClient()
 
     // Generate embedding
-    const embeddingResponse = await openaiClient.embeddings.create({
+    const embeddingResponse = await openaiClientInstance.embeddings.create({
       model: 'text-embedding-3-small',
       input: messageContent,
     })

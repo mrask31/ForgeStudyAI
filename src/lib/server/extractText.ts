@@ -2,7 +2,15 @@ import OpenAI from 'openai'
 import mammoth from 'mammoth'
 import * as pdfjsLib from 'pdfjs-dist/legacy/build/pdf.js'
 
-const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY })
+// Lazy-initialize OpenAI client to avoid build-time errors
+let openaiClient: OpenAI | null = null
+
+function getOpenAIClient(): OpenAI {
+  if (!openaiClient) {
+    openaiClient = new OpenAI({ apiKey: process.env.OPENAI_API_KEY })
+  }
+  return openaiClient
+}
 
 const parseStorageUrl = (fileUrl: string) => {
   const trimmed = fileUrl.replace(/^\/+/, '')
@@ -32,7 +40,7 @@ const extractPdfText = async (buffer: ArrayBuffer) => {
 
 const extractImageText = async (buffer: ArrayBuffer, mimeType: string) => {
   const dataUrl = bufferToBase64DataUrl(buffer, mimeType)
-  const response = await openai.chat.completions.create({
+  const response = await getOpenAIClient().chat.completions.create({
     model: 'gpt-4o-mini',
     messages: [
       {
