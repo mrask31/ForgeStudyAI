@@ -94,8 +94,8 @@ export function LockedConstellation({ topics, selectedTopicIds }: LockedConstell
         nodeColor="color"
         nodeVal="val"
         enableNodeDrag={false}
-        enableZoomInteractions={false}
-        enablePanInteractions={false}
+        enableZoomInteraction={false}
+        enablePanInteraction={false}
         nodeCanvasObject={(node: any, ctx, globalScale) => {
           const label = node.name;
           const fontSize = 12 / globalScale;
