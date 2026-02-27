@@ -817,70 +817,127 @@ handleNodeClick(developingTopic, { shiftKey: true });
 
 ## Correctness Properties
 
+*A property is a characteristic or behavior that should hold true across all valid executions of a system—essentially, a formal statement about what the system should do. Properties serve as the bridge between human-readable specifications and machine-verifiable correctness guarantees.*
+
 ### Property 1: Constellation Integrity
-**Universal Quantification:**
-```
-∀ constellation C, ∀ node n ∈ C:
-  n.orbit_state = 2 ∧ 2 ≤ |C| ≤ 4
-```
-**Meaning:** Every constellation contains only mastered concepts (orbit_state = 2) and has between 2 and 4 nodes inclusive.
 
-### Property 2: Session State Consistency
-**Universal Quantification:**
-```
-∀ session S:
-  (S.status = 'SPARRING' ⟹ S.final_outline = null ∧ S.cryptographic_proof = null ∧ S.completed_at = null)
-  ∧
-  (S.status = 'THESIS_ACHIEVED' ⟹ S.final_outline ≠ null ∧ S.cryptographic_proof ≠ null ∧ S.completed_at ≠ null)
-```
-**Meaning:** Session status determines nullability of completion fields. Sparring sessions have no final artifacts; achieved sessions have all artifacts.
+*For any* constellation C and any node n in C, the node must have orbit_state = 2 (mastered) and the constellation size must be between 2 and 4 nodes inclusive.
 
-### Property 3: Transcript Chronology
-**Universal Quantification:**
-```
-∀ session S, ∀ i, j where 0 ≤ i < j < |S.transcript|:
-  S.transcript[i].timestamp < S.transcript[j].timestamp
-  ∧
-  S.transcript[i].role ≠ S.transcript[i+1].role
-```
-**Meaning:** Transcript entries are strictly chronologically ordered and alternate between student and AI roles.
+**Validates: Requirements 1.1, 1.2, 15.1, 15.3, 16.1**
 
-### Property 4: Edge Completeness
-**Universal Quantification:**
-```
-∀ session S where S.status = 'THESIS_ACHIEVED':
-  ∃ edges E where |E| = (|S.selected_topic_ids| × (|S.selected_topic_ids| - 1)) / 2
-  ∧
-  ∀ edge e ∈ E: e.loom_session_id = S.id
-  ∧
-  ∀ i, j where i < j ∧ i, j ∈ [0, |S.selected_topic_ids|):
-    ∃ edge e ∈ E: (e.source_topic_id = S.selected_topic_ids[i] ∧ e.target_topic_id = S.selected_topic_ids[j])
-```
-**Meaning:** Completed sessions create a complete graph of edges connecting all selected topics, with exactly n(n-1)/2 edges for n topics.
+### Property 2: Constellation Toggle Idempotence
 
-### Property 5: Crystallized Thread Atomicity
-**Universal Quantification:**
-```
-∀ transcript_entry t where t.crystallized_thread ≠ null:
-  t.role = 'ai'
-  ∧
-  sentenceCount(t.crystallized_thread) = 1
-  ∧
-  isAcademicSummary(t.crystallized_thread) = true
-```
-**Meaning:** Crystallized threads only appear in AI responses, are exactly one sentence, and use academic language.
+*For any* constellation C and any node n in C, removing n then adding n back should result in the same constellation state (order may vary).
 
-### Property 6: Socratic Constraint Enforcement
-**Universal Quantification:**
-```
-∀ ai_response r:
-  containsDirectAnswer(r.socratic_response) = false
-  ∧
-  containsThesisStatement(r.socratic_response) = false
-  ∧
-  (r.loom_status = 'THESIS_ACHIEVED' ⟹ studentGeneratedThesis(r) = true)
-```
-**Meaning:** AI never provides direct answers or writes the thesis. Thesis achievement only occurs when student articulates synthesis.
+**Validates: Requirements 1.4**
+
+### Property 3: Session State Consistency
+
+*For any* loom session S, if status = 'SPARRING' then final_outline, cryptographic_proof, and completed_at must be null; if status = 'THESIS_ACHIEVED' then all three must be non-null.
+
+**Validates: Requirements 5.3, 5.4**
+
+### Property 4: Transcript Chronology and Alternation
+
+*For any* loom session transcript, all entries must be strictly chronologically ordered by timestamp, and roles must alternate between 'student' and 'ai' with no consecutive entries having the same role.
+
+**Validates: Requirements 5.5, 5.6**
+
+### Property 5: Transcript Role Assignment
+
+*For any* message appended to a transcript, if the message originates from a student then role = 'student', and if from AI then role = 'ai'.
+
+**Validates: Requirements 5.1, 5.2**
+
+### Property 6: Edge Completeness Formula
+
+*For any* completed loom session with n selected topics, exactly n(n-1)/2 topic_edges must be created, forming a complete graph with no self-loops and all edges referencing the session_id.
+
+**Validates: Requirements 7.1, 7.2, 7.3, 7.4**
+
+### Property 7: Crystallized Thread Atomicity
+
+*For any* crystallized_thread in a transcript, it must appear only in AI responses, consist of exactly one sentence, and use academic language.
+
+**Validates: Requirements 4.2**
+
+### Property 8: Socratic Constraint Enforcement
+
+*For any* AI response, it must not contain direct answers to synthesis questions, must not write thesis statements on behalf of the student, and thesis achievement can only occur when the student articulates the synthesis.
+
+**Validates: Requirements 3.1, 3.2, 3.5**
+
+### Property 9: Session Initialization Completeness
+
+*For any* valid constellation used to initialize a loom session, the system must create a session record with status = 'SPARRING', generate a unique UUID, query proof_events for all topics, and inject that context into the AI system prompt.
+
+**Validates: Requirements 2.1, 2.2, 2.3, 2.5**
+
+### Property 10: Row Level Security Enforcement
+
+*For any* database query on loom_sessions or topic_edges, the result set must contain only records where user_id matches the authenticated user (auth.uid()), enforced at the database level via RLS policies.
+
+**Validates: Requirements 9.1, 9.2, 17.1, 17.2, 17.3, 17.4**
+
+### Property 11: Input Sanitization Completeness
+
+*For any* student message submitted to the system, markdown code blocks, HTML tags, system instruction markers, and content beyond 2000 characters must be removed before processing.
+
+**Validates: Requirements 12.1, 12.2, 12.3, 12.4**
+
+### Property 12: Rate Limiting Enforcement
+
+*For any* user within a one-hour window, the system must reject attempts to create more than 5 loom sessions, enforcing the limit before session creation.
+
+**Validates: Requirements 10.1**
+
+### Property 13: Export Document Completeness
+
+*For any* completed loom session export, the proof document must contain session_id, topic_titles, final_outline, cryptographic_proof, completion timestamp, hashed user_id, and a SHA-256 hash of the document content.
+
+**Validates: Requirements 14.1, 14.2, 14.3, 14.4**
+
+### Property 14: UI State Consistency with Session Status
+
+*For any* loom session displayed in the workspace, if status = 'SPARRING' then chat input must be enabled and export button hidden; if status = 'THESIS_ACHIEVED' then chat input must be disabled and export button visible.
+
+**Validates: Requirements 6.5, 6.6, 8.5, 8.6**
+
+### Property 15: Constellation Dock Visibility
+
+*For any* constellation state in the Galaxy UI, the bottom dock with "Weave Thesis" button must be visible if and only if the constellation contains at least 2 nodes.
+
+**Validates: Requirements 1.5**
+
+### Property 16: SVG Thread Rendering Completeness
+
+*For any* constellation with n selected nodes, the system must render n(n-1)/2 SVG thread elements connecting all unique pairs of nodes.
+
+**Validates: Requirements 1.6**
+
+### Property 17: Structured Output Schema Compliance
+
+*For any* AI response generated by the Socratic Engine, the response must parse successfully against the SOCRATIC_RESPONSE_SCHEMA using Zod validation.
+
+**Validates: Requirements 3.6, 12.5**
+
+### Property 18: Cryptographic Proof Transcript References
+
+*For any* cryptographic proof document, it must contain at least one specific reference to the transcript by timestamp or excerpt, demonstrating how the student arrived at the synthesis.
+
+**Validates: Requirements 6.4**
+
+### Property 19: Orbit State Validation at All Boundaries
+
+*For any* operation involving topic selection (constellation building, session initialization, edge creation), the system must verify orbit_state = 2 for all involved topics and reject the operation if any topic fails this check.
+
+**Validates: Requirements 2.6, 7.5, 16.3, 16.4**
+
+### Property 20: Database Constraint Enforcement
+
+*For any* attempt to create a loom_sessions record with selected_topic_ids array length outside the range [2, 4], the database must reject the operation via CHECK constraint.
+
+**Validates: Requirements 15.4**
 
 ## Error Handling
 

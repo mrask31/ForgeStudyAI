@@ -16,23 +16,18 @@
 ALTER TABLE study_topics 
 ADD COLUMN IF NOT EXISTS orbit_state INTEGER DEFAULT 1 NOT NULL
 CHECK (orbit_state >= 0 AND orbit_state <= 1);
-
 -- Add index for query performance (Galaxy UI filters by orbit_state >= 1)
 CREATE INDEX IF NOT EXISTS idx_study_topics_orbit_state 
 ON study_topics(orbit_state);
-
 -- Add description column (used by webhook for auto-created topics)
 ALTER TABLE study_topics
 ADD COLUMN IF NOT EXISTS description TEXT;
-
 -- Add metadata column (used by webhook for source tracking and AI analysis)
 ALTER TABLE study_topics
 ADD COLUMN IF NOT EXISTS metadata JSONB DEFAULT '{}'::jsonb;
-
 -- Create index for metadata queries (useful for filtering by source)
 CREATE INDEX IF NOT EXISTS idx_study_topics_metadata 
 ON study_topics USING gin(metadata);
-
 -- ============================================
 -- VERIFICATION QUERIES
 -- ============================================
@@ -61,5 +56,4 @@ ON study_topics USING gin(metadata);
 -- DROP INDEX IF EXISTS idx_study_topics_metadata;
 -- ALTER TABLE study_topics DROP COLUMN IF EXISTS orbit_state;
 -- ALTER TABLE study_topics DROP COLUMN IF EXISTS description;
--- ALTER TABLE study_topics DROP COLUMN IF EXISTS metadata;
-
+-- ALTER TABLE study_topics DROP COLUMN IF EXISTS metadata;;

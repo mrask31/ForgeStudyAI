@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from 'react';
 import dynamic from 'next/dynamic';
 import { useRouter } from 'next/navigation';
+import { toast } from 'sonner';
 
 // Dynamically import ForceGraph2D to avoid SSR issues
 const ForceGraph2D = dynamic(() => import('react-force-graph-2d'), {
@@ -18,12 +19,14 @@ interface Topic {
   id: string;
   title: string;
   mastery_score: number;
+  orbit_state: number; // 0=Quarantine, 1=Active, 2=Mastered
 }
 
 interface Node {
   id: string;
   name: string;
   masteryScore: number;
+  orbitState: number;
   val: number; // Node size
   color: string;
 }
@@ -31,6 +34,7 @@ interface Node {
 interface Link {
   source: string;
   target: string;
+  isConstellation?: boolean; // Mark constellation threads
 }
 
 interface ConceptGalaxyProps {
@@ -41,6 +45,10 @@ export function ConceptGalaxy({ topics }: ConceptGalaxyProps) {
   const router = useRouter();
   const graphRef = useRef<any>();
   const [dimensions, setDimensions] = useState({ width: 800, height: 600 });
+  
+  // Constellation state management
+  const [selectedConstellation, setSelectedConstellation] = useState<string[]>([]);
+  const [showLoomDock, setShowLoomDock] = useState(false);
 
   // Update dimensions on mount and resize
   useEffect(() => {
@@ -59,21 +67,73 @@ export function ConceptGalaxy({ topics }: ConceptGalaxyProps) {
     return () => window.removeEventListener('resize', updateDimensions);
   }, []);
 
+  // Update dock visibility when constellation changes
+  useEffect(() => {
+    setShowLoomDock(selectedConstellation.length >= 2);
+  }, [selectedConstellation]);
+
   // Transform topics into graph nodes
   const nodes: Node[] = topics.map(topic => ({
     id: topic.id,
     name: topic.title,
     masteryScore: topic.mastery_score || 0,
+    orbitState: topic.orbit_state || 1,
     val: 10 + (topic.mastery_score || 0) / 10, // Size based on mastery (10-20)
     color: getMasteryColor(topic.mastery_score || 0),
   }));
 
-  // Create links (for now, no relationships - just isolated nodes)
+  // Create constellation links (native canvas approach)
   const links: Link[] = [];
+  
+  // Generate all pairs of selected nodes as constellation threads
+  for (let i = 0; i < selectedConstellation.length; i++) {
+    for (let j = i + 1; j < selectedConstellation.length; j++) {
+      links.push({
+        source: selectedConstellation[i],
+        target: selectedConstellation[j],
+        isConstellation: true,
+      });
+    }
+  }
 
-  const handleNodeClick = (node: any) => {
-    // Navigate to tutor with topic context
-    router.push(`/tutor?topicId=${node.id}&topicTitle=${encodeURIComponent(node.name)}`);
+  const handleNodeClick = (node: any, event: MouseEvent) => {
+    // Check if Shift key is pressed for constellation selection
+    if (event.shiftKey) {
+      handleConstellationSelection(node);
+    } else {
+      // Normal click: Navigate to tutor
+      router.push(`/tutor?topicId=${node.id}&topicTitle=${encodeURIComponent(node.name)}`);
+    }
+  };
+
+  const handleConstellationSelection = (node: Node) => {
+    // Validation 1: Check orbit_state (The "Unearned Knowledge" Constraint)
+    if (node.orbitState !== 2) {
+      toast.error('Only Mastered stars can be woven.');
+      return;
+    }
+
+    // Check if node is already selected (toggle behavior)
+    if (selectedConstellation.includes(node.id)) {
+      // Remove from constellation
+      setSelectedConstellation(prev => prev.filter(id => id !== node.id));
+      return;
+    }
+
+    // Validation 2: Check max nodes (The "Overload" Constraint)
+    if (selectedConstellation.length >= 4) {
+      toast.error('Maximum 4 concepts can be woven together.');
+      return;
+    }
+
+    // Add to constellation
+    setSelectedConstellation(prev => [...prev, node.id]);
+  };
+
+  const handleWeaveThesis = () => {
+    console.log('[Sprint 1] Weave Thesis clicked with constellation:', selectedConstellation);
+    // Sprint 2 will implement session initialization
+    toast.info('Session initialization coming in Sprint 2');
   };
 
   if (topics.length === 0) {
@@ -86,7 +146,7 @@ export function ConceptGalaxy({ topics }: ConceptGalaxyProps) {
   }
 
   return (
-    <div id="galaxy-container" className="w-full">
+    <div id="galaxy-container" className="w-full relative">
       <div className="w-full h-[600px] bg-slate-950 rounded-lg border border-slate-800 overflow-hidden">
         <ForceGraph2D
           ref={graphRef}
@@ -102,11 +162,12 @@ export function ConceptGalaxy({ topics }: ConceptGalaxyProps) {
             const label = node.name;
             const fontSize = 12 / globalScale;
             const nodeSize = node.val;
+            const isSelected = selectedConstellation.includes(node.id);
             
-            // Draw glow for mastered topics (>70%)
-            if (node.masteryScore > 70) {
-              ctx.shadowBlur = 20;
-              ctx.shadowColor = node.color;
+            // Draw glow for mastered topics (>70%) or selected nodes
+            if (node.masteryScore > 70 || isSelected) {
+              ctx.shadowBlur = isSelected ? 30 : 20;
+              ctx.shadowColor = isSelected ? '#f59e0b' : node.color; // Amber glow for selected
             } else {
               ctx.shadowBlur = 0;
             }
@@ -114,8 +175,15 @@ export function ConceptGalaxy({ topics }: ConceptGalaxyProps) {
             // Draw circle
             ctx.beginPath();
             ctx.arc(node.x, node.y, nodeSize, 0, 2 * Math.PI);
-            ctx.fillStyle = node.color;
+            ctx.fillStyle = isSelected ? '#f59e0b' : node.color; // Amber fill for selected
             ctx.fill();
+            
+            // Draw selection ring for selected nodes
+            if (isSelected) {
+              ctx.strokeStyle = '#fbbf24';
+              ctx.lineWidth = 2 / globalScale;
+              ctx.stroke();
+            }
             
             // Reset shadow
             ctx.shadowBlur = 0;
@@ -128,8 +196,9 @@ export function ConceptGalaxy({ topics }: ConceptGalaxyProps) {
             ctx.fillText(label, node.x, node.y + nodeSize + fontSize + 2);
           }}
           backgroundColor="#020617"
-          linkColor={() => '#334155'}
-          linkWidth={1}
+          linkColor={(link: any) => link.isConstellation ? 'rgba(251, 191, 36, 0.6)' : '#334155'}
+          linkWidth={(link: any) => link.isConstellation ? 2 : 1}
+          linkDirectionalParticles={0}
           d3AlphaDecay={0.02}
           d3VelocityDecay={0.3}
           cooldownTicks={100}
@@ -141,6 +210,29 @@ export function ConceptGalaxy({ topics }: ConceptGalaxyProps) {
           }}
         />
       </div>
+
+      {/* Loom Dock - Bottom slide-up panel */}
+      {showLoomDock && (
+        <div className="absolute bottom-0 left-0 right-0 bg-slate-900 border-t border-slate-700 p-4 rounded-b-lg animate-slide-up">
+          <div className="flex items-center justify-between max-w-4xl mx-auto">
+            <div className="flex items-center gap-3">
+              <div className="text-amber-400 text-sm font-medium">
+                {selectedConstellation.length} concept{selectedConstellation.length !== 1 ? 's' : ''} selected
+              </div>
+              <div className="text-slate-500 text-xs">
+                Shift+Click to add or remove stars
+              </div>
+            </div>
+            <button
+              onClick={handleWeaveThesis}
+              className="px-6 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg font-medium transition-colors flex items-center gap-2"
+            >
+              <span>🕸️</span>
+              <span>Weave Thesis</span>
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
