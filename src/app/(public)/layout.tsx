@@ -2,6 +2,9 @@ import type { Metadata } from 'next'
 import PublicLayout from '@/components/layout/PublicLayout'
 import { AppShell } from '@/components/layout/AppShell'
 
+// Force dynamic rendering for public routes that use Supabase
+export const dynamic = 'force-dynamic'
+
 export const metadata: Metadata = {
   metadataBase: new URL('https://www.forgestudyai.com'),
   title: 'ForgeStudy | AI Study Help for Grades 6–12',

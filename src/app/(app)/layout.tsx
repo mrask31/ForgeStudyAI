@@ -1,6 +1,9 @@
 import { Suspense } from 'react'
 import { AppShell } from '@/components/layout/AppShell'
 
+// Force dynamic rendering for all app routes
+export const dynamic = 'force-dynamic'
+
 export default function AppRouteLayout({
   children,
 }: {
