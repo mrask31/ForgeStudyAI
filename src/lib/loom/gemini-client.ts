@@ -69,7 +69,8 @@ export class LoomGeminiClient {
         topK: 40,
         maxOutputTokens: 1024,
         responseMimeType: 'application/json', // Enforce JSON output
-        responseSchema: zodToJsonSchema(require('./schemas').SocraticResponseSchema),
+        // Type assertion bypasses Google's strict enum format requirement
+        responseSchema: zodToJsonSchema(require('./schemas').SocraticResponseSchema) as any,
       },
       systemInstruction: this.systemPrompt,
     });
