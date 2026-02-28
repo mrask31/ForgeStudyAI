@@ -204,7 +204,7 @@ export function ConceptGalaxy({ topics, profileId, onTopicsRefresh }: ConceptGal
     } catch (error) {
       console.error('[Galaxy] Failed to apply custom forces:', error);
     }
-  }, [topics, justRescued]);
+  }, [justRescued]);
 
   // Update dock visibility when constellation changes
   useEffect(() => {
