@@ -1,7 +1,8 @@
 'use client';
 
 import { X } from 'lucide-react';
-import { useEffect } from 'react';
+import { useEffect, Suspense } from 'react';
+import { FocusPanelChat } from './FocusPanelChat';
 
 interface FocusPanelProps {
   isOpen: boolean;
@@ -80,14 +81,20 @@ export function FocusPanel({ isOpen, topicId, topicTitle, onClose }: FocusPanelP
         {/* Chat Content */}
         <div className="h-[calc(100vh-64px)] overflow-hidden">
           {isOpen && (
-            <div className="h-full flex items-center justify-center p-4">
-              <div className="text-center">
-                <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-slate-900/60 backdrop-blur-md border border-slate-800 mb-4">
-                  <div className="animate-spin rounded-full h-8 w-8 border-2 border-indigo-500 border-t-transparent"></div>
+            <Suspense
+              fallback={
+                <div className="h-full flex items-center justify-center p-4">
+                  <div className="text-center">
+                    <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-slate-900/60 backdrop-blur-md border border-slate-800 mb-4">
+                      <div className="animate-spin rounded-full h-8 w-8 border-2 border-indigo-500 border-t-transparent"></div>
+                    </div>
+                    <p className="text-lg font-medium text-slate-400">Loading chat...</p>
+                  </div>
                 </div>
-                <p className="text-lg font-medium text-slate-400">Loading chat...</p>
-              </div>
-            </div>
+              }
+            >
+              <FocusPanelChat topicId={topicId} topicTitle={topicTitle} />
+            </Suspense>
           )}
         </div>
       </div>

@@ -170,27 +170,27 @@ This implementation plan converts the remaining legacy V1 pages (/readiness, /he
 
 ### Phase 3: Chat Integration
 
-- [ ] 8. Create FocusPanelChat wrapper component
-  - [ ] 8.1 Create FocusPanelChat component file and structure
+- [x] 8. Create FocusPanelChat wrapper component
+  - [x] 8.1 Create FocusPanelChat component file and structure
     - Create src/components/galaxy/FocusPanelChat.tsx
     - Define FocusPanelChatProps interface (topicId, topicTitle)
     - Add state for sessionId and isInitializing
     - _Requirements: 5.1_
   
-  - [ ] 8.2 Implement chat session initialization
+  - [x] 8.2 Implement chat session initialization
     - Create useEffect to initialize session on mount
     - Call /api/chats/resolve with intent: 'new_question', topicId, topicTitle
     - Store returned chatId in sessionId state
     - Handle initialization loading state
     - _Requirements: 5.3_
   
-  - [ ] 8.3 Handle session initialization errors
+  - [x] 8.3 Handle session initialization errors
     - Add try-catch for API call failures
     - Display error message in panel
     - Provide retry or close options
     - _Requirements: 5.3_
   
-  - [ ] 8.4 Integrate ChatInterface component
+  - [x] 8.4 Integrate ChatInterface component
     - Wrap ChatInterface with TutorProvider
     - Pass sessionId, mode: 'focus-panel', topicId, topicTitle props
     - Ensure chat functions identically to /tutor page
@@ -202,28 +202,28 @@ This implementation plan converts the remaining legacy V1 pages (/readiness, /he
     - Test ChatInterface receives correct props
     - _Requirements: 5.2, 5.3_
 
-- [ ] 9. Style chat messages for Dark Space UI
-  - [ ] 9.1 Update AI message styling in ChatInterface
+- [x] 9. Style chat messages for Dark Space UI
+  - [x] 9.1 Update AI message styling in ChatInterface
     - Apply bg-slate-900 border border-slate-800 text-slate-300
     - Apply rounded-2xl rounded-tl-none
     - _Requirements: 6.1_
   
-  - [ ] 9.2 Update student message styling in ChatInterface
+  - [x] 9.2 Update student message styling in ChatInterface
     - Apply bg-indigo-600/20 border border-indigo-500/30 text-indigo-100
     - Apply rounded-2xl rounded-tr-none
     - _Requirements: 6.2_
   
-  - [ ] 9.3 Update input bar styling
+  - [x] 9.3 Update input bar styling
     - Apply bg-slate-950 border-t border-slate-800
     - Fix to bottom of Focus Panel
     - _Requirements: 6.3_
   
-  - [ ] 9.4 Update input field styling
+  - [x] 9.4 Update input field styling
     - Apply bg-slate-900 border border-slate-700 text-slate-200 rounded-xl
     - Apply focus:border-indigo-500
     - _Requirements: 6.4_
   
-  - [ ] 9.5 Update send button styling
+  - [x] 9.5 Update send button styling
     - Apply bg-indigo-600 hover:bg-indigo-500 text-white
     - _Requirements: 6.5_
 
