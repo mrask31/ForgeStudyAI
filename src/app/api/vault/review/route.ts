@@ -75,7 +75,7 @@ export async function POST(request: Request) {
     
     const { data: proofEvents } = await supabase
       .from('proof_events')
-      .select('concept, transcript_excerpt, student_analogy')
+      .select('concept, transcript_excerpt, student_analogy, timestamp')
       .eq('topic_id', topicId)
       .order('timestamp', { ascending: false })
       .limit(5);
