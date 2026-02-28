@@ -19,7 +19,8 @@ interface Topic {
   id: string;
   title: string;
   mastery_score: number;
-  orbit_state: number; // 0=Quarantine, 1=Active, 2=Mastered
+  orbit_state: number; // 0=Quarantine, 1=Active, 2=Mastered, 3=Ghost Node
+  next_review_date?: string | null; // For Ghost Nodes
 }
 
 interface Node {
@@ -29,6 +30,8 @@ interface Node {
   orbitState: number;
   val: number; // Node size
   color: string;
+  physicsMode: 'mastered' | 'ghost' | 'snapBack'; // Physics state
+  isAnimating: boolean; // Animation state
 }
 
 interface Link {
@@ -39,9 +42,11 @@ interface Link {
 
 interface ConceptGalaxyProps {
   topics: Topic[];
+  profileId?: string; // For lazy evaluation
+  onTopicsRefresh?: () => void; // Callback to refresh topics after lazy eval
 }
 
-export function ConceptGalaxy({ topics }: ConceptGalaxyProps) {
+export function ConceptGalaxy({ topics, profileId, onTopicsRefresh }: ConceptGalaxyProps) {
   const router = useRouter();
   const graphRef = useRef<any>();
   const [dimensions, setDimensions] = useState({ width: 800, height: 600 });
@@ -50,6 +55,12 @@ export function ConceptGalaxy({ topics }: ConceptGalaxyProps) {
   const [selectedConstellation, setSelectedConstellation] = useState<string[]>([]);
   const [showLoomDock, setShowLoomDock] = useState(false);
   const [isCreatingSession, setIsCreatingSession] = useState(false);
+  
+  // Permanent edges state
+  const [permanentEdges, setPermanentEdges] = useState<Array<{ source: string; target: string }>>([]);
+  
+  // Vault: Snap-back animation state
+  const [justRescued, setJustRescued] = useState<string[]>([]);
 
   // Update dimensions on mount and resize
   useEffect(() => {
@@ -67,6 +78,118 @@ export function ConceptGalaxy({ topics }: ConceptGalaxyProps) {
     window.addEventListener('resize', updateDimensions);
     return () => window.removeEventListener('resize', updateDimensions);
   }, []);
+  
+  // Fetch permanent topic edges on mount
+  useEffect(() => {
+    async function fetchTopicEdges() {
+      try {
+        const response = await fetch('/api/loom/edges');
+        if (response.ok) {
+          const data = await response.json();
+          setPermanentEdges(data.edges || []);
+        }
+      } catch (error) {
+        console.error('[Galaxy] Failed to fetch topic edges:', error);
+      }
+    }
+    
+    fetchTopicEdges();
+  }, []);
+  
+  // Vault: Lazy evaluation on mount
+  useEffect(() => {
+    async function evaluateDecay() {
+      if (!profileId) return;
+      
+      try {
+        const response = await fetch('/api/vault/lazy-eval', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ profileId }),
+        });
+        
+        if (response.ok) {
+          const { updatedCount } = await response.json();
+          
+          if (updatedCount > 0) {
+            console.log(`[Vault] ${updatedCount} topics decayed to Ghost Nodes`);
+            // Refresh topics to show new Ghost Nodes
+            if (onTopicsRefresh) {
+              onTopicsRefresh();
+            }
+          }
+        }
+      } catch (error) {
+        console.error('[Vault] Failed to evaluate decay:', error);
+      }
+    }
+    
+    evaluateDecay();
+  }, [profileId, onTopicsRefresh]);
+  
+  // Vault: Snap-back event listener
+  useEffect(() => {
+    const handleSnapBack = (event: CustomEvent) => {
+      const { topicId } = event.detail;
+      
+      console.log('[Vault] Snap-back triggered for topic:', topicId);
+      
+      // Add to justRescued array
+      setJustRescued(prev => [...prev, topicId]);
+      
+      // Refresh topics to get updated orbit_state
+      if (onTopicsRefresh) {
+        onTopicsRefresh();
+      }
+    };
+    
+    window.addEventListener('vault:snap-back', handleSnapBack as EventListener);
+    
+    return () => {
+      window.removeEventListener('vault:snap-back', handleSnapBack as EventListener);
+    };
+  }, [onTopicsRefresh]);
+  
+  // Vault: Clear snap-back state after 1 second
+  useEffect(() => {
+    if (justRescued.length === 0) return;
+    
+    const timer = setTimeout(() => {
+      console.log('[Vault] Clearing snap-back animation');
+      setJustRescued([]);
+    }, 1000);
+    
+    return () => clearTimeout(timer);
+  }, [justRescued]);
+  
+  // Apply custom D3 forces for Ghost Node physics
+  useEffect(() => {
+    if (!graphRef.current) return;
+    
+    const graph = graphRef.current;
+    
+    // Apply custom radial force based on node physics mode
+    try {
+      const d3 = require('d3-force');
+      
+      graph.d3Force('radial', d3.forceRadial((node: Node) => {
+        if (node.physicsMode === 'snapBack') {
+          return 2.0 * 100; // Very strong pull to center (snap-back)
+        } else if (node.physicsMode === 'ghost') {
+          return -0.3 * 100; // Weak push to rim (drift away)
+        } else {
+          return 0.5 * 100; // Normal pull to center
+        }
+      }));
+      
+      // Reheat simulation when physics mode changes
+      if (justRescued.length > 0) {
+        graph.d3ReheatSimulation();
+      }
+    } catch (error) {
+      console.error('[Galaxy] Failed to apply custom forces:', error);
+    }
+  }, [nodes, justRescued]);
 
   // Update dock visibility when constellation changes
   useEffect(() => {
@@ -74,17 +197,45 @@ export function ConceptGalaxy({ topics }: ConceptGalaxyProps) {
   }, [selectedConstellation]);
 
   // Transform topics into graph nodes
-  const nodes: Node[] = topics.map(topic => ({
-    id: topic.id,
-    name: topic.title,
-    masteryScore: topic.mastery_score || 0,
-    orbitState: topic.orbit_state || 1,
-    val: 10 + (topic.mastery_score || 0) / 10, // Size based on mastery (10-20)
-    color: getMasteryColor(topic.mastery_score || 0),
-  }));
+  const nodes: Node[] = topics.map(topic => {
+    // Determine physics mode
+    let physicsMode: 'mastered' | 'ghost' | 'snapBack';
+    
+    if (justRescued.includes(topic.id)) {
+      physicsMode = 'snapBack';
+    } else if (topic.orbit_state === 3) {
+      physicsMode = 'ghost';
+    } else {
+      physicsMode = 'mastered';
+    }
+    
+    return {
+      id: topic.id,
+      name: topic.title,
+      masteryScore: topic.mastery_score || 0,
+      orbitState: topic.orbit_state || 1,
+      val: 10 + (topic.mastery_score || 0) / 10, // Size based on mastery (10-20)
+      color: getNodeColor(topic.orbit_state, justRescued.includes(topic.id)),
+      physicsMode,
+      isAnimating: justRescued.includes(topic.id),
+    };
+  });
 
   // Create constellation links (native canvas approach)
   const links: Link[] = [];
+  
+  // Add permanent edges (indigo threads between mastered nodes)
+  const masteredTopicIds = topics.filter(t => t.orbit_state === 2).map(t => t.id);
+  for (const edge of permanentEdges) {
+    // Only render edges between mastered nodes
+    if (masteredTopicIds.includes(edge.source) && masteredTopicIds.includes(edge.target)) {
+      links.push({
+        source: edge.source,
+        target: edge.target,
+        isConstellation: false, // Permanent edges are not constellation threads
+      });
+    }
+  }
   
   // Generate all pairs of selected nodes as constellation threads
   for (let i = 0; i < selectedConstellation.length; i++) {
@@ -193,14 +344,28 @@ export function ConceptGalaxy({ topics }: ConceptGalaxyProps) {
             const fontSize = 12 / globalScale;
             const nodeSize = node.val;
             const isSelected = selectedConstellation.includes(node.id);
+            const isGhost = node.orbitState === 3;
+            const isSnapBack = node.isAnimating;
             
-            // Draw glow for mastered topics (>70%) or selected nodes
-            if (node.masteryScore > 70 || isSelected) {
-              ctx.shadowBlur = isSelected ? 30 : 20;
+            // Calculate opacity
+            let opacity = 1.0;
+            if (isGhost && !isSnapBack) {
+              opacity = 0.4; // 40% opacity for Ghost Nodes
+            } else if (isSnapBack) {
+              // Animate opacity from 0.4 to 1.0 over 1 second
+              opacity = 1.0; // Simplified - full opacity during snap-back
+            }
+            
+            // Draw glow for mastered topics, selected nodes, or snap-back
+            if (node.masteryScore > 70 || isSelected || isSnapBack) {
+              ctx.shadowBlur = isSelected ? 30 : (isSnapBack ? 40 : 20);
               ctx.shadowColor = isSelected ? '#f59e0b' : node.color; // Amber glow for selected
             } else {
               ctx.shadowBlur = 0;
             }
+            
+            // Apply opacity
+            ctx.globalAlpha = opacity;
             
             // Draw circle
             ctx.beginPath();
@@ -215,8 +380,9 @@ export function ConceptGalaxy({ topics }: ConceptGalaxyProps) {
               ctx.stroke();
             }
             
-            // Reset shadow
+            // Reset shadow and alpha
             ctx.shadowBlur = 0;
+            ctx.globalAlpha = 1.0;
             
             // Draw label
             ctx.font = `${fontSize}px Sans-Serif`;
@@ -226,8 +392,18 @@ export function ConceptGalaxy({ topics }: ConceptGalaxyProps) {
             ctx.fillText(label, node.x, node.y + nodeSize + fontSize + 2);
           }}
           backgroundColor="#020617"
-          linkColor={(link: any) => link.isConstellation ? 'rgba(251, 191, 36, 0.6)' : '#334155'}
-          linkWidth={(link: any) => link.isConstellation ? 2 : 1}
+          linkColor={(link: any) => {
+            if (link.isConstellation) {
+              return 'rgba(251, 191, 36, 0.6)'; // Amber for active constellation
+            }
+            return 'rgba(99, 102, 241, 0.4)'; // Indigo for permanent edges
+          }}
+          linkWidth={(link: any) => {
+            if (link.isConstellation) {
+              return 2; // Thicker for active constellation
+            }
+            return 1.5; // Subtle for permanent edges
+          }}
           linkDirectionalParticles={0}
           d3AlphaDecay={0.02}
           d3VelocityDecay={0.3}
@@ -281,4 +457,24 @@ function getMasteryColor(score: number): string {
   if (score < 30) return '#64748b'; // Grey (slate-500) - Learning
   if (score < 70) return '#f59e0b'; // Amber (amber-500) - Developing
   return '#6366f1'; // Indigo (indigo-500) - Mastered
+}
+
+function getNodeColor(orbitState: number, isSnapBack: boolean): string {
+  if (isSnapBack) {
+    return '#6366f1'; // Indigo (animating back to mastered)
+  }
+  
+  if (orbitState === 3) {
+    return '#94a3b8'; // Silver (slate-400) - Ghost Node
+  }
+  
+  if (orbitState === 2) {
+    return '#6366f1'; // Indigo (mastered)
+  }
+  
+  if (orbitState === 1) {
+    return '#f59e0b'; // Amber (active/developing)
+  }
+  
+  return '#64748b'; // Grey (quarantine)
 }

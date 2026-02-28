@@ -37,11 +37,28 @@ interface Link {
 interface LockedConstellationProps {
   topics: Topic[];
   selectedTopicIds: string[];
+  isFlaring?: boolean;
+  isAchieved?: boolean;
 }
 
-export function LockedConstellation({ topics, selectedTopicIds }: LockedConstellationProps) {
+export function LockedConstellation({ topics, selectedTopicIds, isFlaring = false, isAchieved = false }: LockedConstellationProps) {
   const graphRef = useRef<any>();
   const [dimensions, setDimensions] = useState({ width: 400, height: 300 });
+
+  // Determine link color based on state
+  const getLinkColor = () => {
+    if (isAchieved) {
+      return 'rgba(99, 102, 241, 0.8)'; // Indigo (permanent lock)
+    }
+    return 'rgba(251, 191, 36, 0.6)'; // Amber (sparring state)
+  };
+
+  const getLinkWidth = () => {
+    if (isAchieved) {
+      return 2.5;
+    }
+    return 2;
+  };
 
   useEffect(() => {
     const updateDimensions = () => {
@@ -84,7 +101,12 @@ export function LockedConstellation({ topics, selectedTopicIds }: LockedConstell
   }
 
   return (
-    <div id="locked-constellation-container" className="w-full h-full bg-slate-900 rounded-lg border border-slate-800 overflow-hidden">
+    <div id="locked-constellation-container" className="w-full h-full bg-slate-900 rounded-lg border border-slate-800 overflow-hidden relative">
+      {isFlaring && (
+        <div className="absolute inset-0 pointer-events-none z-10">
+          <div className="w-full h-full constellation-flare" />
+        </div>
+      )}
       <ForceGraph2D
         ref={graphRef}
         graphData={{ nodes, links }}
@@ -122,8 +144,8 @@ export function LockedConstellation({ topics, selectedTopicIds }: LockedConstell
           ctx.fillText(label, node.x, node.y + nodeSize + fontSize + 2);
         }}
         backgroundColor="#0f172a"
-        linkColor={() => 'rgba(251, 191, 36, 0.6)'}
-        linkWidth={2}
+        linkColor={getLinkColor}
+        linkWidth={getLinkWidth()}
         d3AlphaDecay={0.02}
         d3VelocityDecay={0.3}
         cooldownTicks={100}

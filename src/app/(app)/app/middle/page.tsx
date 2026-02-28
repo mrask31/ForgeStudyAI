@@ -98,7 +98,17 @@ export default function MiddleDashboardPage() {
               </div>
             ) : (
               <>
-                <ConceptGalaxy topics={topics} />
+                <ConceptGalaxy 
+                  topics={topics} 
+                  profileId={activeProfileId || undefined}
+                  onTopicsRefresh={async () => {
+                    // Refresh topics after lazy eval or snap-back
+                    if (activeProfileId && user) {
+                      const topicsData = await getStudyTopicsWithMastery(activeProfileId);
+                      setTopics(topicsData);
+                    }
+                  }}
+                />
                 {smartCTA && (
                   <SmartCTA 
                     label={smartCTA.label}
@@ -106,6 +116,7 @@ export default function MiddleDashboardPage() {
                     reason={smartCTA.reason}
                     topicId={smartCTA.topicId}
                     orbitState={smartCTA.orbitState}
+                    vaultTopicIds={smartCTA.vaultTopicIds}
                   />
                 )}
               </>

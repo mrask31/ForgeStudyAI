@@ -6,7 +6,7 @@ export const dynamic = 'force-dynamic';
 /**
  * GET /api/loom/edges
  * Lists all topic edges for the authenticated user
- * Sprint 1: Placeholder implementation
+ * Returns edges created from completed synthesis sessions
  */
 export async function GET(req: NextRequest) {
   try {
@@ -22,10 +22,28 @@ export async function GET(req: NextRequest) {
       );
     }
 
-    // Sprint 1: Return empty array (placeholder)
-    // Future sprints will query topic_edges table
+    // Query topic_edges table (RLS will enforce user_id = auth.uid())
+    const { data: edges, error: edgesError } = await supabase
+      .from('topic_edges')
+      .select('source_topic_id, target_topic_id')
+      .eq('user_id', user.id);
+
+    if (edgesError) {
+      console.error('[Loom API] Failed to fetch edges:', edgesError);
+      return NextResponse.json(
+        { error: 'Failed to fetch topic edges' },
+        { status: 500 }
+      );
+    }
+
+    // Transform to simple source/target format
+    const formattedEdges = (edges || []).map(edge => ({
+      source: edge.source_topic_id,
+      target: edge.target_topic_id,
+    }));
+
     return NextResponse.json({
-      edges: [],
+      edges: formattedEdges,
     });
 
   } catch (error: any) {

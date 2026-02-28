@@ -8,9 +8,10 @@ import { updateOrbitState } from '@/app/actions/study-topics';
 interface SmartCTAProps {
   label: string;
   action: string;
-  reason: 'deadline' | 'low_mastery' | 'decay' | 'new' | 'quarantine';
+  reason: 'deadline' | 'low_mastery' | 'decay' | 'new' | 'quarantine' | 'vault';
   topicId?: string;
   orbitState?: number;
+  vaultTopicIds?: string[]; // For Vault batch sessions
 }
 
 const reasonConfig = {
@@ -44,6 +45,12 @@ const reasonConfig = {
     color: 'from-teal-600 to-cyan-600', // Soothing teal-to-cyan gradient
     hoverColor: 'hover:shadow-teal-500/50',
   },
+  vault: {
+    icon: RefreshCw,
+    label: '🔐 Secure Your Foundation',
+    color: 'from-purple-600 to-indigo-600', // Purple-to-indigo for Vault
+    hoverColor: 'hover:shadow-purple-500/50',
+  },
 };
 
 /**
@@ -60,13 +67,43 @@ const reasonConfig = {
  * 
  * Requirements: 3.4, 3.5
  */
-export function SmartCTA({ label, action, reason, topicId, orbitState }: SmartCTAProps) {
+export function SmartCTA({ label, action, reason, topicId, orbitState, vaultTopicIds }: SmartCTAProps) {
   const router = useRouter();
   const [isAirlocking, setIsAirlocking] = useState(false);
   const config = reasonConfig[reason];
   const Icon = config.icon;
   
   const handleClick = async () => {
+    // Check if this is a Vault CTA (reason = 'vault')
+    if (reason === 'vault' && vaultTopicIds && vaultTopicIds.length > 0) {
+      // VAULT SESSION CREATION
+      setIsAirlocking(true);
+      
+      try {
+        // Create Vault session
+        const response = await fetch('/api/vault/session', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ topicIds: vaultTopicIds }),
+        });
+        
+        if (!response.ok) {
+          throw new Error('Failed to create Vault session');
+        }
+        
+        const data = await response.json();
+        const sessionId = data.session.id;
+        
+        // Navigate to Vault workspace
+        router.push(`/vault/${sessionId}`);
+      } catch (error) {
+        console.error('[SmartCTA] Failed to create Vault session:', error);
+        setIsAirlocking(false);
+      }
+      
+      return;
+    }
+    
     // Check if this is a quarantined topic (orbit_state = 0)
     if (orbitState === 0 && topicId) {
       // AIRLOCK RELEASE SEQUENCE
@@ -120,7 +157,7 @@ export function SmartCTA({ label, action, reason, topicId, orbitState }: SmartCT
         `}
       >
         <Icon className="inline-block mr-3 h-8 w-8" />
-        {isAirlocking ? 'Materializing to Galaxy...' : label}
+        {isAirlocking ? 'Initializing...' : label}
       </button>
     </div>
   );

@@ -5,10 +5,11 @@ import { createClient } from '@/lib/supabase/server';
 export interface SmartCTAResult {
   label: string;
   action: string; // URL to navigate to
-  reason: 'deadline' | 'low_mastery' | 'decay' | 'new' | 'quarantine';
+  reason: 'deadline' | 'low_mastery' | 'decay' | 'new' | 'quarantine' | 'vault';
   priority: number;
   topicId?: string;
-  orbitState?: number; // 0 = quarantined, 1 = active
+  orbitState?: number; // 0 = quarantined, 1 = active, 2 = mastered, 3 = ghost
+  vaultTopicIds?: string[]; // For Vault batch sessions
 }
 
 export async function calculateSmartCTA(
@@ -17,7 +18,27 @@ export async function calculateSmartCTA(
 ): Promise<SmartCTAResult> {
   const supabase = createClient();
   
-  // 1. Check for upcoming deadlines (highest priority)
+  // 0. Check for Ghost Nodes (HIGHEST PRIORITY - The Vault)
+  // If foundation is crumbling, we cannot let them learn new things
+  const { data: ghostNodes } = await supabase
+    .from('study_topics')
+    .select('id, title')
+    .eq('profile_id', profileId)
+    .eq('orbit_state', 3) // Ghost Nodes
+    .order('next_review_date', { ascending: true }) // Most overdue first
+    .limit(5); // Cap at 5 per session
+  
+  if (ghostNodes && ghostNodes.length > 0) {
+    return {
+      label: `🔐 Review ${ghostNodes.length} Fading Memor${ghostNodes.length !== 1 ? 'ies' : 'y'}`,
+      action: `/vault/session`, // Will be handled by SmartCTA to create session first
+      reason: 'vault',
+      priority: 0, // HIGHEST PRIORITY
+      vaultTopicIds: ghostNodes.map(n => n.id),
+    };
+  }
+  
+  // 1. Check for upcoming deadlines (high priority)
   const { data: deadlines } = await supabase
     .from('homework_tasks')
     .select('*, homework_plans!inner(title, user_id)')

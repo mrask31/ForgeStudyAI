@@ -10,20 +10,21 @@ import { useActiveProfile } from '@/contexts/ActiveProfileContext'
 
 const NAV_ITEMS_BY_BAND = {
   middle: [
-    { label: 'Study Hub', href: '/app/middle', icon: Sparkles },
+    { label: '🌌 My Galaxy', href: '/app', icon: Sparkles },
     { label: 'Uploads', href: '/sources', icon: FileText },
     { label: 'Progress', href: '/readiness', icon: Activity },
     { label: 'How it Works', href: '/help', icon: Shield },
     { label: 'Settings', href: '/settings', icon: Settings },
   ],
   high: [
-    { label: 'Study Hub', href: '/app/high', icon: Sparkles },
+    { label: '🌌 My Galaxy', href: '/app', icon: Sparkles },
     { label: 'Uploads', href: '/sources', icon: FileText },
     { label: 'Progress', href: '/readiness', icon: Activity },
     { label: 'How it Works', href: '/help', icon: Shield },
     { label: 'Settings', href: '/settings', icon: Settings },
   ],
   default: [
+    { label: '🌌 My Galaxy', href: '/app', icon: Sparkles },
     { label: 'Tutor Workspace', href: '/tutor', icon: MessageSquare },
     { label: 'My Classes', href: '/classes', icon: GraduationCap },
     { label: 'Sources', href: '/sources', icon: FileText },
@@ -94,13 +95,13 @@ export default function Sidebar({ onNavigate }: SidebarProps = {}) {
     : NAV_ITEMS_BY_BAND.default
 
   return (
-    <aside className="flex w-full h-full flex-col bg-gradient-to-br from-slate-950 via-teal-900 to-emerald-950 text-teal-100">
+    <aside className="flex w-full h-full flex-col bg-slate-900 text-slate-400">
       {/* Sidebar Content */}
       <div className="flex h-full flex-col px-6 py-8">
         <div className="mb-10 px-2">
           {/* Logo or Brand with Icon */}
           <div className="flex items-center gap-2.5">
-            <div className="w-2 h-2 rounded-full bg-teal-400"></div>
+            <div className="w-2 h-2 rounded-full bg-indigo-400"></div>
             <span className="text-xl font-bold text-white tracking-tight">ForgeStudy Platform</span>
           </div>
         </div>
@@ -124,6 +125,8 @@ export default function Sidebar({ onNavigate }: SidebarProps = {}) {
             const isActive = isTutorRoute
               ? isTutorActive
               : pathname === item.href ||
+                pathname.startsWith(item.href + '/') ||
+                (item.href === '/app' && pathname.startsWith('/app')) ||
                 (item.href === '/classes' && pathname.startsWith('/classes')) ||
                 (item.href === '/dictionary' && pathname.startsWith('/dictionary'))
             const Icon = item.icon
@@ -136,8 +139,8 @@ export default function Sidebar({ onNavigate }: SidebarProps = {}) {
                 className={`
                   group flex items-center gap-3 rounded-lg px-4 py-3.5 text-sm font-medium transition-all duration-200
                   ${isActive 
-                    ? "bg-gradient-to-r from-teal-600 to-emerald-600 text-white shadow-md" 
-                    : "text-teal-200 hover:bg-gradient-to-r hover:from-teal-900/50 hover:to-emerald-900/50 hover:text-white"}
+                    ? "bg-indigo-600 text-white shadow-md" 
+                    : "text-slate-400 hover:bg-slate-800 hover:text-indigo-400"}
                 `}
               >
                 <Icon className="h-5 w-5" />
@@ -148,12 +151,12 @@ export default function Sidebar({ onNavigate }: SidebarProps = {}) {
         </nav>
         
         {/* History Button - Moved from TutorHeader */}
-        <div className="mt-4 pt-4 border-t border-teal-900/50 space-y-2">
+        <div className="mt-4 pt-4 border-t border-slate-800 space-y-2">
           <HistoryButton onNavigate={onNavigate} />
           <Link
             href="/proof-history"
             onClick={onNavigate}
-            className="group flex items-center gap-3 rounded-lg px-4 py-3 text-sm font-medium transition-all duration-200 text-teal-200 hover:bg-gradient-to-r hover:from-teal-900/50 hover:to-emerald-900/50 hover:text-white"
+            className="group flex items-center gap-3 rounded-lg px-4 py-3 text-sm font-medium transition-all duration-200 text-slate-400 hover:bg-slate-800 hover:text-indigo-400"
           >
             <Folder className="h-5 w-5" />
             Proof History
@@ -161,7 +164,7 @@ export default function Sidebar({ onNavigate }: SidebarProps = {}) {
           <Link
             href="/parent"
             onClick={onNavigate}
-            className="group flex items-center gap-3 rounded-lg px-4 py-3 text-sm font-medium transition-all duration-200 text-teal-200 hover:bg-gradient-to-r hover:from-teal-900/50 hover:to-emerald-900/50 hover:text-white"
+            className="group flex items-center gap-3 rounded-lg px-4 py-3 text-sm font-medium transition-all duration-200 text-slate-400 hover:bg-slate-800 hover:text-indigo-400"
           >
             <Shield className="h-5 w-5" />
             Parent Dashboard
@@ -169,13 +172,13 @@ export default function Sidebar({ onNavigate }: SidebarProps = {}) {
         </div>
         
         {/* User Profile / Footer */}
-        <div className="mt-auto pt-6 border-t border-teal-900/50">
+        <div className="mt-auto pt-6 border-t border-slate-800">
           <Link
             href="/profiles"
             onClick={onNavigate}
-            className="flex items-center gap-3 px-2 py-2 rounded-lg hover:bg-teal-900/40 transition-colors"
+            className="flex items-center gap-3 px-2 py-2 rounded-lg hover:bg-slate-800 transition-colors"
           >
-            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-teal-600 to-emerald-600 border border-teal-500/50 flex items-center justify-center shadow-sm">
+            <div className="w-10 h-10 rounded-full bg-indigo-600 border border-indigo-500/50 flex items-center justify-center shadow-sm">
               <UserIcon className="w-5 h-5 text-white" />
             </div>
             <div className="flex flex-col min-w-0">
@@ -183,15 +186,15 @@ export default function Sidebar({ onNavigate }: SidebarProps = {}) {
                 <>
                   <span className="text-sm font-bold text-white truncate">{studentName}</span>
                   {gradeBand ? (
-                    <span className="text-xs text-teal-200 truncate">{gradeBandLabel(gradeBand)}</span>
+                    <span className="text-xs text-slate-400 truncate">{gradeBandLabel(gradeBand)}</span>
                   ) : (
-                    <span className="text-xs text-teal-200 truncate">Select a grade band</span>
+                    <span className="text-xs text-slate-400 truncate">Select a grade band</span>
                   )}
                 </>
               ) : (
                 <>
                   <span className="text-sm font-medium text-white">Student Account</span>
-                  <span className="text-xs text-teal-200">Choose a profile</span>
+                  <span className="text-xs text-slate-400">Choose a profile</span>
                 </>
               )}
             </div>

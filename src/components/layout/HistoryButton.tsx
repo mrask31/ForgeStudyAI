@@ -303,7 +303,7 @@ export default function HistoryButton({ onNavigate }: HistoryButtonProps) {
     }}>
       <SheetTrigger asChild>
         <button
-          className="w-full flex items-center gap-3 rounded-lg px-4 py-3.5 text-sm font-medium transition-all duration-200 text-indigo-300 hover:bg-gradient-to-r hover:from-indigo-900/50 hover:to-purple-900/50 hover:text-indigo-100"
+          className="w-full flex items-center gap-3 rounded-lg px-4 py-3.5 text-sm font-medium transition-all duration-200 text-slate-400 hover:bg-slate-800 hover:text-indigo-400"
         >
           <Clock className="h-5 w-5" />
           <span>History</span>

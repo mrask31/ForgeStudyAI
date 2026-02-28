@@ -39,8 +39,11 @@ export default function LoomSessionPage() {
         const response = await fetch(`/api/loom/sessions/${sessionId}`);
 
         if (!response.ok) {
+          if (response.status === 403) {
+            throw new Error('Access denied: This session belongs to another user');
+          }
           if (response.status === 404) {
-            throw new Error('Session not found or access denied');
+            throw new Error('Session not found');
           }
           if (response.status === 401) {
             throw new Error('Please sign in to access this session');

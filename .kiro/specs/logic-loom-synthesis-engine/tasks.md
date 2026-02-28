@@ -394,8 +394,8 @@ This sprint transforms the constellation selection into a functional synthesis s
     - Test chat input disabled when isLocked = true
     - _Requirements: 8.1, 8.2, 8.3, 8.4, 8.5, 8.6_
 
-- [ ] 11. Implement Gemini 3.1 Ultra integration (The Brain)
-  - [ ] 11.1 Create /api/loom/spar endpoint
+- [x] 11. Implement Gemini 3.1 Ultra integration (The Brain)
+  - [x] 11.1 Create /api/loom/spar endpoint
     - Create Next.js API route at app/api/loom/spar/route.ts
     - Accept POST request: { sessionId: string, message: string }
     - Verify session belongs to authenticated user
@@ -407,7 +407,7 @@ This sprint transforms the constellation selection into a functional synthesis s
     - Return AI response to client
     - _Requirements: 3.1, 3.2, 3.3, 3.4, 3.5, 3.6, 5.1, 5.2, 12.5_
 
-  - [ ] 11.2 Implement Socratic Master Prompt
+  - [x] 11.2 Implement Socratic Master Prompt
     - Create prompt template at lib/loom/socratic-prompt.ts
     - Inject proof_events context for each selected topic
     - Enforce Socratic constraints: no direct answers, no thesis writing
@@ -416,7 +416,7 @@ This sprint transforms the constellation selection into a functional synthesis s
     - Format as system message for Gemini API
     - _Requirements: 3.1, 3.2, 3.3, 3.4, 3.5_
 
-  - [ ] 11.3 Implement Gemini API client with context caching
+  - [x] 11.3 Implement Gemini API client with context caching
     - Create client at lib/loom/gemini-client.ts
     - Initialize GoogleGenerativeAI with API key
     - Implement prompt caching using cachedContent parameter
@@ -426,7 +426,7 @@ This sprint transforms the constellation selection into a functional synthesis s
     - Set responseMimeType: 'application/json' for structured output
     - _Requirements: 3.6, 10.6, 13.4_
 
-  - [ ] 11.4 Define SOCRATIC_RESPONSE_SCHEMA with Zod
+  - [x] 11.4 Define SOCRATIC_RESPONSE_SCHEMA with Zod
     - Create schema at lib/loom/schemas.ts
     - Define schema: { socratic_response: string, loom_status: 'SPARRING' | 'THESIS_ACHIEVED', crystallized_thread?: string, cryptographic_proof?: string }
     - Use Zod for runtime validation
@@ -434,7 +434,7 @@ This sprint transforms the constellation selection into a functional synthesis s
     - Handle validation errors gracefully (retry with fallback)
     - _Requirements: 3.6, 4.2, 6.1, 6.2, 6.3, 12.5_
 
-  - [ ] 11.5 Implement input sanitization
+  - [x] 11.5 Implement input sanitization
     - Create sanitization utility at lib/loom/sanitize-input.ts
     - Strip markdown code blocks from student messages
     - Remove HTML tags
@@ -451,8 +451,8 @@ This sprint transforms the constellation selection into a functional synthesis s
     - Mock Gemini API responses for deterministic testing
     - _Requirements: 3.6, 12.1, 12.2, 12.3, 12.4, 12.5_
 
-- [ ] 12. Implement real-time state updates (The Dopamine Loop)
-  - [ ] 12.1 Wire up chat message submission
+- [x] 12. Implement real-time state updates (The Dopamine Loop)
+  - [x] 12.1 Wire up chat message submission
     - In SocraticChat component, implement onSendMessage handler
     - POST student message to /api/loom/spar
     - Optimistically add student message to transcript
@@ -461,14 +461,14 @@ This sprint transforms the constellation selection into a functional synthesis s
     - Handle errors: Display toast, remove optimistic message
     - _Requirements: 5.1, 5.2, 11.3_
 
-  - [ ] 12.2 Implement crystallized thread animation
+  - [x] 12.2 Implement crystallized thread animation
     - When AI response contains crystallized_thread, append to outline
     - Trigger gold pulse animation (bg-amber-500/20) on new thread
     - Use CSS animation with 1s duration
     - Ensure animation is GPU-accelerated (transform/opacity only)
     - _Requirements: 4.4, 13.3_
 
-  - [ ] 12.3 Implement thesis achievement handling
+  - [x] 12.3 Implement thesis achievement handling
     - When AI response has loom_status = 'THESIS_ACHIEVED', update session state
     - Lock chat input (disable textarea and send button)
     - Trigger SVG flare animation on constellation
@@ -476,7 +476,7 @@ This sprint transforms the constellation selection into a functional synthesis s
     - Show success toast: "Synthesis complete! Your thesis has been crystallized."
     - _Requirements: 6.1, 6.2, 6.3, 6.4, 6.5, 6.6, 6.7_
 
-  - [ ] 12.4 Implement session state persistence
+  - [x] 12.4 Implement session state persistence
     - After each AI response, update loom_sessions.transcript in database
     - Ensure transcript is saved incrementally (not just on completion)
     - Handle concurrent updates gracefully (optimistic locking)
@@ -494,21 +494,21 @@ This sprint transforms the constellation selection into a functional synthesis s
     - Test that chat input is enabled when status = 'SPARRING'
     - Test that chat input is disabled when status = 'THESIS_ACHIEVED'
 
-- [ ] 13. Error handling and edge cases
-  - [ ] 13.1 Implement Gemini API error handling
+- [x] 13. Error handling and edge cases
+  - [x] 13.1 Implement Gemini API error handling
     - Handle rate limit errors (429): Show retry button with exponential backoff
     - Handle timeout errors: Save transcript state, show retry button
     - Handle malformed JSON: Automatically retry up to 3 times
     - Handle validation errors: Log error, show user-friendly message
     - _Requirements: 11.1, 11.2, 11.3, 11.4_
 
-  - [ ] 13.2 Implement session access control
+  - [x] 13.2 Implement session access control
     - Verify session belongs to authenticated user before loading workspace
     - Return 403 Forbidden if user tries to access another user's session
     - Verify all selected topics belong to authenticated user
     - _Requirements: 9.3, 9.4, 9.5_
 
-  - [ ] 13.3 Implement session termination
+  - [x] 13.3 Implement session termination
     - Auto-terminate session after 50 sparring turns (per design constraint)
     - Show warning at 45 turns: "Approaching synthesis limit. Aim for your thesis!"
     - On termination: Set status to 'THESIS_ACHIEVED' with partial outline
@@ -521,7 +521,7 @@ This sprint transforms the constellation selection into a functional synthesis s
     - Test malformed AI response handling
     - _Requirements: 9.5, 10.4, 11.1, 11.2, 11.3_
 
-- [ ] 14. Final checkpoint - Sprint 2 complete
+- [x] 14. Final checkpoint - Sprint 2 complete
   - Verify "Weave Thesis" button creates session and navigates to workspace
   - Verify split-screen UI renders correctly with locked constellation
   - Verify Socratic chat accepts student messages and returns AI responses
@@ -543,3 +543,153 @@ This sprint transforms the constellation selection into a functional synthesis s
 - Session termination at 50 turns is a hard limit (design constraint)
 - Cryptographic proof generation is deferred to Sprint 3 (polish sprint)
 - Topic edge creation is deferred to Sprint 3 (polish sprint)
+
+
+---
+
+# Sprint 3: The Trophy Phase (Polish & Export)
+
+## Overview
+
+Sprint 3 implements the final visual polish and cryptographic proof export system. This sprint focuses on:
+
+- **Task 15**: Constellation flare animation on thesis achievement
+- **Task 16**: Permanent topic edge creation and visualization
+- **Task 17**: Cryptographic proof export with SHA-256 hash
+
+This sprint delivers the complete visual reward loop and the exportable proof of original thought.
+
+## Sprint 3 Scope Boundaries
+
+**IN SCOPE:**
+- Constellation flare animation (amber → white flash → indigo lock)
+- Topic edge generation on thesis achievement (n(n-1)/2 edges)
+- Permanent indigo threads in ConceptGalaxy for existing edges
+- Export button UI in LoomWorkspace
+- /api/loom/export endpoint with formatted proof document
+- SHA-256 hash generation for document integrity
+
+**OUT OF SCOPE (Future Hardening):**
+- Session history/resume functionality
+- Analytics tracking (turns to thesis, token costs)
+- Rate limiting enforcement
+- Advanced error recovery (session timeout handling)
+
+## Tasks
+
+- [ ] 15. Implement constellation flare animation (The Visual Reward)
+  - [ ] 15.1 Create flare animation CSS
+    - Define keyframe animation: amber → white (300ms) → indigo (permanent)
+    - Use transform: scale(1.05) for subtle expansion
+    - Apply to SVG constellation threads in LockedConstellation
+    - Ensure GPU acceleration (transform/opacity only)
+    - _Requirements: 6.6, 8.2_
+
+  - [ ] 15.2 Trigger flare on THESIS_ACHIEVED
+    - Add state management for flare animation in LoomWorkspace
+    - Trigger animation when loom_status changes to THESIS_ACHIEVED
+    - Apply animation class to LockedConstellation threads
+    - Remove animation class after completion (300ms)
+    - Lock threads to indigo color after flare
+    - _Requirements: 6.6, 8.2_
+
+  - [ ] 15.3 Update LockedConstellation component
+    - Accept isFlaring prop to trigger animation
+    - Accept isAchieved prop to lock indigo color
+    - Apply animation classes conditionally
+    - Render threads with appropriate colors (amber → white → indigo)
+    - _Requirements: 6.6, 8.2_
+
+- [ ] 16. Implement permanent topic edges (The Permanent Web)
+  - [ ] 16.1 Create edge generation logic
+    - Implement algorithm to generate n(n-1)/2 unique edges
+    - Create edges for all pairs of selected topics
+    - Insert into topic_edges table with loom_session_id
+    - Trigger on THESIS_ACHIEVED status in /api/loom/spar
+    - Handle duplicate edge prevention (UNIQUE constraint)
+    - _Requirements: 7.1, 7.2, 7.3, 7.4, 7.5_
+
+  - [ ] 16.2 Update ConceptGalaxy to fetch and render edges
+    - Query topic_edges table on component mount
+    - Filter edges for mastered nodes (orbit_state = 2)
+    - Render permanent indigo threads between connected nodes
+    - Apply subtle styling (lower opacity than active constellation)
+    - Ensure edges render behind nodes (z-index management)
+    - _Requirements: 7.5, 8.2_
+
+  - [ ] 16.3 Test edge generation and visualization
+    - Verify n(n-1)/2 edges created for 2, 3, 4 topic constellations
+    - Test duplicate edge prevention
+    - Verify edges appear in ConceptGalaxy after synthesis
+    - Test edge rendering with multiple completed sessions
+    - _Requirements: 7.1, 7.2, 7.3, 7.4, 7.5_
+
+- [ ] 17. Implement cryptographic proof export (The Trophy)
+  - [ ] 17.1 Create export button UI
+    - Add "📄 Export Proof of Original Thought" button to OutlineBoard
+    - Show button only when status = THESIS_ACHIEVED
+    - Position below outline with high-contrast styling
+    - Add loading state during export generation
+    - _Requirements: 6.7_
+
+  - [ ] 17.2 Create /api/loom/export endpoint
+    - Accept GET request with sessionId parameter
+    - Verify session belongs to authenticated user
+    - Fetch session data (topics, outline, proof, timestamp)
+    - Generate formatted proof document (Markdown)
+    - Calculate SHA-256 hash of document content
+    - Return document as downloadable file
+    - _Requirements: 6.7, 14.1, 14.2, 14.3, 14.4_
+
+  - [ ] 17.3 Implement proof document formatting
+    - Include session UUID
+    - Include hashed user ID (for privacy)
+    - Include timestamp (ISO 8601 format)
+    - Include topic titles
+    - Include final Roman numeral outline
+    - Include cryptographic proof of cognition
+    - Include SHA-256 hash of document content
+    - Format as clean Markdown with clear sections
+    - _Requirements: 14.1, 14.2, 14.3, 14.4_
+
+  - [ ] 17.4 Wire up export button to API
+    - Implement onClick handler in OutlineBoard
+    - Call /api/loom/export with sessionId
+    - Trigger browser download of proof document
+    - Show success toast on download
+    - Handle errors gracefully (show error toast)
+    - _Requirements: 6.7, 14.1_
+
+  - [ ] 17.5 Test export functionality
+    - Verify export button appears only when thesis achieved
+    - Test proof document contains all required fields
+    - Verify SHA-256 hash is correct
+    - Test download triggers correctly in browser
+    - Test error handling for failed exports
+    - _Requirements: 6.7, 14.1, 14.2, 14.3, 14.4_
+
+- [ ] 18. Final checkpoint - Sprint 3 complete (Master Demo)
+  - Record complete E2E demo video showing:
+    - Selecting 3 mastered nodes with Shift+Click
+    - Clicking "Weave Thesis" button
+    - Entering Loom Workspace split-screen
+    - Sparring with AI (show "Try to Cheat" test)
+    - Getting gold pulse animations on crystallized threads
+    - Achieving final synthesis (THESIS_ACHIEVED)
+    - Watching constellation flare animation (amber → white → indigo)
+    - Chat input locking
+    - Clicking "Export Proof" button
+    - Downloading cryptographic proof document
+    - Navigating back to ConceptGalaxy
+    - Showing permanent indigo threads between synthesized concepts
+  - Verify all Sprint 3 features working end-to-end
+  - Ask the user if questions arise or if ready to deploy
+
+## Notes
+
+- Flare animation must be 300ms for optimal visual impact
+- Edge generation uses n(n-1)/2 formula (2 topics = 1 edge, 3 topics = 3 edges, 4 topics = 6 edges)
+- SHA-256 hash ensures document integrity (teachers can verify no tampering)
+- Hashed user ID protects student privacy while maintaining proof authenticity
+- Permanent indigo threads show brain rewiring in the galaxy view
+- Export button is the final trophy - proof of original thought
