@@ -15,6 +15,12 @@ export async function middleware(request: NextRequest) {
     const { pathname } = request.nextUrl
     const searchParams = request.nextUrl.searchParams
 
+    // Redirect old V1 routes to unified /app route (MUST be first, before any auth checks)
+    if (pathname.startsWith('/app/middle') || pathname.startsWith('/app/high') || 
+        pathname.startsWith('/elementary') || pathname.startsWith('/app/elementary')) {
+      return NextResponse.redirect(new URL('/app', request.url))
+    }
+
     // Force production traffic onto the canonical app URL to avoid cross-domain auth issues.
     const appUrlEnv = process.env.NEXT_PUBLIC_APP_URL
     if (process.env.NODE_ENV === 'production' && appUrlEnv) {
@@ -165,12 +171,6 @@ export async function middleware(request: NextRequest) {
     // Protected routes (auth + subscription + profile required)
     // Everything under /app/* is protected
     const isProtectedRoute = pathname.startsWith('/app/')
-
-    // Redirect old V1 routes to unified /app route
-    if (pathname.startsWith('/app/middle') || pathname.startsWith('/app/high') || 
-        pathname.startsWith('/elementary') || pathname.startsWith('/app/elementary')) {
-      return NextResponse.redirect(new URL('/app', request.url))
-    }
 
     // ============================================
     // MIDDLEWARE ENFORCEMENT (Decision Tree)
