@@ -166,10 +166,10 @@ export async function middleware(request: NextRequest) {
     // Everything under /app/* is protected
     const isProtectedRoute = pathname.startsWith('/app/')
 
-    // Redirect elementary to middle (grade band normalization)
-    if (pathname.startsWith('/elementary') || pathname.startsWith('/app/elementary')) {
-      const redirectPath = pathname.replace('/elementary', '/middle').replace('/app/elementary', '/app/middle')
-      return NextResponse.redirect(new URL(redirectPath, request.url))
+    // Redirect old V1 routes to unified /app route
+    if (pathname.startsWith('/app/middle') || pathname.startsWith('/app/high') || 
+        pathname.startsWith('/elementary') || pathname.startsWith('/app/elementary')) {
+      return NextResponse.redirect(new URL('/app', request.url))
     }
 
     // ============================================
