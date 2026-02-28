@@ -71,7 +71,7 @@ export function zodToJsonSchema(schema: typeof SocraticResponseSchema) {
       },
     },
     required: ['socratic_response', 'loom_status'],
-  };
+  } as const;
 }
 
 /**
