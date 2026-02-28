@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from 'react';
 import dynamic from 'next/dynamic';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
+import { FocusPanel } from './FocusPanel';
 
 // Dynamically import ForceGraph2D to avoid SSR issues
 const ForceGraph2D = dynamic(() => import('react-force-graph-2d'), {
@@ -59,6 +60,13 @@ export function ConceptGalaxy({ topics, profileId, onTopicsRefresh }: ConceptGal
   
   // Weave Mode for touch devices (replaces Shift+Click)
   const [isWeaveModeActive, setIsWeaveModeActive] = useState(false);
+  
+  // Focus Panel state management
+  const [focusPanelState, setFocusPanelState] = useState({
+    isOpen: false,
+    selectedTopicId: null as string | null,
+    selectedTopicTitle: null as string | null,
+  });
   
   // Permanent edges state
   const [permanentEdges, setPermanentEdges] = useState<Array<{ source: string; target: string }>>([]);
@@ -268,9 +276,21 @@ export function ConceptGalaxy({ topics, profileId, onTopicsRefresh }: ConceptGal
     if (isWeaveModeActive || event.shiftKey) {
       handleConstellationSelection(node);
     } else {
-      // Normal click: Navigate to tutor
-      router.push(`/tutor?topicId=${node.id}&topicTitle=${encodeURIComponent(node.name)}`);
+      // Open Focus Panel instead of navigating
+      setFocusPanelState({
+        isOpen: true,
+        selectedTopicId: node.id,
+        selectedTopicTitle: node.name,
+      });
     }
+  };
+
+  const handleCloseFocusPanel = () => {
+    setFocusPanelState({
+      isOpen: false,
+      selectedTopicId: null,
+      selectedTopicTitle: null,
+    });
   };
 
   const handleConstellationSelection = (node: Node) => {
@@ -479,6 +499,14 @@ export function ConceptGalaxy({ topics, profileId, onTopicsRefresh }: ConceptGal
           </div>
         </div>
       )}
+
+      {/* Focus Panel */}
+      <FocusPanel
+        isOpen={focusPanelState.isOpen}
+        topicId={focusPanelState.selectedTopicId}
+        topicTitle={focusPanelState.selectedTopicTitle}
+        onClose={handleCloseFocusPanel}
+      />
     </div>
   );
 }
