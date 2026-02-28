@@ -47,23 +47,25 @@ export type SocraticResponse = z.infer<typeof SocraticResponseSchema>;
  */
 export function zodToJsonSchema(schema: typeof SocraticResponseSchema) {
   return {
-    type: 'object',
+    type: 'OBJECT' as const,
     properties: {
       socratic_response: {
-        type: 'string',
+        type: 'STRING' as const,
         description: 'The Socratic question or pushback to guide the student',
       },
       loom_status: {
-        type: 'string',
+        type: 'STRING' as const,
         enum: ['SPARRING', 'THESIS_ACHIEVED'],
         description: 'Current session status - SPARRING during dialogue, THESIS_ACHIEVED when synthesis complete',
       },
       crystallized_thread: {
-        type: ['string', 'null'],
+        type: 'STRING' as const,
+        nullable: true,
         description: 'One-sentence academic summary when student makes valid micro-connection between concepts. Null if no connection detected.',
       },
       cryptographic_proof_of_cognition: {
-        type: ['string', 'null'],
+        type: 'STRING' as const,
+        nullable: true,
         description: 'Clinical audit proving HOW student arrived at thesis. Only populated when loom_status is THESIS_ACHIEVED.',
       },
     },
