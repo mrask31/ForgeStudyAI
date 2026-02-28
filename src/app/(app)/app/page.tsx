@@ -6,6 +6,7 @@ import { ConceptGalaxy } from '@/components/galaxy/ConceptGalaxy'
 import { GalaxyLegend } from '@/components/galaxy/GalaxyLegend'
 import { SmartCTA } from '@/components/galaxy/SmartCTA'
 import { DecontaminationBanner } from '@/components/galaxy/DecontaminationBanner'
+import { SettingsDrawer } from '@/components/drawers/SettingsDrawer'
 import { useEffect, useState } from 'react'
 import { getStudyTopicsWithMastery, getQuarantinedTopicsCount } from '@/app/actions/study-topics'
 import { calculateSmartCTA, type SmartCTAResult } from '@/lib/smart-cta'
@@ -19,6 +20,14 @@ export default function GalaxyPage() {
   const [loading, setLoading] = useState(true)
   const [smartCTA, setSmartCTA] = useState<SmartCTAResult | null>(null)
   const [quarantinedCount, setQuarantinedCount] = useState(0)
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false)
+
+  // Listen for settings drawer open event
+  useEffect(() => {
+    const handleOpenSettings = () => setIsSettingsOpen(true)
+    window.addEventListener('open-settings-drawer', handleOpenSettings)
+    return () => window.removeEventListener('open-settings-drawer', handleOpenSettings)
+  }, [])
 
   useEffect(() => {
     async function loadData() {
@@ -125,6 +134,12 @@ export default function GalaxyPage() {
           </div>
         </div>
       )}
+
+      {/* Settings Drawer */}
+      <SettingsDrawer 
+        isOpen={isSettingsOpen}
+        onClose={() => setIsSettingsOpen(false)}
+      />
     </div>
   )
 }

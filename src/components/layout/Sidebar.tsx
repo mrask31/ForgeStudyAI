@@ -10,28 +10,19 @@ import { useActiveProfile } from '@/contexts/ActiveProfileContext'
 
 const NAV_ITEMS_BY_BAND = {
   middle: [
-    { label: '🌌 My Galaxy', href: '/app', icon: Sparkles },
-    { label: 'Uploads', href: '/sources', icon: FileText },
-    { label: 'Progress', href: '/readiness', icon: Activity },
-    { label: 'How it Works', href: '/help', icon: Shield },
-    { label: 'Settings', href: '/settings', icon: Settings },
+    { label: '🌌 My Galaxy', href: '/app', icon: Sparkles, type: 'route' as const },
+    { label: '📥 Uploads', href: '/sources', icon: FileText, type: 'route' as const },
   ],
   high: [
-    { label: '🌌 My Galaxy', href: '/app', icon: Sparkles },
-    { label: 'Uploads', href: '/sources', icon: FileText },
-    { label: 'Progress', href: '/readiness', icon: Activity },
-    { label: 'How it Works', href: '/help', icon: Shield },
-    { label: 'Settings', href: '/settings', icon: Settings },
+    { label: '🌌 My Galaxy', href: '/app', icon: Sparkles, type: 'route' as const },
+    { label: '📥 Uploads', href: '/sources', icon: FileText, type: 'route' as const },
   ],
   default: [
-    { label: '🌌 My Galaxy', href: '/app', icon: Sparkles },
-    { label: 'Tutor Workspace', href: '/tutor', icon: MessageSquare },
-    { label: 'My Classes', href: '/classes', icon: GraduationCap },
-    { label: 'Sources', href: '/sources', icon: FileText },
-    { label: 'Dashboard', href: '/readiness', icon: Activity },
-    { label: 'Vocabulary Bank', href: '/dictionary', icon: BookOpen },
-    { label: 'How it Works', href: '/help', icon: Shield },
-    { label: 'Settings', href: '/settings', icon: Settings },
+    { label: '🌌 My Galaxy', href: '/app', icon: Sparkles, type: 'route' as const },
+    { label: 'Tutor Workspace', href: '/tutor', icon: MessageSquare, type: 'route' as const },
+    { label: 'My Classes', href: '/classes', icon: GraduationCap, type: 'route' as const },
+    { label: 'Sources', href: '/sources', icon: FileText, type: 'route' as const },
+    { label: 'Vocabulary Bank', href: '/dictionary', icon: BookOpen, type: 'route' as const },
   ],
 } as const
 
@@ -153,14 +144,16 @@ export default function Sidebar({ onNavigate }: SidebarProps = {}) {
         {/* History Button - Moved from TutorHeader */}
         <div className="mt-4 pt-4 border-t border-slate-800 space-y-2">
           <HistoryButton onNavigate={onNavigate} />
-          <Link
-            href="/proof-history"
-            onClick={onNavigate}
-            className="group flex items-center gap-3 rounded-lg px-4 py-3 text-sm font-medium transition-all duration-200 text-slate-400 hover:bg-slate-800 hover:text-indigo-400"
+          <button
+            onClick={() => {
+              window.dispatchEvent(new Event('open-settings-drawer'));
+              onNavigate?.();
+            }}
+            className="w-full group flex items-center gap-3 rounded-lg px-4 py-3 text-sm font-medium transition-all duration-200 text-slate-400 hover:bg-slate-800 hover:text-indigo-400"
           >
-            <Folder className="h-5 w-5" />
-            Proof History
-          </Link>
+            <Settings className="h-5 w-5" />
+            Settings
+          </button>
           <Link
             href="/parent"
             onClick={onNavigate}
