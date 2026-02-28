@@ -9,7 +9,7 @@ import { toast } from 'sonner';
 const ForceGraph2D = dynamic(() => import('react-force-graph-2d'), {
   ssr: false,
   loading: () => (
-    <div className="w-full h-[600px] bg-slate-950 rounded-lg border border-slate-800 flex items-center justify-center">
+    <div className="w-full h-full bg-slate-950 flex items-center justify-center">
       <div className="text-slate-400">Loading galaxy...</div>
     </div>
   ),
@@ -334,7 +334,7 @@ export function ConceptGalaxy({ topics, profileId, onTopicsRefresh }: ConceptGal
 
   if (topics.length === 0) {
     return (
-      <div className="w-full h-[600px] bg-slate-950 rounded-lg border border-slate-800 flex flex-col items-center justify-center gap-4">
+      <div className="w-full h-full bg-slate-950 flex flex-col items-center justify-center gap-4">
         <div className="text-slate-400 text-lg">Your galaxy is empty</div>
         <div className="text-slate-500 text-sm">Start studying to see your progress visualized here</div>
       </div>
