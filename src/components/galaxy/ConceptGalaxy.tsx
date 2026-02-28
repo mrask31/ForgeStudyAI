@@ -49,6 +49,7 @@ interface ConceptGalaxyProps {
 export function ConceptGalaxy({ topics, profileId, onTopicsRefresh }: ConceptGalaxyProps) {
   const router = useRouter();
   const graphRef = useRef<any>();
+  const containerRef = useRef<HTMLDivElement>(null);
   const [dimensions, setDimensions] = useState({ width: 800, height: 600 });
   
   // Constellation state management
@@ -56,27 +57,41 @@ export function ConceptGalaxy({ topics, profileId, onTopicsRefresh }: ConceptGal
   const [showLoomDock, setShowLoomDock] = useState(false);
   const [isCreatingSession, setIsCreatingSession] = useState(false);
   
+  // Weave Mode for touch devices (replaces Shift+Click)
+  const [isWeaveModeActive, setIsWeaveModeActive] = useState(false);
+  
   // Permanent edges state
   const [permanentEdges, setPermanentEdges] = useState<Array<{ source: string; target: string }>>([]);
   
   // Vault: Snap-back animation state
   const [justRescued, setJustRescued] = useState<string[]>([]);
 
-  // Update dimensions on mount and resize
+  // Dynamic Canvas Observer - Auto-resize on window resize/rotation
   useEffect(() => {
     const updateDimensions = () => {
-      const container = document.getElementById('galaxy-container');
-      if (container) {
+      if (containerRef.current) {
         setDimensions({
-          width: container.clientWidth,
-          height: 600,
+          width: containerRef.current.clientWidth,
+          height: containerRef.current.clientHeight,
         });
       }
     };
 
     updateDimensions();
+    
+    // Use ResizeObserver for better performance
+    const resizeObserver = new ResizeObserver(updateDimensions);
+    if (containerRef.current) {
+      resizeObserver.observe(containerRef.current);
+    }
+    
+    // Fallback to window resize event
     window.addEventListener('resize', updateDimensions);
-    return () => window.removeEventListener('resize', updateDimensions);
+    
+    return () => {
+      resizeObserver.disconnect();
+      window.removeEventListener('resize', updateDimensions);
+    };
   }, []);
   
   // Fetch permanent topic edges on mount
@@ -249,8 +264,8 @@ export function ConceptGalaxy({ topics, profileId, onTopicsRefresh }: ConceptGal
   }
 
   const handleNodeClick = (node: any, event: MouseEvent) => {
-    // Check if Shift key is pressed for constellation selection
-    if (event.shiftKey) {
+    // Check if Weave Mode is active OR Shift key is pressed for constellation selection
+    if (isWeaveModeActive || event.shiftKey) {
       handleConstellationSelection(node);
     } else {
       // Normal click: Navigate to tutor
@@ -327,17 +342,16 @@ export function ConceptGalaxy({ topics, profileId, onTopicsRefresh }: ConceptGal
   }
 
   return (
-    <div id="galaxy-container" className="w-full relative">
-      <div className="w-full h-[600px] bg-slate-950 rounded-lg border border-slate-800 overflow-hidden">
-        <ForceGraph2D
-          ref={graphRef}
-          graphData={{ nodes, links }}
-          width={dimensions.width}
-          height={dimensions.height}
-          nodeLabel="name"
-          nodeColor="color"
-          nodeVal="val"
-          onNodeClick={handleNodeClick}
+    <div ref={containerRef} className="w-full h-full relative overflow-hidden">
+      <ForceGraph2D
+        ref={graphRef}
+        graphData={{ nodes, links }}
+        width={dimensions.width}
+        height={dimensions.height}
+        nodeLabel="name"
+        nodeColor="color"
+        nodeVal="val"
+        onNodeClick={handleNodeClick}
           nodeCanvasObject={(node: any, ctx, globalScale) => {
             // Custom node rendering with glow effect for mastered topics
             const label = node.name;
@@ -415,18 +429,34 @@ export function ConceptGalaxy({ topics, profileId, onTopicsRefresh }: ConceptGal
             }
           }}
         />
-      </div>
+      
+      {/* Weave Mode Toggle - Floating button for touch devices */}
+      <button
+        onClick={() => setIsWeaveModeActive(!isWeaveModeActive)}
+        className={`absolute top-4 right-4 z-50 px-4 py-2 rounded-xl font-medium transition-all shadow-2xl backdrop-blur-md border ${
+          isWeaveModeActive
+            ? 'bg-amber-600/90 border-amber-500/50 text-white'
+            : 'bg-slate-900/60 border-slate-700/50 text-slate-300 hover:bg-slate-800/60'
+        }`}
+        title={isWeaveModeActive ? 'Weave Mode Active - Tap nodes to select' : 'Enable Weave Mode for touch selection'}
+      >
+        <span className="flex items-center gap-2">
+          <span>🕸️</span>
+          <span className="hidden sm:inline">Weave Mode</span>
+          {isWeaveModeActive && <span className="text-xs">(Active)</span>}
+        </span>
+      </button>
 
       {/* Loom Dock - Bottom slide-up panel */}
       {showLoomDock && (
-        <div className="absolute bottom-0 left-0 right-0 bg-slate-900 border-t border-slate-700 p-4 rounded-b-lg animate-slide-up">
-          <div className="flex items-center justify-between max-w-4xl mx-auto">
+        <div className="absolute bottom-0 left-0 right-0 bg-slate-900/90 backdrop-blur-md border-t border-slate-700 p-4 rounded-b-lg animate-slide-up">
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-3 max-w-4xl mx-auto">
             <div className="flex items-center gap-3">
               <div className="text-amber-400 text-sm font-medium">
                 {selectedConstellation.length} concept{selectedConstellation.length !== 1 ? 's' : ''} selected
               </div>
-              <div className="text-slate-500 text-xs">
-                Shift+Click to add or remove stars
+              <div className="text-slate-500 text-xs hidden md:block">
+                Shift+Click or Weave Mode to add/remove stars
               </div>
             </div>
             <button

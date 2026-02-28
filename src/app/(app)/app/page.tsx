@@ -47,16 +47,16 @@ export default function GalaxyPage() {
   }, [activeProfileId, user])
 
   return (
-    <div className="relative min-h-screen bg-slate-950">
+    <div className="relative w-full h-screen bg-slate-950 overflow-hidden">
       {/* Decontamination Banner - Floating at top */}
       {quarantinedCount > 0 && (
-        <div className="absolute top-6 left-1/2 -translate-x-1/2 z-50">
+        <div className="absolute top-4 md:top-6 left-1/2 -translate-x-1/2 z-50 px-4 w-full max-w-md">
           <DecontaminationBanner quarantinedCount={quarantinedCount} />
         </div>
       )}
       
-      {/* Top Left HUD - Title & Legend */}
-      <div className="absolute top-6 left-6 z-40 bg-slate-900/60 backdrop-blur-md border border-slate-700/50 rounded-xl shadow-2xl p-6 max-w-md">
+      {/* Top Left HUD - Title & Legend (Hidden on mobile) */}
+      <div className="hidden md:block absolute top-6 left-6 z-40 bg-slate-900/60 backdrop-blur-md border border-slate-700/50 rounded-xl shadow-2xl p-6 max-w-md">
         <div className="flex items-center gap-3 mb-4">
           <Sparkles className="w-6 h-6 text-indigo-400" />
           <h1 className="text-2xl font-bold text-white">
@@ -69,22 +69,23 @@ export default function GalaxyPage() {
         <GalaxyLegend />
       </div>
       
-      {/* Top Right HUD - Upload Button */}
-      <div className="absolute top-6 right-6 z-40">
+      {/* Top Right HUD - Upload Button (Smaller on mobile) */}
+      <div className="absolute top-4 md:top-6 right-4 md:right-6 z-40">
         <Link
           href="/sources"
-          className="inline-flex items-center gap-2 px-6 py-3 bg-slate-900/60 backdrop-blur-md border border-slate-700/50 rounded-xl shadow-2xl text-white font-semibold hover:bg-slate-800/60 transition-all"
+          className="inline-flex items-center gap-2 px-4 md:px-6 py-2 md:py-3 bg-slate-900/60 backdrop-blur-md border border-slate-700/50 rounded-xl shadow-2xl text-white text-sm md:text-base font-semibold hover:bg-slate-800/60 transition-all"
         >
-          <Sparkles className="w-5 h-5" />
-          Upload Materials
+          <Sparkles className="w-4 h-4 md:w-5 md:h-5" />
+          <span className="hidden sm:inline">Upload Materials</span>
+          <span className="sm:hidden">Upload</span>
         </Link>
       </div>
       
       {/* Full-Bleed Galaxy Canvas */}
-      <div className="w-full h-screen">
+      <div className="w-full h-full">
         {!activeProfileId ? (
-          <div className="flex items-center justify-center h-full">
-            <div className="bg-slate-900/60 backdrop-blur-md border border-slate-700/50 rounded-xl shadow-2xl p-8 max-w-md text-center">
+          <div className="flex items-center justify-center h-full px-4">
+            <div className="bg-slate-900/60 backdrop-blur-md border border-slate-700/50 rounded-xl shadow-2xl p-6 md:p-8 max-w-md text-center">
               <p className="text-amber-300 text-sm">
                 Choose a student profile to see your learning galaxy.
               </p>
@@ -109,10 +110,10 @@ export default function GalaxyPage() {
         )}
       </div>
       
-      {/* Bottom Center HUD - Smart CTA */}
+      {/* Bottom Center HUD - Smart CTA (Sticky bottom sheet on mobile) */}
       {smartCTA && (
-        <div className="absolute bottom-8 left-1/2 -translate-x-1/2 z-40">
-          <div className="bg-slate-900/60 backdrop-blur-md border border-slate-700/50 rounded-xl shadow-2xl p-6">
+        <div className="fixed md:absolute bottom-0 md:bottom-8 left-0 md:left-1/2 md:-translate-x-1/2 w-full md:w-auto z-40">
+          <div className="bg-slate-900/90 md:bg-slate-900/60 backdrop-blur-md border-t md:border border-slate-700/50 rounded-t-xl md:rounded-xl shadow-2xl p-4 md:p-6">
             <SmartCTA 
               label={smartCTA.label}
               action={smartCTA.action}
