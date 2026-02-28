@@ -198,19 +198,26 @@ export async function POST(request: Request) {
       );
     }
     
-    const { data: proofEvents } = await supabase
+    const { data: proofEventsData } = await supabase
       .from('proof_events')
       .select('concept, transcript_excerpt, student_analogy, timestamp')
       .eq('topic_id', firstTopicId)
       .order('timestamp', { ascending: false })
       .limit(5);
     
+    const proofEvents = (proofEventsData || []).map(event => ({
+      concept: event.concept,
+      transcript_excerpt: event.transcript_excerpt,
+      student_analogy: event.student_analogy,
+      timestamp: event.timestamp,
+    }));
+    
     // Generate first question with Flash
     try {
       const flashClient = createFlashClient();
       const question = await flashClient.generateQuestion(
         topic.title,
-        proofEvents || []
+        proofEvents
       );
       
       // Store first question in transcript

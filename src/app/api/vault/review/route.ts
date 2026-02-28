@@ -73,12 +73,19 @@ export async function POST(request: Request) {
       );
     }
     
-    const { data: proofEvents } = await supabase
+    const { data: proofEventsData } = await supabase
       .from('proof_events')
       .select('concept, transcript_excerpt, student_analogy, timestamp')
       .eq('topic_id', topicId)
       .order('timestamp', { ascending: false })
       .limit(5);
+    
+    const proofEvents = (proofEventsData || []).map(event => ({
+      concept: event.concept,
+      transcript_excerpt: event.transcript_excerpt,
+      student_analogy: event.student_analogy,
+      timestamp: event.timestamp,
+    }));
     
     // Evaluate answer with Flash
     let evaluation;
@@ -90,7 +97,7 @@ export async function POST(request: Request) {
         currentQuestion,
         sanitizedAnswer,
         topic.title,
-        proofEvents || []
+        proofEvents
       );
     } catch (aiError: any) {
       console.error('[VaultReview] AI error:', aiError);
@@ -180,18 +187,25 @@ export async function POST(request: Request) {
         .eq('id', nextTopicId)
         .single();
       
-      const { data: nextProofEvents } = await supabase
+      const { data: nextProofEventsData } = await supabase
         .from('proof_events')
         .select('concept, transcript_excerpt, student_analogy, timestamp')
         .eq('topic_id', nextTopicId)
         .order('timestamp', { ascending: false })
         .limit(5);
       
+      const nextProofEvents = (nextProofEventsData || []).map(event => ({
+        concept: event.concept,
+        transcript_excerpt: event.transcript_excerpt,
+        student_analogy: event.student_analogy,
+        timestamp: event.timestamp,
+      }));
+      
       try {
         const flashClient = createFlashClient();
         const questionData = await flashClient.generateQuestion(
           nextTopic!.title,
-          nextProofEvents || []
+          nextProofEvents
         );
         
         nextQuestion = {
