@@ -1,6 +1,6 @@
 'use client';
 
-import { X, Mail, LogOut, Layout, Shield } from 'lucide-react';
+import { X, Mail, LogOut, Layout, Shield, Settings } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { createBrowserClient } from '@supabase/ssr';
 import { useRouter } from 'next/navigation';
