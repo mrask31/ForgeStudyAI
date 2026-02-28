@@ -9,6 +9,7 @@
  */
 
 import { z } from 'zod';
+import { SchemaType } from '@google/generative-ai';
 
 /**
  * Socratic Response Schema
@@ -47,24 +48,24 @@ export type SocraticResponse = z.infer<typeof SocraticResponseSchema>;
  */
 export function zodToJsonSchema(schema: typeof SocraticResponseSchema) {
   return {
-    type: 'OBJECT' as const,
+    type: SchemaType.OBJECT,
     properties: {
       socratic_response: {
-        type: 'STRING' as const,
+        type: SchemaType.STRING,
         description: 'The Socratic question or pushback to guide the student',
       },
       loom_status: {
-        type: 'STRING' as const,
+        type: SchemaType.STRING,
         enum: ['SPARRING', 'THESIS_ACHIEVED'],
         description: 'Current session status - SPARRING during dialogue, THESIS_ACHIEVED when synthesis complete',
       },
       crystallized_thread: {
-        type: 'STRING' as const,
+        type: SchemaType.STRING,
         nullable: true,
         description: 'One-sentence academic summary when student makes valid micro-connection between concepts. Null if no connection detected.',
       },
       cryptographic_proof_of_cognition: {
-        type: 'STRING' as const,
+        type: SchemaType.STRING,
         nullable: true,
         description: 'Clinical audit proving HOW student arrived at thesis. Only populated when loom_status is THESIS_ACHIEVED.',
       },
