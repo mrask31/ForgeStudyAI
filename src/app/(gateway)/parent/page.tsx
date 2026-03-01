@@ -76,12 +76,12 @@ function WeeklySummary({ profiles }: { profiles: StudentProfile[] }) {
   );
 
   if (isLoading) {
-    return <p className="text-sm text-slate-600">Loading weekly summary...</p>;
+    return <p className="text-sm text-slate-400">Loading weekly summary...</p>;
   }
 
   if (visibleInsights.length === 0) {
     return (
-      <p className="text-sm text-slate-600">
+      <p className="text-sm text-slate-400">
         No patterns to report this week.
       </p>
     );
@@ -92,16 +92,16 @@ function WeeklySummary({ profiles }: { profiles: StudentProfile[] }) {
       {visibleInsights.map((insight, index) => (
         <div
           key={index}
-          className="flex items-start justify-between gap-4 rounded-lg border border-slate-200 bg-white px-4 py-3"
+          className="flex items-start justify-between gap-4 rounded-lg border border-slate-700 bg-slate-950/50 px-4 py-3"
         >
-          <p className="text-sm text-slate-700">{insight.sentence}</p>
+          <p className="text-sm text-slate-300">{insight.sentence}</p>
           <button
             onClick={() => {
               const newDismissed = new Set(dismissed);
               newDismissed.add(insight.concept);
               setDismissed(newDismissed);
             }}
-            className="text-xs text-slate-400 hover:text-slate-600 flex-shrink-0"
+            className="text-xs text-slate-500 hover:text-slate-300 flex-shrink-0"
           >
             Dismiss
           </button>
@@ -293,24 +293,24 @@ export default function ParentDashboardPage() {
 
   if (hasPin === null) {
     return (
-      <div className="h-full bg-slate-50 flex items-center justify-center">
-        <div className="text-slate-600">Loading parent access…</div>
+      <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 flex items-center justify-center">
+        <div className="text-slate-400">Loading parent access…</div>
       </div>
     )
   }
 
   if (!hasPin) {
     return (
-      <div className="h-full overflow-y-auto bg-gradient-to-br from-slate-50 to-white">
+      <div className="min-h-screen overflow-y-auto bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 flex items-center justify-center">
         <div className="max-w-xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
-          <div className="bg-white/90 border border-slate-200/60 rounded-2xl p-8 shadow-lg">
+          <div className="bg-slate-900/80 backdrop-blur-xl border border-slate-800 rounded-2xl p-8 shadow-xl">
             <div className="flex items-center gap-3 mb-4">
-              <div className="w-10 h-10 rounded-2xl bg-emerald-100 flex items-center justify-center">
-                <Shield className="w-5 h-5 text-emerald-700" />
+              <div className="w-10 h-10 rounded-2xl bg-emerald-900/50 flex items-center justify-center">
+                <Shield className="w-5 h-5 text-emerald-400" />
               </div>
               <div>
-                <h1 className="text-2xl font-semibold text-slate-900">Set parent PIN</h1>
-                <p className="text-sm text-slate-600">Protect billing and profile management.</p>
+                <h1 className="text-2xl font-semibold text-slate-100">Set parent PIN</h1>
+                <p className="text-sm text-slate-400">Protect billing and profile management.</p>
               </div>
             </div>
             <form onSubmit={handleSetPin} className="space-y-4">
@@ -320,11 +320,11 @@ export default function ParentDashboardPage() {
                 maxLength={4}
                 value={pinValue}
                 onChange={(e) => setPinValue(e.target.value)}
-                className="w-full rounded-xl border border-slate-200 px-4 py-3 text-lg tracking-[0.3em] text-center focus:outline-none focus:ring-2 focus:ring-emerald-600"
+                className="w-full rounded-xl border border-slate-700 bg-slate-950/50 px-4 py-3 text-lg tracking-[0.3em] text-center text-slate-100 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
                 placeholder="••••"
               />
               {pinError && (
-                <div className="rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-xs text-red-700">
+                <div className="rounded-xl border border-red-800 bg-red-950/50 px-3 py-2 text-xs text-red-400">
                   {pinError}
                 </div>
               )}
@@ -344,16 +344,16 @@ export default function ParentDashboardPage() {
 
   if (!isUnlocked) {
     return (
-      <div className="h-full overflow-y-auto bg-gradient-to-br from-slate-50 to-white">
+      <div className="min-h-screen overflow-y-auto bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 flex items-center justify-center">
         <div className="max-w-xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
-          <div className="bg-white/90 border border-slate-200/60 rounded-2xl p-8 shadow-lg">
+          <div className="bg-slate-900/80 backdrop-blur-xl border border-slate-800 rounded-2xl p-8 shadow-xl">
             <div className="flex items-center gap-3 mb-4">
-              <div className="w-10 h-10 rounded-2xl bg-emerald-100 flex items-center justify-center">
-                <Lock className="w-5 h-5 text-emerald-700" />
+              <div className="w-10 h-10 rounded-2xl bg-emerald-900/50 flex items-center justify-center">
+                <Lock className="w-5 h-5 text-emerald-400" />
               </div>
               <div>
-                <h1 className="text-2xl font-semibold text-slate-900">Parent dashboard</h1>
-                <p className="text-sm text-slate-600">Enter your PIN to continue.</p>
+                <h1 className="text-2xl font-semibold text-slate-100">Parent dashboard</h1>
+                <p className="text-sm text-slate-400">Enter your PIN to continue.</p>
               </div>
             </div>
             <form onSubmit={handleVerifyPin} className="space-y-4">
@@ -363,11 +363,11 @@ export default function ParentDashboardPage() {
                 maxLength={4}
                 value={pinValue}
                 onChange={(e) => setPinValue(e.target.value)}
-                className="w-full rounded-xl border border-slate-200 px-4 py-3 text-lg tracking-[0.3em] text-center focus:outline-none focus:ring-2 focus:ring-emerald-600"
+                className="w-full rounded-xl border border-slate-700 bg-slate-950/50 px-4 py-3 text-lg tracking-[0.3em] text-center text-slate-100 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
                 placeholder="••••"
               />
               {pinError && (
-                <div className="rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-xs text-red-700">
+                <div className="rounded-xl border border-red-800 bg-red-950/50 px-3 py-2 text-xs text-red-400">
                   {pinError}
                 </div>
               )}
@@ -386,18 +386,18 @@ export default function ParentDashboardPage() {
   }
 
   return (
-    <div className="h-full overflow-y-auto bg-gradient-to-br from-slate-50 via-emerald-50/30 to-slate-50">
+    <div className="min-h-screen overflow-y-auto bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950">
       <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         <div className="flex items-center justify-between mb-8">
           <div>
-            <h1 className="text-3xl sm:text-4xl font-bold text-slate-900">Parent dashboard</h1>
-            <p className="text-sm sm:text-base text-slate-600">
+            <h1 className="text-3xl sm:text-4xl font-bold text-slate-100">Parent dashboard</h1>
+            <p className="text-sm sm:text-base text-slate-400">
               Manage subscriptions and student profiles in one secure place.
             </p>
           </div>
           <button
             onClick={handleResetParentPin}
-            className="text-xs font-semibold text-slate-500 hover:text-slate-700"
+            className="text-xs font-semibold text-slate-400 hover:text-slate-200"
             disabled={isPinBusy}
           >
             Reset parent PIN
@@ -405,34 +405,34 @@ export default function ParentDashboardPage() {
         </div>
 
         <div className="grid gap-6 md:grid-cols-2">
-          <div className="rounded-2xl border border-slate-200/60 bg-white/90 p-6 shadow-lg">
+          <div className="rounded-2xl border border-slate-800 bg-slate-900/80 backdrop-blur-xl p-6 shadow-xl">
             <div className="flex items-center gap-3 mb-4">
-              <CreditCard className="w-5 h-5 text-emerald-600" />
-              <h2 className="text-lg font-semibold text-slate-900">Subscription</h2>
+              <CreditCard className="w-5 h-5 text-emerald-400" />
+              <h2 className="text-lg font-semibold text-slate-100">Subscription</h2>
             </div>
-            <p className="text-sm text-slate-600 mb-2">Status</p>
+            <p className="text-sm text-slate-400 mb-2">Status</p>
             <div className="flex items-center gap-2">
               {subscriptionData?.subscription?.status === 'active' || subscriptionData?.subscription?.status === 'trialing' ? (
-                <CheckCircle className="w-4 h-4 text-emerald-600" />
+                <CheckCircle className="w-4 h-4 text-emerald-400" />
               ) : (
-                <XCircle className="w-4 h-4 text-slate-400" />
+                <XCircle className="w-4 h-4 text-slate-500" />
               )}
-              <span className="text-sm font-semibold text-slate-900">{subscriptionLabel}</span>
+              <span className="text-sm font-semibold text-slate-100">{subscriptionLabel}</span>
             </div>
             <button
               onClick={loadSubscription}
-              className="mt-3 text-xs font-semibold text-teal-700 hover:text-teal-800"
+              className="mt-3 text-xs font-semibold text-emerald-400 hover:text-emerald-300"
               disabled={isCanceling}
             >
               Refresh status
             </button>
             {subscriptionData?.subscription?.trialEndDate && (
-              <p className="text-xs text-emerald-700 mt-2">
+              <p className="text-xs text-emerald-400 mt-2">
                 Trial ends {subscriptionData.subscription.trialEndDate}
               </p>
             )}
             {subscriptionData?.subscription?.cancelAtPeriodEnd && (
-              <p className="text-xs text-amber-700 mt-2">
+              <p className="text-xs text-amber-400 mt-2">
                 Subscription will cancel at end of billing period.
               </p>
             )}
@@ -461,7 +461,7 @@ export default function ParentDashboardPage() {
                     setIsCanceling(false)
                   }
                 }}
-                className="mt-4 inline-flex items-center justify-center rounded-xl border border-rose-200 px-4 py-2 text-xs font-semibold text-rose-600 hover:bg-rose-50"
+                className="mt-4 inline-flex items-center justify-center rounded-xl border border-rose-800 bg-rose-950/30 px-4 py-2 text-xs font-semibold text-rose-400 hover:bg-rose-950/50"
                 disabled={isCanceling}
               >
                 {isCanceling ? 'Canceling…' : 'Cancel subscription'}
@@ -469,12 +469,12 @@ export default function ParentDashboardPage() {
             )}
           </div>
 
-          <div className="rounded-2xl border border-slate-200/60 bg-white/90 p-6 shadow-lg">
+          <div className="rounded-2xl border border-slate-800 bg-slate-900/80 backdrop-blur-xl p-6 shadow-xl">
             <div className="flex items-center gap-3 mb-4">
-              <Users className="w-5 h-5 text-emerald-600" />
-              <h2 className="text-lg font-semibold text-slate-900">Profiles</h2>
+              <Users className="w-5 h-5 text-emerald-400" />
+              <h2 className="text-lg font-semibold text-slate-100">Profiles</h2>
             </div>
-            <p className="text-sm text-slate-600 mb-4">
+            <p className="text-sm text-slate-400 mb-4">
               Manage student details, interests, and PIN protection.
             </p>
             <div className="mb-4">
@@ -487,7 +487,7 @@ export default function ParentDashboardPage() {
                   Add student profile
                 </Link>
               ) : (
-                <div className="rounded-xl border border-slate-200 bg-slate-50 px-4 py-2 text-xs text-slate-600">
+                <div className="rounded-xl border border-slate-700 bg-slate-950/50 px-4 py-2 text-xs text-slate-400">
                   {subscriptionData?.planType === 'family'
                     ? 'Family plan limit reached. Remove a profile to add another.'
                     : 'Upgrade to the Family plan to add more profiles.'}
@@ -496,11 +496,11 @@ export default function ParentDashboardPage() {
             </div>
             <div className="space-y-4">
               {profiles.map((profile) => (
-                <div key={profile.id} className="rounded-xl border border-slate-200/70 p-4">
+                <div key={profile.id} className="rounded-xl border border-slate-700 bg-slate-950/50 p-4">
                   <div className="flex items-start justify-between gap-4">
                     <div>
-                      <p className="text-sm font-semibold text-slate-900">{profile.display_name}</p>
-                      <p className="text-xs text-slate-600">{profile.grade_band} • {profile.grade || 'Grade not set'}</p>
+                      <p className="text-sm font-semibold text-slate-100">{profile.display_name}</p>
+                      <p className="text-xs text-slate-400">{profile.grade_band} • {profile.grade || 'Grade not set'}</p>
                       <p className="text-xs text-slate-500 mt-1">
                         Interests: {profile.interests || 'None yet'}
                       </p>
@@ -511,7 +511,7 @@ export default function ParentDashboardPage() {
                     <div className="flex flex-col gap-2 text-right">
                       <Link
                         href={`/profiles/${profile.id}/edit`}
-                        className="text-xs font-semibold text-teal-700 hover:text-teal-800"
+                        className="text-xs font-semibold text-emerald-400 hover:text-emerald-300"
                       >
                         Edit profile
                       </Link>
@@ -521,14 +521,14 @@ export default function ParentDashboardPage() {
                           setStudentPinValue('')
                           setStudentPinError(null)
                         }}
-                        className="text-xs font-semibold text-slate-600 hover:text-slate-800"
+                        className="text-xs font-semibold text-slate-400 hover:text-slate-200"
                       >
                         {profile.has_pin ? 'Reset PIN' : 'Set PIN'}
                       </button>
                       {profile.has_pin && (
                         <button
                           onClick={() => handleClearStudentPin(profile.id)}
-                          className="text-xs font-semibold text-rose-600 hover:text-rose-700"
+                          className="text-xs font-semibold text-rose-400 hover:text-rose-300"
                         >
                           Remove PIN
                         </button>
@@ -538,25 +538,25 @@ export default function ParentDashboardPage() {
                 </div>
               ))}
               {profiles.length === 0 && (
-                <div className="text-sm text-slate-600">No profiles found yet.</div>
+                <div className="text-sm text-slate-400">No profiles found yet.</div>
               )}
             </div>
           </div>
         </div>
 
-        <div className="mt-8 rounded-2xl border border-emerald-100 bg-emerald-50/50 p-6">
-          <h3 className="text-lg font-semibold text-slate-900 mb-2">This Week</h3>
+        <div className="mt-8 rounded-2xl border border-slate-800 bg-slate-900/80 backdrop-blur-xl p-6 shadow-xl">
+          <h3 className="text-lg font-semibold text-slate-100 mb-2">This Week</h3>
           <WeeklySummary profiles={profiles} />
         </div>
       </div>
 
       {pinTarget && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 px-4">
-          <div className="w-full max-w-sm rounded-2xl bg-white p-6 shadow-xl">
-            <h2 className="text-lg font-semibold text-slate-900 mb-2">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 backdrop-blur-sm px-4">
+          <div className="w-full max-w-sm rounded-2xl bg-slate-900/95 backdrop-blur-xl border border-slate-800 p-6 shadow-2xl">
+            <h2 className="text-lg font-semibold text-slate-100 mb-2">
               {pinTarget.has_pin ? 'Reset student PIN' : 'Set student PIN'}
             </h2>
-            <p className="text-sm text-slate-600 mb-4">
+            <p className="text-sm text-slate-400 mb-4">
               Enter a 4-digit PIN for {pinTarget.display_name}.
             </p>
             <form onSubmit={handleStudentPinSave} className="space-y-4">
@@ -566,11 +566,11 @@ export default function ParentDashboardPage() {
                 maxLength={4}
                 value={studentPinValue}
                 onChange={(e) => setStudentPinValue(e.target.value)}
-                className="w-full rounded-xl border border-slate-200 px-4 py-2 text-lg tracking-[0.3em] text-center focus:outline-none focus:ring-2 focus:ring-emerald-600"
+                className="w-full rounded-xl border border-slate-700 bg-slate-950/50 px-4 py-2 text-lg tracking-[0.3em] text-center text-slate-100 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
                 placeholder="••••"
               />
               {studentPinError && (
-                <div className="rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-xs text-red-700">
+                <div className="rounded-xl border border-red-800 bg-red-950/50 px-3 py-2 text-xs text-red-400">
                   {studentPinError}
                 </div>
               )}
@@ -578,7 +578,7 @@ export default function ParentDashboardPage() {
                 <button
                   type="button"
                   onClick={() => setPinTarget(null)}
-                  className="flex-1 rounded-xl border border-slate-200 px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50"
+                  className="flex-1 rounded-xl border border-slate-700 px-4 py-2 text-sm font-semibold text-slate-300 hover:bg-slate-800/50"
                   disabled={isStudentPinBusy}
                 >
                   Cancel

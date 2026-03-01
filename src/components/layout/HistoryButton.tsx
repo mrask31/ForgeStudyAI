@@ -309,12 +309,12 @@ export default function HistoryButton({ onNavigate }: HistoryButtonProps) {
           <span>History</span>
         </button>
       </SheetTrigger>
-      <SheetContent side="right" className="w-80 p-0 flex flex-col">
-        <SheetHeader className="px-6 py-4 border-b border-slate-200 shrink-0">
+      <SheetContent side="right" className="w-80 p-0 flex flex-col bg-slate-950/95 backdrop-blur-2xl border-l border-slate-800 shadow-2xl">
+        <SheetHeader className="px-6 py-4 border-b border-slate-800 shrink-0">
           <div className="flex items-center justify-between gap-2">
             <div className="flex-1">
-              <SheetTitle className="text-slate-900 font-semibold tracking-tight">Session History</SheetTitle>
-              <p className="text-xs text-slate-600 mt-1">
+              <SheetTitle className="text-slate-200 font-semibold tracking-tight">Session History</SheetTitle>
+              <p className="text-xs text-slate-400 mt-1">
                 Quickly return to past learning moments.
               </p>
             </div>
@@ -335,12 +335,12 @@ export default function HistoryButton({ onNavigate }: HistoryButtonProps) {
 
         <div className="flex-1 overflow-y-auto px-6 py-4">
           {isLoading ? (
-            <div className="text-center py-8 text-slate-500">
+            <div className="text-center py-8 text-slate-400">
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600 mx-auto mb-4"></div>
               <p className="text-sm">Loading history...</p>
             </div>
           ) : groupedChats.length === 0 ? (
-            <div className="text-center py-12 text-slate-500">
+            <div className="text-center py-12 text-slate-400">
               <Clock className="w-12 h-12 mx-auto mb-3 opacity-30" />
               <p className="text-sm mb-1">No session history yet</p>
               <p className="text-xs">Start a conversation to see it here</p>
@@ -352,22 +352,22 @@ export default function HistoryButton({ onNavigate }: HistoryButtonProps) {
                 const totalChats = group.timeGroups.reduce((sum, tg) => sum + tg.chats.length, 0)
                 
                 return (
-                  <div key={group.groupId} className="border border-slate-200 rounded-lg overflow-hidden">
+                  <div key={group.groupId} className="border border-slate-800 rounded-lg overflow-hidden">
                     {/* Class Header - Clickable to expand/collapse */}
                     <button
                       onClick={() => toggleGroup(group.groupId)}
-                      className="w-full flex items-center justify-between px-4 py-3 bg-slate-50 hover:bg-slate-100 transition-colors"
+                      className="w-full flex items-center justify-between px-4 py-3 bg-slate-900/60 hover:bg-slate-800/60 transition-colors"
                     >
                       <div className="flex items-center gap-2">
                         {isExpanded ? (
-                          <ChevronDown className="w-4 h-4 text-slate-500 flex-shrink-0" />
+                          <ChevronDown className="w-4 h-4 text-slate-400 flex-shrink-0" />
                         ) : (
-                          <ChevronRight className="w-4 h-4 text-slate-500 flex-shrink-0" />
+                          <ChevronRight className="w-4 h-4 text-slate-400 flex-shrink-0" />
                         )}
-                        <h3 className="text-sm font-semibold text-slate-700">
+                        <h3 className="text-sm font-semibold text-slate-200">
                           {group.label}
                         </h3>
-                        <span className="text-xs text-slate-500 bg-slate-200 px-2 py-0.5 rounded-full">
+                        <span className="text-xs text-slate-400 bg-slate-800 px-2 py-0.5 rounded-full">
                           {totalChats}
                         </span>
                       </div>
@@ -375,10 +375,10 @@ export default function HistoryButton({ onNavigate }: HistoryButtonProps) {
                     
                     {/* Time Groups - Only show when expanded */}
                     {isExpanded && (
-                      <div className="px-4 py-3 space-y-4 bg-white">
+                      <div className="px-4 py-3 space-y-4 bg-slate-900/40">
                         {group.timeGroups.map((timeGroup) => (
                           <div key={timeGroup.label}>
-                            <h4 className="text-xs font-medium text-slate-400 mb-2">{timeGroup.label}</h4>
+                            <h4 className="text-xs font-medium text-slate-500 mb-2">{timeGroup.label}</h4>
                             <div className="space-y-1">
                               {timeGroup.chats.map((chat) => {
                                 const Icon = getSessionIcon(chat.session_type)
@@ -389,8 +389,8 @@ export default function HistoryButton({ onNavigate }: HistoryButtonProps) {
                                     key={chat.id}
                                     className={`flex items-center gap-2 p-2 rounded-lg border transition-colors ${
                                       isSelected
-                                        ? 'bg-indigo-50 border-indigo-300'
-                                        : 'bg-white border-slate-200 hover:border-indigo-300 hover:bg-indigo-50/50'
+                                        ? 'bg-indigo-900/40 border-indigo-700'
+                                        : 'bg-slate-900/60 border-slate-700 hover:border-indigo-600 hover:bg-indigo-900/20'
                                     }`}
                                   >
                                     <Checkbox
@@ -420,13 +420,13 @@ export default function HistoryButton({ onNavigate }: HistoryButtonProps) {
                                       onClick={() => handleChatClick(chat)}
                                       className="flex-1 text-left min-w-0 flex items-center gap-2"
                                     >
-                                      <Icon className="w-4 h-4 flex-shrink-0 text-slate-500" />
+                                      <Icon className="w-4 h-4 flex-shrink-0 text-slate-400" />
                                       <div className="flex-1 min-w-0">
                                         <div className="flex items-center gap-2 mb-0.5">
-                                          <span className="text-sm font-medium text-slate-900 truncate">
+                                          <span className="text-sm font-medium text-slate-200 truncate">
                                             {chat.title || 'Untitled Chat'}
                                           </span>
-                                          <span className="text-xs px-1.5 py-0.5 bg-slate-100 text-slate-600 rounded shrink-0">
+                                          <span className="text-xs px-1.5 py-0.5 bg-slate-800 text-slate-400 rounded shrink-0">
                                             {badge}
                                           </span>
                                         </div>

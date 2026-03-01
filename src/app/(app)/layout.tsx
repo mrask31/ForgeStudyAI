@@ -1,5 +1,6 @@
 import { Suspense } from 'react'
 import { AppShell } from '@/components/layout/AppShell'
+import { SettingsDrawerWrapper } from '@/components/drawers/SettingsDrawerWrapper'
 
 // Force dynamic rendering for all app routes
 export const dynamic = 'force-dynamic'
@@ -18,6 +19,7 @@ export default function AppRouteLayout({
       <AppShell variant="app">
         {children}
       </AppShell>
+      <SettingsDrawerWrapper />
     </Suspense>
   )
 }

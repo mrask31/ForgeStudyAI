@@ -194,10 +194,10 @@ function ProfilesPageContent() {
             <div className="w-16 h-16 bg-gradient-to-br from-teal-100 to-cyan-100 rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-lg">
               <Plus className="w-8 h-8 text-teal-600" />
             </div>
-            <h1 className="text-3xl sm:text-4xl font-bold text-slate-900 mb-3">
+            <h1 className="text-3xl sm:text-4xl font-bold text-slate-100 mb-3">
               Create your first student profile
             </h1>
-            <p className="text-base sm:text-lg text-slate-600 mb-6">
+            <p className="text-base sm:text-lg text-slate-400 mb-6">
               Set up a profile to personalize learning support by grade band.
             </p>
             <Link
@@ -216,13 +216,13 @@ function ProfilesPageContent() {
     <div className="h-full overflow-y-auto bg-gradient-to-br from-slate-50 to-white">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 sm:py-24">
         <div className="text-center mb-12 sm:mb-16">
-          <h1 className="text-4xl sm:text-5xl md:text-6xl font-bold text-slate-900 mb-4 sm:mb-6">
+          <h1 className="text-4xl sm:text-5xl md:text-6xl font-bold text-slate-100 mb-4 sm:mb-6">
             Who's studying?
           </h1>
-          <p className="text-lg sm:text-xl text-slate-700 max-w-2xl mx-auto mb-2">
+          <p className="text-lg sm:text-xl text-slate-300 max-w-2xl mx-auto mb-2">
             Select a student profile to continue
           </p>
-          <p className="text-sm text-slate-500 max-w-2xl mx-auto">
+          <p className="text-sm text-slate-400 max-w-2xl mx-auto">
             Each student gets personalized step-by-step support for Grades 6–12
           </p>
         </div>
@@ -237,7 +237,7 @@ function ProfilesPageContent() {
             return (
               <div
                 key={profile.id}
-                className="group relative bg-white/80 backdrop-blur-sm border-2 border-slate-200/60 rounded-2xl p-8 shadow-lg shadow-slate-200/50 hover:shadow-xl hover:shadow-teal-200/30 transition-all duration-300 transform hover:scale-[1.02] hover:border-teal-300 cursor-pointer"
+                className="group relative bg-slate-900/60 backdrop-blur-md border-2 border-slate-800 rounded-2xl p-8 shadow-xl hover:border-indigo-500 hover:bg-slate-800/60 hover:-translate-y-1 hover:shadow-[0_0_20px_rgba(99,102,241,0.15)] transition-all duration-300 cursor-pointer"
                 onClick={() => handleProfileClick(profile)}
               >
                 {/* Delete Button */}
@@ -262,10 +262,10 @@ function ProfilesPageContent() {
                     <Icon className="w-4 h-4 text-teal-600" />
                   </div>
 
-                  <h2 className="text-xl font-bold text-slate-900 mb-1">{profile.display_name}</h2>
-                  <p className="text-sm text-slate-600 mb-2">{getGradeBandLabel(profile.grade_band)}</p>
+                  <h2 className="text-xl font-bold text-slate-100 mb-1">{profile.display_name}</h2>
+                  <p className="text-sm text-slate-400 mb-2">{getGradeBandLabel(profile.grade_band)}</p>
                   {profile.grade && (
-                    <p className="text-xs text-slate-500">Grade {profile.grade}</p>
+                    <p className="text-xs text-slate-400">Grade {profile.grade}</p>
                   )}
                   {profile.has_pin && (
                     <div className="mt-3 inline-flex items-center gap-1 rounded-full bg-slate-100 px-2.5 py-1 text-xs text-slate-600">
@@ -288,9 +288,9 @@ function ProfilesPageContent() {
                 <div className="w-20 h-20 bg-gradient-to-br from-teal-100 to-cyan-100 rounded-xl flex items-center justify-center mb-4 shadow-lg group-hover:shadow-xl transition-shadow group-hover:from-teal-200 group-hover:to-cyan-200">
                   <Plus className="w-10 h-10 text-teal-600" />
                 </div>
-                <h2 className="text-xl font-bold text-slate-900 mb-1">Add Profile</h2>
-                <p className="text-sm text-slate-600">Create a new student profile</p>
-                <p className="text-xs text-slate-500 mt-1">Grades 6–12</p>
+                <h2 className="text-xl font-bold text-slate-100 mb-1">Add Profile</h2>
+                <p className="text-sm text-slate-400">Create a new student profile</p>
+                <p className="text-xs text-slate-400 mt-1">Grades 6–12</p>
               </div>
             </Link>
           )}
@@ -299,7 +299,7 @@ function ProfilesPageContent() {
         {profiles.length >= 1 && (
           <div className="max-w-2xl mx-auto text-center mb-8">
             <div className="rounded-2xl border border-slate-200 bg-white/80 px-6 py-4 shadow-sm">
-              <p className="text-sm text-slate-600">
+              <p className="text-sm text-slate-400">
                 Need to add or manage student profiles? Use the Parent Dashboard.
               </p>
               <Link
@@ -379,7 +379,7 @@ export default function ProfilesPage() {
             <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-br from-teal-100 to-cyan-100 mb-4">
               <div className="animate-spin rounded-full h-8 w-8 border-2 border-teal-600 border-t-transparent"></div>
             </div>
-            <p className="text-lg font-medium text-slate-600">Loading profiles...</p>
+            <p className="text-lg font-medium text-slate-400">Loading profiles...</p>
           </div>
         </div>
       }
