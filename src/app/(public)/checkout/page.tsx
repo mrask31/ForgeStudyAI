@@ -59,14 +59,14 @@ function CheckoutContent() {
   // Always show plan selection UI (even if a plan is pre-selected from URL)
   // This allows users to see and change their plan before checkout
   return (
-    <div className="min-h-[calc(100dvh-4rem)] bg-gradient-to-br from-slate-50 to-white py-12 sm:py-16 pb-safe-b">
+    <div className="min-h-[calc(100dvh-4rem)] bg-slate-950 py-12 sm:py-16 pb-safe-b">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center mb-10 sm:mb-12">
-          <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold text-slate-900 mb-4 tracking-tight">
-            Make homework easier, starting tonight
+          <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold text-slate-100 mb-4 tracking-tight">
+            Unlock their cognitive potential
           </h1>
-          <p className="text-lg sm:text-xl text-slate-700 max-w-2xl mx-auto leading-relaxed">
-            Choose the plan that fits your family. All plans help build confidence, reduce stress, and support step-by-step learning.
+          <p className="text-lg sm:text-xl text-slate-400 max-w-2xl mx-auto leading-relaxed">
+            Choose the plan that fits your family. All plans include the full Spatial OS experience.
           </p>
         </div>
 
@@ -75,39 +75,39 @@ function CheckoutContent() {
             {/* Individual Plan (Monthly) */}
             <div 
               onClick={() => setSelectedPlan('individual_monthly')}
-              className={`bg-white border-2 rounded-2xl p-6 sm:p-8 shadow-lg cursor-pointer transition-all duration-300 transform hover:scale-[1.02] ${
+              className={`bg-slate-900/40 backdrop-blur-md border-2 rounded-2xl p-6 sm:p-8 cursor-pointer transition-all duration-300 transform hover:scale-[1.02] ${
                 selectedPlan === 'individual_monthly' 
-                  ? 'border-teal-500 shadow-xl shadow-teal-500/30' 
-                  : 'border-slate-200 hover:border-teal-300'
+                  ? 'border-indigo-500 shadow-xl shadow-indigo-500/20' 
+                  : 'border-slate-800 hover:border-indigo-500/50'
               }`}
             >
-              <h3 className="text-xl font-bold text-slate-900 mb-2">Individual Plan</h3>
+              <h3 className="text-xl font-bold text-slate-100 mb-2">Individual Plan</h3>
               <div className="mb-4">
-                <span className="text-4xl font-bold text-slate-900">$9.99</span>
-                <span className="text-lg text-slate-600"> / month</span>
+                <span className="text-4xl font-bold text-slate-100">$9.99</span>
+                <span className="text-lg text-slate-400"> / month</span>
               </div>
-              <p className="text-sm text-teal-700 font-semibold mb-1">Annual: $89 / year</p>
-              <p className="text-xs text-slate-600 mb-4">3 months free, includes summer</p>
-              <ul className="space-y-2.5 mb-6 text-sm text-slate-700">
+              <p className="text-sm text-indigo-400 font-semibold mb-1">Annual: $89 / year</p>
+              <p className="text-xs text-slate-500 mb-4">3 months free, includes summer</p>
+              <ul className="space-y-2.5 mb-6 text-sm text-slate-300">
                 <li className="flex items-start gap-2">
-                  <span className="text-teal-600 mt-0.5">•</span>
+                  <span className="text-indigo-400 mt-0.5">•</span>
                   <span>1 student profile</span>
                 </li>
                 <li className="flex items-start gap-2">
-                  <span className="text-teal-600 mt-0.5">•</span>
-                  <span>Step-by-step homework help</span>
+                  <span className="text-indigo-400 mt-0.5">•</span>
+                  <span>Full Galaxy visualization</span>
                 </li>
                 <li className="flex items-start gap-2">
-                  <span className="text-teal-600 mt-0.5">•</span>
-                  <span>Personalized readiness dashboard</span>
+                  <span className="text-indigo-400 mt-0.5">•</span>
+                  <span>Socratic sparring sessions</span>
                 </li>
                 <li className="flex items-start gap-2">
-                  <span className="text-teal-600 mt-0.5">•</span>
+                  <span className="text-indigo-400 mt-0.5">•</span>
                   <span>Cancel anytime</span>
                 </li>
               </ul>
               {selectedPlan === 'individual_monthly' && (
-                <div className="flex items-center justify-center gap-2 text-teal-600 font-semibold mb-4">
+                <div className="flex items-center justify-center gap-2 text-indigo-400 font-semibold mb-4">
                   <Check className="w-5 h-5" />
                   <span>Selected</span>
                 </div>
@@ -117,137 +117,137 @@ function CheckoutContent() {
             {/* Individual Plan (Annual) */}
             <div 
               onClick={() => setSelectedPlan('individual_annual')}
-              className={`bg-white border-2 rounded-2xl p-6 sm:p-8 shadow-lg cursor-pointer transition-all duration-300 transform hover:scale-[1.02] ${
+              className={`bg-slate-900/40 backdrop-blur-md border-2 rounded-2xl p-6 sm:p-8 cursor-pointer transition-all duration-300 transform hover:scale-[1.02] ${
                 selectedPlan === 'individual_annual' 
-                  ? 'border-teal-500 shadow-xl shadow-teal-500/30' 
-                  : 'border-slate-200 hover:border-teal-300'
+                  ? 'border-indigo-500 shadow-xl shadow-indigo-500/20' 
+                  : 'border-slate-800 hover:border-indigo-500/50'
               }`}
             >
-              <h3 className="text-xl font-bold text-slate-900 mb-2">Individual Plan (Annual)</h3>
+              <h3 className="text-xl font-bold text-slate-100 mb-2">Individual Plan (Annual)</h3>
               <div className="mb-4">
-                <span className="text-4xl font-bold text-slate-900">$89</span>
-                <span className="text-lg text-slate-600"> / year</span>
+                <span className="text-4xl font-bold text-slate-100">$89</span>
+                <span className="text-lg text-slate-400"> / year</span>
               </div>
-              <p className="text-sm text-teal-700 font-semibold mb-1">Pay for 9 months, get 12</p>
-              <p className="text-xs text-slate-600 mb-4">Includes summer — 3 months free</p>
-              <ul className="space-y-2.5 mb-6 text-sm text-slate-700">
+              <p className="text-sm text-indigo-400 font-semibold mb-1">Pay for 9 months, get 12</p>
+              <p className="text-xs text-slate-500 mb-4">Includes summer — 3 months free</p>
+              <ul className="space-y-2.5 mb-6 text-sm text-slate-300">
                 <li className="flex items-start gap-2">
-                  <span className="text-teal-600 mt-0.5">•</span>
+                  <span className="text-indigo-400 mt-0.5">•</span>
                   <span>1 student profile</span>
                 </li>
                 <li className="flex items-start gap-2">
-                  <span className="text-teal-600 mt-0.5">•</span>
-                  <span>Step-by-step homework help</span>
+                  <span className="text-indigo-400 mt-0.5">•</span>
+                  <span>Full Galaxy visualization</span>
                 </li>
                 <li className="flex items-start gap-2">
-                  <span className="text-teal-600 mt-0.5">•</span>
-                  <span>Personalized readiness dashboard</span>
+                  <span className="text-indigo-400 mt-0.5">•</span>
+                  <span>Socratic sparring sessions</span>
                 </li>
                 <li className="flex items-start gap-2">
-                  <span className="text-teal-600 mt-0.5">•</span>
+                  <span className="text-indigo-400 mt-0.5">•</span>
                   <span>Cancel anytime</span>
                 </li>
               </ul>
               {selectedPlan === 'individual_annual' && (
-                <div className="flex items-center justify-center gap-2 text-teal-600 font-semibold mb-4">
+                <div className="flex items-center justify-center gap-2 text-indigo-400 font-semibold mb-4">
                   <Check className="w-5 h-5" />
                   <span>Selected</span>
                 </div>
               )}
             </div>
 
-            {/* Family Plan (Monthly) - Recommended */}
+            {/* Family Plan (Monthly) - Most Popular */}
             <div 
               onClick={() => setSelectedPlan('family_monthly')}
-              className={`bg-gradient-to-br from-teal-50/50 via-slate-50 to-teal-50/50 border-2 rounded-2xl p-6 sm:p-8 shadow-xl relative cursor-pointer transition-all duration-300 transform hover:scale-[1.02] ${
+              className={`bg-slate-900/60 backdrop-blur-md border-2 rounded-2xl p-6 sm:p-8 relative cursor-pointer transition-all duration-300 transform hover:scale-[1.02] ${
                 selectedPlan === 'family_monthly' 
-                  ? 'border-teal-500 shadow-2xl shadow-teal-500/40' 
-                  : 'border-teal-300/60'
+                  ? 'border-indigo-500 shadow-2xl shadow-indigo-500/30' 
+                  : 'border-indigo-500/50'
               }`}
             >
               <div className="absolute -top-3 left-1/2 -translate-x-1/2">
-                <span className="bg-teal-600 text-white text-[10px] px-2.5 py-0.5 rounded-full font-semibold shadow-lg">
-                  Recommended for Families
+                <span className="bg-indigo-600 text-white text-[10px] px-2.5 py-0.5 rounded-full font-semibold shadow-lg">
+                  Most Popular
                 </span>
               </div>
-              <h3 className="text-xl font-bold text-slate-900 mb-2 mt-2">Family Plan (Monthly)</h3>
+              <h3 className="text-xl font-bold text-slate-100 mb-2 mt-2">Family Plan (Monthly)</h3>
               <div className="mb-1">
-                <span className="text-4xl font-bold text-slate-900">$19.99</span>
-                <span className="text-lg text-slate-600"> / month</span>
+                <span className="text-4xl font-bold text-slate-100">$19.99</span>
+                <span className="text-lg text-slate-400"> / month</span>
               </div>
-              <p className="text-sm text-teal-700 mb-1 font-semibold">Annual: $179 / year</p>
-              <p className="text-xs text-slate-600 mb-4">Less than $15/month per child</p>
-              <ul className="space-y-2.5 mb-6 text-sm text-slate-700">
+              <p className="text-sm text-indigo-400 mb-1 font-semibold">Annual: $179 / year</p>
+              <p className="text-xs text-slate-500 mb-4">Less than $15/month per child</p>
+              <ul className="space-y-2.5 mb-6 text-sm text-slate-300">
                 <li className="flex items-start gap-2">
-                  <span className="text-teal-600 mt-0.5">•</span>
+                  <span className="text-indigo-400 mt-0.5">•</span>
                   <span>Up to 4 student profiles</span>
                 </li>
                 <li className="flex items-start gap-2">
-                  <span className="text-teal-600 mt-0.5">•</span>
+                  <span className="text-indigo-400 mt-0.5">•</span>
                   <span>One parent account</span>
                 </li>
                 <li className="flex items-start gap-2">
-                  <span className="text-teal-600 mt-0.5">•</span>
+                  <span className="text-indigo-400 mt-0.5">•</span>
                   <span>Easy profile switching</span>
                 </li>
                 <li className="flex items-start gap-2">
-                  <span className="text-teal-600 mt-0.5">•</span>
+                  <span className="text-indigo-400 mt-0.5">•</span>
                   <span>Cancel anytime</span>
                 </li>
               </ul>
               {selectedPlan === 'family_monthly' && (
-                <div className="flex items-center justify-center gap-2 text-teal-600 font-semibold mb-4">
+                <div className="flex items-center justify-center gap-2 text-indigo-400 font-semibold mb-4">
                   <Check className="w-5 h-5" />
                   <span>Selected</span>
                 </div>
               )}
             </div>
 
-            {/* Family Plan (Annual) - Best for Long-Term Growth */}
+            {/* Family Plan (Annual) */}
             <div 
               onClick={() => setSelectedPlan('family_annual')}
-              className={`bg-gradient-to-br from-teal-50/50 via-slate-50 to-teal-50/50 border-2 rounded-2xl p-6 sm:p-8 shadow-xl relative cursor-pointer transition-all duration-300 transform hover:scale-[1.02] ${
+              className={`bg-slate-900/60 backdrop-blur-md border-2 rounded-2xl p-6 sm:p-8 relative cursor-pointer transition-all duration-300 transform hover:scale-[1.02] ${
                 selectedPlan === 'family_annual' 
-                  ? 'border-teal-500 shadow-2xl shadow-teal-500/40' 
-                  : 'border-teal-300/60'
+                  ? 'border-indigo-500 shadow-2xl shadow-indigo-500/30' 
+                  : 'border-indigo-500/50'
               }`}
             >
               <div className="absolute -top-3 left-1/2 -translate-x-1/2">
-                <span className="bg-teal-600 text-white text-[10px] px-2.5 py-0.5 rounded-full font-semibold shadow-lg">
-                  Best for Long-Term Growth
+                <span className="bg-indigo-600 text-white text-[10px] px-2.5 py-0.5 rounded-full font-semibold shadow-lg">
+                  Best Value
                 </span>
               </div>
-              <h3 className="text-xl font-bold text-slate-900 mb-2 mt-2">Family Plan (Annual)</h3>
+              <h3 className="text-xl font-bold text-slate-100 mb-2 mt-2">Family Plan (Annual)</h3>
               <div className="mb-1">
-                <span className="text-4xl font-bold text-slate-900">$179</span>
-                <span className="text-lg text-slate-600"> / year</span>
+                <span className="text-4xl font-bold text-slate-100">$179</span>
+                <span className="text-lg text-slate-400"> / year</span>
               </div>
-              <p className="text-sm text-teal-700 mb-4 font-semibold">
+              <p className="text-sm text-indigo-400 mb-4 font-semibold">
                 Includes summer — 3 months free
               </p>
-              <p className="text-sm text-slate-700 mb-4 font-medium">
+              <p className="text-sm text-slate-300 mb-4 font-medium">
                 Less than $15/month per child, with uninterrupted support all year.
               </p>
-              <ul className="space-y-2.5 mb-6 text-sm text-slate-700">
+              <ul className="space-y-2.5 mb-6 text-sm text-slate-300">
                 <li className="flex items-start gap-2">
-                  <span className="text-teal-600 mt-0.5">•</span>
+                  <span className="text-indigo-400 mt-0.5">•</span>
                   <span>Up to 4 student profiles</span>
                 </li>
                 <li className="flex items-start gap-2">
-                  <span className="text-teal-600 mt-0.5">•</span>
+                  <span className="text-indigo-400 mt-0.5">•</span>
                   <span>One parent account</span>
                 </li>
                 <li className="flex items-start gap-2">
-                  <span className="text-teal-600 mt-0.5">•</span>
+                  <span className="text-indigo-400 mt-0.5">•</span>
                   <span>Easy profile switching</span>
                 </li>
                 <li className="flex items-start gap-2">
-                  <span className="text-teal-600 mt-0.5">•</span>
+                  <span className="text-indigo-400 mt-0.5">•</span>
                   <span>Cancel anytime</span>
                 </li>
               </ul>
               {selectedPlan === 'family_annual' && (
-                <div className="flex items-center justify-center gap-2 text-teal-600 font-semibold mb-4">
+                <div className="flex items-center justify-center gap-2 text-indigo-400 font-semibold mb-4">
                   <Check className="w-5 h-5" />
                   <span>Selected</span>
                 </div>
@@ -260,7 +260,7 @@ function CheckoutContent() {
           <button
             onClick={handleStartCheckout}
             disabled={!selectedPlan || isStartingCheckout}
-            className="w-full sm:w-auto px-8 sm:px-10 py-4 sm:py-5 bg-gradient-to-r from-teal-700 to-teal-600 text-white rounded-xl text-base sm:text-lg font-bold hover:from-teal-800 hover:to-teal-700 focus:outline-none focus:ring-2 focus:ring-teal-600 focus:ring-offset-2 transition-all duration-200 shadow-md shadow-teal-500/30 hover:shadow-lg hover:shadow-teal-500/40 disabled:opacity-50 disabled:cursor-not-allowed transform hover:scale-105 active:scale-95 min-h-[44px]"
+            className="w-full sm:w-auto px-8 sm:px-10 py-4 sm:py-5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl text-base sm:text-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed border-none transform hover:scale-105 active:scale-95 min-h-[44px]"
           >
             {isStartingCheckout ? (
               <>
@@ -286,10 +286,10 @@ function CheckoutContent() {
 export default function CheckoutPage() {
   return (
     <Suspense fallback={
-      <div className="min-h-[calc(100dvh-4rem)] bg-slate-50 flex items-center justify-center">
+      <div className="min-h-[calc(100dvh-4rem)] bg-slate-950 flex items-center justify-center">
         <div className="text-center">
-          <Loader2 className="w-8 h-8 animate-spin text-teal-600 mx-auto mb-4" />
-          <p className="text-slate-700">Loading...</p>
+          <Loader2 className="w-8 h-8 animate-spin text-indigo-400 mx-auto mb-4" />
+          <p className="text-slate-400">Loading...</p>
         </div>
       </div>
     }>

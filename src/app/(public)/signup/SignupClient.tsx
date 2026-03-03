@@ -343,74 +343,71 @@ export default function SignupClient() {
 
   if (showSuccess) {
     return (
-      <div className="min-h-[calc(100dvh-4rem)] bg-slate-50">
-        <div className="grid grid-cols-1 lg:grid-cols-2 min-h-[calc(100dvh-4rem)]">
+      <div className="min-h-[calc(100dvh-4rem)] bg-slate-950">
+        <div className="grid grid-cols-1 md:grid-cols-2 min-h-[calc(100dvh-4rem)]">
           {/* Left Column */}
-          <div className="hidden lg:flex bg-gradient-to-br from-slate-50 to-white border-r border-slate-200 flex flex-col justify-center items-center h-full px-8 text-center">
+          <div className="bg-slate-900 md:border-r border-slate-800 flex flex-col justify-center items-center h-full px-8 text-center">
             <div className="max-w-md space-y-6">
-              <div className="w-16 h-16 bg-gradient-to-br from-teal-700 to-teal-600 rounded-xl flex items-center justify-center mx-auto shadow-lg shadow-teal-500/25">
-                <MessageSquare className="w-8 h-8 text-white" />
+              <div className="w-16 h-16 bg-indigo-600/20 rounded-xl flex items-center justify-center mx-auto">
+                <MessageSquare className="w-8 h-8 text-indigo-400" />
               </div>
-              <h2 className="text-2xl font-bold text-slate-900 leading-tight">
-                Make tonight's homework easier.
+              <h2 className="text-2xl font-bold text-slate-100 leading-tight">
+                Unlock their cognitive potential.
               </h2>
-              <p className="text-base text-slate-600 leading-relaxed">
-                ForgeStudy turns "I'm stuck" into progress with guided explanations and better study habits.
-              </p>
-              <p className="text-sm text-slate-500 italic">
-                Less stress for them. Less frustration for you.
+              <p className="text-base text-slate-400 leading-relaxed">
+                The AI tutor that refuses to cheat.
               </p>
             </div>
           </div>
 
           {/* Right Column - Success State */}
-          <div className="flex items-center justify-center px-4 py-12 bg-white">
+          <div className="bg-slate-950 flex items-center justify-center px-4 py-12">
             <div className="w-full max-w-md">
-              <div className="bg-white border border-slate-200 rounded-2xl p-8 shadow-lg text-center">
+              <div className="bg-slate-900/60 backdrop-blur-md border border-slate-800 rounded-2xl p-8 shadow-2xl text-center">
                 {isVerifying && message?.text.includes('Email verified') ? (
                   <>
-                    <div className="w-20 h-20 bg-green-50 rounded-full flex items-center justify-center mx-auto mb-6">
-                      <CheckCircle className="w-10 h-10 text-green-600" />
+                    <div className="w-20 h-20 bg-green-900/20 rounded-full flex items-center justify-center mx-auto mb-6">
+                      <CheckCircle className="w-10 h-10 text-green-400" />
                     </div>
-                    <h1 className="text-2xl font-semibold text-slate-900 mb-3">
+                    <h1 className="text-2xl font-semibold text-slate-100 mb-3">
                       Email verified!
                     </h1>
-                    <p className="text-base text-slate-600 mb-6">
+                    <p className="text-base text-slate-400 mb-6">
                       Redirecting you now...
                     </p>
                     <div className="flex justify-center">
-                      <Loader2 className="h-8 w-8 animate-spin text-teal-600" />
+                      <Loader2 className="h-8 w-8 animate-spin text-indigo-400" />
                     </div>
                   </>
                 ) : (
                   <>
-                    <div className="w-20 h-20 bg-teal-50 rounded-full flex items-center justify-center mx-auto mb-6">
-                      <Mail className="w-10 h-10 text-teal-600" />
+                    <div className="w-20 h-20 bg-indigo-600/20 rounded-full flex items-center justify-center mx-auto mb-6">
+                      <Mail className="w-10 h-10 text-indigo-400" />
                     </div>
-                    <h1 className="text-2xl font-semibold text-slate-900 mb-3">
+                    <h1 className="text-2xl font-semibold text-slate-100 mb-3">
                       Check your email to continue
                     </h1>
-                    <div className="inline-flex items-center justify-center px-3 py-1 bg-amber-50 border border-amber-200 rounded-full text-xs font-semibold text-amber-800 mb-3">
+                    <div className="inline-flex items-center justify-center px-3 py-1 bg-amber-900/20 border border-amber-700/50 rounded-full text-xs font-semibold text-amber-400 mb-3">
                       Verify to continue to checkout
                     </div>
-                    <p className="text-base text-slate-600 mb-2">
+                    <p className="text-base text-slate-400 mb-2">
                       Verify your email to unlock checkout. We sent a confirmation link to
                     </p>
-                    <p className="text-base font-semibold text-teal-600 mb-6 break-all">
+                    <p className="text-base font-semibold text-indigo-400 mb-6 break-all">
                       {email}
                     </p>
-                    <div className="bg-teal-50 border border-teal-200 rounded-xl p-4 mb-6 text-left">
-                      <div className="space-y-2 text-sm text-slate-700">
+                    <div className="bg-indigo-900/20 border border-indigo-700/50 rounded-xl p-4 mb-6 text-left">
+                      <div className="space-y-2 text-sm text-slate-300">
                         <div className="flex items-start gap-2">
-                          <span className="text-teal-600 mt-0.5">•</span>
+                          <span className="text-indigo-400 mt-0.5">•</span>
                           <span>Check your Spam/Junk folder if you don't see it</span>
                         </div>
                         <div className="flex items-start gap-2">
-                          <span className="text-teal-600 mt-0.5">•</span>
+                          <span className="text-indigo-400 mt-0.5">•</span>
                           <span>Click the confirmation link (on any device)</span>
                         </div>
                         <div className="flex items-start gap-2">
-                          <span className="text-teal-600 mt-0.5">•</span>
+                          <span className="text-indigo-400 mt-0.5">•</span>
                           <span>This page will automatically refresh when verified</span>
                         </div>
                       </div>
@@ -418,14 +415,14 @@ export default function SignupClient() {
                     {message && (
                       <div className={`p-4 text-sm rounded-xl mb-4 ${
                         message.type === 'error' 
-                          ? 'bg-red-50 text-red-700 border border-red-200' 
-                          : 'bg-green-50 text-green-700 border border-green-200'
+                          ? 'bg-red-900/20 text-red-400 border border-red-700/50' 
+                          : 'bg-green-900/20 text-green-400 border border-green-700/50'
                       }`}>
                         {message.text}
                       </div>
                     )}
                     <div className="flex items-center justify-center gap-2 text-sm text-slate-500 mb-4">
-                      <Loader2 className="h-4 w-4 animate-spin text-teal-600" />
+                      <Loader2 className="h-4 w-4 animate-spin text-indigo-400" />
                       <span>Waiting for verification, then sending you to checkout...</span>
                     </div>
                     <div className="flex flex-col gap-3">
@@ -444,7 +441,7 @@ export default function SignupClient() {
                           }
                           window.location.assign(loginUrl.toString())
                         }}
-                        className="inline-flex items-center justify-center gap-2 px-4 py-2 bg-slate-100 text-slate-700 rounded-lg text-sm font-medium hover:bg-slate-200 transition-colors"
+                        className="inline-flex items-center justify-center gap-2 px-4 py-2 bg-slate-800 text-slate-300 rounded-lg text-sm font-medium hover:bg-slate-700 transition-colors"
                       >
                         <Loader2 className="h-4 w-4" />
                         Refresh after verification
@@ -460,7 +457,7 @@ export default function SignupClient() {
                           handleResendEmail(e)
                         }}
                         disabled={resending}
-                        className="inline-flex items-center justify-center gap-2 px-4 py-2 bg-gradient-to-r from-teal-700 to-teal-600 text-white rounded-lg text-sm font-bold hover:from-teal-800 hover:to-teal-700 focus:outline-none focus:ring-2 focus:ring-teal-600 focus:ring-offset-2 transition-colors disabled:opacity-50 disabled:cursor-not-allowed shadow-md shadow-teal-500/30"
+                        className="inline-flex items-center justify-center gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg text-sm font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed border-none"
                       >
                         {resending ? (
                           <>
@@ -475,14 +472,14 @@ export default function SignupClient() {
                         )}
                       </button>
                       {appUrl && (
-                        <div className="bg-slate-50 border border-slate-200 rounded-xl p-4 text-center">
-                          <p className="text-xs font-semibold text-slate-700 mb-2">
+                        <div className="bg-slate-800/50 border border-slate-700 rounded-xl p-4 text-center">
+                          <p className="text-xs font-semibold text-slate-300 mb-2">
                             Open ForgeStudy on your phone
                           </p>
                           <img
                             src={`https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${encodeURIComponent(appUrl)}`}
                             alt="ForgeStudy QR code"
-                            className="mx-auto rounded-lg border border-slate-200 bg-white p-2"
+                            className="mx-auto rounded-lg border border-slate-700 bg-white p-2"
                           />
                           <p className="text-[11px] text-slate-500 mt-2">
                             Scan to open the verification flow on mobile.
@@ -491,7 +488,7 @@ export default function SignupClient() {
                       )}
                       <Link
                         href="/login"
-                        className="inline-flex items-center gap-2 px-4 py-2 text-teal-600 hover:text-teal-700 text-sm font-medium transition-colors"
+                        className="inline-flex items-center gap-2 px-4 py-2 text-indigo-400 hover:text-indigo-300 text-sm font-medium transition-colors"
                       >
                         Back to Sign In
                       </Link>
@@ -507,83 +504,77 @@ export default function SignupClient() {
   }
 
   return (
-    <div className="min-h-[calc(100dvh-4rem)] bg-slate-50">
-      <div className="grid grid-cols-1 lg:grid-cols-2 min-h-[calc(100dvh-4rem)] flex-col-reverse lg:flex-row">
-        {/* Left Column - Desktop Only, shown below on mobile */}
-        <div className="hidden lg:flex bg-gradient-to-br from-slate-50 to-white border-r border-slate-200 flex flex-col justify-center items-center h-full px-8 text-center">
-          <div className="max-w-md space-y-8">
+    <div className="min-h-[calc(100dvh-4rem)] bg-slate-950">
+      <div className="grid grid-cols-1 md:grid-cols-2 min-h-[calc(100dvh-4rem)]">
+        {/* Left Column - Context Area */}
+        <div className="bg-slate-900 md:border-r border-slate-800 flex flex-col justify-center p-8 md:p-16 w-full">
+          <div className="max-w-md mx-auto space-y-8">
             <div className="space-y-4">
-              <div className="w-16 h-16 bg-gradient-to-br from-teal-700 to-teal-600 rounded-xl flex items-center justify-center mx-auto shadow-lg shadow-teal-500/25">
-                <MessageSquare className="w-8 h-8 text-white" />
-              </div>
-              <h2 className="text-2xl font-bold text-slate-900 leading-tight">
-                Make tonight's homework easier.
+              <h2 className="text-3xl font-bold text-slate-100 leading-tight">
+                Unlock their cognitive potential.
               </h2>
-              <p className="text-base text-slate-600 leading-relaxed">
-                ForgeStudy turns "I'm stuck" into progress with guided explanations and better study habits.
-              </p>
-              <p className="text-sm text-slate-500 italic">
-                Less stress for them. Less frustration for you.
+              <p className="text-slate-400 text-lg">
+                The AI tutor that refuses to cheat.
               </p>
             </div>
             
             {/* Quick Benefits */}
-            <div className="space-y-4 pt-8 border-t border-slate-200">
-              <div className="flex items-start gap-3 text-left">
-                <div className="w-10 h-10 rounded-lg bg-teal-50 flex items-center justify-center flex-shrink-0">
-                  <Sparkles className="w-5 h-5 text-teal-600" />
+            <div className="space-y-6 pt-8">
+              <div className="flex items-start gap-4 text-left">
+                <div className="w-12 h-12 rounded-xl bg-indigo-600/20 flex items-center justify-center flex-shrink-0">
+                  <Sparkles className="w-6 h-6 text-indigo-400" />
                 </div>
                 <div>
-                  <div className="font-semibold text-slate-900 text-sm mb-1">Create a student profile in minutes</div>
-                  <div className="text-xs text-slate-600">Quick setup for Grades 6–12</div>
+                  <div className="font-semibold text-slate-100 text-base mb-1">Visualized Mastery</div>
+                  <div className="text-sm text-slate-400">Watch their knowledge grow into a connected universe.</div>
                 </div>
               </div>
-              <div className="flex items-start gap-3 text-left">
-                <div className="w-10 h-10 rounded-lg bg-teal-50 flex items-center justify-center flex-shrink-0">
-                  <BookOpen className="w-5 h-5 text-teal-600" />
+              <div className="flex items-start gap-4 text-left">
+                <div className="w-12 h-12 rounded-xl bg-indigo-600/20 flex items-center justify-center flex-shrink-0">
+                  <BookOpen className="w-6 h-6 text-indigo-400" />
                 </div>
                 <div>
-                  <div className="font-semibold text-slate-900 text-sm mb-1">Built for real learning, not shortcuts</div>
-                  <div className="text-xs text-slate-600">Step-by-step explanations that build understanding</div>
+                  <div className="font-semibold text-slate-100 text-base mb-1">Socratic Sparring</div>
+                  <div className="text-sm text-slate-400">We force critical thinking instead of just handing out answers.</div>
                 </div>
               </div>
-              <div className="flex items-start gap-3 text-left">
-                <div className="w-10 h-10 rounded-lg bg-teal-50 flex items-center justify-center flex-shrink-0">
-                  <Shield className="w-5 h-5 text-teal-600" />
+              <div className="flex items-start gap-4 text-left">
+                <div className="w-12 h-12 rounded-xl bg-indigo-600/20 flex items-center justify-center flex-shrink-0">
+                  <Shield className="w-6 h-6 text-indigo-400" />
                 </div>
                 <div>
-                  <div className="font-semibold text-slate-900 text-sm mb-1">Cancel anytime during your preview</div>
-                  <div className="text-xs text-slate-600">No commitment, full access during trial</div>
+                  <div className="font-semibold text-slate-100 text-base mb-1">Guaranteed Retention</div>
+                  <div className="text-sm text-slate-400">Snap-back reviews mathematically eliminate test-day anxiety.</div>
                 </div>
               </div>
             </div>
           </div>
         </div>
 
-        {/* Right Column - Auth Form - Shown first on mobile */}
-        <div className="flex items-center justify-center px-4 sm:px-6 py-8 sm:py-12 bg-white order-1 lg:order-2">
+        {/* Right Column - Auth Form */}
+        <div className="bg-slate-950 flex items-center justify-center px-4 sm:px-6 py-8 sm:py-12 order-1 md:order-2">
           <div className="w-full max-w-md">
-            <div className="bg-white border border-slate-200 rounded-2xl p-6 sm:p-8 shadow-lg">
+            <div className="bg-slate-900/60 backdrop-blur-md border border-slate-800 rounded-2xl p-6 sm:p-8 shadow-2xl">
               {/* Header */}
               <div className="text-center mb-6 sm:mb-8">
-                <div className="inline-flex items-center justify-center w-14 h-14 bg-gradient-to-br from-teal-700 to-teal-600 rounded-xl mb-4 shadow-lg shadow-teal-500/25">
-                  <Sparkles className="w-7 h-7 text-white" />
+                <div className="inline-flex items-center justify-center w-14 h-14 bg-indigo-600/20 rounded-xl mb-4">
+                  <Sparkles className="w-7 h-7 text-indigo-400" />
                 </div>
-                <h1 className="text-2xl sm:text-3xl font-semibold text-slate-900 mb-2">
+                <h1 className="text-2xl sm:text-3xl font-semibold text-slate-100 mb-2">
                   Start your free preview
                 </h1>
-                <p className="text-sm text-slate-600">
+                <p className="text-sm text-slate-400">
                   Get set up in minutes. Built for Grades 6–12.
                 </p>
               </div>
 
               {/* Form */}
               {!appUrl && (
-                <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 text-left">
-                  <p className="text-sm font-semibold text-amber-900 mb-1">
+                <div className="bg-amber-900/20 border border-amber-700/50 rounded-xl p-4 text-left mb-6">
+                  <p className="text-sm font-semibold text-amber-400 mb-1">
                     Configure your app URL
                   </p>
-                  <p className="text-xs text-amber-800">
+                  <p className="text-xs text-amber-500">
                     Set <code className="font-semibold">NEXT_PUBLIC_APP_URL</code> so email verification works on all devices.
                   </p>
                 </div>
@@ -591,22 +582,22 @@ export default function SignupClient() {
               <form onSubmit={handleSignup} className="space-y-4 sm:space-y-5">
                 <div className="space-y-4">
                   <div className="relative">
-                    <Mail className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400" />
+                    <Mail className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-500" />
                     <input
                       type="email"
                       placeholder="Enter your email"
-                      className="w-full pl-12 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-teal-600 focus:border-transparent transition-all"
+                      className="w-full pl-12 pr-4 py-3 bg-slate-950 border border-slate-700 rounded-xl text-sm text-slate-200 placeholder:text-slate-500 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all"
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
                       required
                     />
                   </div>
                   <div className="relative">
-                    <Lock className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400" />
+                    <Lock className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-500" />
                     <input
                       type="password"
                       placeholder="Create a password"
-                      className="w-full pl-12 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-teal-600 focus:border-transparent transition-all"
+                      className="w-full pl-12 pr-4 py-3 bg-slate-950 border border-slate-700 rounded-xl text-sm text-slate-200 placeholder:text-slate-500 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all"
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
                       required
@@ -621,17 +612,17 @@ export default function SignupClient() {
                 {message && (
                   <div className={`p-4 text-sm rounded-xl ${
                     message.type === 'error' 
-                      ? 'bg-red-50 text-red-700 border border-red-200' 
+                      ? 'bg-red-900/20 text-red-400 border border-red-700/50' 
                       : message.type === 'info'
-                      ? 'bg-blue-50 text-blue-700 border border-blue-200'
-                      : 'bg-green-50 text-green-700 border border-green-200'
+                      ? 'bg-blue-900/20 text-blue-400 border border-blue-700/50'
+                      : 'bg-green-900/20 text-green-400 border border-green-700/50'
                   }`}>
                     <div className="flex flex-col gap-2">
                       <span>{message.text}</span>
                       {message.type === 'error' && message.text.includes('already registered') && (
                         <Link
                           href="/login"
-                          className="inline-flex items-center gap-1 text-sm font-medium text-red-700 hover:text-red-800 underline mt-1"
+                          className="inline-flex items-center gap-1 text-sm font-medium text-red-400 hover:text-red-300 underline mt-1"
                         >
                           Go to Sign In
                           <ArrowRight className="h-4 w-4" />
@@ -644,7 +635,7 @@ export default function SignupClient() {
                 <button
                   type="submit"
                   disabled={loading || !email || !password || !acceptedTerms || !appUrl}
-                  className="w-full flex items-center justify-center gap-2 px-6 py-3 sm:py-3.5 bg-gradient-to-r from-teal-700 to-teal-600 text-white rounded-xl text-base font-bold hover:from-teal-800 hover:to-teal-700 focus:outline-none focus:ring-2 focus:ring-teal-600 focus:ring-offset-2 transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-md shadow-teal-500/30 hover:shadow-lg hover:shadow-teal-500/40 min-h-[44px]"
+                  className="w-full flex items-center justify-center gap-2 px-6 py-3 sm:py-3.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl text-base font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed border-none min-h-[44px]"
                 >
                   {loading ? (
                     <>
@@ -665,16 +656,16 @@ export default function SignupClient() {
                       type="checkbox"
                       checked={acceptedTerms}
                       onChange={(e) => setAcceptedTerms(e.target.checked)}
-                      className="mt-0.5 w-4 h-4 text-teal-600 border-slate-300 rounded focus:ring-2 focus:ring-teal-600 cursor-pointer"
+                      className="mt-0.5 w-4 h-4 text-indigo-600 border-slate-600 rounded focus:ring-2 focus:ring-indigo-500 cursor-pointer bg-slate-950"
                       required
                     />
-                    <span className="text-xs text-slate-600 leading-relaxed">
+                    <span className="text-xs text-slate-400 leading-relaxed">
                       I agree to the{' '}
-                      <Link href="/terms" target="_blank" className="text-teal-600 hover:text-teal-700 underline font-medium">
+                      <Link href="/terms" target="_blank" className="text-indigo-400 hover:text-indigo-300 underline font-medium">
                         Terms of Service
                       </Link>
                       {' '}and{' '}
-                      <Link href="/privacy" target="_blank" className="text-teal-600 hover:text-teal-700 underline font-medium">
+                      <Link href="/privacy" target="_blank" className="text-indigo-400 hover:text-indigo-300 underline font-medium">
                         Privacy Policy
                       </Link>
                     </span>
@@ -686,13 +677,13 @@ export default function SignupClient() {
               </form>
 
               {/* Toggle */}
-              <div className="mt-6 sm:mt-8 pt-4 sm:pt-6 border-t border-slate-200 text-center">
-                <span className="text-sm text-slate-600">
+              <div className="mt-6 sm:mt-8 pt-4 sm:pt-6 border-t border-slate-800 text-center">
+                <span className="text-sm text-slate-400">
                   Already have an account?{' '}
                 </span>
                 <Link
                   href="/login"
-                  className="text-sm font-semibold text-teal-600 hover:text-teal-700 transition-colors"
+                  className="text-sm font-semibold text-indigo-400 hover:text-indigo-300 transition-colors"
                 >
                   Sign in
                 </Link>

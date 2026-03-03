@@ -271,50 +271,47 @@ export default function LoginClient() {
   }
 
   return (
-    <div className="min-h-[calc(100dvh-4rem)] bg-slate-50">
-      <div className="grid grid-cols-1 lg:grid-cols-2 min-h-[calc(100dvh-4rem)] flex-col-reverse lg:flex-row">
-        {/* Left Column - Desktop Only, shown below on mobile */}
-        <div className="hidden lg:flex bg-gradient-to-br from-slate-50 to-white border-r border-slate-200 flex flex-col justify-center items-center h-full px-8 text-center">
-          <div className="max-w-md space-y-8">
+    <div className="min-h-[calc(100dvh-4rem)] bg-slate-950 flex">
+      <div className="grid grid-cols-1 md:grid-cols-2 min-h-[calc(100dvh-4rem)] w-full">
+        {/* Left Column - Context Area */}
+        <div className="bg-slate-900 md:border-r border-slate-800 flex flex-col justify-center p-8 md:p-16 w-full">
+          <div className="max-w-md mx-auto space-y-8">
             <div className="space-y-4">
-              <div className="w-16 h-16 bg-gradient-to-br from-teal-600 to-cyan-600 rounded-xl flex items-center justify-center mx-auto shadow-lg">
-                <MessageSquare className="w-8 h-8 text-white" />
-              </div>
-              <h2 className="text-2xl font-bold text-slate-900 leading-tight">
-                Homework help that teaches — not cheats.
+              <h2 className="text-3xl font-bold text-slate-100 leading-tight">
+                Unlock their cognitive potential.
               </h2>
-              <p className="text-base text-slate-600 leading-relaxed">
-                Step-by-step support for Grades 6–12 that builds real understanding.
+              <p className="text-slate-400 text-lg">
+                The AI tutor that refuses to cheat.
               </p>
             </div>
             
             {/* Quick Benefits */}
-            <div className="space-y-4 pt-8 border-t border-slate-200">
-              <div className="flex items-start gap-3 text-left">
-                <div className="w-10 h-10 rounded-lg bg-teal-50 flex items-center justify-center flex-shrink-0">
-                  <MessageSquare className="w-5 h-5 text-teal-600" />
+            <div className="space-y-6 pt-8">
+              <div className="flex items-start gap-4 text-left">
+                <div className="w-12 h-12 rounded-xl bg-indigo-600/20 flex items-center justify-center flex-shrink-0">
+                  <MessageSquare className="w-6 h-6 text-indigo-400" />
                 </div>
                 <div>
-                  <div className="font-semibold text-slate-900 text-sm mb-1">Explains step-by-step (not just answers)</div>
-                  <div className="text-xs text-slate-600">Guided explanations that build understanding</div>
+                  <div className="font-semibold text-slate-100 text-base mb-1">Visualized Mastery</div>
+                  <div className="text-sm text-slate-400">Watch their knowledge grow into a connected universe.</div>
                 </div>
               </div>
-              <div className="flex items-start gap-3 text-left">
-                <div className="w-10 h-10 rounded-lg bg-teal-50 flex items-center justify-center flex-shrink-0">
-                  <GraduationCap className="w-5 h-5 text-teal-600" />
+              <div className="flex items-start gap-4 text-left">
+                <div className="w-12 h-12 rounded-xl bg-indigo-600/20 flex items-center justify-center flex-shrink-0">
+                  <GraduationCap className="w-6 h-6 text-indigo-400" />
                 </div>
                 <div>
-                  <div className="font-semibold text-slate-900 text-sm mb-1">Personal readiness dashboard</div>
-                  <div className="text-xs text-slate-600">Track progress and focus areas</div>
+                  <div className="font-semibold text-slate-100 text-base mb-1">Socratic Sparring</div>
+                  <div className="text-sm text-slate-400">We force critical thinking instead of just handing out answers.</div>
                 </div>
               </div>
-              <div className="flex items-start gap-3 text-left">
-                <div className="w-10 h-10 rounded-lg bg-teal-50 flex items-center justify-center flex-shrink-0">
-                  <BookOpen className="w-5 h-5 text-teal-600" />
+              <div className="flex items-start gap-4 text-left">
+                <div className="w-12 h-12 rounded-xl bg-indigo-600/20 flex items-center justify-center flex-shrink-0">
+                  <Shield className="w-6 h-6 text-indigo-400" />
                 </div>
                 <div>
-                  <div className="font-semibold text-slate-900 text-sm mb-1">Parent + student friendly</div>
-                  <div className="text-xs text-slate-600">Easy to use for families</div>
+                  <div className="font-semibold text-slate-100 text-base mb-1">Guaranteed Retention</div>
+                  <div className="text-sm text-slate-400">Snap-back reviews mathematically eliminate test-day anxiety.</div>
                 </div>
               </div>
             </div>
@@ -322,21 +319,21 @@ export default function LoginClient() {
         </div>
 
         {/* Right Column - Login Form */}
-        <div className="flex flex-col justify-center items-center px-4 py-8 sm:px-6 lg:px-8">
-          <div className="w-full max-w-md space-y-8">
-            <div className="text-center lg:text-left">
-              <h1 className="text-3xl sm:text-4xl font-bold text-slate-900 mb-2">
+        <div className="bg-slate-950 flex flex-col justify-center items-center p-8 md:p-16 w-full">
+          <div className="w-full max-w-md bg-slate-900/60 backdrop-blur-md border border-slate-800 shadow-2xl rounded-2xl p-8">
+            <div className="text-center mb-8">
+              <h1 className="text-3xl sm:text-4xl font-bold text-slate-100 mb-2">
                 Welcome back
               </h1>
-              <p className="text-slate-600">
+              <p className="text-slate-400">
                 Sign in to continue your learning journey
               </p>
             </div>
 
             {/* Success Message for Email Verification */}
             {showVerificationSuccess && (
-              <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-4 text-center">
-                <p className="text-sm text-emerald-700 font-medium">
+              <div className="bg-emerald-900/20 border border-emerald-700/50 rounded-xl p-4 text-center mb-6">
+                <p className="text-sm text-emerald-400 font-medium">
                   ✅ Email verified successfully! Please sign in below.
                 </p>
               </div>
@@ -344,15 +341,15 @@ export default function LoginClient() {
 
             {/* Error Message */}
             {message && (
-              <div className={`rounded-xl p-4 text-center ${message.type === 'error' ? 'bg-red-50 border border-red-200' : 'bg-emerald-50 border border-emerald-200'}`}>
-                <p className={`text-sm font-medium ${message.type === 'error' ? 'text-red-700' : 'text-emerald-700'}`}>
+              <div className={`rounded-xl p-4 text-center mb-6 ${message.type === 'error' ? 'bg-red-900/20 border border-red-700/50' : 'bg-emerald-900/20 border border-emerald-700/50'}`}>
+                <p className={`text-sm font-medium ${message.type === 'error' ? 'text-red-400' : 'text-emerald-400'}`}>
                   {message.text}
                 </p>
                 {message.type === 'error' && (
                   <button
                     type="button"
                     onClick={resetSession}
-                    className="mt-2 text-xs font-semibold text-slate-600 hover:text-slate-900 underline"
+                    className="mt-2 text-xs font-semibold text-slate-400 hover:text-slate-200 underline"
                   >
                     Reset session
                   </button>
@@ -363,11 +360,11 @@ export default function LoginClient() {
             <form onSubmit={handleLogin} className="space-y-6">
               {/* Email Input */}
               <div>
-                <label htmlFor="email" className="block text-sm font-semibold text-slate-700 mb-2">
+                <label htmlFor="email" className="block text-sm font-semibold text-slate-300 mb-2">
                   Email address
                 </label>
                 <div className="relative">
-                  <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
+                  <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-500" />
                   <input
                     id="email"
                     name="email"
@@ -376,7 +373,7 @@ export default function LoginClient() {
                     required
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    className="block w-full pl-11 pr-4 py-3 border-2 border-slate-200 rounded-xl text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-teal-600 focus:border-teal-400 transition-all"
+                    className="block w-full pl-11 pr-4 py-3 bg-slate-950 border border-slate-700 rounded-xl text-slate-200 placeholder-slate-500 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all"
                     placeholder="Enter your email"
                     disabled={loading}
                   />
@@ -385,11 +382,11 @@ export default function LoginClient() {
 
               {/* Password Input */}
               <div>
-                <label htmlFor="password" className="block text-sm font-semibold text-slate-700 mb-2">
+                <label htmlFor="password" className="block text-sm font-semibold text-slate-300 mb-2">
                   Password
                 </label>
                 <div className="relative">
-                  <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
+                  <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-500" />
                   <input
                     id="password"
                     name="password"
@@ -398,7 +395,7 @@ export default function LoginClient() {
                     required
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    className="block w-full pl-11 pr-4 py-3 border-2 border-slate-200 rounded-xl text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-teal-600 focus:border-teal-400 transition-all"
+                    className="block w-full pl-11 pr-4 py-3 bg-slate-950 border border-slate-700 rounded-xl text-slate-200 placeholder-slate-500 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all"
                     placeholder="Enter your password"
                     disabled={loading}
                   />
@@ -407,7 +404,7 @@ export default function LoginClient() {
 
               {/* Remember & Reset */}
               <div className="flex items-center justify-between">
-                <Link href="/reset" className="text-sm text-teal-600 hover:text-teal-700 font-medium">
+                <Link href="/reset" className="text-sm text-indigo-400 hover:text-indigo-300 font-medium">
                   Forgot password?
                 </Link>
               </div>
@@ -416,7 +413,7 @@ export default function LoginClient() {
               <button
                 type="submit"
                 disabled={loading || !email.trim() || !password.trim()}
-                className="w-full flex items-center justify-center px-4 py-3 bg-gradient-to-r from-teal-600 to-cyan-600 text-white font-semibold rounded-xl hover:from-teal-700 hover:to-cyan-700 transition-all duration-200 shadow-md hover:shadow-lg disabled:opacity-60 disabled:cursor-not-allowed"
+                className="w-full flex items-center justify-center px-4 py-3 bg-indigo-600 hover:bg-indigo-500 text-white font-medium rounded-xl transition-colors border-none disabled:opacity-60 disabled:cursor-not-allowed"
               >
                 {loading ? (
                   <div className="flex items-center gap-2">
@@ -433,10 +430,10 @@ export default function LoginClient() {
             </form>
 
             {/* Additional Links */}
-            <div className="text-center space-y-2">
-              <p className="text-sm text-slate-600">
+            <div className="text-center space-y-2 mt-6">
+              <p className="text-sm text-slate-400">
                 Don't have an account?{' '}
-                <Link href="/signup" className="text-teal-600 hover:text-teal-700 font-semibold">
+                <Link href="/signup" className="text-indigo-400 hover:text-indigo-300 font-semibold">
                   Sign up
                 </Link>
               </p>
