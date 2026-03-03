@@ -2,23 +2,18 @@
 
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
-import Image from 'next/image'
 import {
-  GraduationCap,
-  BookOpen,
   ArrowRight,
-  Users,
-  Target,
   CheckCircle2,
-  TrendingUp,
-  Brain,
-  MessageSquare,
-  ChevronRight,
+  Sparkles,
+  Zap,
+  Shield,
 } from 'lucide-react'
 import { Accordion } from '@/components/ui/accordion'
 
 export default function HomePage() {
   const [billingPeriod, setBillingPeriod] = useState<'monthly' | 'annual'>('monthly')
+  
   useEffect(() => {
     if (typeof window === 'undefined') return
     const params = new URLSearchParams(window.location.search)
@@ -27,6 +22,7 @@ export default function HomePage() {
     targetUrl.search = params.toString()
     window.location.replace(targetUrl.toString())
   }, [])
+
   const faqItems = [
     {
       question: "Is this cheating?",
@@ -75,505 +71,316 @@ export default function HomePage() {
   }
 
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen bg-slate-950 text-slate-200">
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{
           __html: JSON.stringify([orgSchema, faqSchema]),
         }}
       />
-      {/* Hero Section */}
-      <section className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-12 sm:pt-20 pb-16 sm:pb-24 bg-gradient-to-br from-white via-slate-50/30 to-white">
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-16 items-center">
-          {/* Left: Text Content */}
-          <div className="text-center lg:text-left">
-            <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold text-slate-900 mb-6 leading-tight tracking-tight">
-              Turn confusion into a plan
-              <br className="hidden sm:block" /> in minutes.
-            </h1>
-            <p className="text-lg sm:text-xl md:text-2xl text-slate-700 mb-4 leading-relaxed max-w-2xl mx-auto lg:mx-0 font-medium">
-              ForgeStudy is the AI study companion for Grades 6–12 that maps what to learn, builds a path, and keeps students practicing until they can prove it.
-            </p>
-            <p className="text-sm sm:text-base text-slate-500 mb-8 leading-relaxed max-w-2xl mx-auto lg:mx-0">
-              Map → Path → Practice → Prove → Review. Homework help, study guides, and test prep that build confident, independent learners.
-            </p>
-            
-            {/* CTAs */}
-            <div className="flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-4 mb-8">
-              <Link
-                href="/signup"
-                className="w-full sm:w-auto px-8 py-4 bg-gradient-to-r from-teal-600 to-cyan-600 text-white rounded-xl font-semibold text-lg hover:from-teal-700 hover:to-cyan-700 transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-105 active:scale-95 flex items-center justify-center gap-2"
-              >
-                Get Started
-                <ArrowRight className="w-5 h-5" />
-              </Link>
+
+      {/* Sticky Navigation */}
+      <nav className="sticky top-0 z-50 bg-slate-950/70 backdrop-blur-md border-b border-slate-800">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex items-center justify-between h-16">
+            <div className="flex items-center gap-2">
+              <Sparkles className="w-6 h-6 text-indigo-400" />
+              <span className="text-xl font-bold text-slate-100">ForgeStudy</span>
+            </div>
+            <div className="flex items-center gap-4">
               <Link
                 href="/login"
-                className="w-full sm:w-auto px-8 py-4 bg-white text-slate-900 border-2 border-slate-300 rounded-xl font-semibold text-lg hover:border-teal-400 hover:bg-slate-50 transition-all duration-200 shadow-md hover:shadow-lg"
+                className="px-4 py-2 text-sm font-medium text-slate-300 hover:text-slate-100 transition-colors"
               >
                 Log In
               </Link>
-            </div>
-
-            {/* Proof Chips */}
-            <div className="flex flex-wrap items-center justify-center lg:justify-start gap-3">
-              <div className="flex items-center gap-2 px-4 py-2 bg-teal-50 border border-teal-200 rounded-full">
-                <MessageSquare className="w-4 h-4 text-teal-600" />
-                <span className="text-sm font-medium text-teal-900">Explains step-by-step (not just answers)</span>
-              </div>
-              <div className="flex items-center gap-2 px-4 py-2 bg-cyan-50 border border-cyan-200 rounded-full">
-                <Users className="w-4 h-4 text-cyan-600" />
-                <span className="text-sm font-medium text-cyan-900">One account for the whole family</span>
-              </div>
-              <div className="flex items-center gap-2 px-4 py-2 bg-amber-50 border border-amber-200 rounded-full">
-                <TrendingUp className="w-4 h-4 text-amber-600" />
-                <span className="text-sm font-medium text-amber-900">Builds confidence & independence</span>
-              </div>
+              <Link
+                href="/signup"
+                className="px-6 py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg font-semibold text-sm transition-colors shadow-lg shadow-indigo-500/20"
+              >
+                Get Started
+              </Link>
             </div>
           </div>
+        </div>
+      </nav>
 
-          {/* Right: Product Preview Collage */}
-          <div className="relative">
-            <div className="relative w-full overflow-hidden sm:overflow-visible">
-              <div className="relative aspect-[4/3] overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-2xl">
-                <Image
-                  src="/Hero1.png"
-                  alt="ForgeStudy study workflow preview"
-                  fill
-                  className="object-cover"
-                  priority
-                />
-              </div>
-              <div className="absolute bottom-2 right-2 w-[62%] translate-x-1 translate-y-2 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-xl sm:-bottom-8 sm:-right-6 sm:w-[58%] sm:translate-x-0 sm:translate-y-0 hidden sm:block">
-                <Image
-                  src="/Hero2.png"
-                  alt="ForgeStudy study tools preview"
-                  width={640}
-                  height={420}
-                  className="h-auto w-full object-cover"
-                  priority
-                />
-              </div>
-              <div className="absolute bottom-2 right-2 w-[68%] translate-x-1 translate-y-2 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-xl sm:hidden">
-                <Image
-                  src="/Hero2.png"
-                  alt="ForgeStudy study tools preview"
-                  width={640}
-                  height={420}
-                  className="h-auto w-full object-cover"
-                  priority
-                />
-              </div>
+      {/* Hero Section */}
+      <section className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-20 pb-24">
+        <div className="text-center max-w-5xl mx-auto">
+          {/* Headline */}
+          <h1 className="text-5xl md:text-7xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-slate-100 to-slate-400 tracking-tight mb-6">
+            The AI tutor that refuses to cheat.
+          </h1>
+
+          {/* Subheadline */}
+          <p className="text-xl text-slate-400 max-w-2xl mx-auto mt-6 mb-12">
+            Standard AI just gives your child the answers. ForgeStudy is a spatial operating system that maps their brain, forces critical thinking through Socratic sparring, and mathematically guarantees memory retention.
+          </p>
+
+          {/* CTA Buttons */}
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-16">
+            <Link
+              href="/signup"
+              className="px-8 py-4 bg-indigo-600 hover:bg-indigo-500 text-white rounded-full font-medium text-lg transition-all shadow-[0_0_30px_rgba(99,102,241,0.3)] hover:shadow-[0_0_40px_rgba(99,102,241,0.4)] flex items-center gap-2"
+            >
+              Unlock Their Galaxy
+              <ArrowRight className="w-5 h-5" />
+            </Link>
+            <button className="px-8 py-4 bg-slate-900/60 backdrop-blur-md border border-slate-700 hover:border-indigo-500/50 text-slate-200 rounded-full font-medium text-lg transition-all">
+              See how it works
+            </button>
+          </div>
+
+          {/* Hero Visual Placeholder */}
+          <div className="w-full max-w-6xl h-[600px] mx-auto mt-12 rounded-2xl border border-slate-800 shadow-[0_0_50px_rgba(99,102,241,0.2)] bg-slate-900/50 backdrop-blur-md flex items-center justify-center">
+            <div className="text-center">
+              <Sparkles className="w-16 h-16 text-indigo-400 mx-auto mb-4" />
+              <p className="text-slate-400 text-lg">Galaxy UI Preview</p>
+              <p className="text-slate-500 text-sm mt-2">4K video coming soon</p>
             </div>
-            <div className="absolute -z-10 -inset-4 bg-gradient-to-r from-teal-200/20 to-cyan-200/20 rounded-3xl blur-2xl"></div>
           </div>
         </div>
       </section>
 
-      {/* Parent Pain → Relief Section */}
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 sm:py-20 md:py-24 bg-white">
-        <div className="max-w-4xl mx-auto">
-          <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold text-slate-900 mb-8 sm:mb-12 text-center">
-            If homework time feels like this… you're not alone.
+      {/* Paradigm Shift - Problem/Solution */}
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-24">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-5xl mx-auto">
+          {/* The Old Way */}
+          <div className="bg-slate-900/40 border border-rose-900/50 p-8 rounded-3xl">
+            <h3 className="text-2xl font-bold text-rose-400 mb-4">The ChatGPT Trap.</h3>
+            <p className="text-slate-300 leading-relaxed">
+              Kids type a question. The AI writes the essay. They copy, paste, and learn absolutely nothing. It is a digital crutch.
+            </p>
+          </div>
+
+          {/* The ForgeStudy Way */}
+          <div className="bg-slate-900/60 border border-indigo-500/50 shadow-[0_0_30px_rgba(99,102,241,0.1)] p-8 rounded-3xl">
+            <h3 className="text-2xl font-bold text-indigo-400 mb-4">Cryptographic Proof of Cognition.</h3>
+            <p className="text-slate-300 leading-relaxed">
+              Our Logic Loom uses Socratic sparring. It won't give the answer until your child proves they understand the concept. We turn passive reading into active mental warfare.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      {/* Engine Showcase - 3 Feature Pillars */}
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-24">
+        <div className="text-center mb-16">
+          <h2 className="text-4xl md:text-5xl font-bold text-slate-100 mb-4">
+            The V2 Engine
           </h2>
-          
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6 mb-8 sm:mb-12">
-            <div className="flex items-start gap-3 p-5 bg-slate-50 rounded-xl border border-slate-200">
-              <div className="w-2 h-2 bg-slate-400 rounded-full mt-2 flex-shrink-0"></div>
-              <p className="text-base sm:text-lg text-slate-700 leading-relaxed">I don't remember how to help.</p>
-            </div>
-            <div className="flex items-start gap-3 p-5 bg-slate-50 rounded-xl border border-slate-200">
-              <div className="w-2 h-2 bg-slate-400 rounded-full mt-2 flex-shrink-0"></div>
-              <p className="text-base sm:text-lg text-slate-700 leading-relaxed">My kid shuts down when they get stuck.</p>
-            </div>
-            <div className="flex items-start gap-3 p-5 bg-slate-50 rounded-xl border border-slate-200">
-              <div className="w-2 h-2 bg-slate-400 rounded-full mt-2 flex-shrink-0"></div>
-              <p className="text-base sm:text-lg text-slate-700 leading-relaxed">We spend forever and still feel behind.</p>
-            </div>
-            <div className="flex items-start gap-3 p-5 bg-slate-50 rounded-xl border border-slate-200">
-              <div className="w-2 h-2 bg-slate-400 rounded-full mt-2 flex-shrink-0"></div>
-              <p className="text-base sm:text-lg text-slate-700 leading-relaxed">I'm worried they're falling behind.</p>
-            </div>
-          </div>
-
-          <div className="bg-gradient-to-r from-teal-600 to-cyan-600 rounded-2xl p-8 sm:p-10 text-center text-white shadow-xl">
-            <p className="text-xl sm:text-2xl md:text-3xl font-bold mb-2 leading-tight">
-              ForgeStudy turns "stuck" into progress — by teaching how to think, not what to copy.
-            </p>
-          </div>
+          <p className="text-xl text-slate-400 max-w-2xl mx-auto">
+            Three systems working in perfect harmony to build unstoppable learners.
+          </p>
         </div>
-      </section>
 
-      {/* Value Props */}
-      <section className="py-16 sm:py-20 md:py-24 bg-gradient-to-br from-slate-50 to-white">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-12 sm:mb-16">
-            <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold text-slate-900 mb-4 tracking-tight">
-              Why ForgeStudy?
-            </h2>
-            <p className="text-base sm:text-lg text-slate-600 max-w-3xl mx-auto">
-              Built for Grades 6–12 study skills, homework help, and exam prep — with AI guidance that teaches thinking, not copying.
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+          {/* Card 1: The Galaxy */}
+          <div className="bg-slate-900/40 backdrop-blur-md border border-slate-800 rounded-3xl p-8 hover:border-indigo-500/50 transition-colors">
+            <div className="w-12 h-12 bg-indigo-900/50 rounded-xl flex items-center justify-center mb-6">
+              <Sparkles className="w-6 h-6 text-indigo-400" />
+            </div>
+            <h3 className="text-2xl font-bold text-slate-100 mb-4">The Galaxy</h3>
+            <p className="text-lg font-semibold text-indigo-400 mb-3">Visualized Mastery</p>
+            <p className="text-slate-400 leading-relaxed">
+              Watch their knowledge physically grow. Concepts turn from gray to glowing indigo as they prove mastery, building unstoppable intrinsic motivation.
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 sm:gap-8">
-            {/* Explains step-by-step */}
-            <div className="bg-white border border-slate-200 rounded-2xl p-6 sm:p-8 hover:shadow-lg transition-all duration-300">
-              <div className="w-12 h-12 bg-gradient-to-br from-teal-500 to-cyan-600 rounded-xl flex items-center justify-center mb-4">
-                <Brain className="w-6 h-6 text-white" />
-              </div>
-              <h3 className="text-xl font-bold text-slate-900 mb-3 leading-tight">Explains step-by-step (not just answers)</h3>
-              <p className="text-slate-600 leading-relaxed">
-                Builds understanding through guided inquiry, not quick answers that get forgotten.
-              </p>
+          {/* Card 2: The Airlock */}
+          <div className="bg-slate-900/40 backdrop-blur-md border border-slate-800 rounded-3xl p-8 hover:border-indigo-500/50 transition-colors">
+            <div className="w-12 h-12 bg-indigo-900/50 rounded-xl flex items-center justify-center mb-6">
+              <Zap className="w-6 h-6 text-indigo-400" />
             </div>
-
-            {/* Builds independence */}
-            <div className="bg-white border border-slate-200 rounded-2xl p-6 sm:p-8 hover:shadow-lg transition-all duration-300">
-              <div className="w-12 h-12 bg-gradient-to-br from-teal-500 to-cyan-600 rounded-xl flex items-center justify-center mb-4">
-                <TrendingUp className="w-6 h-6 text-white" />
-              </div>
-              <h3 className="text-xl font-bold text-slate-900 mb-3 leading-tight">Builds study habits and independence</h3>
-              <p className="text-slate-600 leading-relaxed">
-                Students learn to think through problems themselves, building confidence over time.
-              </p>
-            </div>
-
-            {/* Personal dashboards */}
-            <div className="bg-white border border-slate-200 rounded-2xl p-6 sm:p-8 hover:shadow-lg transition-all duration-300">
-              <div className="w-12 h-12 bg-gradient-to-br from-teal-500 to-cyan-600 rounded-xl flex items-center justify-center mb-4">
-                <Target className="w-6 h-6 text-white" />
-              </div>
-              <h3 className="text-xl font-bold text-slate-900 mb-3 leading-tight">Personal dashboards per student</h3>
-              <p className="text-slate-600 leading-relaxed">
-                Each student gets their own dashboard tracking progress, focus areas, and achievements.
-              </p>
-            </div>
-
-            {/* One parent account */}
-            <div className="bg-white border border-slate-200 rounded-2xl p-6 sm:p-8 hover:shadow-lg transition-all duration-300">
-              <div className="w-12 h-12 bg-gradient-to-br from-teal-500 to-cyan-600 rounded-xl flex items-center justify-center mb-4">
-                <Users className="w-6 h-6 text-white" />
-              </div>
-              <h3 className="text-xl font-bold text-slate-900 mb-3 leading-tight">One parent account, multiple learners</h3>
-              <p className="text-slate-600 leading-relaxed">
-                Manage multiple students from one account with easy profile switching for families.
-              </p>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Grade Bands */}
-      <section className="py-16 sm:py-20 md:py-24 bg-white">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-12 sm:mb-16">
-            <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold text-slate-900 mb-4 tracking-tight">
-              Built for Grades 6–12
-            </h2>
-            <p className="text-lg sm:text-xl text-slate-600 max-w-2xl mx-auto">
-              Two tailored experiences designed for the way middle and high schoolers learn.
+            <h3 className="text-2xl font-bold text-slate-100 mb-4">The Airlock</h3>
+            <p className="text-lg font-semibold text-indigo-400 mb-3">Instant Intake</p>
+            <p className="text-slate-400 leading-relaxed">
+              Drop chaotic syllabi, PDFs, and whiteboard photos into the Airlock. Our AI instantly decontaminates it into a structured, clickable universe.
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 sm:gap-8 max-w-4xl mx-auto">
-            {/* Middle School */}
-            <div className="bg-white border-2 border-slate-200 rounded-2xl p-8 shadow-sm hover:shadow-md transition-shadow">
-              <div className="flex flex-col items-center text-center">
-                <div className="w-16 h-16 bg-gradient-to-br from-teal-500 to-cyan-600 rounded-xl flex items-center justify-center mb-4 shadow-md">
-                  <BookOpen className="w-8 h-8 text-white" />
-                </div>
-                <h3 className="text-2xl font-bold text-slate-900 mb-3">Middle School</h3>
-                <p className="text-slate-600 leading-relaxed">
-                  Grades 6–8. Study maps, practice sessions, and clear explanations that build confidence and habits.
-                </p>
-              </div>
+          {/* Card 3: The Vault */}
+          <div className="bg-slate-900/40 backdrop-blur-md border border-slate-800 rounded-3xl p-8 hover:border-indigo-500/50 transition-colors">
+            <div className="w-12 h-12 bg-indigo-900/50 rounded-xl flex items-center justify-center mb-6">
+              <Shield className="w-6 h-6 text-indigo-400" />
             </div>
-
-            {/* High School */}
-            <div className="bg-white border-2 border-slate-200 rounded-2xl p-8 shadow-sm hover:shadow-md transition-shadow">
-              <div className="flex flex-col items-center text-center">
-                <div className="w-16 h-16 bg-gradient-to-br from-teal-500 to-cyan-600 rounded-xl flex items-center justify-center mb-4 shadow-md">
-                  <GraduationCap className="w-8 h-8 text-white" />
-                </div>
-                <h3 className="text-2xl font-bold text-slate-900 mb-3">High School</h3>
-                <p className="text-slate-600 leading-relaxed">
-                  Grades 9–12. Advanced coursework support, essay help, and exam prep that prepares for college.
-                </p>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* How It Works */}
-      <section className="py-16 sm:py-20 md:py-24 bg-gradient-to-br from-slate-50 to-white">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-12 sm:mb-16">
-            <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold text-slate-900 mb-4 tracking-tight">
-              The ForgeStudy loop
-            </h2>
-            <p className="text-lg sm:text-xl text-slate-600 max-w-2xl mx-auto">
-              Map → Path → Practice → Prove → Review
+            <h3 className="text-2xl font-bold text-slate-100 mb-4">The Vault</h3>
+            <p className="text-lg font-semibold text-indigo-400 mb-3">Guaranteed Memory</p>
+            <p className="text-slate-400 leading-relaxed">
+              Powered by the SM-2 Spaced Repetition algorithm. Before a memory fades, the Vault triggers a snap-back review, mathematically eliminating test-day anxiety.
             </p>
-          </div>
-
-          <div className="max-w-5xl mx-auto">
-            <div className="grid grid-cols-1 md:grid-cols-5 gap-6">
-              {/* Step 1 */}
-              <div className="text-center relative">
-                <div className="w-16 h-16 bg-gradient-to-br from-teal-500 to-cyan-600 rounded-full flex items-center justify-center mx-auto mb-4 text-white text-2xl font-bold shadow-lg">
-                  1
-                </div>
-                <h3 className="text-lg font-bold text-slate-900 mb-2">Map</h3>
-                <p className="text-sm text-slate-600 leading-relaxed">
-                  Turn any topic into a clear Study Map of what matters.
-                </p>
-                <ChevronRight className="hidden md:block absolute top-8 -right-3 w-6 h-6 text-slate-300" />
-              </div>
-
-              {/* Step 2 */}
-              <div className="text-center relative">
-                <div className="w-16 h-16 bg-gradient-to-br from-teal-500 to-cyan-600 rounded-full flex items-center justify-center mx-auto mb-4 text-white text-2xl font-bold shadow-lg">
-                  2
-                </div>
-                <h3 className="text-lg font-bold text-slate-900 mb-2">Path</h3>
-                <p className="text-sm text-slate-600 leading-relaxed">
-                  Get a step-by-step plan tailored to the student.
-                </p>
-                <ChevronRight className="hidden md:block absolute top-8 -right-3 w-6 h-6 text-slate-300" />
-              </div>
-
-              {/* Step 3 */}
-              <div className="text-center relative">
-                <div className="w-16 h-16 bg-gradient-to-br from-teal-500 to-cyan-600 rounded-full flex items-center justify-center mx-auto mb-4 text-white text-2xl font-bold shadow-lg">
-                  3
-                </div>
-                <h3 className="text-lg font-bold text-slate-900 mb-2">Practice</h3>
-                <p className="text-sm text-slate-600 leading-relaxed">
-                  Practice Mode and Exam Sheets build confidence fast.
-                </p>
-                <ChevronRight className="hidden md:block absolute top-8 -right-3 w-6 h-6 text-slate-300" />
-              </div>
-
-              {/* Step 4 */}
-              <div className="text-center relative">
-                <div className="w-16 h-16 bg-gradient-to-br from-teal-500 to-cyan-600 rounded-full flex items-center justify-center mx-auto mb-4 text-white text-2xl font-bold shadow-lg">
-                  4
-                </div>
-                <h3 className="text-lg font-bold text-slate-900 mb-2">Prove</h3>
-                <p className="text-sm text-slate-600 leading-relaxed">
-                  Demonstrate mastery with checks that show growth.
-                </p>
-                <ChevronRight className="hidden md:block absolute top-8 -right-3 w-6 h-6 text-slate-300" />
-              </div>
-
-              {/* Step 5 */}
-              <div className="text-center">
-                <div className="w-16 h-16 bg-gradient-to-br from-teal-500 to-cyan-600 rounded-full flex items-center justify-center mx-auto mb-4 text-white text-2xl font-bold shadow-lg">
-                  5
-                </div>
-                <h3 className="text-lg font-bold text-slate-900 mb-2">Review</h3>
-                <p className="text-sm text-slate-600 leading-relaxed">
-                  Review progress and plan the next focused session.
-                </p>
-              </div>
-            </div>
           </div>
         </div>
       </section>
 
       {/* Pricing */}
-      <section className="py-16 sm:py-20 md:py-24 bg-white">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-12 sm:mb-16">
-            <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold text-slate-900 mb-4 tracking-tight">
-              Simple pricing for individuals and families
-            </h2>
-          </div>
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-24">
+        <div className="text-center mb-16">
+          <h2 className="text-4xl md:text-5xl font-bold text-slate-100 mb-4">
+            Simple pricing for individuals and families
+          </h2>
+        </div>
 
-          {/* Billing Period Toggle */}
-          <div className="flex justify-center mb-8">
-            <div className="inline-flex items-center gap-2 bg-white border-2 border-teal-300 rounded-2xl p-1.5 shadow-lg shadow-teal-200/60">
-              <button
-                onClick={() => setBillingPeriod('monthly')}
-                className={`px-6 py-2.5 rounded-xl text-sm font-semibold transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-teal-600 focus:ring-offset-2 ${
-                  billingPeriod === 'monthly'
-                    ? 'bg-teal-600 text-white shadow-md shadow-teal-500/30'
-                    : 'text-teal-700 hover:text-teal-900 hover:bg-teal-50'
-                }`}
-              >
-                Monthly
-              </button>
-              <button
-                onClick={() => setBillingPeriod('annual')}
-                className={`px-6 py-2.5 rounded-xl text-sm font-semibold transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-teal-600 focus:ring-offset-2 ${
-                  billingPeriod === 'annual'
-                    ? 'bg-teal-600 text-white shadow-md shadow-teal-500/30'
-                    : 'text-teal-700 hover:text-teal-900 hover:bg-teal-50'
-                }`}
-              >
-                Annual
-              </button>
-            </div>
+        {/* Billing Period Toggle */}
+        <div className="flex justify-center mb-12">
+          <div className="inline-flex items-center gap-2 bg-slate-900/60 backdrop-blur-md border border-slate-800 rounded-2xl p-1.5">
+            <button
+              onClick={() => setBillingPeriod('monthly')}
+              className={`px-6 py-2.5 rounded-xl text-sm font-semibold transition-all duration-200 ${
+                billingPeriod === 'monthly'
+                  ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-500/30'
+                  : 'text-slate-400 hover:text-slate-200'
+              }`}
+            >
+              Monthly
+            </button>
+            <button
+              onClick={() => setBillingPeriod('annual')}
+              className={`px-6 py-2.5 rounded-xl text-sm font-semibold transition-all duration-200 ${
+                billingPeriod === 'annual'
+                  ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-500/30'
+                  : 'text-slate-400 hover:text-slate-200'
+              }`}
+            >
+              Annual
+            </button>
           </div>
+        </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 sm:gap-8 max-w-4xl mx-auto">
-            {/* Individual Plan */}
-            <div className="bg-white border-2 border-slate-200 rounded-2xl p-8 shadow-sm hover:shadow-md transition-shadow">
-              <div className="text-center mb-6">
-                <h3 className="text-2xl font-bold text-slate-900 mb-3">Individual Plan</h3>
-                <div className="mb-2">
-                  {billingPeriod === 'monthly' ? (
-                    <>
-                      <span className="text-5xl font-bold text-slate-900">$9.99</span>
-                      <span className="text-lg text-slate-600 ml-1">/ month</span>
-                    </>
-                  ) : (
-                    <>
-                      <span className="text-5xl font-bold text-slate-900">$89</span>
-                      <span className="text-lg text-slate-600 ml-1">/ year</span>
-                    </>
-                  )}
-                </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl mx-auto">
+          {/* Individual Plan */}
+          <div className="bg-slate-900/40 backdrop-blur-md border border-slate-800 rounded-2xl p-8 shadow-xl">
+            <div className="text-center mb-6">
+              <h3 className="text-2xl font-bold text-slate-100 mb-3">Individual Plan</h3>
+              <div className="mb-2">
                 {billingPeriod === 'monthly' ? (
-                  <p className="text-sm text-teal-700 font-semibold mb-1">Annual: $89 / year</p>
+                  <>
+                    <span className="text-5xl font-bold text-slate-100">$9.99</span>
+                    <span className="text-lg text-slate-400 ml-1">/ month</span>
+                  </>
                 ) : (
-                  <p className="text-sm text-teal-700 font-semibold mb-1">Pay for 9 months, get 12</p>
-                )}
-                {billingPeriod === 'annual' && (
-                  <p className="text-xs text-slate-600">3 months free, includes summer</p>
+                  <>
+                    <span className="text-5xl font-bold text-slate-100">$89</span>
+                    <span className="text-lg text-slate-400 ml-1">/ year</span>
+                  </>
                 )}
               </div>
-              <div className="space-y-3 mb-8">
-                <div className="flex items-start gap-3">
-                  <CheckCircle2 className="w-5 h-5 text-teal-600 flex-shrink-0 mt-0.5" />
-                  <span className="text-slate-700 text-sm">1 student profile</span>
-                </div>
-                <div className="flex items-start gap-3">
-                  <CheckCircle2 className="w-5 h-5 text-teal-600 flex-shrink-0 mt-0.5" />
-                  <span className="text-slate-700 text-sm">Step-by-step homework help</span>
-                </div>
-                <div className="flex items-start gap-3">
-                  <CheckCircle2 className="w-5 h-5 text-teal-600 flex-shrink-0 mt-0.5" />
-                  <span className="text-slate-700 text-sm">Personalized readiness dashboard</span>
-                </div>
-              </div>
-              <Link
-                href="/signup"
-                className="block w-full px-6 py-3.5 bg-gradient-to-r from-teal-600 to-cyan-600 text-white rounded-xl font-semibold text-center hover:from-teal-700 hover:to-cyan-700 transition-all duration-200 shadow-md hover:shadow-lg"
-              >
-                Get Started
-              </Link>
+              {billingPeriod === 'monthly' ? (
+                <p className="text-sm text-indigo-400 font-semibold mb-1">Annual: $89 / year</p>
+              ) : (
+                <p className="text-sm text-indigo-400 font-semibold mb-1">Pay for 9 months, get 12</p>
+              )}
             </div>
-
-            {/* Family Plan - Most Popular */}
-            <div className="bg-gradient-to-br from-teal-50/50 via-slate-50 to-teal-50/50 border-2 border-teal-300 rounded-2xl p-8 shadow-lg hover:shadow-xl transition-shadow relative">
-              <div className="absolute -top-3 left-1/2 -translate-x-1/2">
-                <span className="bg-teal-600 text-white text-[10px] px-2.5 py-0.5 rounded-full font-semibold shadow-lg">
-                  Most Popular
-                </span>
+            <div className="space-y-3 mb-8">
+              <div className="flex items-start gap-3">
+                <CheckCircle2 className="w-5 h-5 text-indigo-400 flex-shrink-0 mt-0.5" />
+                <span className="text-slate-300 text-sm">1 student profile</span>
               </div>
-              <div className="text-center mb-6 mt-2">
-                <h3 className="text-2xl font-bold text-slate-900 mb-3">Family Plan</h3>
-                <div className="mb-2">
-                  {billingPeriod === 'monthly' ? (
-                    <>
-                      <span className="text-5xl font-bold text-slate-900">$19.99</span>
-                      <span className="text-lg text-slate-600 ml-1">/ month</span>
-                    </>
-                  ) : (
-                    <>
-                      <span className="text-5xl font-bold text-slate-900">$179</span>
-                      <span className="text-lg text-slate-600 ml-1">/ year</span>
-                    </>
-                  )}
-                </div>
+              <div className="flex items-start gap-3">
+                <CheckCircle2 className="w-5 h-5 text-indigo-400 flex-shrink-0 mt-0.5" />
+                <span className="text-slate-300 text-sm">Step-by-step homework help</span>
+              </div>
+              <div className="flex items-start gap-3">
+                <CheckCircle2 className="w-5 h-5 text-indigo-400 flex-shrink-0 mt-0.5" />
+                <span className="text-slate-300 text-sm">Personalized readiness dashboard</span>
+              </div>
+            </div>
+            <Link
+              href="/signup"
+              className="block w-full px-6 py-3.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl font-semibold text-center transition-all duration-200 shadow-lg shadow-indigo-500/20"
+            >
+              Get Started
+            </Link>
+          </div>
+
+          {/* Family Plan - Most Popular */}
+          <div className="bg-slate-900/60 backdrop-blur-md border-2 border-indigo-500 rounded-2xl p-8 shadow-[0_0_30px_rgba(99,102,241,0.2)] relative">
+            <div className="absolute -top-3 left-1/2 -translate-x-1/2">
+              <span className="bg-indigo-600 text-white text-xs px-3 py-1 rounded-full font-semibold shadow-lg">
+                Most Popular
+              </span>
+            </div>
+            <div className="text-center mb-6 mt-2">
+              <h3 className="text-2xl font-bold text-slate-100 mb-3">Family Plan</h3>
+              <div className="mb-2">
                 {billingPeriod === 'monthly' ? (
-                  <p className="text-sm text-teal-700 font-semibold mb-1">Annual: $179 / year</p>
+                  <>
+                    <span className="text-5xl font-bold text-slate-100">$19.99</span>
+                    <span className="text-lg text-slate-400 ml-1">/ month</span>
+                  </>
                 ) : (
-                  <p className="text-sm text-teal-700 font-semibold mb-1">Less than $15/month per child</p>
-                )}
-                {billingPeriod === 'annual' && (
-                  <p className="text-xs text-slate-600">3 months free, includes summer</p>
+                  <>
+                    <span className="text-5xl font-bold text-slate-100">$179</span>
+                    <span className="text-lg text-slate-400 ml-1">/ year</span>
+                  </>
                 )}
               </div>
-              <div className="space-y-3 mb-8">
-                <div className="flex items-start gap-3">
-                  <CheckCircle2 className="w-5 h-5 text-teal-600 flex-shrink-0 mt-0.5" />
-                  <span className="text-slate-700 text-sm">Up to 4 student profiles</span>
-                </div>
-                <div className="flex items-start gap-3">
-                  <CheckCircle2 className="w-5 h-5 text-teal-600 flex-shrink-0 mt-0.5" />
-                  <span className="text-slate-700 text-sm">One parent account</span>
-                </div>
-                <div className="flex items-start gap-3">
-                  <CheckCircle2 className="w-5 h-5 text-teal-600 flex-shrink-0 mt-0.5" />
-                  <span className="text-slate-700 text-sm">Easy profile switching</span>
-                </div>
-              </div>
-              <Link
-                href="/signup"
-                className="block w-full px-6 py-3.5 bg-gradient-to-r from-teal-600 to-cyan-600 text-white rounded-xl font-semibold text-center hover:from-teal-700 hover:to-cyan-700 transition-all duration-200 shadow-md hover:shadow-lg"
-              >
-                Get Started
-              </Link>
+              {billingPeriod === 'monthly' ? (
+                <p className="text-sm text-indigo-400 font-semibold mb-1">Annual: $179 / year</p>
+              ) : (
+                <p className="text-sm text-indigo-400 font-semibold mb-1">Less than $15/month per child</p>
+              )}
             </div>
+            <div className="space-y-3 mb-8">
+              <div className="flex items-start gap-3">
+                <CheckCircle2 className="w-5 h-5 text-indigo-400 flex-shrink-0 mt-0.5" />
+                <span className="text-slate-300 text-sm">Up to 4 student profiles</span>
+              </div>
+              <div className="flex items-start gap-3">
+                <CheckCircle2 className="w-5 h-5 text-indigo-400 flex-shrink-0 mt-0.5" />
+                <span className="text-slate-300 text-sm">One parent account</span>
+              </div>
+              <div className="flex items-start gap-3">
+                <CheckCircle2 className="w-5 h-5 text-indigo-400 flex-shrink-0 mt-0.5" />
+                <span className="text-slate-300 text-sm">Easy profile switching</span>
+              </div>
+            </div>
+            <Link
+              href="/signup"
+              className="block w-full px-6 py-3.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl font-semibold text-center transition-all duration-200 shadow-lg shadow-indigo-500/20"
+            >
+              Get Started
+            </Link>
           </div>
+        </div>
 
-          <div className="text-center mt-8 space-y-2">
-            {billingPeriod === 'annual' && (
-              <p className="text-sm text-slate-600 font-medium">
-                Includes summer — 3 months free
-              </p>
-            )}
-            <p className="text-sm text-slate-500">
-              Cancel anytime
-            </p>
-          </div>
+        <div className="text-center mt-8">
+          <p className="text-sm text-slate-500">Cancel anytime</p>
         </div>
       </section>
 
       {/* FAQ */}
-      <section className="py-16 sm:py-20 md:py-24 bg-white">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-12 sm:mb-16">
-            <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold text-slate-900 mb-4">
-              Frequently Asked Questions
-            </h2>
-          </div>
-
-          <Accordion items={faqItems} />
-        </div>
-      </section>
-
-      {/* Final CTA */}
-      <section className="py-16 sm:py-20 md:py-24 bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 rounded-t-3xl">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold text-white mb-4 sm:mb-6 tracking-tight">
-            Make tonight's homework easier.
+      <section className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-24">
+        <div className="text-center mb-16">
+          <h2 className="text-4xl md:text-5xl font-bold text-slate-100 mb-4">
+            Frequently Asked Questions
           </h2>
-          <p className="text-lg sm:text-xl text-slate-300 max-w-2xl mx-auto mb-8 sm:mb-10">
-            Get started in minutes.
-          </p>
-          
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-4 sm:gap-6">
-            <Link
-              href="/signup"
-              className="w-full sm:w-auto px-8 py-4 bg-gradient-to-r from-teal-600 to-cyan-600 text-white rounded-xl font-semibold text-lg hover:from-teal-700 hover:to-cyan-700 transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-105 active:scale-95 flex items-center justify-center gap-2"
-            >
-              Get Started
-              <ArrowRight className="w-5 h-5" />
-            </Link>
-            <Link
-              href="/login"
-              className="w-full sm:w-auto px-8 py-4 bg-slate-700/50 text-white border-2 border-slate-600/50 rounded-xl font-semibold text-lg hover:bg-slate-600/50 hover:border-slate-500/50 transition-all duration-200 shadow-md hover:shadow-lg"
-            >
-              Log In
-            </Link>
+        </div>
+
+        <Accordion items={faqItems} />
+      </section>
+
+      {/* Footer */}
+      <footer className="border-t border-slate-900 bg-slate-950 py-12">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex flex-col md:flex-row items-center justify-between gap-4">
+            <div className="flex items-center gap-2">
+              <Sparkles className="w-5 h-5 text-indigo-400" />
+              <span className="text-lg font-bold text-slate-100">ForgeStudy</span>
+            </div>
+            <div className="flex items-center gap-6 text-sm text-slate-400">
+              <Link href="/privacy" className="hover:text-slate-200 transition-colors">
+                Privacy
+              </Link>
+              <Link href="/terms" className="hover:text-slate-200 transition-colors">
+                Terms
+              </Link>
+              <span>© 2024 ForgeStudy</span>
+            </div>
           </div>
         </div>
-      </section>
+      </footer>
     </div>
   )
 }
