@@ -22,14 +22,8 @@ function ProfilesPageContent() {
   const { setActiveProfileId } = useActiveProfile()
 
   const getBandRoute = (band: StudentProfile['grade_band']) => {
-    switch (band) {
-      case 'middle':
-        return '/app/middle'
-      case 'high':
-        return '/app/high'
-      default:
-        return '/profiles'
-    }
+    // All profiles route to unified /app Galaxy
+    return '/app'
   }
 
   useEffect(() => {
@@ -175,12 +169,12 @@ function ProfilesPageContent() {
 
   if (isLoading) {
     return (
-      <div className="h-full bg-gradient-to-br from-slate-50 to-white flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
-          <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-br from-teal-100 to-cyan-100 mb-4">
-            <div className="animate-spin rounded-full h-8 w-8 border-2 border-teal-600 border-t-transparent"></div>
+          <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-indigo-900/50 mb-4">
+            <div className="animate-spin rounded-full h-8 w-8 border-2 border-indigo-400 border-t-transparent"></div>
           </div>
-          <p className="text-lg font-medium text-slate-600">Loading profiles...</p>
+          <p className="text-lg font-medium text-slate-400">Loading profiles...</p>
         </div>
       </div>
     )
@@ -188,11 +182,11 @@ function ProfilesPageContent() {
 
   if (!profiles.length) {
     return (
-      <div className="h-full overflow-y-auto bg-gradient-to-br from-slate-50 to-white">
-        <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-16 sm:py-24 text-center">
-          <div className="bg-white/80 backdrop-blur-sm border border-slate-200/60 rounded-2xl p-8 sm:p-10 shadow-lg">
-            <div className="w-16 h-16 bg-gradient-to-br from-teal-100 to-cyan-100 rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-lg">
-              <Plus className="w-8 h-8 text-teal-600" />
+      <div className="min-h-screen flex items-center justify-center px-4">
+        <div className="max-w-3xl mx-auto text-center">
+          <div className="bg-slate-900/60 backdrop-blur-md border border-slate-800 rounded-2xl p-8 sm:p-10 shadow-xl">
+            <div className="w-16 h-16 bg-indigo-900/50 rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-lg">
+              <Plus className="w-8 h-8 text-indigo-400" />
             </div>
             <h1 className="text-3xl sm:text-4xl font-bold text-slate-100 mb-3">
               Create your first student profile
@@ -202,7 +196,7 @@ function ProfilesPageContent() {
             </p>
             <Link
               href="/profiles/new"
-              className="inline-flex items-center justify-center px-6 py-3 bg-gradient-to-r from-teal-700 to-teal-600 text-white rounded-xl font-semibold hover:from-teal-800 hover:to-teal-700 transition-colors shadow-md"
+              className="inline-flex items-center justify-center px-6 py-3 bg-indigo-600 text-white rounded-xl font-semibold hover:bg-indigo-500 transition-colors shadow-md"
             >
               Create student profile
             </Link>
@@ -213,8 +207,8 @@ function ProfilesPageContent() {
   }
 
   return (
-    <div className="h-full overflow-y-auto bg-gradient-to-br from-slate-50 to-white">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 sm:py-24">
+    <div className="min-h-screen w-full flex flex-col items-center justify-center px-4 sm:px-6 lg:px-8 py-16 sm:py-24">
+      <div className="max-w-7xl mx-auto w-full">
         <div className="text-center mb-12 sm:mb-16">
           <h1 className="text-4xl sm:text-5xl md:text-6xl font-bold text-slate-100 mb-4 sm:mb-6">
             Who's studying?
@@ -253,13 +247,13 @@ function ProfilesPageContent() {
 
                 <div className="flex flex-col items-center text-center">
                   {/* Avatar */}
-                  <div className="w-20 h-20 bg-gradient-to-br from-teal-700 to-teal-600 rounded-xl flex items-center justify-center mb-4 shadow-lg group-hover:shadow-xl transition-shadow text-white text-2xl font-bold">
+                  <div className="w-20 h-20 bg-gradient-to-br from-indigo-600 to-indigo-500 rounded-xl flex items-center justify-center mb-4 shadow-lg group-hover:shadow-xl transition-shadow text-white text-2xl font-bold">
                     {initials}
                   </div>
                   
                   {/* Icon Badge */}
-                  <div className="absolute top-12 right-12 w-8 h-8 bg-white rounded-full flex items-center justify-center shadow-md">
-                    <Icon className="w-4 h-4 text-teal-600" />
+                  <div className="absolute top-12 right-12 w-8 h-8 bg-slate-900/80 backdrop-blur-sm rounded-full flex items-center justify-center shadow-md border border-slate-700">
+                    <Icon className="w-4 h-4 text-indigo-400" />
                   </div>
 
                   <h2 className="text-xl font-bold text-slate-100 mb-1">{profile.display_name}</h2>
@@ -282,11 +276,11 @@ function ProfilesPageContent() {
           {profiles.length < 1 && (
             <Link
               href="/profiles/new"
-              className="group bg-white/40 backdrop-blur-sm border-2 border-dashed border-slate-300/60 rounded-2xl p-8 shadow-lg shadow-slate-200/50 hover:shadow-xl hover:shadow-teal-200/30 transition-all duration-300 transform hover:scale-[1.02] hover:border-teal-400 hover:bg-white/60"
+              className="group bg-slate-900/40 backdrop-blur-md border-2 border-dashed border-slate-700 rounded-2xl p-8 shadow-xl hover:shadow-[0_0_20px_rgba(99,102,241,0.15)] transition-all duration-300 transform hover:scale-[1.02] hover:border-indigo-500"
             >
               <div className="flex flex-col items-center text-center h-full justify-center">
-                <div className="w-20 h-20 bg-gradient-to-br from-teal-100 to-cyan-100 rounded-xl flex items-center justify-center mb-4 shadow-lg group-hover:shadow-xl transition-shadow group-hover:from-teal-200 group-hover:to-cyan-200">
-                  <Plus className="w-10 h-10 text-teal-600" />
+                <div className="w-20 h-20 bg-indigo-900/50 rounded-xl flex items-center justify-center mb-4 shadow-lg group-hover:shadow-xl transition-shadow group-hover:bg-indigo-900/70">
+                  <Plus className="w-10 h-10 text-indigo-400" />
                 </div>
                 <h2 className="text-xl font-bold text-slate-100 mb-1">Add Profile</h2>
                 <p className="text-sm text-slate-400">Create a new student profile</p>
@@ -298,13 +292,13 @@ function ProfilesPageContent() {
 
         {profiles.length >= 1 && (
           <div className="max-w-2xl mx-auto text-center mb-8">
-            <div className="rounded-2xl border border-slate-200 bg-white/80 px-6 py-4 shadow-sm">
+            <div className="rounded-2xl border border-slate-800 bg-slate-900/40 backdrop-blur-md px-6 py-4 shadow-xl">
               <p className="text-sm text-slate-400">
                 Need to add or manage student profiles? Use the Parent Dashboard.
               </p>
               <Link
                 href="/parent"
-                className="mt-3 inline-flex items-center justify-center rounded-xl bg-teal-600 px-4 py-2 text-sm font-semibold text-white hover:bg-teal-700 transition-colors"
+                className="mt-3 inline-flex items-center justify-center rounded-xl bg-indigo-600 px-4 py-2 text-sm font-semibold text-white hover:bg-indigo-500 transition-colors"
               >
                 Go to Parent Dashboard
               </Link>
@@ -337,7 +331,7 @@ function ProfilesPageContent() {
                 value={pinValue}
                 onChange={(e) => setPinValue(e.target.value)}
                 maxLength={4}
-                className="w-full rounded-xl border border-slate-200 px-4 py-2 text-lg tracking-[0.3em] text-center focus:outline-none focus:ring-2 focus:ring-teal-600"
+                className="w-full rounded-xl border border-slate-200 px-4 py-2 text-lg tracking-[0.3em] text-center focus:outline-none focus:ring-2 focus:ring-indigo-500"
                 placeholder="••••"
               />
               {pinError && (
@@ -356,7 +350,7 @@ function ProfilesPageContent() {
                 </button>
                 <button
                   type="submit"
-                  className="flex-1 rounded-xl bg-teal-600 px-4 py-2 text-sm font-semibold text-white hover:bg-teal-700 disabled:opacity-60"
+                  className="flex-1 rounded-xl bg-indigo-600 px-4 py-2 text-sm font-semibold text-white hover:bg-indigo-500 disabled:opacity-60"
                   disabled={isVerifyingPin || pinValue.length !== 4}
                 >
                   {isVerifyingPin ? 'Checking...' : 'Unlock'}
@@ -374,10 +368,10 @@ export default function ProfilesPage() {
   return (
     <Suspense
       fallback={
-        <div className="h-full bg-gradient-to-br from-slate-50 to-white flex items-center justify-center">
+        <div className="min-h-screen flex items-center justify-center">
           <div className="text-center">
-            <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-br from-teal-100 to-cyan-100 mb-4">
-              <div className="animate-spin rounded-full h-8 w-8 border-2 border-teal-600 border-t-transparent"></div>
+            <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-indigo-900/50 mb-4">
+              <div className="animate-spin rounded-full h-8 w-8 border-2 border-indigo-400 border-t-transparent"></div>
             </div>
             <p className="text-lg font-medium text-slate-400">Loading profiles...</p>
           </div>
