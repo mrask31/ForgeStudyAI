@@ -292,7 +292,7 @@ This implementation plan breaks down the LMS Autonomy Engine into 6 sequential p
     - Test that all stored tokens are encrypted
     - Use fast-check to generate random tokens and verify encryption
 
-- [-] 10. Checkpoint - Verify services
+- [x] 10. Checkpoint - Verify services
   - Test deduplication engine with sample data
   - Test Smart Sync Service with mock adapters
   - Verify error handling and retry logic
@@ -300,8 +300,8 @@ This implementation plan breaks down the LMS Autonomy Engine into 6 sequential p
 
 ## Phase 4: The Nervous System (API Routes)
 
-- [ ] 11. Build parent authorization endpoints
-  - [ ] 11.1 Implement POST /api/parent/lms/connect
+- [x] 11. Build parent authorization endpoints
+  - [x] 11.1 Implement POST /api/parent/lms/connect
     - Validate parent authentication and authorization
     - Validate request body (studentId, provider, token/OAuth data)
     - For Canvas: validate PAT token using CanvasAdapter
@@ -312,7 +312,7 @@ This implementation plan breaks down the LMS Autonomy Engine into 6 sequential p
     - Return connection ID and status
     - _Requirements: 2.1, 2.2, 2.3, 2.4, 2.5, 2.6, 2.7, 6.2, 9.1_
 
-  - [ ] 11.2 Implement DELETE /api/parent/lms/disconnect
+  - [x] 11.2 Implement DELETE /api/parent/lms/disconnect
     - Validate parent authentication and authorization
     - Validate connectionId in request body
     - Verify parent owns the connection
@@ -322,7 +322,7 @@ This implementation plan breaks down the LMS Autonomy Engine into 6 sequential p
     - Return success message
     - _Requirements: 2.9, 6.4_
 
-  - [ ] 11.3 Implement GET /api/parent/lms/status/:studentId
+  - [x] 11.3 Implement GET /api/parent/lms/status/:studentId
     - Validate parent authentication and authorization
     - Verify parent has access to student
     - Query lms_connections for the student
@@ -341,8 +341,8 @@ This implementation plan breaks down the LMS Autonomy Engine into 6 sequential p
     - Test that all authorization actions create audit log entries
     - Use fast-check to generate random authorization actions
 
-- [ ] 12. Build internal sync trigger endpoints
-  - [ ] 12.1 Implement POST /api/internal/sync/trigger
+- [x] 12. Build internal sync trigger endpoints
+  - [x] 12.1 Implement POST /api/internal/sync/trigger
     - Mark as internal-only endpoint (not exposed publicly)
     - Validate request body (studentId, trigger type)
     - Call SmartSyncService.syncOnLogin for the student
@@ -350,15 +350,15 @@ This implementation plan breaks down the LMS Autonomy Engine into 6 sequential p
     - Handle errors gracefully and return partial results
     - _Requirements: 3.1, 3.3, 4.1, 4.3_
 
-  - [ ] 12.2 Set up cron job for 3AM batch sync
+  - [x] 12.2 Set up cron job for 3AM batch sync
     - Create cron configuration for daily 3:00 AM execution
     - Call SmartSyncService.batchSyncAll
     - Log batch sync results
     - Send summary notifications to admins if needed
     - _Requirements: 3.3, 4.3_
 
-- [ ] 13. Build student sync status endpoint
-  - [ ] 13.1 Implement GET /api/student/sync-status
+- [x] 13. Build student sync status endpoint
+  - [x] 13.1 Implement GET /api/student/sync-status
     - Validate student authentication
     - Check Redis cache for sync status (key: sync:status:${studentId})
     - If cache miss, query lms_connections and synced_assignments
@@ -375,7 +375,7 @@ This implementation plan breaks down the LMS Autonomy Engine into 6 sequential p
     - Test that manual uploads work for any LMS connection status
     - Use fast-check to generate random connection statuses
 
-- [ ] 14. Checkpoint - Verify API routes
+- [-] 14. Checkpoint - Verify API routes
   - Test all endpoints with Postman or automated tests
   - Verify authentication and authorization checks
   - Test error handling for invalid requests
