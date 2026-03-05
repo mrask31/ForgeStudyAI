@@ -174,7 +174,7 @@ This implementation plan breaks down the LMS Autonomy Engine into 6 sequential p
     - Test that all Drive attachments are downloaded for any coursework with attachments
     - Use fast-check to generate coursework with varying attachment counts
 
-- [-] 7. Checkpoint - Verify adapters
+- [x] 7. Checkpoint - Verify adapters
   - Test Canvas adapter with mock API responses
   - Test Google Classroom adapter with mock API responses
   - Verify error handling for authentication failures
@@ -182,22 +182,22 @@ This implementation plan breaks down the LMS Autonomy Engine into 6 sequential p
 
 ## Phase 3: The Brain (Services & Deduplication)
 
-- [ ] 8. Build Deduplication Engine
-  - [ ] 8.1 Implement fuzzy matching algorithm
+- [x] 8. Build Deduplication Engine
+  - [x] 8.1 Implement fuzzy matching algorithm
     - Create calculateMatchScore method using string similarity (Levenshtein distance)
     - Compare assignment titles with fuzzy matching threshold (e.g., 0.8 similarity)
     - Compare due dates with tolerance window (e.g., same day)
     - Return match score between 0 and 1
     - _Requirements: 8.2_
 
-  - [ ] 8.2 Implement manual upload matching
+  - [x] 8.2 Implement manual upload matching
     - Create findMatchingUpload method that searches synced_assignments for matches
     - Query synced assignments for the same student
     - Calculate match scores for each synced assignment
     - Return best match if score exceeds threshold, otherwise null
     - _Requirements: 8.2_
 
-  - [ ] 8.3 Implement assignment merging
+  - [x] 8.3 Implement assignment merging
     - Create mergeAssignments method that links synced and manual records
     - Update synced_assignment.manual_upload_id with manual upload ID
     - Update manual_upload.synced_assignment_id with synced assignment ID
@@ -205,7 +205,7 @@ This implementation plan breaks down the LMS Autonomy Engine into 6 sequential p
     - Preserve all metadata from both sources
     - _Requirements: 8.3, 8.4_
 
-  - [ ] 8.4 Implement cross-provider duplicate detection
+  - [x] 8.4 Implement cross-provider duplicate detection
     - Create detectCrossProviderDuplicates method
     - Find assignments with same title and due date across Canvas and Google Classroom
     - Group duplicates for display purposes
@@ -224,8 +224,8 @@ This implementation plan breaks down the LMS Autonomy Engine into 6 sequential p
     - Test that merging preserves both synced metadata and manual file path
     - Use fast-check to generate random synced/manual pairs and verify no data loss
 
-- [ ] 9. Build Smart Sync Service
-  - [ ] 9.1 Implement login-triggered sync
+- [x] 9. Build Smart Sync Service
+  - [x] 9.1 Implement login-triggered sync
     - Create syncOnLogin method that triggers when student logs in
     - Query active LMS connections for the student
     - Call appropriate adapter (Canvas or Google Classroom) for each connection
@@ -234,7 +234,7 @@ This implementation plan breaks down the LMS Autonomy Engine into 6 sequential p
     - Create sync_log entry with results
     - _Requirements: 3.1, 3.3, 4.1, 4.3_
 
-  - [ ] 9.2 Implement 3AM batch sync
+  - [x] 9.2 Implement 3AM batch sync
     - Create batchSyncAll method for cron job execution
     - Query all students with active LMS connections
     - Process syncs in parallel with rate limiting
@@ -243,7 +243,7 @@ This implementation plan breaks down the LMS Autonomy Engine into 6 sequential p
     - Handle failures gracefully without blocking other syncs
     - _Requirements: 3.3, 4.3_
 
-  - [ ] 9.3 Implement error detection and classification
+  - [x] 9.3 Implement error detection and classification
     - Create detectFirewallBlock method that analyzes repeated failures
     - Classify errors as: auth_error, network_error, or firewall_blocked
     - Mark connection status as 'blocked' after 5 consecutive failures
@@ -251,7 +251,7 @@ This implementation plan breaks down the LMS Autonomy Engine into 6 sequential p
     - Reset failure_count on successful sync
     - _Requirements: 3.4, 3.5, 4.4, 4.5, 7.1_
 
-  - [ ] 9.4 Implement connection status updates
+  - [x] 9.4 Implement connection status updates
     - Create updateConnectionStatus method
     - Update lms_connections.status field based on sync results
     - Update lms_connections.last_sync_status field
@@ -259,14 +259,14 @@ This implementation plan breaks down the LMS Autonomy Engine into 6 sequential p
     - Trigger parent notifications for status changes
     - _Requirements: 2.8, 7.1, 7.2_
 
-  - [ ] 9.5 Implement retry logic with exponential backoff
+  - [x] 9.5 Implement retry logic with exponential backoff
     - Create retryFailedConnection method for manual retry attempts
     - Implement exponential backoff: 1min, 5min, 15min, 1hour
     - Periodic retry for blocked connections every 6 hours
     - Stop retrying after connection marked as 'disconnected'
     - _Requirements: 3.5, 4.5, 7.4, 7.5_
 
-  - [ ] 9.6 Implement token encryption/decryption
+  - [x] 9.6 Implement token encryption/decryption
     - Create encryption utility for storing Canvas PATs and OAuth tokens
     - Use AES-256-GCM encryption with environment variable key
     - Encrypt tokens before storing in lms_connections.encrypted_token
@@ -292,7 +292,7 @@ This implementation plan breaks down the LMS Autonomy Engine into 6 sequential p
     - Test that all stored tokens are encrypted
     - Use fast-check to generate random tokens and verify encryption
 
-- [ ] 10. Checkpoint - Verify services
+- [-] 10. Checkpoint - Verify services
   - Test deduplication engine with sample data
   - Test Smart Sync Service with mock adapters
   - Verify error handling and retry logic
