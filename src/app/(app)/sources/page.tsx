@@ -1,7 +1,6 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { UploadCloud, FileText, CheckCircle2, Loader2 } from 'lucide-react'
 import { useActiveProfile } from '@/contexts/ActiveProfileContext'
 import { createBrowserClient } from '@supabase/ssr'
 import {
@@ -10,6 +9,7 @@ import {
   listLearningSourceItems,
   type LearningSourceType,
 } from '@/app/actions/learning-sources'
+import { DualIntakeAirlock } from '@/components/lms/DualIntakeAirlock'
 
 const BUCKET_ID = 'learning-sources'
 const MAX_UPLOAD_BYTES = 50 * 1024 * 1024 // 50MB
@@ -31,21 +31,36 @@ const sanitizeFileName = (name: string) => {
   return `${safeBase || 'upload'}${ext}`
 }
 
-const formatDate = (value: string) => {
-  const date = new Date(value)
-  return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
-}
-
 export default function AirlockPage() {
   const { activeProfileId } = useActiveProfile()
-  const [isDragging, setIsDragging] = useState(false)
   const [isUploading, setIsUploading] = useState(false)
   const [recentUploads, setRecentUploads] = useState<any[]>([])
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
     loadRecentUploads()
+    triggerSyncOnLogin()
   }, [activeProfileId])
+
+  // Silent sync trigger on page load (student login)
+  const triggerSyncOnLogin = async () => {
+    if (!activeProfileId) return
+
+    try {
+      // Fire and forget - don't wait for response
+      fetch('/api/internal/sync/trigger', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ studentId: activeProfileId, trigger: 'login' }),
+      }).catch((err) => {
+        // Silent failure - sync is best-effort
+        console.debug('[Airlock] Sync trigger failed (non-critical):', err)
+      })
+    } catch (err) {
+      // Silent failure
+      console.debug('[Airlock] Sync trigger error (non-critical):', err)
+    }
+  }
 
   const loadRecentUploads = async () => {
     try {
@@ -53,32 +68,6 @@ export default function AirlockPage() {
       setRecentUploads(items.slice(0, 10)) // Show last 10 uploads
     } catch (err) {
       console.error('[Airlock] Failed to load uploads:', err)
-    }
-  }
-
-  const handleDragOver = (e: React.DragEvent) => {
-    e.preventDefault()
-    setIsDragging(true)
-  }
-
-  const handleDragLeave = () => {
-    setIsDragging(false)
-  }
-
-  const handleDrop = async (e: React.DragEvent) => {
-    e.preventDefault()
-    setIsDragging(false)
-    
-    const files = Array.from(e.dataTransfer.files)
-    if (files.length > 0) {
-      await handleFileUpload(files[0])
-    }
-  }
-
-  const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = e.target.files
-    if (files && files.length > 0) {
-      await handleFileUpload(files[0])
     }
   }
 
@@ -164,84 +153,24 @@ export default function AirlockPage() {
           </p>
         </div>
 
-        {/* Dropzone */}
-        <div
-          onDragOver={handleDragOver}
-          onDragLeave={handleDragLeave}
-          onDrop={handleDrop}
-          className={`group w-full h-72 mt-8 flex flex-col items-center justify-center rounded-3xl border-2 border-dashed transition-all duration-300 cursor-pointer ${
-            isDragging
-              ? 'border-indigo-500 bg-indigo-500/10 shadow-[0_0_30px_rgba(99,102,241,0.15)]'
-              : 'border-slate-700 bg-slate-900/40 backdrop-blur-md hover:border-indigo-500 hover:bg-indigo-500/10 hover:shadow-[0_0_30px_rgba(99,102,241,0.15)]'
-          }`}
-        >
-          <label className="w-full h-full flex flex-col items-center justify-center cursor-pointer">
-            {isUploading ? (
-              <>
-                <Loader2 className="w-16 h-16 text-indigo-400 mb-6 animate-spin" />
-                <p className="text-slate-200 text-xl font-medium">Processing...</p>
-              </>
-            ) : (
-              <>
-                <UploadCloud 
-                  size={64} 
-                  className="text-slate-500 mb-6 transition-colors group-hover:text-indigo-400" 
-                />
-                <p className="text-slate-200 text-xl font-medium mb-3">
-                  Drag & drop your files here
-                </p>
-                <p className="text-slate-500 text-sm">
-                  Supports PDF, DOCX, Images, and TXT up to 50MB
-                </p>
-              </>
-            )}
-            <input
-              type="file"
-              className="hidden"
-              accept=".pdf,.doc,.docx,.txt,image/*"
-              onChange={handleFileSelect}
-              disabled={isUploading}
-            />
-          </label>
-        </div>
+        {/* Dual-Intake Airlock Component */}
+        <DualIntakeAirlock
+          studentId={activeProfileId || ''}
+          onFileUpload={handleFileUpload}
+          recentUploads={recentUploads.map((item) => ({
+            id: item.id,
+            filename: item.original_filename || item.metadata?.label || 'Untitled',
+            uploadedAt: item.created_at,
+            isMerged: false, // TODO: Add merge detection when deduplication is implemented
+            syncedAssignmentTitle: undefined,
+          }))}
+          isUploading={isUploading}
+        />
 
         {/* Error Message */}
         {error && (
           <div className="mt-4 p-4 bg-red-500/10 border border-red-500/20 rounded-xl text-red-400 text-sm">
             {error}
-          </div>
-        )}
-
-        {/* Recent Uploads */}
-        {recentUploads.length > 0 && (
-          <div className="mt-12">
-            <h2 className="text-xl font-semibold text-slate-100 mb-6">
-              Recent Uploads
-            </h2>
-            <div className="space-y-4">
-              {recentUploads.map((item) => (
-                <div
-                  key={item.id}
-                  className="flex items-center justify-between p-5 bg-slate-900/60 backdrop-blur-sm border border-slate-800 rounded-2xl"
-                >
-                  <div className="flex items-center gap-4">
-                    <FileText className="w-5 h-5 text-slate-400" />
-                    <div>
-                      <p className="text-slate-200 font-medium">
-                        {item.original_filename || item.metadata?.label || 'Untitled'}
-                      </p>
-                      <p className="text-slate-500 text-sm">
-                        {formatDate(item.created_at)}
-                      </p>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-2 px-3 py-1.5 bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 rounded-full text-xs font-medium">
-                    <CheckCircle2 className="w-3.5 h-3.5" />
-                    Decontaminated
-                  </div>
-                </div>
-              ))}
-            </div>
           </div>
         )}
       </div>

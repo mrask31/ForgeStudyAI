@@ -375,7 +375,7 @@ This implementation plan breaks down the LMS Autonomy Engine into 6 sequential p
     - Test that manual uploads work for any LMS connection status
     - Use fast-check to generate random connection statuses
 
-- [-] 14. Checkpoint - Verify API routes
+- [x] 14. Checkpoint - Verify API routes
   - Test all endpoints with Postman or automated tests
   - Verify authentication and authorization checks
   - Test error handling for invalid requests
@@ -383,8 +383,8 @@ This implementation plan breaks down the LMS Autonomy Engine into 6 sequential p
 
 ## Phase 5: The Showroom (Frontend UI)
 
-- [ ] 15. Build Integration Panel for Parent Dashboard
-  - [ ] 15.1 Create IntegrationPanel component structure
+- [x] 15. Build Integration Panel for Parent Dashboard
+  - [x] 15.1 Create IntegrationPanel component structure
     - Create IntegrationPanel.tsx component file
     - Accept props: studentId, studentName
     - Set up component state for connection status and loading states
@@ -392,7 +392,7 @@ This implementation plan breaks down the LMS Autonomy Engine into 6 sequential p
     - Use bg-slate-950 base background and indigo accents
     - _Requirements: 2.1, 10.1, 10.2, 10.3_
 
-  - [ ] 15.2 Implement Canvas connection section
+  - [x] 15.2 Implement Canvas connection section
     - Display Canvas logo with proper spacing
     - Add input field for Canvas instance URL
     - Add input field for Personal Access Token
@@ -402,7 +402,7 @@ This implementation plan breaks down the LMS Autonomy Engine into 6 sequential p
     - Display success/error messages
     - _Requirements: 2.2, 2.4, 2.5, 2.6, 10.6_
 
-  - [ ] 15.3 Implement Google Classroom connection section
+  - [x] 15.3 Implement Google Classroom connection section
     - Display Google Classroom logo with proper spacing
     - Add COPPA authorization checkbox with legal text
     - Implement OAuth button that redirects to Google consent screen
@@ -411,7 +411,7 @@ This implementation plan breaks down the LMS Autonomy Engine into 6 sequential p
     - Display success/error messages
     - _Requirements: 2.3, 2.4, 2.5, 2.7, 10.6_
 
-  - [ ] 15.4 Implement connection status display
+  - [x] 15.4 Implement connection status display
     - Show active connections with green status indicator
     - Display timestamp of authorization (authorized_at)
     - Show last sync timestamp if available
@@ -420,7 +420,7 @@ This implementation plan breaks down the LMS Autonomy Engine into 6 sequential p
     - Implement smooth transitions between states
     - _Requirements: 2.8, 2.9, 10.7_
 
-  - [ ] 15.5 Implement responsive mobile layout
+  - [x] 15.5 Implement responsive mobile layout
     - Use responsive grid/flexbox for mobile devices
     - Stack connection sections vertically on small screens
     - Ensure touch targets are appropriately sized
@@ -439,8 +439,8 @@ This implementation plan breaks down the LMS Autonomy Engine into 6 sequential p
     - Test that disconnect action works for any active connection
     - Use React Testing Library with fast-check to generate random active connections
 
-- [ ] 16. Update Student Dashboard with dual-intake UI
-  - [ ] 16.1 Create SyncStatusIndicator component
+- [x] 16. Update Student Dashboard with dual-intake UI
+  - [x] 16.1 Create SyncStatusIndicator component
     - Create SyncStatusIndicator.tsx component file
     - Accept props: connections array with status details
     - Display color-coded status badges (🟢 success, 🔴 failed, 🟡 blocked)
@@ -450,7 +450,7 @@ This implementation plan breaks down the LMS Autonomy Engine into 6 sequential p
     - Use glassmorphic styling consistent with Dark Space UI
     - _Requirements: 5.1, 5.2, 5.3, 5.4, 5.5, 10.1, 10.2_
 
-  - [ ] 16.2 Create DualIntakeAirlock component
+  - [x] 16.2 Create DualIntakeAirlock component
     - Create DualIntakeAirlock.tsx component file
     - Accept props: studentId, syncStatus
     - Place SyncStatusIndicator at top of component
@@ -461,7 +461,7 @@ This implementation plan breaks down the LMS Autonomy Engine into 6 sequential p
     - Show merged assignment indicators (badge/icon)
     - _Requirements: 5.6, 5.7, 5.8, 5.9, 5.10, 8.5_
 
-  - [ ] 16.3 Integrate components into /uploads page
+  - [x] 16.3 Integrate components into /uploads page
     - Replace existing upload interface with DualIntakeAirlock
     - Fetch sync status from GET /api/student/sync-status on page load
     - Implement auto-refresh of sync status every 5 minutes
@@ -481,8 +481,8 @@ This implementation plan breaks down the LMS Autonomy Engine into 6 sequential p
     - Test that merged assignments always display visual indicator
     - Use React Testing Library with fast-check to generate random merged assignments
 
-- [ ] 17. Implement parent notification UI
-  - [ ] 17.1 Create notification display component
+- [x] 17. Implement parent notification UI
+  - [x] 17.1 Create notification display component
     - Create ParentNotifications.tsx component
     - Fetch notifications from database for parent
     - Display unread notifications with badge
@@ -491,7 +491,7 @@ This implementation plan breaks down the LMS Autonomy Engine into 6 sequential p
     - Use glassmorphic styling
     - _Requirements: 9.1, 9.2, 9.3, 9.4_
 
-  - [ ] 17.2 Integrate notifications into Parent Dashboard
+  - [x] 17.2 Integrate notifications into Parent Dashboard
     - Add notification icon to Parent Dashboard header
     - Show unread count badge
     - Display notification panel on click
