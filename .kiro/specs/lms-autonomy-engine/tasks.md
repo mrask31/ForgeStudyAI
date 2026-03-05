@@ -80,7 +80,7 @@ This implementation plan breaks down the LMS Autonomy Engine into 6 sequential p
     - Define enum types for provider, status, sync_trigger, and notification_type
     - _Requirements: 3.1, 3.2, 4.1, 4.2_
 
-- [-] 4. Checkpoint - Verify database and types
+- [x] 4. Checkpoint - Verify database and types
   - Run migrations on test database
   - Verify all constraints and indexes are created
   - Ensure TypeScript types compile without errors
@@ -88,22 +88,22 @@ This implementation plan breaks down the LMS Autonomy Engine into 6 sequential p
 
 ## Phase 2: The Pipes (LMS Adapters)
 
-- [ ] 5. Build Canvas adapter
-  - [ ] 5.1 Implement Canvas PAT validation
+- [x] 5. Build Canvas adapter
+  - [x] 5.1 Implement Canvas PAT validation
     - Create validateToken method that calls Canvas API /api/v1/users/self
     - Handle HTTP 401 responses as invalid token
     - Handle network errors with appropriate error types
     - Return boolean indicating token validity
     - _Requirements: 2.6, 3.4_
 
-  - [ ] 5.2 Implement Canvas course fetching
+  - [x] 5.2 Implement Canvas course fetching
     - Create getCourses method that calls Canvas API /api/v1/courses
     - Use read-only scope: url:GET|/api/v1/courses
     - Parse course list from API response
     - Handle pagination if needed
     - _Requirements: 3.1_
 
-  - [ ] 5.3 Implement Canvas assignment fetching
+  - [x] 5.3 Implement Canvas assignment fetching
     - Create fetchAssignments method that calls Canvas API /api/v1/courses/{id}/assignments
     - Use read-only scope: url:GET|/api/v1/assignments
     - Parse assignment metadata: title, description, due_date, course info
@@ -111,7 +111,7 @@ This implementation plan breaks down the LMS Autonomy Engine into 6 sequential p
     - Return normalized Assignment[] array
     - _Requirements: 3.1, 3.7_
 
-  - [ ] 5.4 Implement Canvas PDF download
+  - [x] 5.4 Implement Canvas PDF download
     - Create downloadAttachment method that downloads files from Canvas URLs
     - Handle authentication with PAT token in headers
     - Stream file to local storage
@@ -131,22 +131,22 @@ This implementation plan breaks down the LMS Autonomy Engine into 6 sequential p
     - Test that all attachments are downloaded for any assignment with attachments
     - Use fast-check to generate assignments with varying attachment counts
 
-- [ ] 6. Build Google Classroom adapter
-  - [ ] 6.1 Implement OAuth token refresh
+- [x] 6. Build Google Classroom adapter
+  - [x] 6.1 Implement OAuth token refresh
     - Create refreshAccessToken method using Google OAuth refresh token flow
     - Handle token expiration and refresh errors
     - Store new access token with expiration timestamp
     - Return refreshed access token
     - _Requirements: 2.7, 4.4_
 
-  - [ ] 6.2 Implement Google Classroom course fetching
+  - [x] 6.2 Implement Google Classroom course fetching
     - Create getCourses method that calls Google Classroom API courses.list
     - Use read-only scope: classroom.courses.readonly
     - Parse course list from API response
     - Handle pagination with pageToken
     - _Requirements: 4.1_
 
-  - [ ] 6.3 Implement Google Classroom coursework fetching
+  - [x] 6.3 Implement Google Classroom coursework fetching
     - Create fetchCoursework method that calls Google Classroom API courses.courseWork.list
     - Use read-only scope: classroom.coursework.me.readonly
     - Parse coursework metadata: title, description, dueDate, course info
@@ -154,7 +154,7 @@ This implementation plan breaks down the LMS Autonomy Engine into 6 sequential p
     - Return normalized Assignment[] array
     - _Requirements: 4.1, 4.7_
 
-  - [ ] 6.4 Implement Google Drive attachment download
+  - [x] 6.4 Implement Google Drive attachment download
     - Create downloadDriveAttachment method using Google Drive API
     - Handle authentication with OAuth access token
     - Download files by Drive file ID
@@ -174,7 +174,7 @@ This implementation plan breaks down the LMS Autonomy Engine into 6 sequential p
     - Test that all Drive attachments are downloaded for any coursework with attachments
     - Use fast-check to generate coursework with varying attachment counts
 
-- [ ] 7. Checkpoint - Verify adapters
+- [-] 7. Checkpoint - Verify adapters
   - Test Canvas adapter with mock API responses
   - Test Google Classroom adapter with mock API responses
   - Verify error handling for authentication failures
