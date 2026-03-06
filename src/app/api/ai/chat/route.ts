@@ -1,6 +1,7 @@
 /**
  * POST /api/ai/chat
  * 
+ * Compatibility Adapter: Bridges old frontend (chatId, chats table) to new Claude Service
  * Generates Socratic tutoring responses using Claude 3.5 Sonnet with streaming support.
  * 
  * Requirements: 2.1, 2.2, 2.3, 2.4, 9.1, 9.2
@@ -12,34 +13,46 @@ import { ClaudeService } from '@/lib/ai/ClaudeService';
 import { chatRateLimiter } from '@/lib/ai/RateLimiter';
 import { handleAPIError, getResponseWithFallback, AIServiceError } from '@/lib/ai/error-handling';
 import { buildSourceMaterial } from '@/lib/ai/lms-context';
-import { loadChatHistory, saveChatMessage } from '@/lib/ai/chat-session';
 import { trackAPIUsage, calculateClaudeCost } from '@/lib/ai/metrics';
 import type {
-  ChatRequest,
-  ChatResponseData,
   ClaudeChatMessage,
+  CacheMetrics,
 } from '@/types/dual-ai-orchestration';
 
 export const maxDuration = 60; // Claude streaming can take time
 
 export async function POST(req: NextRequest) {
   try {
-    // Parse request body
-    const body: ChatRequest = await req.json();
-    const { 
-      session_id, 
-      message, 
-      parsed_content_id, 
-      synced_assignment_id, 
-      stream = true 
-    } = body;
+    // Parse request body - COMPATIBILITY LAYER
+    // Accept both old format (chatId, messages array) and new format (session_id, message)
+    const body: any = await req.json();
+    
+    // Extract chatId from multiple possible sources (Vercel AI SDK compatibility)
+    const chatId = body.chatId || body.session_id || body.id;
+    const messages = body.messages || [];
+    
+    // Extract latest user message
+    const userMessages = messages.filter((m: any) => m.role === 'user');
+    const latestUserMessage = userMessages.length > 0 ? userMessages[userMessages.length - 1]?.content : body.message;
+    
+    // Extract context IDs from body
+    const parsed_content_id = body.parsed_content_id || body.attachedFileIds?.[0];
+    const synced_assignment_id = body.synced_assignment_id;
+
+    console.log('[AI Chat Adapter] Request:', {
+      chatId,
+      hasMessages: messages.length > 0,
+      latestUserMessage: latestUserMessage?.substring(0, 50),
+      parsed_content_id,
+      synced_assignment_id,
+    });
 
     // Validate request
-    if (!session_id || !message) {
+    if (!chatId || !latestUserMessage) {
       return NextResponse.json(
         {
           success: false,
-          error: 'Missing required fields: session_id and message',
+          error: 'Missing required fields: chatId and message',
         },
         { status: 400 }
       );
@@ -88,105 +101,94 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Load chat session and verify ownership
-    const { data: session, error: sessionError } = await supabase
-      .from('chat_sessions')
-      .select('id, student_id, parsed_content_id, synced_assignment_id')
-      .eq('id', session_id)
+    // COMPATIBILITY LAYER: Load from OLD schema (chats + messages tables)
+    // Verify chat ownership
+    const { data: chat, error: chatError } = await supabase
+      .from('chats')
+      .select('id, user_id, metadata')
+      .eq('id', chatId)
       .single();
 
-    if (sessionError || !session) {
+    if (chatError || !chat) {
+      console.log('[AI Chat Adapter] Chat not found, will be created on first message save');
+    } else if (chat.user_id !== user.id) {
       return NextResponse.json(
         {
           success: false,
-          error: 'Chat session not found',
-        },
-        { status: 404 }
-      );
-    }
-
-    if (session.student_id !== user.id) {
-      return NextResponse.json(
-        {
-          success: false,
-          error: 'Forbidden: Session does not belong to user',
+          error: 'Forbidden: Chat does not belong to user',
         },
         { status: 403 }
       );
     }
 
-    // Load chat history (last 20 messages for context window management)
-    const chatHistory = await loadChatHistory(session_id);
+    // Load chat history from OLD messages table
+    const { data: historyMessages, error: historyError } = await supabase
+      .from('messages')
+      .select('role, content')
+      .eq('chat_id', chatId)
+      .order('sequence_number', { ascending: true })
+      .limit(20); // Last 20 messages for context
+
+    if (historyError) {
+      console.error('[AI Chat Adapter] Failed to load history:', historyError);
+    }
+
+    // Build chat history for Claude
+    const chatHistory: ClaudeChatMessage[] = (historyMessages || []).map((msg: any) => ({
+      role: msg.role as 'user' | 'assistant',
+      content: msg.content,
+    }));
 
     // Add current user message to history
     chatHistory.push({
       role: 'user',
-      content: message,
+      content: latestUserMessage,
     });
 
-    // Retrieve source material
+    console.log('[AI Chat Adapter] Chat history loaded:', {
+      messageCount: chatHistory.length,
+      chatId,
+    });
+
+    // Retrieve source material (LMS context, parsed content)
     const sourceMaterial = await buildSourceMaterial(
-      parsed_content_id || session.parsed_content_id || undefined,
-      synced_assignment_id || session.synced_assignment_id || undefined
+      parsed_content_id,
+      synced_assignment_id
     );
+
+    console.log('[AI Chat Adapter] Source material:', {
+      hasParsedContent: !!sourceMaterial.parsed_content,
+      hasAssignmentDescription: !!sourceMaterial.assignment_description,
+      hasTeacherRubric: !!sourceMaterial.teacher_rubric,
+      hasPdfText: !!sourceMaterial.pdf_text,
+    });
 
     // Initialize Claude Service
     const claudeService = new ClaudeService(apiKey);
 
-    // Generate response with fallback
+    // Generate streaming response
     const startTime = Date.now();
-    const response = await getResponseWithFallback(
-      () => claudeService.generateResponse(chatHistory, sourceMaterial, stream),
+    const stream = await getResponseWithFallback(
+      () => claudeService.generateResponse(chatHistory, sourceMaterial, true),
       'I\'m having trouble connecting to the tutoring service right now. Please try again in a moment.'
     );
     const latencyMs = Date.now() - startTime;
 
-    // Handle streaming response
-    if (stream && response instanceof ReadableStream) {
-      return new Response(response, {
+    console.log('[AI Chat Adapter] Claude response generated:', {
+      isStream: stream instanceof ReadableStream,
+      latencyMs,
+    });
+
+    // COMPATIBILITY LAYER: Return streaming response compatible with Vercel AI SDK useChat hook
+    // The frontend useChat hook expects a text/plain stream with newline-delimited chunks
+    if (stream instanceof ReadableStream) {
+      return new Response(stream, {
         headers: {
-          'Content-Type': 'text/event-stream',
+          'Content-Type': 'text/plain; charset=utf-8',
           'Cache-Control': 'no-cache',
           'Connection': 'keep-alive',
         },
       });
-    }
-
-    // Handle non-streaming response
-    if (!stream && typeof response === 'object' && 'content' in response) {
-      // Save user message to database
-      await saveChatMessage(session_id, 'user', message);
-
-      // Save assistant message to database
-      const messageId = await saveChatMessage(
-        session_id,
-        'assistant',
-        response.content,
-        response.metrics
-      );
-
-      // Track metrics
-      const estimatedCost = calculateClaudeCost(response.metrics);
-      await trackAPIUsage({
-        studentId: user.id,
-        serviceType: 'claude_chat',
-        operationType: 'chat_response',
-        modelVersion: 'claude-3-5-sonnet-20241022',
-        inputTokens: response.metrics.input_tokens,
-        outputTokens: response.metrics.output_tokens,
-        cacheCreationTokens: response.metrics.cache_creation_input_tokens,
-        cacheReadTokens: response.metrics.cache_read_input_tokens,
-        latencyMs,
-        estimatedCostUsd: estimatedCost,
-        success: true,
-      });
-
-      return NextResponse.json({
-        success: true,
-        content: response.content,
-        metrics: response.metrics,
-        message_id: messageId,
-      } as ChatResponseData);
     }
 
     // Fallback error
