@@ -234,7 +234,6 @@ Rules:
     // incompatible with the root @ai-sdk/provider used by @ai-sdk/openai, even though they're
     // functionally compatible at runtime. This is a known issue with nested dependencies.
     const { text: mapMarkdownRaw } = await generateText({
-      // @ts-expect-error - Version mismatch between root @ai-sdk/provider and ai's nested @ai-sdk/provider
       model: openai('gpt-4o-mini'),
       prompt: mapPrompt,
       temperature: 0.3,
