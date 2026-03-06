@@ -205,7 +205,7 @@ export class ClaudeService {
     }
 
     // Apply caching for large content
-    const contentBlocks: Anthropic.ContentBlock[] = [];
+    const contentBlocks: any[] = [];
 
     // Cache assignment description and rubric (static, reusable)
     if (sourceMaterial.assignment_description) {
