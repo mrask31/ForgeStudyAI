@@ -10,8 +10,8 @@ import { NextResponse } from 'next/server';
 import { createServerClient, type CookieOptions } from '@supabase/ssr';
 import { cookies } from 'next/headers';
 import { getFromCache, setInCache } from '@/lib/lms/redis-client';
-import { REDIS_KEYS, REDIS_TTL } from '@/lib/lms/redis-schema';
-import type { StudentSyncStatusResponse, SyncStatusCache } from '@/lib/lms/types';
+import { REDIS_KEYS, REDIS_TTL, type SyncStatusCache } from '@/lib/lms/redis-schema';
+import type { StudentSyncStatusResponse } from '@/lib/lms/types';
 
 export const dynamic = 'force-dynamic';
 
