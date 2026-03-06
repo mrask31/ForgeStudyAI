@@ -12,7 +12,7 @@
 import { useState, useEffect } from 'react';
 import { UploadCloud, FileText, CheckCircle2, Loader2 } from 'lucide-react';
 import { SyncStatusIndicator } from './SyncStatusIndicator';
-import type { SyncStatusResponse } from '@/lib/lms/types';
+import type { StudentSyncStatusResponse } from '@/lib/lms/types';
 
 interface DualIntakeAirlockProps {
   studentId: string;
@@ -33,7 +33,7 @@ export function DualIntakeAirlock({
   recentUploads = [],
   isUploading = false,
 }: DualIntakeAirlockProps) {
-  const [syncStatus, setSyncStatus] = useState<SyncStatusResponse | null>(null);
+  const [syncStatus, setSyncStatus] = useState<StudentSyncStatusResponse | null>(null);
   const [isLoadingStatus, setIsLoadingStatus] = useState(true);
   const [isDragging, setIsDragging] = useState(false);
 
@@ -52,7 +52,7 @@ export function DualIntakeAirlock({
         return;
       }
 
-      const data: SyncStatusResponse = await response.json();
+      const data: StudentSyncStatusResponse = await response.json();
       setSyncStatus(data);
     } catch (error) {
       console.error('[DualIntakeAirlock] Error fetching sync status:', error);
