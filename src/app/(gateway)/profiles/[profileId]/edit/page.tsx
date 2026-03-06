@@ -5,6 +5,7 @@ import { useParams, useRouter } from 'next/navigation'
 import { createBrowserClient } from '@supabase/ssr'
 import { GraduationCap, BookOpen } from 'lucide-react'
 import { getStudentProfile, updateStudentProfile, type StudentProfile } from '@/app/actions/student-profiles'
+import { IntegrationPanel } from '@/components/lms/IntegrationPanel'
 
 export default function EditProfilePage() {
   const router = useRouter()
@@ -97,34 +98,34 @@ export default function EditProfilePage() {
 
   if (isLoading) {
     return (
-      <div className="h-full bg-slate-50 flex items-center justify-center">
-        <div className="text-slate-600">Loading profile...</div>
+      <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 flex items-center justify-center">
+        <div className="text-slate-400">Loading profile...</div>
       </div>
     )
   }
 
   if (!profile) {
     return (
-      <div className="h-full bg-slate-50 flex items-center justify-center">
-        <div className="text-slate-600">Profile not found.</div>
+      <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 flex items-center justify-center">
+        <div className="text-slate-400">Profile not found.</div>
       </div>
     )
   }
 
   return (
-    <div className="h-full overflow-y-auto bg-gradient-to-br from-slate-50 to-white">
+    <div className="min-h-screen overflow-y-auto bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950">
       <div className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 py-16 sm:py-20">
-        <div className="bg-white/80 backdrop-blur-sm border border-slate-200/60 rounded-2xl p-8 sm:p-10 shadow-lg">
-          <h1 className="text-3xl sm:text-4xl font-bold text-slate-900 mb-2">
+        <div className="bg-slate-900/60 backdrop-blur-md border border-slate-800 rounded-2xl p-8 sm:p-10 shadow-xl">
+          <h1 className="text-3xl sm:text-4xl font-bold text-slate-100 mb-2">
             Edit student profile
           </h1>
-          <p className="text-base sm:text-lg text-slate-600 mb-6">
+          <p className="text-base sm:text-lg text-slate-400 mb-6">
             Update preferences, grade level, and interests for personalized support.
           </p>
 
           <form onSubmit={handleSubmit} className="space-y-6">
             <div>
-              <label htmlFor="displayName" className="block text-sm font-semibold text-slate-900 mb-2">
+              <label htmlFor="displayName" className="block text-sm font-semibold text-slate-200 mb-2">
                 Student name / nickname *
               </label>
               <input
@@ -134,19 +135,19 @@ export default function EditProfilePage() {
                 onChange={(e) => setDisplayName(e.target.value)}
                 placeholder="Enter student name or nickname"
                 required
-                className="w-full px-4 py-3 border-2 border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-teal-600 focus:border-teal-400 transition-all text-slate-900"
+                className="w-full px-4 py-3 bg-slate-950 border-2 border-slate-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all text-slate-100 placeholder-slate-500"
                 disabled={isSaving}
               />
             </div>
 
             <div>
-              <label className="block text-sm font-semibold text-slate-900 mb-3">
+              <label className="block text-sm font-semibold text-slate-200 mb-3">
                 Grade level *
               </label>
-              <p className="text-xs text-slate-500 mb-3">
+              <p className="text-xs text-slate-400 mb-3">
                 ForgeStudy adapts its teaching style to match each grade band
               </p>
-              <div className="grid grid-cols-3 gap-4">
+              <div className="grid grid-cols-2 gap-4">
                 {[
                   { value: 'middle', label: 'Middle School', sublabel: 'Grades 6–8', icon: BookOpen },
                   { value: 'high', label: 'High School', sublabel: 'Grades 9–12', icon: GraduationCap },
@@ -162,17 +163,17 @@ export default function EditProfilePage() {
                     className={`
                       p-4 rounded-xl border-2 transition-all duration-200
                       ${band === value
-                        ? 'border-teal-500 bg-teal-50 shadow-md'
-                        : 'border-slate-200 hover:border-teal-300 hover:bg-slate-50'
+                        ? 'border-indigo-500 bg-indigo-500/10 shadow-md shadow-indigo-500/20'
+                        : 'border-slate-700 hover:border-indigo-400 hover:bg-slate-800/60'
                       }
                       ${isSaving ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}
                     `}
                   >
-                    <Icon className={`w-6 h-6 mx-auto mb-2 ${band === value ? 'text-teal-600' : 'text-slate-400'}`} />
-                    <span className={`text-sm font-semibold block ${band === value ? 'text-teal-900' : 'text-slate-700'}`}>
+                    <Icon className={`w-6 h-6 mx-auto mb-2 ${band === value ? 'text-indigo-400' : 'text-slate-500'}`} />
+                    <span className={`text-sm font-semibold block ${band === value ? 'text-indigo-300' : 'text-slate-300'}`}>
                       {label}
                     </span>
-                    <span className={`text-xs mt-0.5 ${band === value ? 'text-teal-700' : 'text-slate-500'}`}>
+                    <span className={`text-xs mt-0.5 block ${band === value ? 'text-indigo-400' : 'text-slate-500'}`}>
                       {sublabel}
                     </span>
                   </button>
@@ -182,17 +183,17 @@ export default function EditProfilePage() {
 
             {band && (
               <div>
-                <label htmlFor="grade" className="block text-sm font-semibold text-slate-900 mb-2">
+                <label htmlFor="grade" className="block text-sm font-semibold text-slate-200 mb-2">
                   Specific grade (optional)
                 </label>
-                <p className="text-xs text-slate-500 mb-2">
+                <p className="text-xs text-slate-400 mb-2">
                   Helps us personalize explanations and examples
                 </p>
                 <select
                   id="grade"
                   value={grade}
                   onChange={(e) => setGrade(e.target.value)}
-                  className="w-full px-4 py-3 border-2 border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-teal-600 focus:border-teal-400 transition-all text-slate-900 bg-white"
+                  className="w-full px-4 py-3 bg-slate-950 border-2 border-slate-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all text-slate-100"
                   disabled={isSaving}
                 >
                   <option value="">Select grade (optional)...</option>
@@ -206,10 +207,10 @@ export default function EditProfilePage() {
             )}
 
             <div>
-              <label htmlFor="interests" className="block text-sm font-semibold text-slate-900 mb-2">
+              <label htmlFor="interests" className="block text-sm font-semibold text-slate-200 mb-2">
                 Interests & hobbies (optional)
               </label>
-              <p className="text-xs text-slate-500 mb-2">
+              <p className="text-xs text-slate-400 mb-2">
                 We use this to make examples more engaging for your student.
               </p>
               <textarea
@@ -217,14 +218,14 @@ export default function EditProfilePage() {
                 value={interests}
                 onChange={(e) => setInterests(e.target.value)}
                 placeholder="e.g., soccer, space, art, Minecraft, dinosaurs"
-                className="w-full min-h-[120px] px-4 py-3 border-2 border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-teal-600 focus:border-teal-400 transition-all text-slate-900"
+                className="w-full min-h-[120px] px-4 py-3 bg-slate-950 border-2 border-slate-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all text-slate-100 placeholder-slate-500"
                 disabled={isSaving}
               />
             </div>
 
             {error && (
-              <div className="bg-red-50 border border-red-200 rounded-xl p-4">
-                <p className="text-sm font-medium text-red-800">{error}</p>
+              <div className="bg-red-900/40 border border-red-700 rounded-xl p-4">
+                <p className="text-sm font-medium text-red-300">{error}</p>
               </div>
             )}
 
@@ -233,19 +234,30 @@ export default function EditProfilePage() {
                 type="button"
                 onClick={() => router.push('/profiles')}
                 disabled={isSaving}
-                className="flex-1 px-6 py-3 border-2 border-slate-300 text-slate-700 rounded-xl font-semibold hover:bg-slate-50 transition-colors disabled:opacity-50"
+                className="flex-1 px-6 py-3 border-2 border-slate-700 text-slate-300 rounded-xl font-semibold hover:bg-slate-800/60 hover:border-slate-600 transition-colors disabled:opacity-50"
               >
                 Cancel
               </button>
               <button
                 type="submit"
                 disabled={isSaving || !band || !displayName.trim()}
-                className="flex-1 px-6 py-3 bg-gradient-to-r from-teal-700 to-teal-600 text-white rounded-xl font-bold hover:from-teal-800 hover:to-teal-700 focus:outline-none focus:ring-2 focus:ring-teal-600 focus:ring-offset-2 transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-md shadow-teal-500/30 hover:shadow-lg hover:shadow-teal-500/40"
+                className="flex-1 px-6 py-3 bg-gradient-to-r from-indigo-600 to-indigo-500 text-white rounded-xl font-bold hover:from-indigo-700 hover:to-indigo-600 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 focus:ring-offset-slate-900 transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-md shadow-indigo-500/30 hover:shadow-lg hover:shadow-indigo-500/40"
               >
                 {isSaving ? 'Saving...' : 'Save changes'}
               </button>
             </div>
           </form>
+
+          {/* School Integrations Section */}
+          <div className="mt-8 pt-8 border-t border-slate-800">
+            <h2 className="text-xl font-semibold text-slate-200 mb-4">
+              School Integrations (LMS)
+            </h2>
+            <IntegrationPanel 
+              studentId={profileId} 
+              studentName={displayName || profile.display_name}
+            />
+          </div>
         </div>
       </div>
     </div>

@@ -99,35 +99,35 @@ This implementation plan breaks down the Dual AI Orchestration feature into sequ
 - [ ] 3. Checkpoint - Ensure vision processing tests pass
   - Ensure all tests pass, ask the user if questions arise.
 
-- [ ] 4. Phase 3: The Conscience (Claude Service)
-  - [ ] 4.1 Implement ClaudeService class with core structure
+- [x] 4. Phase 3: The Conscience (Claude Service)
+  - [x] 4.1 Implement ClaudeService class with core structure
     - Create src/lib/ai/ClaudeService.ts
     - Initialize Anthropic client with API key
     - Set up model configuration (claude-3-5-sonnet-20241022)
     - Define CACHE_THRESHOLD constant (1024 tokens)
     - _Requirements: 2.1, 2.10_
 
-  - [ ] 4.2 Build Socratic system prompt with anti-cheat constraints
+  - [x] 4.2 Build Socratic system prompt with anti-cheat constraints
     - Create SOCRATIC_SYSTEM_PROMPT constant
     - Include role definition, critical constraints (never/always do), response strategy for direct answer requests
     - Include teaching strategy and source material usage guidelines
     - Include response style guidelines
     - _Requirements: 2.5, 2.6, 2.7, 2.8, 2.9_
 
-  - [ ] 4.3 Implement prompt caching with cache_control blocks
+  - [x] 4.3 Implement prompt caching with cache_control blocks
     - Create buildContextWithCaching method
     - Implement token counting/estimation logic
     - Apply cache_control to assignment descriptions, rubrics, and PDF content
     - Do not cache student-specific parsed_content
     - _Requirements: 3.1, 3.2, 3.3, 3.4, 5.5_
 
-  - [ ] 4.4 Add streaming response support
+  - [x] 4.4 Add streaming response support
     - Implement generateResponse method with streaming option
     - Use anthropic.messages.stream for streaming responses
     - Convert to ReadableStream for API endpoints
     - _Requirements: 2.1_
 
-  - [ ] 4.5 Implement token counting and cost tracking
+  - [x] 4.5 Implement token counting and cost tracking
     - Create countTokens method for precise token counting
     - Create estimateTokens function for quick estimation
     - Create calculateCost function with pricing for input, output, cache write, cache read
@@ -156,8 +156,8 @@ This implementation plan breaks down the Dual AI Orchestration feature into sequ
 - [ ] 5. Checkpoint - Ensure Claude service tests pass
   - Ensure all tests pass, ask the user if questions arise.
 
-- [ ] 6. Phase 4: API Endpoints
-  - [ ] 6.1 Build POST /api/vision/process endpoint
+- [x] 6. Phase 4: API Endpoints
+  - [x] 6.1 Build POST /api/vision/process endpoint
     - Create src/app/api/vision/process/route.ts
     - Validate request body (upload_id, student_id)
     - Retrieve upload record from manual_uploads table
@@ -166,7 +166,7 @@ This implementation plan breaks down the Dual AI Orchestration feature into sequ
     - Return VisionProcessingResult
     - _Requirements: 1.1, 4.1, 4.2_
 
-  - [ ] 6.2 Build POST /api/chat endpoint
+  - [x] 6.2 Build POST /api/chat endpoint
     - Create src/app/api/chat/route.ts
     - Validate request body (session_id, message, optional parsed_content_id, synced_assignment_id, stream)
     - Load chat history from database
@@ -176,14 +176,14 @@ This implementation plan breaks down the Dual AI Orchestration feature into sequ
     - Return streaming or non-streaming response
     - _Requirements: 2.1, 2.2, 2.3, 2.4, 9.1, 9.2_
 
-  - [ ] 6.3 Add rate limiting for both endpoints
+  - [x] 6.3 Add rate limiting for both endpoints
     - Create RateLimiter class with per-student limits
     - Apply 10 requests/minute limit for vision endpoint
     - Apply 30 requests/minute limit for chat endpoint
     - Return user-friendly error when rate limit exceeded
     - _Requirements: 8.4_
 
-  - [ ] 6.4 Implement error handling and graceful degradation
+  - [x] 6.4 Implement error handling and graceful degradation
     - Create AIServiceError class with error codes
     - Implement handleAPIError function for API failures
     - Implement retryWithBackoff function with exponential backoff
