@@ -10,7 +10,7 @@
 
 interface SyncStatusConnection {
   provider: 'canvas' | 'google_classroom';
-  status: 'active' | 'failed' | 'blocked' | 'disconnected';
+  status: 'active' | 'failed' | 'blocked' | 'disconnected' | 'expired';
   lastSyncAt: string | null;
   minutesSinceSync: number | null;
   newAssignmentsCount: number;
