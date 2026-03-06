@@ -222,7 +222,10 @@ export async function POST(request: Request) {
   } catch (error: any) {
     console.error('[LMS Connect] Unexpected error:', error);
     return NextResponse.json(
-      { error: 'Internal server error' },
+      { 
+        success: false, 
+        error: error instanceof Error ? error.message : String(error) 
+      },
       { status: 500 }
     );
   }

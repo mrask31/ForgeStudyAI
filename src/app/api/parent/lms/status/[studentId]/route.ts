@@ -104,7 +104,10 @@ export async function GET(
   } catch (error: any) {
     console.error('[LMS Status] Unexpected error:', error);
     return NextResponse.json(
-      { error: 'Internal server error' },
+      { 
+        success: false, 
+        error: error instanceof Error ? error.message : String(error) 
+      },
       { status: 500 }
     );
   }
