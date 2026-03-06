@@ -235,7 +235,7 @@ export default function ClinicalTutorWorkspace({
   }, [chatId, strictMode, filterMode, selectedDocIds, mode, topicTitle, className, selectedClassName, attachedFiles, activeProfileId]);
   
   const { messages, append, isLoading, setMessages } = useChat({
-    api: '/api/chat',
+    api: '/api/ai/chat',
     initialMessages: initialMessages,
     body: requestBody,
     onError: (err) => {
