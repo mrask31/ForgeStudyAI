@@ -64,8 +64,8 @@ export class TokenEncryption {
       // Format: iv:authTag:encryptedData
       return `${iv.toString('hex')}:${authTag.toString('hex')}:${encrypted}`;
     } catch (error: any) {
-      console.error('[TokenEncryption] Encryption failed:', error.message);
-      throw new Error('Failed to encrypt token');
+      console.error('[TokenEncryption] Encryption failed:', error);
+      throw new Error(`Encryption failed: ${error instanceof Error ? error.message : String(error)}`);
     }
   }
 
@@ -99,8 +99,8 @@ export class TokenEncryption {
 
       return decrypted;
     } catch (error: any) {
-      console.error('[TokenEncryption] Decryption failed:', error.message);
-      throw new Error('Failed to decrypt token');
+      console.error('[TokenEncryption] Decryption failed:', error);
+      throw new Error(`Decryption failed: ${error instanceof Error ? error.message : String(error)}`);
     }
   }
 
