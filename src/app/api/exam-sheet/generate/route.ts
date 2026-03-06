@@ -59,7 +59,6 @@ export async function POST(req: Request) {
     })
 
     const { text: sheetMarkdown } = await generateText({
-      // @ts-expect-error - ai SDK provider mismatch
       model: openai('gpt-4o-mini'),
       prompt,
       temperature: 0.3,
