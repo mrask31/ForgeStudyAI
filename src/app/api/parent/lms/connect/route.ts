@@ -48,21 +48,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    // 2. Verify user is a parent
-    const { data: parent, error: parentError } = await supabase
-      .from('parents')
-      .select('id')
-      .eq('id', user.id)
-      .single();
-
-    if (parentError || !parent) {
-      return NextResponse.json(
-        { error: 'Only parents can authorize LMS connections' },
-        { status: 403 }
-      );
-    }
-
-    // 3. Parse and validate request
+    // 2. Parse and validate request
     const body: ConnectLMSRequest = await request.json();
 
     if (!body.studentId || !body.provider) {
@@ -72,21 +58,21 @@ export async function POST(request: Request) {
       );
     }
 
-    // 4. Verify parent has access to this student
-    const { data: student, error: studentError } = await supabase
-      .from('students')
-      .select('id, parent_id')
+    // 3. Verify user has access to this student profile
+    const { data: studentProfile, error: studentError } = await supabase
+      .from('student_profiles')
+      .select('id, owner_id')
       .eq('id', body.studentId)
       .single();
 
-    if (studentError || !student || student.parent_id !== user.id) {
+    if (studentError || !studentProfile || studentProfile.owner_id !== user.id) {
       return NextResponse.json(
-        { error: 'Student not found or access denied' },
+        { error: 'Student profile not found or access denied' },
         { status: 403 }
       );
     }
 
-    // 5. Validate credentials based on provider
+    // 4. Validate credentials based on provider
     let validationResult: { valid: boolean; errorMessage?: string };
     let tokenToEncrypt: string;
     let tokenExpiresAt: string | null = null;
@@ -143,7 +129,7 @@ export async function POST(request: Request) {
       );
     }
 
-    // 6. Check for existing connection
+    // 5. Check for existing connection
     const { data: existingConnection } = await supabase
       .from('lms_connections')
       .select('id')
@@ -163,7 +149,7 @@ export async function POST(request: Request) {
       );
     }
 
-    // 7. Encrypt token
+    // 6. Encrypt token
     const encryptedToken = TokenEncryption.encrypt(tokenToEncrypt);
 
     // 8. Create connection record
