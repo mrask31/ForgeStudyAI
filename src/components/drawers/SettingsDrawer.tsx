@@ -1,7 +1,7 @@
 'use client';
 
 import { X, Mail, LogOut, Layout, Shield, Settings } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import { createBrowserClient } from '@supabase/ssr';
 import { useRouter } from 'next/navigation';
 import { useDensity } from '@/contexts/DensityContext';
@@ -19,12 +19,17 @@ export function SettingsDrawer({ isOpen, onClose }: SettingsDrawerProps) {
   const { density, setDensity } = useDensity();
   const tokens = getDensityTokens(density);
 
+  // Singleton Supabase client - only create once per component instance
+  const supabase = useMemo(
+    () =>
+      createBrowserClient(
+        process.env.NEXT_PUBLIC_SUPABASE_URL!,
+        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+      ),
+    []
+  );
+
   useEffect(() => {
-    const supabase = createBrowserClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-    );
-    
     const loadProfile = async () => {
       const { data: { user } } = await supabase.auth.getUser();
       setUser(user);
@@ -33,14 +38,9 @@ export function SettingsDrawer({ isOpen, onClose }: SettingsDrawerProps) {
     if (isOpen) {
       loadProfile();
     }
-  }, [isOpen]);
+  }, [isOpen, supabase]);
 
   const handleLogout = async () => {
-    const supabase = createBrowserClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-    );
-    
     await supabase.auth.signOut();
     router.push('/');
     router.refresh();

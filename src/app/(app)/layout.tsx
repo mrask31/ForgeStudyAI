@@ -18,8 +18,8 @@ export default function AppRouteLayout({
     }>
       <AppShell variant="app">
         {children}
+        <SettingsDrawerWrapper />
       </AppShell>
-      <SettingsDrawerWrapper />
     </Suspense>
   )
 }
