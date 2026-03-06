@@ -154,11 +154,12 @@ function NewProfileContent() {
       const updatedProfiles = await getStudentProfiles()
       
       if (updatedProfiles.length === 1) {
+        // First profile created - set as active and go to app
         setActiveProfileId(newProfile.id)
         router.push(getBandRoute(newProfile.grade_band))
       } else {
-        // Multiple profiles -> back to picker
-        router.push('/profiles')
+        // Multiple profiles - redirect to Parent Dashboard (not profile picker)
+        router.push('/parent')
       }
     } catch (err: any) {
       console.error('[New Profile Page] Error creating profile:', err)
@@ -194,23 +195,23 @@ function NewProfileContent() {
     : ['9', '10', '11', '12']
 
   return (
-    <div className="h-full overflow-y-auto bg-gradient-to-br from-slate-50 to-white">
+    <div className="h-full overflow-y-auto bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950">
       <div className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 py-16 sm:py-24">
-        <div className="bg-white/80 backdrop-blur-sm border border-slate-200/60 rounded-2xl p-8 sm:p-10 shadow-lg">
-          <h1 className="text-3xl sm:text-4xl font-bold text-slate-900 mb-2">
+        <div className="bg-slate-900/80 backdrop-blur-xl border border-slate-800 rounded-2xl p-8 sm:p-10 shadow-xl">
+          <h1 className="text-3xl sm:text-4xl font-bold text-slate-100 mb-2">
             Create a student profile
           </h1>
-          <p className="text-lg text-slate-600 mb-2">
+          <p className="text-lg text-slate-300 mb-2">
             Set up personalized learning support for Grades 6–12
           </p>
-          <p className="text-sm text-slate-500 mb-8">
+          <p className="text-sm text-slate-400 mb-8">
             ForgeStudy helps students understand their work step-by-step, building confidence and independence.
           </p>
 
           <form onSubmit={handleSubmit} className="space-y-6">
             {/* Display Name */}
             <div>
-              <label htmlFor="displayName" className="block text-sm font-semibold text-slate-900 mb-2">
+              <label htmlFor="displayName" className="block text-sm font-semibold text-slate-100 mb-2">
                 Student name / nickname *
               </label>
               <input
@@ -220,23 +221,23 @@ function NewProfileContent() {
                 onChange={(e) => setDisplayName(e.target.value)}
                 placeholder="Enter student name or nickname"
                 required
-                className="w-full px-4 py-3 border-2 border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-teal-600 focus:border-teal-400 transition-all text-slate-900"
+                className="w-full px-4 py-3 border-2 border-slate-700 bg-slate-950/50 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all text-slate-100 placeholder-slate-500"
                 disabled={isSubmitting}
               />
-              <p className="mt-1.5 text-xs text-slate-500">
+              <p className="mt-1.5 text-xs text-slate-400">
                 This helps personalize their learning experience
               </p>
             </div>
 
             {/* Grade Band */}
             <div>
-              <label className="block text-sm font-semibold text-slate-900 mb-3">
+              <label className="block text-sm font-semibold text-slate-100 mb-3">
                 Grade level *
               </label>
-              <p className="text-xs text-slate-500 mb-3">
+              <p className="text-xs text-slate-400 mb-3">
                 ForgeStudy adapts its teaching style to match each grade band
               </p>
-              <div className="grid grid-cols-3 gap-4">
+              <div className="grid grid-cols-2 gap-4">
               {[
                 { value: 'middle', label: 'Middle School', sublabel: 'Grades 6–8', icon: BookOpen },
                 { value: 'high', label: 'High School', sublabel: 'Grades 9–12', icon: GraduationCap },
@@ -249,17 +250,17 @@ function NewProfileContent() {
                     className={`
                       p-4 rounded-xl border-2 transition-all duration-200
                       ${band === value
-                        ? 'border-teal-500 bg-teal-50 shadow-md'
-                        : 'border-slate-200 hover:border-teal-300 hover:bg-slate-50'
+                        ? 'border-indigo-500 bg-indigo-950/50 shadow-lg shadow-indigo-500/20'
+                        : 'border-slate-700 bg-slate-950/30 hover:border-indigo-600 hover:bg-slate-900/50'
                       }
                       ${isSubmitting ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}
                     `}
                   >
-                    <Icon className={`w-6 h-6 mx-auto mb-2 ${band === value ? 'text-teal-600' : 'text-slate-400'}`} />
-                    <span className={`text-sm font-semibold block ${band === value ? 'text-teal-900' : 'text-slate-700'}`}>
+                    <Icon className={`w-6 h-6 mx-auto mb-2 ${band === value ? 'text-indigo-400' : 'text-slate-500'}`} />
+                    <span className={`text-sm font-semibold block ${band === value ? 'text-indigo-300' : 'text-slate-300'}`}>
                       {label}
                     </span>
-                    <span className={`text-xs mt-0.5 ${band === value ? 'text-teal-700' : 'text-slate-500'}`}>
+                    <span className={`text-xs mt-0.5 block ${band === value ? 'text-indigo-400' : 'text-slate-500'}`}>
                       {sublabel}
                     </span>
                   </button>
@@ -270,17 +271,17 @@ function NewProfileContent() {
             {/* Grade (Optional) */}
             {band && (
               <div>
-                <label htmlFor="grade" className="block text-sm font-semibold text-slate-900 mb-2">
+                <label htmlFor="grade" className="block text-sm font-semibold text-slate-100 mb-2">
                   Specific grade (optional)
                 </label>
-                <p className="text-xs text-slate-500 mb-2">
+                <p className="text-xs text-slate-400 mb-2">
                   Helps us personalize explanations and examples
                 </p>
                 <select
                   id="grade"
                   value={grade}
                   onChange={(e) => setGrade(e.target.value)}
-                  className="w-full px-4 py-3 border-2 border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-teal-600 focus:border-teal-400 transition-all text-slate-900 bg-white"
+                  className="w-full px-4 py-3 border-2 border-slate-700 bg-slate-950/50 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all text-slate-100"
                   disabled={isSubmitting}
                 >
                   <option value="">Select grade (optional)...</option>
@@ -294,10 +295,10 @@ function NewProfileContent() {
             )}
 
             <div>
-              <label htmlFor="interests" className="block text-sm font-semibold text-slate-900 mb-2">
+              <label htmlFor="interests" className="block text-sm font-semibold text-slate-100 mb-2">
                 Interests & hobbies (optional)
               </label>
-              <p className="text-xs text-slate-500 mb-2">
+              <p className="text-xs text-slate-400 mb-2">
                 We use this to make examples more engaging for your student.
               </p>
               <textarea
@@ -305,15 +306,15 @@ function NewProfileContent() {
                 value={interests}
                 onChange={(e) => setInterests(e.target.value)}
                 placeholder="e.g., soccer, space, art, Minecraft, dinosaurs"
-                className="w-full min-h-[120px] px-4 py-3 border-2 border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-teal-600 focus:border-teal-400 transition-all text-slate-900"
+                className="w-full min-h-[120px] px-4 py-3 border-2 border-slate-700 bg-slate-950/50 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all text-slate-100 placeholder-slate-500"
                 disabled={isSubmitting}
               />
             </div>
 
             {/* Error Message */}
             {error && (
-              <div className="bg-red-50 border border-red-200 rounded-xl p-4">
-                <p className="text-sm font-medium text-red-800">{error}</p>
+              <div className="bg-red-950/50 border border-red-800 rounded-xl p-4">
+                <p className="text-sm font-medium text-red-400">{error}</p>
               </div>
             )}
 
@@ -321,16 +322,16 @@ function NewProfileContent() {
             <div className="flex gap-4 pt-4">
               <button
                 type="button"
-                onClick={() => router.push('/profiles')}
+                onClick={() => router.push('/parent')}
                 disabled={isSubmitting}
-                className="flex-1 px-6 py-3 border-2 border-slate-300 text-slate-700 rounded-xl font-semibold hover:bg-slate-50 transition-colors disabled:opacity-50"
+                className="flex-1 px-6 py-3 border-2 border-slate-700 text-slate-300 rounded-xl font-semibold hover:bg-slate-800/50 transition-colors disabled:opacity-50"
               >
                 Cancel
               </button>
               <button
                 type="submit"
                 disabled={isSubmitting || !band || !displayName.trim()}
-                className="flex-1 px-6 py-3 bg-gradient-to-r from-teal-700 to-teal-600 text-white rounded-xl font-bold hover:from-teal-800 hover:to-teal-700 focus:outline-none focus:ring-2 focus:ring-teal-600 focus:ring-offset-2 transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-md shadow-teal-500/30 hover:shadow-lg hover:shadow-teal-500/40"
+                className="flex-1 px-6 py-3 bg-gradient-to-r from-indigo-600 to-indigo-500 text-white rounded-xl font-bold hover:from-indigo-700 hover:to-indigo-600 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 focus:ring-offset-slate-950 transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-indigo-500/30 hover:shadow-xl hover:shadow-indigo-500/40"
               >
                 {isSubmitting ? 'Creating profile...' : 'Create Profile'}
               </button>
