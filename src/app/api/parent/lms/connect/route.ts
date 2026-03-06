@@ -186,7 +186,10 @@ export async function POST(request: Request) {
     if (insertError || !connection) {
       console.error('[LMS Connect] Error creating connection:', insertError);
       return NextResponse.json(
-        { error: 'Failed to create LMS connection' },
+        { 
+          error: 'Failed to create LMS connection',
+          details: insertError ? (insertError.message || JSON.stringify(insertError)) : 'No connection returned'
+        },
         { status: 500 }
       );
     }
