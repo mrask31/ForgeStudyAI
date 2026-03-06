@@ -117,9 +117,9 @@ function NewProfileContent() {
   const getBandRoute = (bandValue: 'high' | 'middle') => {
     switch (bandValue) {
       case 'middle':
-        return '/app/middle'
+        return '/middle'
       case 'high':
-        return '/app/high'
+        return '/high'
       default:
         return '/profiles'
     }

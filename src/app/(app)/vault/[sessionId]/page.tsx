@@ -180,7 +180,7 @@ export default function VaultWorkspace({ params }: VaultWorkspaceProps) {
           </div>
           
           <button
-            onClick={() => router.push('/app/middle')}
+            onClick={() => router.push('/middle')}
             className="w-full px-6 py-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg font-medium transition-colors"
           >
             Return to Galaxy
