@@ -124,7 +124,8 @@ export function DualIntakeAirlock({
           {isUploading ? (
             <>
               <Loader2 className="w-16 h-16 text-indigo-400 mb-6 animate-spin" />
-              <p className="text-slate-200 text-xl font-medium">Processing...</p>
+              <p className="text-slate-200 text-xl font-medium mb-2">👁️ AI is reading your document...</p>
+              <p className="text-slate-400 text-sm">Extracting text, formulas, and diagrams</p>
             </>
           ) : (
             <>

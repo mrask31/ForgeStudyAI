@@ -11,6 +11,7 @@ import { createClient } from '@/lib/supabase/server';
 import { GeminiVisionService } from '@/lib/ai/GeminiVisionService';
 import { visionRateLimiter } from '@/lib/ai/RateLimiter';
 import { handleAPIError, retryWithBackoff, AIServiceError } from '@/lib/ai/error-handling';
+import { trackAPIUsage, calculateGeminiCost } from '@/lib/ai/metrics';
 import type { 
   VisionProcessRequest, 
   VisionProcessResponse 
@@ -117,6 +118,7 @@ export async function POST(req: NextRequest) {
     const visionService = new GeminiVisionService(apiKey);
 
     // Process image with retry logic
+    const startTime = Date.now();
     const result = await retryWithBackoff(
       () => visionService.processImage({
         upload_id: upload.id,
@@ -127,6 +129,21 @@ export async function POST(req: NextRequest) {
       2, // Max 2 retries
       1000 // 1 second initial delay
     );
+    const latencyMs = Date.now() - startTime;
+
+    // Track metrics
+    await trackAPIUsage({
+      studentId: student_id,
+      serviceType: 'gemini_vision',
+      operationType: 'image_processing',
+      modelVersion: 'gemini-1.5-pro',
+      inputTokens: result.token_count,
+      outputTokens: result.token_count,
+      latencyMs,
+      estimatedCostUsd: result.token_count ? calculateGeminiCost(result.token_count, result.token_count) : undefined,
+      success: result.success,
+      errorMessage: result.error_message,
+    });
 
     // Save processed content to database
     const saveResult = await visionService.saveProcessedContent(

@@ -113,8 +113,8 @@ export default function AirlockPage() {
         description: `Uploaded via Airlock on ${new Date().toLocaleDateString()}`,
       })
 
-      // Add source item
-      await addLearningSourceItem({
+      // Add source item and get the upload ID
+      const sourceItem = await addLearningSourceItem({
         sourceId: source.id,
         itemType: file.type.startsWith('image/') ? 'photo' : 'file',
         fileUrl: `${BUCKET_ID}/${path}`,
@@ -129,6 +129,34 @@ export default function AirlockPage() {
           path: path,
         },
       })
+
+      // If it's an image, trigger AI vision processing
+      if (file.type.startsWith('image/')) {
+        try {
+          console.log('[Airlock] 👁️ AI is reading your document...')
+          
+          const visionResponse = await fetch('/api/ai/vision/process', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              upload_id: sourceItem.id,
+              student_id: user.id,
+            }),
+          })
+
+          if (!visionResponse.ok) {
+            console.warn('[Airlock] Vision processing failed, but upload succeeded')
+          } else {
+            const visionResult = await visionResponse.json()
+            if (visionResult.success) {
+              console.log('[Airlock] ✅ AI extracted content successfully')
+            }
+          }
+        } catch (visionError) {
+          // Non-critical: Vision processing failed but upload succeeded
+          console.warn('[Airlock] Vision processing error (non-critical):', visionError)
+        }
+      }
 
       // Reload recent uploads
       await loadRecentUploads()
