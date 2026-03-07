@@ -16,8 +16,8 @@ export async function middleware(request: NextRequest) {
     const searchParams = request.nextUrl.searchParams
 
     // Redirect old V1 routes to unified /app route (MUST be first, before any auth checks)
-    if (pathname.startsWith('/app/middle') || pathname.startsWith('/app/high') || 
-        pathname.startsWith('/elementary') || pathname.startsWith('/app/elementary')) {
+    if (pathname.startsWith('/middle') || pathname.startsWith('/high') || 
+        pathname.startsWith('/elementary')) {
       return NextResponse.redirect(new URL('/app', request.url))
     }
 

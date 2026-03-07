@@ -177,7 +177,7 @@ test.describe('Navigation Smoke Tests', () => {
         key: 'middle',
         detectLabel: 'Study Hub',
         items: [
-          { label: 'Study Hub', href: '/app/middle', expectedContent: ['ForgeMiddle', 'Grades 6–8'] },
+          { label: 'Study Hub', href: '/middle', expectedContent: ['ForgeMiddle', 'Grades 6–8'] },
           { label: 'Uploads', href: '/sources', expectedContent: ['Sources'] },
           { label: 'Progress', href: '/readiness', expectedContent: ['Learning Dashboard'] },
           { label: 'Settings', href: '/settings', expectedContent: ['Settings', 'Display Density'] },
@@ -187,7 +187,7 @@ test.describe('Navigation Smoke Tests', () => {
         key: 'high',
         detectLabel: 'Study Hub',
         items: [
-          { label: 'Study Hub', href: '/app/high', expectedContent: ['ForgeHigh', 'Grades 9–12'] },
+          { label: 'Study Hub', href: '/high', expectedContent: ['ForgeHigh', 'Grades 9–12'] },
           { label: 'Uploads', href: '/sources', expectedContent: ['Sources'] },
           { label: 'Progress', href: '/readiness', expectedContent: ['Learning Dashboard'] },
           { label: 'Settings', href: '/settings', expectedContent: ['Settings', 'Display Density'] },
