@@ -110,12 +110,12 @@ export default function HomePage() {
         <div className="text-center max-w-5xl mx-auto">
           {/* Headline */}
           <h1 className="text-5xl md:text-7xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-slate-100 to-slate-400 tracking-tight mb-6">
-            The AI tutor that refuses to cheat.
+            Your child isn't learning. They're outsourcing.
           </h1>
 
           {/* Subheadline */}
           <p className="text-xl text-slate-400 max-w-2xl mx-auto mt-6 mb-12">
-            Standard AI just gives your child the answers. ForgeStudy is a spatial operating system that maps their brain, forces critical thinking through Socratic sparring, and mathematically guarantees memory retention.
+            ForgeStudy is the AI tutor that refuses to give the answer. It forces your child to think — and mathematically guarantees they'll remember.
           </p>
 
           {/* CTA Buttons */}
@@ -124,7 +124,7 @@ export default function HomePage() {
               href="/signup"
               className="px-8 py-4 bg-indigo-600 hover:bg-indigo-500 text-white rounded-full font-medium text-lg transition-all shadow-[0_0_30px_rgba(99,102,241,0.3)] hover:shadow-[0_0_40px_rgba(99,102,241,0.4)] flex items-center gap-2"
             >
-              Unlock Their Galaxy
+              Start Their Galaxy — Free Trial
               <ArrowRight className="w-5 h-5" />
             </Link>
             <button className="px-8 py-4 bg-slate-900/60 backdrop-blur-md border border-slate-700 hover:border-indigo-500/50 text-slate-200 rounded-full font-medium text-lg transition-all">
@@ -143,22 +143,33 @@ export default function HomePage() {
         </div>
       </section>
 
+      {/* The Moment Parents Recognize */}
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
+        <div className="max-w-4xl mx-auto">
+          <div className="bg-slate-900/60 border-l-4 border-indigo-500 p-8 md:p-12 rounded-2xl shadow-[0_0_30px_rgba(99,102,241,0.1)]">
+            <p className="text-xl md:text-2xl text-slate-200 leading-relaxed">
+              They got an A on the assignment. You were proud. Then you asked them to explain it. They couldn't. <span className="text-indigo-400 font-semibold">ForgeStudy closes that gap — permanently.</span>
+            </p>
+          </div>
+        </div>
+      </section>
+
       {/* Paradigm Shift - Problem/Solution */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-24">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-5xl mx-auto">
-          {/* The Old Way */}
+          {/* The Problem */}
           <div className="bg-slate-900/40 border border-rose-900/50 p-8 rounded-3xl">
             <h3 className="text-2xl font-bold text-rose-400 mb-4">The ChatGPT Trap.</h3>
             <p className="text-slate-300 leading-relaxed">
-              Kids type a question. The AI writes the essay. They copy, paste, and learn absolutely nothing. It is a digital crutch.
+              Your child types a question. The AI writes the answer. They copy, paste, and submit. They learned nothing — but they feel like they did. That's the most dangerous kind of failure.
             </p>
           </div>
 
-          {/* The ForgeStudy Way */}
+          {/* The Solution */}
           <div className="bg-slate-900/60 border border-indigo-500/50 shadow-[0_0_30px_rgba(99,102,241,0.1)] p-8 rounded-3xl">
-            <h3 className="text-2xl font-bold text-indigo-400 mb-4">Cryptographic Proof of Cognition.</h3>
+            <h3 className="text-2xl font-bold text-indigo-400 mb-4">The AI That Fights Back.</h3>
             <p className="text-slate-300 leading-relaxed">
-              Our Logic Loom uses Socratic sparring. It won't give the answer until your child proves they understand the concept. We turn passive reading into active mental warfare.
+              ForgeStudy's Logic Loom uses Socratic sparring. It won't reveal the answer until your child proves they understand the concept. Every session ends with verified comprehension — not just completed homework.
             </p>
           </div>
         </div>
@@ -184,7 +195,7 @@ export default function HomePage() {
             <h3 className="text-2xl font-bold text-slate-100 mb-4">The Galaxy</h3>
             <p className="text-lg font-semibold text-indigo-400 mb-3">Visualized Mastery</p>
             <p className="text-slate-400 leading-relaxed">
-              Watch their knowledge physically grow. Concepts turn from gray to glowing indigo as they prove mastery, building unstoppable intrinsic motivation.
+              Watch their knowledge physically grow as gray nodes turn indigo — proof of real mastery, visible in real time.
             </p>
           </div>
 
@@ -196,7 +207,7 @@ export default function HomePage() {
             <h3 className="text-2xl font-bold text-slate-100 mb-4">The Airlock</h3>
             <p className="text-lg font-semibold text-indigo-400 mb-3">Instant Intake</p>
             <p className="text-slate-400 leading-relaxed">
-              Drop chaotic syllabi, PDFs, and whiteboard photos into the Airlock. Our AI instantly decontaminates it into a structured, clickable universe.
+              Drop any syllabus, PDF, or photo of a whiteboard. ForgeStudy builds their entire study universe in seconds.
             </p>
           </div>
 
@@ -208,7 +219,36 @@ export default function HomePage() {
             <h3 className="text-2xl font-bold text-slate-100 mb-4">The Vault</h3>
             <p className="text-lg font-semibold text-indigo-400 mb-3">Guaranteed Memory</p>
             <p className="text-slate-400 leading-relaxed">
-              Powered by the SM-2 Spaced Repetition algorithm. Before a memory fades, the Vault triggers a snap-back review, mathematically eliminating test-day anxiety.
+              The SM-2 algorithm tracks exactly when a memory is about to fade — and snaps it back before it does. No cramming. Ever.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      {/* Social Proof - Trust Signals */}
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-24">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-5xl mx-auto">
+          {/* Stat 1 */}
+          <div className="bg-slate-900/40 backdrop-blur-md border border-slate-800 rounded-2xl p-8 text-center">
+            <h3 className="text-2xl font-bold text-indigo-400 mb-3">SM-2 Algorithm</h3>
+            <p className="text-slate-300 leading-relaxed">
+              The same spaced repetition science used by medical students worldwide
+            </p>
+          </div>
+
+          {/* Stat 2 */}
+          <div className="bg-slate-900/40 backdrop-blur-md border border-slate-800 rounded-2xl p-8 text-center">
+            <h3 className="text-2xl font-bold text-indigo-400 mb-3">Socratic Method</h3>
+            <p className="text-slate-300 leading-relaxed">
+              2,400 years of proven teaching — now running at AI speed
+            </p>
+          </div>
+
+          {/* Stat 3 */}
+          <div className="bg-slate-900/40 backdrop-blur-md border border-slate-800 rounded-2xl p-8 text-center">
+            <h3 className="text-2xl font-bold text-indigo-400 mb-3">Zero Answer Leaking</h3>
+            <p className="text-slate-300 leading-relaxed">
+              ForgeStudy cannot write your child's essay. It is architecturally impossible.
             </p>
           </div>
         </div>
