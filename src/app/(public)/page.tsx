@@ -256,20 +256,20 @@ export default function HomePage() {
               <div className="mb-2">
                 {billingPeriod === 'monthly' ? (
                   <>
-                    <span className="text-5xl font-bold text-slate-100">$9.99</span>
+                    <span className="text-5xl font-bold text-slate-100">$14.99</span>
                     <span className="text-lg text-slate-400 ml-1">/ month</span>
                   </>
                 ) : (
                   <>
-                    <span className="text-5xl font-bold text-slate-100">$89</span>
+                    <span className="text-5xl font-bold text-slate-100">$134.91</span>
                     <span className="text-lg text-slate-400 ml-1">/ year</span>
                   </>
                 )}
               </div>
               {billingPeriod === 'monthly' ? (
-                <p className="text-sm text-indigo-400 font-semibold mb-1">Annual: $89 / year</p>
+                <p className="text-sm text-indigo-400 font-semibold mb-1">Annual: $134.91 / year</p>
               ) : (
-                <p className="text-sm text-indigo-400 font-semibold mb-1">Pay for 9 months, get 12</p>
+                <p className="text-sm text-indigo-400 font-semibold mb-1">Save 25% — 12 months for the price of 9</p>
               )}
             </div>
             <div className="space-y-3 mb-8">
@@ -306,20 +306,20 @@ export default function HomePage() {
               <div className="mb-2">
                 {billingPeriod === 'monthly' ? (
                   <>
-                    <span className="text-5xl font-bold text-slate-100">$19.99</span>
+                    <span className="text-5xl font-bold text-slate-100">$29.99</span>
                     <span className="text-lg text-slate-400 ml-1">/ month</span>
                   </>
                 ) : (
                   <>
-                    <span className="text-5xl font-bold text-slate-100">$179</span>
+                    <span className="text-5xl font-bold text-slate-100">$269.91</span>
                     <span className="text-lg text-slate-400 ml-1">/ year</span>
                   </>
                 )}
               </div>
               {billingPeriod === 'monthly' ? (
-                <p className="text-sm text-indigo-400 font-semibold mb-1">Annual: $179 / year</p>
+                <p className="text-sm text-indigo-400 font-semibold mb-1">Annual: $269.91 / year</p>
               ) : (
-                <p className="text-sm text-indigo-400 font-semibold mb-1">Less than $15/month per child</p>
+                <p className="text-sm text-indigo-400 font-semibold mb-1">Save 25% — 12 months for the price of 9</p>
               )}
             </div>
             <div className="space-y-3 mb-8">

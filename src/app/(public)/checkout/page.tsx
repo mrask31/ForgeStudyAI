@@ -83,11 +83,11 @@ function CheckoutContent() {
             >
               <h3 className="text-xl font-bold text-slate-100 mb-2">Individual Plan</h3>
               <div className="mb-4">
-                <span className="text-4xl font-bold text-slate-100">$9.99</span>
+                <span className="text-4xl font-bold text-slate-100">$14.99</span>
                 <span className="text-lg text-slate-400"> / month</span>
               </div>
-              <p className="text-sm text-indigo-400 font-semibold mb-1">Annual: $89 / year</p>
-              <p className="text-xs text-slate-500 mb-4">3 months free, includes summer</p>
+              <p className="text-sm text-indigo-400 font-semibold mb-1">Annual: $134.91 / year</p>
+              <p className="text-xs text-slate-500 mb-4">Save 25% — 12 months for the price of 9</p>
               <ul className="space-y-2.5 mb-6 text-sm text-slate-300">
                 <li className="flex items-start gap-2">
                   <span className="text-indigo-400 mt-0.5">•</span>
@@ -125,11 +125,11 @@ function CheckoutContent() {
             >
               <h3 className="text-xl font-bold text-slate-100 mb-2">Individual Plan (Annual)</h3>
               <div className="mb-4">
-                <span className="text-4xl font-bold text-slate-100">$89</span>
+                <span className="text-4xl font-bold text-slate-100">$134.91</span>
                 <span className="text-lg text-slate-400"> / year</span>
               </div>
-              <p className="text-sm text-indigo-400 font-semibold mb-1">Pay for 9 months, get 12</p>
-              <p className="text-xs text-slate-500 mb-4">Includes summer — 3 months free</p>
+              <p className="text-sm text-indigo-400 font-semibold mb-1">Save 25% — 12 months for the price of 9</p>
+              <p className="text-xs text-slate-500 mb-4">Just $11.24/month billed annually</p>
               <ul className="space-y-2.5 mb-6 text-sm text-slate-300">
                 <li className="flex items-start gap-2">
                   <span className="text-indigo-400 mt-0.5">•</span>
@@ -172,11 +172,11 @@ function CheckoutContent() {
               </div>
               <h3 className="text-xl font-bold text-slate-100 mb-2 mt-2">Family Plan (Monthly)</h3>
               <div className="mb-1">
-                <span className="text-4xl font-bold text-slate-100">$19.99</span>
+                <span className="text-4xl font-bold text-slate-100">$29.99</span>
                 <span className="text-lg text-slate-400"> / month</span>
               </div>
-              <p className="text-sm text-indigo-400 mb-1 font-semibold">Annual: $179 / year</p>
-              <p className="text-xs text-slate-500 mb-4">Less than $15/month per child</p>
+              <p className="text-sm text-indigo-400 mb-1 font-semibold">Annual: $269.91 / year</p>
+              <p className="text-xs text-slate-500 mb-4">Save 25% with annual billing</p>
               <ul className="space-y-2.5 mb-6 text-sm text-slate-300">
                 <li className="flex items-start gap-2">
                   <span className="text-indigo-400 mt-0.5">•</span>
@@ -219,14 +219,14 @@ function CheckoutContent() {
               </div>
               <h3 className="text-xl font-bold text-slate-100 mb-2 mt-2">Family Plan (Annual)</h3>
               <div className="mb-1">
-                <span className="text-4xl font-bold text-slate-100">$179</span>
+                <span className="text-4xl font-bold text-slate-100">$269.91</span>
                 <span className="text-lg text-slate-400"> / year</span>
               </div>
               <p className="text-sm text-indigo-400 mb-4 font-semibold">
-                Includes summer — 3 months free
+                Save 25% — 12 months for the price of 9
               </p>
               <p className="text-sm text-slate-300 mb-4 font-medium">
-                Less than $15/month per child, with uninterrupted support all year.
+                Just $22.49/month per family, billed annually.
               </p>
               <ul className="space-y-2.5 mb-6 text-sm text-slate-300">
                 <li className="flex items-start gap-2">
