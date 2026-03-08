@@ -20,16 +20,28 @@ function CheckoutContent() {
     if (plan === 'family_annual') return 'family_annual'
     return null
   }
-  const [selectedPlan, setSelectedPlan] = useState<
-    'individual_monthly' | 'individual_annual' | 'family_monthly' | 'family_annual' | null
-  >(normalizePlan(urlPlan))
+  
+  const [billingPeriod, setBillingPeriod] = useState<'monthly' | 'annual'>('annual')
+  const [selectedPlanType, setSelectedPlanType] = useState<'individual' | 'family'>('family')
   const [isStartingCheckout, setIsStartingCheckout] = useState(false)
 
   useEffect(() => {
-    // If a plan is provided in URL and valid, set it as selected (but still show UI)
+    // If a plan is provided in URL and valid, set it as selected
     const normalizedPlan = normalizePlan(urlPlan)
     if (normalizedPlan) {
-      setSelectedPlan(normalizedPlan)
+      // Extract plan type and billing period from normalized plan
+      if (normalizedPlan.includes('individual')) {
+        setSelectedPlanType('individual')
+      } else if (normalizedPlan.includes('family')) {
+        setSelectedPlanType('family')
+      }
+      
+      if (normalizedPlan.includes('monthly')) {
+        setBillingPeriod('monthly')
+      } else if (normalizedPlan.includes('annual')) {
+        setBillingPeriod('annual')
+      }
+      
       localStorage.removeItem('forgenursing-pending-plan')
       return
     }
@@ -37,14 +49,25 @@ function CheckoutContent() {
     const pendingPlan = localStorage.getItem('forgenursing-pending-plan')
     const normalizedPendingPlan = normalizePlan(pendingPlan)
     if (normalizedPendingPlan) {
-      setSelectedPlan(normalizedPendingPlan)
+      if (normalizedPendingPlan.includes('individual')) {
+        setSelectedPlanType('individual')
+      } else if (normalizedPendingPlan.includes('family')) {
+        setSelectedPlanType('family')
+      }
+      
+      if (normalizedPendingPlan.includes('monthly')) {
+        setBillingPeriod('monthly')
+      } else if (normalizedPendingPlan.includes('annual')) {
+        setBillingPeriod('annual')
+      }
     }
 
     localStorage.removeItem('forgenursing-pending-plan')
   }, [urlPlan])
 
   const handleStartCheckout = async () => {
-    if (!selectedPlan) return
+    const selectedPlan = `${selectedPlanType}_${billingPeriod}` as 
+      'individual_monthly' | 'individual_annual' | 'family_monthly' | 'family_annual'
     
     setIsStartingCheckout(true)
     try {
@@ -56,11 +79,9 @@ function CheckoutContent() {
     }
   }
 
-  // Always show plan selection UI (even if a plan is pre-selected from URL)
-  // This allows users to see and change their plan before checkout
   return (
     <div className="min-h-[calc(100dvh-4rem)] bg-slate-950 py-12 sm:py-16 pb-safe-b">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center mb-10 sm:mb-12">
           <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold text-slate-100 mb-4 tracking-tight">
             Unlock their cognitive potential
@@ -70,196 +91,169 @@ function CheckoutContent() {
           </p>
         </div>
 
+        {/* Billing Period Toggle */}
+        <div className="flex justify-center mb-10">
+          <div className="inline-flex items-center bg-slate-900/60 backdrop-blur-md border border-slate-700 rounded-xl p-1">
+            <button
+              onClick={() => setBillingPeriod('monthly')}
+              className={`px-6 py-2.5 rounded-lg text-sm font-semibold transition-all ${
+                billingPeriod === 'monthly'
+                  ? 'bg-indigo-600 text-white shadow-lg'
+                  : 'text-slate-400 hover:text-slate-200'
+              }`}
+            >
+              Monthly
+            </button>
+            <button
+              onClick={() => setBillingPeriod('annual')}
+              className={`px-6 py-2.5 rounded-lg text-sm font-semibold transition-all ${
+                billingPeriod === 'annual'
+                  ? 'bg-indigo-600 text-white shadow-lg'
+                  : 'text-slate-400 hover:text-slate-200'
+              }`}
+            >
+              Annual
+            </button>
+          </div>
+        </div>
+
         {/* Pricing Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 sm:gap-8 max-w-6xl mx-auto mb-8">
-            {/* Individual Plan (Monthly) */}
-            <div 
-              onClick={() => setSelectedPlan('individual_monthly')}
-              className={`bg-slate-900/40 backdrop-blur-md border-2 rounded-2xl p-6 sm:p-8 cursor-pointer transition-all duration-300 transform hover:scale-[1.02] ${
-                selectedPlan === 'individual_monthly' 
-                  ? 'border-indigo-500 shadow-xl shadow-indigo-500/20' 
-                  : 'border-slate-800 hover:border-indigo-500/50'
-              }`}
-            >
-              <h3 className="text-xl font-bold text-slate-100 mb-2">Individual Plan</h3>
-              <div className="mb-4">
-                <span className="text-4xl font-bold text-slate-100">$14.99</span>
-                <span className="text-lg text-slate-400"> / month</span>
-              </div>
-              <p className="text-sm text-indigo-400 font-semibold mb-1">Annual: $134.91 / year</p>
-              <p className="text-xs text-slate-500 mb-4">Save 25% — 12 months for the price of 9</p>
-              <ul className="space-y-2.5 mb-6 text-sm text-slate-300">
-                <li className="flex items-start gap-2">
-                  <span className="text-indigo-400 mt-0.5">•</span>
-                  <span>1 student profile</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <span className="text-indigo-400 mt-0.5">•</span>
-                  <span>Full Galaxy visualization</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <span className="text-indigo-400 mt-0.5">•</span>
-                  <span>Socratic sparring sessions</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <span className="text-indigo-400 mt-0.5">•</span>
-                  <span>Cancel anytime</span>
-                </li>
-              </ul>
-              {selectedPlan === 'individual_monthly' && (
-                <div className="flex items-center justify-center gap-2 text-indigo-400 font-semibold mb-4">
-                  <Check className="w-5 h-5" />
-                  <span>Selected</span>
-                </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 sm:gap-8 max-w-4xl mx-auto mb-8">
+          {/* Individual Plan */}
+          <div 
+            onClick={() => setSelectedPlanType('individual')}
+            className={`bg-slate-900/40 backdrop-blur-md border-2 rounded-2xl p-6 sm:p-8 cursor-pointer transition-all duration-300 transform hover:scale-[1.02] ${
+              selectedPlanType === 'individual' 
+                ? 'border-indigo-500 shadow-xl shadow-indigo-500/20' 
+                : 'border-slate-800 hover:border-indigo-500/50'
+            }`}
+          >
+            <h3 className="text-2xl font-bold text-slate-100 mb-4">Individual Plan</h3>
+            <div className="mb-4">
+              {billingPeriod === 'monthly' ? (
+                <>
+                  <span className="text-5xl font-bold text-slate-100">$14.99</span>
+                  <span className="text-xl text-slate-400"> / month</span>
+                </>
+              ) : (
+                <>
+                  <span className="text-5xl font-bold text-slate-100">$129.99</span>
+                  <span className="text-xl text-slate-400"> / year</span>
+                </>
               )}
             </div>
+            {billingPeriod === 'annual' && (
+              <>
+                <p className="text-sm text-indigo-400 font-semibold mb-1">
+                  Save 28% — 12 months for the price of 9
+                </p>
+                <p className="text-xs text-slate-500 mb-4">
+                  Just $10.83/month billed annually
+                </p>
+              </>
+            )}
+            {billingPeriod === 'monthly' && (
+              <div className="h-12 mb-4"></div>
+            )}
+            <ul className="space-y-3 mb-6 text-sm text-slate-300">
+              <li className="flex items-start gap-2">
+                <Check className="w-5 h-5 text-indigo-400 flex-shrink-0 mt-0.5" />
+                <span>1 student profile</span>
+              </li>
+              <li className="flex items-start gap-2">
+                <Check className="w-5 h-5 text-indigo-400 flex-shrink-0 mt-0.5" />
+                <span>Full Galaxy visualization</span>
+              </li>
+              <li className="flex items-start gap-2">
+                <Check className="w-5 h-5 text-indigo-400 flex-shrink-0 mt-0.5" />
+                <span>Socratic sparring sessions</span>
+              </li>
+              <li className="flex items-start gap-2">
+                <Check className="w-5 h-5 text-indigo-400 flex-shrink-0 mt-0.5" />
+                <span>Cancel anytime</span>
+              </li>
+            </ul>
+            {selectedPlanType === 'individual' && (
+              <div className="flex items-center justify-center gap-2 text-indigo-400 font-semibold">
+                <Check className="w-5 h-5" />
+                <span>Selected</span>
+              </div>
+            )}
+          </div>
 
-            {/* Individual Plan (Annual) */}
-            <div 
-              onClick={() => setSelectedPlan('individual_annual')}
-              className={`bg-slate-900/40 backdrop-blur-md border-2 rounded-2xl p-6 sm:p-8 cursor-pointer transition-all duration-300 transform hover:scale-[1.02] ${
-                selectedPlan === 'individual_annual' 
-                  ? 'border-indigo-500 shadow-xl shadow-indigo-500/20' 
-                  : 'border-slate-800 hover:border-indigo-500/50'
-              }`}
-            >
-              <h3 className="text-xl font-bold text-slate-100 mb-2">Individual Plan (Annual)</h3>
-              <div className="mb-4">
-                <span className="text-4xl font-bold text-slate-100">$134.91</span>
-                <span className="text-lg text-slate-400"> / year</span>
-              </div>
-              <p className="text-sm text-indigo-400 font-semibold mb-1">Save 25% — 12 months for the price of 9</p>
-              <p className="text-xs text-slate-500 mb-4">Just $11.24/month billed annually</p>
-              <ul className="space-y-2.5 mb-6 text-sm text-slate-300">
-                <li className="flex items-start gap-2">
-                  <span className="text-indigo-400 mt-0.5">•</span>
-                  <span>1 student profile</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <span className="text-indigo-400 mt-0.5">•</span>
-                  <span>Full Galaxy visualization</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <span className="text-indigo-400 mt-0.5">•</span>
-                  <span>Socratic sparring sessions</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <span className="text-indigo-400 mt-0.5">•</span>
-                  <span>Cancel anytime</span>
-                </li>
-              </ul>
-              {selectedPlan === 'individual_annual' && (
-                <div className="flex items-center justify-center gap-2 text-indigo-400 font-semibold mb-4">
-                  <Check className="w-5 h-5" />
-                  <span>Selected</span>
-                </div>
+          {/* Family Plan */}
+          <div 
+            onClick={() => setSelectedPlanType('family')}
+            className={`bg-slate-900/60 backdrop-blur-md border-2 rounded-2xl p-6 sm:p-8 relative cursor-pointer transition-all duration-300 transform hover:scale-[1.02] ${
+              selectedPlanType === 'family' 
+                ? 'border-indigo-500 shadow-2xl shadow-indigo-500/30' 
+                : 'border-indigo-500/50'
+            }`}
+          >
+            <div className="absolute -top-3 left-1/2 -translate-x-1/2">
+              <span className="bg-indigo-600 text-white text-xs px-3 py-1 rounded-full font-semibold shadow-lg">
+                Most Popular
+              </span>
+            </div>
+            <h3 className="text-2xl font-bold text-slate-100 mb-4 mt-2">Family Plan</h3>
+            <div className="mb-4">
+              {billingPeriod === 'monthly' ? (
+                <>
+                  <span className="text-5xl font-bold text-slate-100">$29.99</span>
+                  <span className="text-xl text-slate-400"> / month</span>
+                </>
+              ) : (
+                <>
+                  <span className="text-5xl font-bold text-slate-100">$249.99</span>
+                  <span className="text-xl text-slate-400"> / year</span>
+                </>
               )}
             </div>
-
-            {/* Family Plan (Monthly) - Most Popular */}
-            <div 
-              onClick={() => setSelectedPlan('family_monthly')}
-              className={`bg-slate-900/60 backdrop-blur-md border-2 rounded-2xl p-6 sm:p-8 relative cursor-pointer transition-all duration-300 transform hover:scale-[1.02] ${
-                selectedPlan === 'family_monthly' 
-                  ? 'border-indigo-500 shadow-2xl shadow-indigo-500/30' 
-                  : 'border-indigo-500/50'
-              }`}
-            >
-              <div className="absolute -top-3 left-1/2 -translate-x-1/2">
-                <span className="bg-indigo-600 text-white text-[10px] px-2.5 py-0.5 rounded-full font-semibold shadow-lg">
-                  Most Popular
-                </span>
+            {billingPeriod === 'annual' && (
+              <>
+                <p className="text-sm text-indigo-400 font-semibold mb-1">
+                  Save 28% — 12 months for the price of 9
+                </p>
+                <p className="text-xs text-slate-500 mb-4">
+                  Just $20.83/month billed annually
+                </p>
+              </>
+            )}
+            {billingPeriod === 'monthly' && (
+              <div className="h-12 mb-4"></div>
+            )}
+            <ul className="space-y-3 mb-6 text-sm text-slate-300">
+              <li className="flex items-start gap-2">
+                <Check className="w-5 h-5 text-indigo-400 flex-shrink-0 mt-0.5" />
+                <span>Up to 4 student profiles</span>
+              </li>
+              <li className="flex items-start gap-2">
+                <Check className="w-5 h-5 text-indigo-400 flex-shrink-0 mt-0.5" />
+                <span>One parent account</span>
+              </li>
+              <li className="flex items-start gap-2">
+                <Check className="w-5 h-5 text-indigo-400 flex-shrink-0 mt-0.5" />
+                <span>Easy profile switching</span>
+              </li>
+              <li className="flex items-start gap-2">
+                <Check className="w-5 h-5 text-indigo-400 flex-shrink-0 mt-0.5" />
+                <span>Cancel anytime</span>
+              </li>
+            </ul>
+            {selectedPlanType === 'family' && (
+              <div className="flex items-center justify-center gap-2 text-indigo-400 font-semibold">
+                <Check className="w-5 h-5" />
+                <span>Selected</span>
               </div>
-              <h3 className="text-xl font-bold text-slate-100 mb-2 mt-2">Family Plan (Monthly)</h3>
-              <div className="mb-1">
-                <span className="text-4xl font-bold text-slate-100">$29.99</span>
-                <span className="text-lg text-slate-400"> / month</span>
-              </div>
-              <p className="text-sm text-indigo-400 mb-1 font-semibold">Annual: $269.91 / year</p>
-              <p className="text-xs text-slate-500 mb-4">Save 25% with annual billing</p>
-              <ul className="space-y-2.5 mb-6 text-sm text-slate-300">
-                <li className="flex items-start gap-2">
-                  <span className="text-indigo-400 mt-0.5">•</span>
-                  <span>Up to 4 student profiles</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <span className="text-indigo-400 mt-0.5">•</span>
-                  <span>One parent account</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <span className="text-indigo-400 mt-0.5">•</span>
-                  <span>Easy profile switching</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <span className="text-indigo-400 mt-0.5">•</span>
-                  <span>Cancel anytime</span>
-                </li>
-              </ul>
-              {selectedPlan === 'family_monthly' && (
-                <div className="flex items-center justify-center gap-2 text-indigo-400 font-semibold mb-4">
-                  <Check className="w-5 h-5" />
-                  <span>Selected</span>
-                </div>
-              )}
-            </div>
-
-            {/* Family Plan (Annual) */}
-            <div 
-              onClick={() => setSelectedPlan('family_annual')}
-              className={`bg-slate-900/60 backdrop-blur-md border-2 rounded-2xl p-6 sm:p-8 relative cursor-pointer transition-all duration-300 transform hover:scale-[1.02] ${
-                selectedPlan === 'family_annual' 
-                  ? 'border-indigo-500 shadow-2xl shadow-indigo-500/30' 
-                  : 'border-indigo-500/50'
-              }`}
-            >
-              <div className="absolute -top-3 left-1/2 -translate-x-1/2">
-                <span className="bg-indigo-600 text-white text-[10px] px-2.5 py-0.5 rounded-full font-semibold shadow-lg">
-                  Best Value
-                </span>
-              </div>
-              <h3 className="text-xl font-bold text-slate-100 mb-2 mt-2">Family Plan (Annual)</h3>
-              <div className="mb-1">
-                <span className="text-4xl font-bold text-slate-100">$269.91</span>
-                <span className="text-lg text-slate-400"> / year</span>
-              </div>
-              <p className="text-sm text-indigo-400 mb-4 font-semibold">
-                Save 25% — 12 months for the price of 9
-              </p>
-              <p className="text-sm text-slate-300 mb-4 font-medium">
-                Just $22.49/month per family, billed annually.
-              </p>
-              <ul className="space-y-2.5 mb-6 text-sm text-slate-300">
-                <li className="flex items-start gap-2">
-                  <span className="text-indigo-400 mt-0.5">•</span>
-                  <span>Up to 4 student profiles</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <span className="text-indigo-400 mt-0.5">•</span>
-                  <span>One parent account</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <span className="text-indigo-400 mt-0.5">•</span>
-                  <span>Easy profile switching</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <span className="text-indigo-400 mt-0.5">•</span>
-                  <span>Cancel anytime</span>
-                </li>
-              </ul>
-              {selectedPlan === 'family_annual' && (
-                <div className="flex items-center justify-center gap-2 text-indigo-400 font-semibold mb-4">
-                  <Check className="w-5 h-5" />
-                  <span>Selected</span>
-                </div>
-              )}
-            </div>
+            )}
+          </div>
         </div>
 
         {/* Continue Button */}
         <div className="text-center max-w-md mx-auto">
           <button
             onClick={handleStartCheckout}
-            disabled={!selectedPlan || isStartingCheckout}
+            disabled={isStartingCheckout}
             className="w-full sm:w-auto px-8 sm:px-10 py-4 sm:py-5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl text-base sm:text-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed border-none transform hover:scale-105 active:scale-95 min-h-[44px]"
           >
             {isStartingCheckout ? (
@@ -297,4 +291,3 @@ export default function CheckoutPage() {
     </Suspense>
   )
 }
-
