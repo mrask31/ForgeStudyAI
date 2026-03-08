@@ -8,23 +8,13 @@ import { getSupabaseBrowser } from '@/lib/supabase/client'
 import HistoryButton from './HistoryButton'
 import { useActiveProfile } from '@/contexts/ActiveProfileContext'
 
-const NAV_ITEMS_BY_BAND = {
-  middle: [
-    { label: '🌌 My Galaxy', href: '/app', icon: Sparkles, type: 'route' as const },
-    { label: '📥 Uploads', href: '/sources', icon: FileText, type: 'route' as const },
-  ],
-  high: [
-    { label: '🌌 My Galaxy', href: '/app', icon: Sparkles, type: 'route' as const },
-    { label: '📥 Uploads', href: '/sources', icon: FileText, type: 'route' as const },
-  ],
-  default: [
-    { label: '🌌 My Galaxy', href: '/app', icon: Sparkles, type: 'route' as const },
-    { label: 'Tutor Workspace', href: '/tutor', icon: MessageSquare, type: 'route' as const },
-    { label: 'My Classes', href: '/classes', icon: GraduationCap, type: 'route' as const },
-    { label: 'Sources', href: '/sources', icon: FileText, type: 'route' as const },
-    { label: 'Vocabulary Bank', href: '/dictionary', icon: BookOpen, type: 'route' as const },
-  ],
-} as const
+const NAV_ITEMS = [
+  { label: '🌌 My Galaxy', href: '/app', icon: Sparkles, type: 'route' as const },
+  { label: 'Tutor Workspace', href: '/tutor', icon: MessageSquare, type: 'route' as const },
+  { label: 'My Classes', href: '/classes', icon: GraduationCap, type: 'route' as const },
+  { label: 'Sources', href: '/sources', icon: FileText, type: 'route' as const },
+  { label: 'Vocabulary Bank', href: '/dictionary', icon: BookOpen, type: 'route' as const },
+] as const
 
 interface SidebarProps {
   onNavigate?: () => void
@@ -86,9 +76,7 @@ export default function Sidebar({ onNavigate }: SidebarProps = {}) {
   }
 
   // Always show full navigation structure - use skeleton during loading
-  const navItems = gradeBand && gradeBand in NAV_ITEMS_BY_BAND
-    ? NAV_ITEMS_BY_BAND[gradeBand as keyof typeof NAV_ITEMS_BY_BAND]
-    : NAV_ITEMS_BY_BAND.default
+  const navItems = NAV_ITEMS
 
   return (
     <aside className="flex w-full h-full flex-col bg-slate-900 text-slate-400">
