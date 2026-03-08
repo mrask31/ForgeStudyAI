@@ -1,13 +1,11 @@
-import { openai } from '@ai-sdk/openai';
-import { streamText, convertToCoreMessages } from 'ai';
+import Anthropic from '@anthropic-ai/sdk';
 import { getSystemPrompt } from '@/lib/ai/prompts';
 import { retrieveLearningContext } from '@/app/actions/learning-sources';
 import { createServerClient, type CookieOptions } from '@supabase/ssr';
 import { cookies } from 'next/headers';
 import OpenAI from 'openai';
-import { createHobbyAnalogyChatModel } from '@/lib/ai/google-client';
 
-// Lazy-initialize OpenAI client to avoid build-time errors
+// Lazy-initialize OpenAI client for embeddings only
 let openaiEmbeddings: OpenAI | null = null;
 
 function getOpenAIEmbeddings(): OpenAI {
@@ -17,6 +15,18 @@ function getOpenAIEmbeddings(): OpenAI {
     });
   }
   return openaiEmbeddings;
+}
+
+// Lazy-initialize Anthropic client
+let anthropicClient: Anthropic | null = null;
+
+function getAnthropicClient(): Anthropic {
+  if (!anthropicClient) {
+    anthropicClient = new Anthropic({
+      apiKey: process.env.ANTHROPIC_API_KEY,
+    });
+  }
+  return anthropicClient;
 }
 
 export const maxDuration = 30;
@@ -651,24 +661,37 @@ FORMATTING RULES:
 - If student materials were provided, include a "Sources:" line with filenames.
 `;
 
-  // Create Google AI model with hobby analogies
-  const hobbyModel = createHobbyAnalogyChatModel(
-    activeProfile || {
-      display_name: null,
-      interests: null,
-      grade_band: 'middle',
-      grade: null,
-    },
-    systemPrompt
-  );
+  // Stream response using Anthropic Claude
+  const anthropic = getAnthropicClient();
+  
+  // Convert messages to Anthropic format
+  const anthropicMessages: Anthropic.MessageParam[] = messagesWithBinder
+    .filter((msg: any) => msg.role !== 'system')
+    .map((msg: any) => ({
+      role: msg.role as 'user' | 'assistant',
+      content: msg.content,
+    }));
 
-  const result = await streamText({
-    model: hobbyModel as any,
-    messages: messagesWithBinder,
+  // Create streaming response
+  const stream = await anthropic.messages.stream({
+    model: 'claude-3-5-sonnet-20241022',
+    max_tokens: 2048,
+    temperature: 0.7,
+    system: systemPrompt,
+    messages: anthropicMessages,
   });
 
+  // Convert Anthropic stream to ReadableStream
+  const readableStream = stream.toReadableStream();
+
   // Return response with file summaries in metadata for UI display
-  const response = result.toAIStreamResponse();
+  const response = new Response(readableStream, {
+    headers: {
+      'Content-Type': 'text/plain; charset=utf-8',
+      'Cache-Control': 'no-cache',
+      'Connection': 'keep-alive',
+    },
+  });
   
   // Add file summaries to response headers for UI to display "Using your files" pill
   if (fileSummaries.length > 0 && binderContext && binderContext.trim().length > 0) {

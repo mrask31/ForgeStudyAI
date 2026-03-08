@@ -19,12 +19,10 @@
  * Uses non-streaming responses (required for middleware processing).
  */
 
-import { openai } from '@ai-sdk/openai';
-import { generateText } from 'ai';
+import Anthropic from '@anthropic-ai/sdk';
 import { getSystemPrompt } from '@/lib/ai/prompts';
 import { createServerClient, type CookieOptions } from '@supabase/ssr';
 import { cookies } from 'next/headers';
-import OpenAI from 'openai';
 
 // Proof Engine imports
 import { ProofEngineMiddleware } from '@/lib/proof-engine/middleware';
@@ -39,6 +37,18 @@ import {
 } from '@/lib/proof-engine/checkpoint-frequency';
 import type { ConversationState, Message } from '@/lib/proof-engine/types';
 import { z } from 'zod';
+
+// Lazy-initialize Anthropic client
+let anthropicClient: Anthropic | null = null;
+
+function getAnthropicClient(): Anthropic {
+  if (!anthropicClient) {
+    anthropicClient = new Anthropic({
+      apiKey: process.env.ANTHROPIC_API_KEY,
+    });
+  }
+  return anthropicClient;
+}
 
 // ============================================
 // Minimal Persisted State Schema (Version 1)
@@ -97,26 +107,14 @@ const RuntimeConversationStateSchema = z.object({
 
 type RuntimeConversationState = z.infer<typeof RuntimeConversationStateSchema>;
 
-// Lazy-initialize OpenAI client to avoid build-time errors
-let openaiClient: OpenAI | null = null;
-
-function getOpenAIClient(): OpenAI {
-  if (!openaiClient) {
-    openaiClient = new OpenAI({
-      apiKey: process.env.OPENAI_API_KEY,
-    });
-  }
-  return openaiClient;
-}
-
 export const maxDuration = 30;
 
 type SupabaseServerClient = ReturnType<typeof createServerClient>;
 
 /**
- * Call OpenAI for main tutoring responses (what students see during teaching mode)
+ * Call Anthropic Claude for main tutoring responses (what students see during teaching mode)
  * 
- * This is the primary teaching AI - uses gpt-4o for high-quality instruction.
+ * This is the primary teaching AI - uses claude-3-5-sonnet-20241022 for high-quality instruction.
  * Separate from evaluation AI to maintain clear boundaries.
  * 
  * @param messages - Conversation messages
@@ -127,19 +125,34 @@ async function callTutorAI(
   messages: Array<{ role: string; content: string }>,
   systemPrompt: string
 ): Promise<string> {
-  const result = await generateText({
-    model: openai('gpt-4o') as any,
-    messages: messages as any,
+  const anthropic = getAnthropicClient();
+  
+  // Convert messages to Anthropic format
+  const anthropicMessages: Anthropic.MessageParam[] = messages.map(msg => ({
+    role: msg.role as 'user' | 'assistant',
+    content: msg.content,
+  }));
+
+  const response = await anthropic.messages.create({
+    model: 'claude-3-5-sonnet-20241022',
+    max_tokens: 2048,
+    temperature: 0.7,
     system: systemPrompt,
+    messages: anthropicMessages,
   });
 
-  return result.text;
+  const content = response.content
+    .filter((block): block is Anthropic.TextBlock => block.type === 'text')
+    .map((block) => block.text)
+    .join('');
+
+  return content;
 }
 
 /**
- * Call OpenAI for evaluation/auxiliary operations (validator, classifier, prompt generation, adaptive responses)
+ * Call Anthropic Claude for evaluation/auxiliary operations (validator, classifier, prompt generation, adaptive responses)
  * 
- * This is the evaluation AI - uses gpt-4o-mini for efficiency.
+ * This is the evaluation AI - uses claude-3-5-sonnet-20241022 for consistency.
  * Handles all proof engine auxiliary operations:
  * - Understanding validation
  * - Teaching exchange classification
@@ -153,13 +166,21 @@ async function callTutorAI(
  * @returns AI response text
  */
 async function callEvaluationAI(prompt: string): Promise<string> {
-  const response = await getOpenAIClient().chat.completions.create({
-    model: 'gpt-4o-mini',
-    messages: [{ role: 'user', content: prompt }],
+  const anthropic = getAnthropicClient();
+  
+  const response = await anthropic.messages.create({
+    model: 'claude-3-5-sonnet-20241022',
+    max_tokens: 2048,
     temperature: 0, // DETERMINISTIC: No randomness in evaluation
+    messages: [{ role: 'user', content: prompt }],
   });
 
-  return response.choices[0]?.message?.content || '';
+  const content = response.content
+    .filter((block): block is Anthropic.TextBlock => block.type === 'text')
+    .map((block) => block.text)
+    .join('');
+
+  return content;
 }
 
 /**
