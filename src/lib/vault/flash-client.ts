@@ -1,7 +1,7 @@
 /**
- * Gemini Flash Interrogator Client
+ * Anthropic Claude Flash Interrogator Client
  * 
- * Lightweight client for Gemini 1.5 Flash active recall testing.
+ * Lightweight client for Claude Haiku active recall testing.
  * No caching, no conversation history - just fast single-turn interactions.
  * 
  * Performance targets:
@@ -10,7 +10,7 @@
  * - Cost: ~$0.001 per question/evaluation pair
  */
 
-import { GoogleGenerativeAI } from '@google/generative-ai';
+import Anthropic from '@anthropic-ai/sdk';
 import { 
   buildFlashInterrogatorPrompt, 
   buildFlashEvaluatorPrompt 
@@ -22,7 +22,9 @@ import {
   FlashEvaluation 
 } from './flash-schemas';
 
-const genAI = new GoogleGenerativeAI(process.env.GOOGLE_AI_API_KEY!);
+const anthropic = new Anthropic({
+  apiKey: process.env.ANTHROPIC_API_KEY!,
+});
 
 export interface ProofEvent {
   concept: string;
@@ -35,25 +37,14 @@ export interface ProofEvent {
  * Flash Interrogator Client
  * 
  * Configured for speed and cost optimization:
- * - Model: gemini-1.5-flash (fastest, cheapest)
+ * - Model: claude-haiku-4-5-20251001 (fastest, cheapest)
  * - Temperature: 0.3 (low for consistent evaluation)
- * - Max tokens: 512 (short responses only)
+ * - Max tokens: 1024 (short responses only)
  * - Response format: JSON (prevents conversational drift)
  */
 export class FlashInterrogatorClient {
-  private model;
-  
   constructor() {
-    this.model = genAI.getGenerativeModel({
-      model: 'gemini-1.5-flash',
-      generationConfig: {
-        temperature: 0.3, // Low temperature for consistent evaluation
-        topP: 0.8,
-        topK: 40,
-        maxOutputTokens: 512, // Short responses only
-        responseMimeType: 'application/json',
-      },
-    });
+    // No initialization needed for Anthropic
   }
   
   /**
@@ -74,8 +65,19 @@ export class FlashInterrogatorClient {
     try {
       const prompt = buildFlashInterrogatorPrompt(topicTitle, proofEvents);
       
-      const result = await this.model.generateContent(prompt);
-      const text = result.response.text();
+      const response = await anthropic.messages.create({
+        model: 'claude-haiku-4-5-20251001',
+        max_tokens: 1024,
+        temperature: 0.3,
+        messages: [
+          {
+            role: 'user',
+            content: prompt + '\n\nYou MUST respond with valid JSON matching this schema: {"question": string, "context_reference": string}',
+          },
+        ],
+      });
+      
+      const text = response.content[0].type === 'text' ? response.content[0].text : '';
       
       let json;
       try {
@@ -120,8 +122,19 @@ export class FlashInterrogatorClient {
         proofEvents
       );
       
-      const result = await this.model.generateContent(prompt);
-      const text = result.response.text();
+      const response = await anthropic.messages.create({
+        model: 'claude-haiku-4-5-20251001',
+        max_tokens: 1024,
+        temperature: 0.3,
+        messages: [
+          {
+            role: 'user',
+            content: prompt + '\n\nYou MUST respond with valid JSON matching this schema: {"passed_recall": boolean, "brief_feedback": string}',
+          },
+        ],
+      });
+      
+      const text = response.content[0].type === 'text' ? response.content[0].text : '';
       
       let json;
       try {

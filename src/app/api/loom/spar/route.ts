@@ -284,7 +284,7 @@ export async function POST(request: NextRequest) {
         );
       }
       
-      if (error.message.includes('Gemini') || error.message.includes('Socratic')) {
+      if (error.message.includes('Anthropic') || error.message.includes('Socratic') || error.message.includes('Claude')) {
         return NextResponse.json(
           { error: 'AI service temporarily unavailable. Please try again.' },
           { status: 503 }

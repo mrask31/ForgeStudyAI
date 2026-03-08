@@ -1,26 +1,26 @@
 /**
- * Gemini Client for Logic Loom Synthesis Engine
+ * Anthropic Claude Client for Logic Loom Synthesis Engine
  * 
- * Implements Gemini 3.1 Ultra integration with:
+ * Implements Claude 3.5 Sonnet integration with:
  * - Socratic Master Prompt system
  * - Structured output enforcement (JSON schema)
- * - Context caching for 90% token cost reduction
  * - Input sanitization for security
  * 
- * COST OPTIMIZATION:
- * - First turn: ~2000-5000 tokens (full system prompt + proof_events)
- * - Subsequent turns: 90% discount on cached tokens
- * - Cache TTL: 5 minutes (sufficient for typical session)
- * - Expected savings: 60-70% token cost after first turn
+ * REASONING QUALITY:
+ * - Uses Claude Sonnet for high-quality Socratic synthesis
+ * - Temperature: 0.7 for creative concept connections
+ * - Max tokens: 2048 for detailed reasoning
  */
 
-import { GoogleGenerativeAI, GenerativeModel } from '@google/generative-ai';
+import Anthropic from '@anthropic-ai/sdk';
 import { buildSocraticSystemPrompt, formatProofEventsContext } from './socratic-prompt';
-import { zodToJsonSchema, parseSocraticResponse, SocraticResponse } from './schemas';
+import { parseSocraticResponse, SocraticResponse } from './schemas';
 import { sanitizeStudentInput } from './sanitize-input';
 
-// Initialize Google AI client
-const genAI = new GoogleGenerativeAI(process.env.GOOGLE_AI_API_KEY!);
+// Initialize Anthropic client
+const anthropic = new Anthropic({
+  apiKey: process.env.ANTHROPIC_API_KEY!,
+});
 
 interface Topic {
   id: string;
@@ -40,17 +40,15 @@ interface Message {
 }
 
 /**
- * Loom Gemini Client
+ * Loom Anthropic Client
  * 
- * Manages Gemini API interactions for Socratic dialogue with caching.
+ * Manages Anthropic Claude API interactions for Socratic dialogue.
  */
 export class LoomGeminiClient {
-  private model: GenerativeModel;
-  private cachedContent: any | null = null; // Using any for CachedContent type
   private systemPrompt: string;
   
   /**
-   * Initialize Loom Gemini Client
+   * Initialize Loom Anthropic Client
    * 
    * @param topics - Selected topics for synthesis
    * @param proofEvents - Historical learning context
@@ -59,55 +57,22 @@ export class LoomGeminiClient {
     // Build system prompt with proof events context
     const proofEventsContext = formatProofEventsContext(proofEvents);
     this.systemPrompt = buildSocraticSystemPrompt(topics, proofEventsContext);
-    
-    // Initialize model with structured output
-    this.model = genAI.getGenerativeModel({
-      model: 'gemini-1.5-pro', // Using Pro as Ultra placeholder
-      generationConfig: {
-        temperature: 0.3, // Lower for consistent Socratic behavior
-        topP: 0.8,
-        topK: 40,
-        maxOutputTokens: 1024,
-        responseMimeType: 'application/json', // Enforce JSON output
-        // Type assertion bypasses Google's strict enum format requirement
-        responseSchema: zodToJsonSchema(require('./schemas').SocraticResponseSchema) as any,
-      },
-      systemInstruction: this.systemPrompt,
-    });
   }
   
   /**
-   * Initialize context caching
+   * Initialize context caching (no-op for Anthropic)
    * 
-   * Caches the system prompt + proof_events context for token cost optimization.
-   * Should be called before first sparring turn.
-   * 
-   * NOTE: Gemini's caching API is still in preview. This is a placeholder
-   * implementation that will be activated when the API is stable.
+   * Kept for API compatibility with existing code.
    */
   async initializeCache(): Promise<void> {
-    try {
-      // TODO: Implement actual caching when Gemini API supports it
-      // For now, this is a no-op placeholder
-      
-      // Future implementation:
-      // this.cachedContent = await genAI.cacheContent({
-      //   model: 'gemini-1.5-pro',
-      //   systemInstruction: this.systemPrompt,
-      //   ttl: 300, // 5 minutes
-      // });
-      
-      console.log('[LoomGemini] Context caching initialized (placeholder)');
-    } catch (error) {
-      console.warn('[LoomGemini] Context caching not available:', error);
-      // Continue without caching - not critical for functionality
-    }
+    // No-op: Anthropic handles caching automatically with prompt caching
+    console.log('[LoomAnthropic] Client initialized');
   }
   
   /**
    * Generate Socratic response with retry logic
    * 
-   * Sends student message to Gemini and returns structured Socratic response.
+   * Sends student message to Claude and returns structured Socratic response.
    * Implements automatic retry for malformed JSON and exponential backoff for rate limits.
    * 
    * @param studentMessage - Student's response to previous question
@@ -126,37 +91,40 @@ export class LoomGeminiClient {
     // Sanitize student input
     const sanitizedMessage = sanitizeStudentInput(studentMessage);
     
-    // Build conversation history for Gemini
-    const geminiMessages = [
+    // Build conversation history for Claude
+    const claudeMessages: Anthropic.MessageParam[] = [
       ...transcript.map(msg => ({
-        role: msg.role === 'student' ? 'user' : 'model',
-        parts: [{ text: msg.content }],
+        role: (msg.role === 'student' ? 'user' : 'assistant') as 'user' | 'assistant',
+        content: msg.content,
       })),
       {
         role: 'user',
-        parts: [{ text: sanitizedMessage }],
+        content: sanitizedMessage,
       },
     ];
     
     try {
       // Generate response with structured output
-      const result = await this.model.generateContent({
-        contents: geminiMessages,
+      const response = await anthropic.messages.create({
+        model: 'claude-sonnet-4-5',
+        max_tokens: 2048,
+        temperature: 0.7,
+        system: this.systemPrompt + '\n\nYou MUST respond with valid JSON matching this schema: {"socratic_response": string, "crystallized_thread": string | null, "loom_status": "SPARRING" | "THESIS_ACHIEVED", "cryptographic_proof_of_cognition": string | null}',
+        messages: claudeMessages,
       });
       
-      const response = result.response;
-      const text = response.text();
+      const text = response.content[0].type === 'text' ? response.content[0].text : '';
       
       // Parse JSON response
       let jsonResponse;
       try {
         jsonResponse = JSON.parse(text);
       } catch (parseError) {
-        console.error('[LoomGemini] JSON parse error:', parseError);
+        console.error('[LoomAnthropic] JSON parse error:', parseError);
         
         // Retry on malformed JSON (up to MAX_RETRIES)
         if (retryCount < MAX_RETRIES) {
-          console.log(`[LoomGemini] Retrying due to malformed JSON (attempt ${retryCount + 1}/${MAX_RETRIES})`);
+          console.log(`[LoomAnthropic] Retrying due to malformed JSON (attempt ${retryCount + 1}/${MAX_RETRIES})`);
           await this.delay(BASE_DELAY * Math.pow(2, retryCount));
           return this.generateSocraticResponse(studentMessage, transcript, retryCount + 1);
         }
@@ -170,13 +138,13 @@ export class LoomGeminiClient {
       return validatedResponse;
       
     } catch (error: any) {
-      console.error('[LoomGemini] Error generating response:', error);
+      console.error('[LoomAnthropic] Error generating response:', error);
       
       // Handle rate limit errors (429)
       if (error?.status === 429 || error?.message?.includes('rate limit')) {
         if (retryCount < MAX_RETRIES) {
           const delay = BASE_DELAY * Math.pow(2, retryCount);
-          console.log(`[LoomGemini] Rate limit hit, retrying in ${delay}ms (attempt ${retryCount + 1}/${MAX_RETRIES})`);
+          console.log(`[LoomAnthropic] Rate limit hit, retrying in ${delay}ms (attempt ${retryCount + 1}/${MAX_RETRIES})`);
           await this.delay(delay);
           return this.generateSocraticResponse(studentMessage, transcript, retryCount + 1);
         }
@@ -190,11 +158,11 @@ export class LoomGeminiClient {
       
       // Handle validation errors
       if (error?.name === 'ZodError') {
-        console.error('[LoomGemini] Validation error:', error);
+        console.error('[LoomAnthropic] Validation error:', error);
         
         // Retry on validation errors (up to MAX_RETRIES)
         if (retryCount < MAX_RETRIES) {
-          console.log(`[LoomGemini] Retrying due to validation error (attempt ${retryCount + 1}/${MAX_RETRIES})`);
+          console.log(`[LoomAnthropic] Retrying due to validation error (attempt ${retryCount + 1}/${MAX_RETRIES})`);
           await this.delay(BASE_DELAY * Math.pow(2, retryCount));
           return this.generateSocraticResponse(studentMessage, transcript, retryCount + 1);
         }
