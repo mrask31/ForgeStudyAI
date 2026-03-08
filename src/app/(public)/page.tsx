@@ -132,41 +132,12 @@ export default function HomePage() {
             </button>
           </div>
 
-          {/* Hero Visual - Video or Placeholder */}
-          <div className="w-full max-w-6xl h-[600px] mx-auto mt-12 rounded-2xl border border-slate-800 shadow-[0_0_50px_rgba(99,102,241,0.2)] bg-slate-900/50 backdrop-blur-md overflow-hidden">
-            {/* 
-              TO INTEGRATE YOUR RECORDED VIDEO:
-              1. Record the Galaxy UI following the shot list (Pan → Weave → Focus Panel)
-              2. Compress the video for web (H.264 MP4 + WebM for compatibility)
-              3. Place video files in: public/hero-galaxy-demo.mp4 and public/hero-galaxy-demo.webm
-              4. Uncomment the <video> tag below and remove the placeholder div
-            */}
-            
-            {/* VIDEO INTEGRATION (uncomment when ready): */}
-            {/* <video 
-              autoPlay 
-              loop 
-              muted 
-              playsInline
-              className="w-full h-full object-cover"
-              poster="/hero-galaxy-poster.jpg"
-            >
-              <source src="/hero-galaxy-demo.webm" type="video/webm" />
-              <source src="/hero-galaxy-demo.mp4" type="video/mp4" />
-              Your browser does not support the video tag.
-            </video> */}
-            
-            {/* PLACEHOLDER (remove when video is ready): */}
-            <div className="w-full h-full flex items-center justify-center">
-              <div className="text-center">
-                <Sparkles className="w-16 h-16 text-indigo-400 mx-auto mb-4" />
-                <p className="text-slate-400 text-lg font-semibold">Galaxy UI Sizzle Reel</p>
-                <p className="text-slate-500 text-sm mt-2">Record: Pan → Weave Mode → Focus Panel</p>
-                <p className="text-slate-600 text-xs mt-4 max-w-md mx-auto">
-                  Use OBS Studio or QuickTime to capture 1080p+ footage.<br />
-                  Compress with HandBrake (H.264, CRF 23) for web delivery.
-                </p>
-              </div>
+          {/* Hero Visual - Video Placeholder */}
+          <div className="w-full max-w-6xl min-h-[400px] mx-auto mt-12 rounded-2xl border border-indigo-500/20 shadow-[0_0_50px_rgba(99,102,241,0.2)] bg-slate-900/60 backdrop-blur overflow-hidden flex items-center justify-center">
+            <div className="text-center px-8 py-16">
+              <Sparkles className="w-16 h-16 text-indigo-400 mx-auto mb-6" />
+              <h3 className="text-2xl font-bold text-slate-100 mb-3">See ForgeStudy in Action</h3>
+              <p className="text-slate-400 text-lg">Full walkthrough coming soon</p>
             </div>
           </div>
         </div>
@@ -389,27 +360,6 @@ export default function HomePage() {
 
         <Accordion items={faqItems} />
       </section>
-
-      {/* Footer */}
-      <footer className="border-t border-slate-900 bg-slate-950 py-12">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex flex-col md:flex-row items-center justify-between gap-4">
-            <div className="flex items-center gap-2">
-              <Sparkles className="w-5 h-5 text-indigo-400" />
-              <span className="text-lg font-bold text-slate-100">ForgeStudy</span>
-            </div>
-            <div className="flex items-center gap-6 text-sm text-slate-400">
-              <Link href="/privacy" className="hover:text-slate-200 transition-colors">
-                Privacy
-              </Link>
-              <Link href="/terms" className="hover:text-slate-200 transition-colors">
-                Terms
-              </Link>
-              <span>© 2024 ForgeStudy</span>
-            </div>
-          </div>
-        </div>
-      </footer>
     </div>
   )
 }
