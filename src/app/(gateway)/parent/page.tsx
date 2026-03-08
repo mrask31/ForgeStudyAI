@@ -357,9 +357,37 @@ export default function ParentDashboardPage() {
   }, [subscriptionData])
 
   const canAddProfile = useMemo(() => {
-    if (!subscriptionData) return false
-    return subscriptionData.planType === 'family' && profiles.length < 4
-  }, [subscriptionData, profiles.length])
+    // Trial users can add up to 2 profiles
+    if (isTrialing) {
+      return profiles.length < 2
+    }
+    
+    // Individual plan users can add 1 profile
+    if (subscriptionData?.planType === 'individual') {
+      return profiles.length < 1
+    }
+    
+    // Family plan users can add up to 4 profiles
+    if (subscriptionData?.planType === 'family') {
+      return profiles.length < 4
+    }
+    
+    // No subscription or expired - cannot add profiles
+    return false
+  }, [subscriptionData, profiles.length, isTrialing])
+
+  const profileLimitMessage = useMemo(() => {
+    if (isTrialing && profiles.length >= 2) {
+      return 'Trial limit reached (2 profiles). Upgrade to add more.'
+    }
+    if (subscriptionData?.planType === 'individual' && profiles.length >= 1) {
+      return 'Individual plan limit reached. Upgrade to Family plan for up to 4 profiles.'
+    }
+    if (subscriptionData?.planType === 'family' && profiles.length >= 4) {
+      return 'Family plan limit reached. Remove a profile to add another.'
+    }
+    return 'Upgrade to add student profiles.'
+  }, [subscriptionData, profiles.length, isTrialing])
 
   if (hasPin === null) {
     return (
@@ -494,7 +522,7 @@ export default function ParentDashboardPage() {
               <h2 className="text-lg font-semibold text-slate-100">Subscription</h2>
             </div>
             <p className="text-sm text-slate-400 mb-2">Status</p>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 mb-3">
               {subscriptionData?.subscription?.status === 'active' || subscriptionData?.subscription?.status === 'trialing' || isTrialing ? (
                 <CheckCircle className="w-4 h-4 text-indigo-400" />
               ) : (
@@ -506,62 +534,64 @@ export default function ParentDashboardPage() {
                 {subscriptionLabel}
               </span>
             </div>
-            <button
-              onClick={loadSubscription}
-              className="mt-3 text-xs font-semibold text-indigo-400 hover:text-indigo-300"
-              disabled={isCanceling}
-            >
-              Refresh status
-            </button>
-            {isTrialing && (
-              <Link
-                href="/checkout"
-                className="mt-4 inline-flex items-center justify-center rounded-lg bg-indigo-600 hover:bg-indigo-700 px-4 py-2 text-sm font-semibold text-white transition-colors"
-              >
-                Upgrade to keep your Galaxy →
-              </Link>
-            )}
-            {subscriptionData?.subscription?.trialEndDate && !isTrialing && (
-              <p className="text-xs text-slate-400 mt-2">
-                Trial ends {subscriptionData.subscription.trialEndDate}
-              </p>
-            )}
-            {subscriptionData?.subscription?.cancelAtPeriodEnd && (
-              <p className="text-xs text-amber-400 mt-2">
-                Subscription will cancel at end of billing period.
-              </p>
-            )}
-            {isCancelable && (
+            <div className="space-y-2">
               <button
-                onClick={async () => {
-                  if (!confirm('Cancel subscription at period end?')) return
-                  setIsCanceling(true)
-                  try {
-                    const res = await fetch('/api/stripe/cancel-subscription', {
-                      method: 'POST',
-                      credentials: 'include',
-                    })
-                    if (!res.ok) {
-                      const error = await res.json()
-                      throw new Error(error.error || 'Failed to cancel subscription')
-                    }
-                    const subRes = await fetch('/api/stripe/subscription', { credentials: 'include' })
-                    if (subRes.ok) {
-                      const data = await subRes.json()
-                      setSubscriptionData(data)
-                    }
-                  } catch (error) {
-                    console.error('[Parent Dashboard] Failed to cancel subscription:', error)
-                  } finally {
-                    setIsCanceling(false)
-                  }
-                }}
-                className="mt-4 inline-flex items-center justify-center rounded-xl bg-transparent border border-red-500/50 px-4 py-2 text-xs font-semibold text-red-400 hover:bg-red-500/10"
+                onClick={loadSubscription}
+                className="text-xs font-semibold text-indigo-400 hover:text-indigo-300 block"
                 disabled={isCanceling}
               >
-                {isCanceling ? 'Canceling…' : 'Cancel subscription'}
+                Refresh status
               </button>
-            )}
+              {isTrialing && (
+                <Link
+                  href="/checkout"
+                  className="w-full inline-flex items-center justify-center rounded-lg bg-indigo-600 hover:bg-indigo-700 px-4 py-2 text-sm font-semibold text-white transition-colors"
+                >
+                  Upgrade to keep your Galaxy →
+                </Link>
+              )}
+              {subscriptionData?.subscription?.trialEndDate && !isTrialing && (
+                <p className="text-xs text-slate-400">
+                  Trial ends {subscriptionData.subscription.trialEndDate}
+                </p>
+              )}
+              {subscriptionData?.subscription?.cancelAtPeriodEnd && (
+                <p className="text-xs text-amber-400">
+                  Subscription will cancel at end of billing period.
+                </p>
+              )}
+              {isCancelable && (
+                <button
+                  onClick={async () => {
+                    if (!confirm('Cancel subscription at period end?')) return
+                    setIsCanceling(true)
+                    try {
+                      const res = await fetch('/api/stripe/cancel-subscription', {
+                        method: 'POST',
+                        credentials: 'include',
+                      })
+                      if (!res.ok) {
+                        const error = await res.json()
+                        throw new Error(error.error || 'Failed to cancel subscription')
+                      }
+                      const subRes = await fetch('/api/stripe/subscription', { credentials: 'include' })
+                      if (subRes.ok) {
+                        const data = await subRes.json()
+                        setSubscriptionData(data)
+                      }
+                    } catch (error) {
+                      console.error('[Parent Dashboard] Failed to cancel subscription:', error)
+                    } finally {
+                      setIsCanceling(false)
+                    }
+                  }}
+                  className="w-full inline-flex items-center justify-center rounded-xl bg-transparent border border-red-500/50 px-4 py-2 text-xs font-semibold text-red-400 hover:bg-red-500/10"
+                  disabled={isCanceling}
+                >
+                  {isCanceling ? 'Canceling…' : 'Cancel subscription'}
+                </button>
+              )}
+            </div>
           </div>
 
           <div className="rounded-2xl border border-slate-700/50 bg-slate-900/60 backdrop-blur-xl p-6 shadow-xl">
@@ -584,11 +614,9 @@ export default function ParentDashboardPage() {
               ) : (
                 <div className="space-y-2">
                   <div className="rounded-xl border border-slate-700 bg-slate-950/50 px-4 py-2 text-xs text-slate-400">
-                    {subscriptionData?.planType === 'family'
-                      ? 'Family plan limit reached. Remove a profile to add another.'
-                      : 'Upgrade to the Family plan to add more profiles.'}
+                    {profileLimitMessage}
                   </div>
-                  {subscriptionData?.planType !== 'family' && (
+                  {!isTrialing && subscriptionData?.planType !== 'family' && (
                     <button
                       onClick={async () => {
                         try {
