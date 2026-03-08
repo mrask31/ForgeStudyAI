@@ -179,7 +179,7 @@ export default function LoginClient() {
           type: 'success' 
         })
         if (!redirectParam) {
-          setRedirect('/checkout')
+          setRedirect('/parent')
         }
       } else if (verified === 'true' && !verifiedEmail) {
         const storedEmail = window.localStorage.getItem('forgestudy-pending-email')
@@ -191,7 +191,7 @@ export default function LoginClient() {
             type: 'success' 
           })
           if (!redirectParam) {
-            setRedirect('/checkout')
+            setRedirect('/parent')
           }
         }
       }

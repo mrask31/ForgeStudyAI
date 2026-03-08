@@ -67,14 +67,14 @@ export async function GET(request: Request) {
     }
   )
 
-  // Upsert profile with pending_payment status and onboarding fields
+  // Upsert profile with trialing status (auto-set by database trigger)
   // Use onConflict to handle existing profiles gracefully
   let profile: any = null
   const { data: profileData, error: profileError } = await adminClient
     .from('profiles')
     .upsert({
       id: user.id,
-      subscription_status: 'pending_payment',
+      // Note: subscription_status and trial_ends_at are set by handle_new_user() trigger
       // Onboarding fields (will be ignored if columns don't exist yet)
       onboarding_completed: false,
       onboarding_step: 0,
@@ -94,7 +94,6 @@ export async function GET(request: Request) {
         .from('profiles')
         .upsert({
           id: user.id,
-          subscription_status: 'pending_payment',
         }, {
           onConflict: 'id',
           ignoreDuplicates: false
@@ -125,6 +124,8 @@ export async function GET(request: Request) {
 
   // Determine redirect based on subscription status and plan parameter
   const subscriptionStatus = profile?.subscription_status
+  const trialEndsAt = profile?.trial_ends_at
+  const isTrialActive = trialEndsAt && new Date(trialEndsAt) > new Date()
 
   // If plan parameter is present, redirect to checkout with plan
   if (plan) {
@@ -133,11 +134,11 @@ export async function GET(request: Request) {
     return NextResponse.redirect(checkoutUrl)
   }
 
-  // If no access, redirect to checkout
-  if (!hasSubscriptionAccess(subscriptionStatus)) {
-    return NextResponse.redirect(`${appUrl}/checkout`)
+  // If trial is active or has subscription access, redirect to parent dashboard
+  if (isTrialActive || hasSubscriptionAccess(subscriptionStatus)) {
+    return NextResponse.redirect(`${appUrl}/parent`)
   }
 
-  // If has access, redirect to primary app route (profiles page for ForgeStudy)
-  return NextResponse.redirect(`${appUrl}/profiles`)
+  // If no access and no trial, redirect to checkout
+  return NextResponse.redirect(`${appUrl}/checkout`)
 }

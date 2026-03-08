@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import Link from 'next/link'
 import { Shield, Lock, CreditCard, Users, CheckCircle, XCircle, Plus } from 'lucide-react'
+import { createBrowserClient } from '@supabase/ssr'
 import {
   getParentPinStatus,
   setParentPin,
@@ -22,6 +23,8 @@ type SubscriptionData = {
     cancelAtPeriodEnd: boolean
   } | null
   status: string
+  trialEndsAt?: string | null // From profiles table
+  trialDaysLeft?: number
 }
 
 const PIN_UNLOCK_KEY = 'parent_pin_unlocked'
@@ -139,6 +142,15 @@ export default function ParentDashboardPage() {
   const [studentPinError, setStudentPinError] = useState<string | null>(null)
   const [isStudentPinBusy, setIsStudentPinBusy] = useState(false)
 
+  const supabase = useMemo(
+    () =>
+      createBrowserClient(
+        process.env.NEXT_PUBLIC_SUPABASE_URL!,
+        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+      ),
+    []
+  )
+
   useEffect(() => {
     const loadStatus = async () => {
       try {
@@ -166,6 +178,31 @@ export default function ParentDashboardPage() {
       if (res.ok) {
         const data = await res.json()
         setSubscriptionData(data)
+      }
+      
+      // Also fetch trial data from profiles table
+      const { data: { user } } = await supabase.auth.getUser()
+      if (user) {
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('trial_ends_at, subscription_status')
+          .eq('id', user.id)
+          .single()
+        
+        if (profile?.trial_ends_at) {
+          const trialEnd = new Date(profile.trial_ends_at)
+          const now = new Date()
+          const daysLeft = Math.ceil((trialEnd.getTime() - now.getTime()) / (1000 * 60 * 60 * 24))
+          
+          setSubscriptionData(prev => ({
+            ...prev,
+            trialEndsAt: profile.trial_ends_at,
+            trialDaysLeft: Math.max(0, daysLeft),
+            status: profile.subscription_status || prev?.status || 'none',
+            subscription: prev?.subscription || null,
+            planType: prev?.planType
+          }))
+        }
       }
     } catch (error) {
       console.error('[Parent Dashboard] Failed to load subscription:', error)
@@ -283,11 +320,32 @@ export default function ParentDashboardPage() {
   }
 
   const subscriptionLabel = useMemo(() => {
+    // Check for trial from profiles table first
+    if (subscriptionData?.trialEndsAt && subscriptionData?.status === 'trialing') {
+      const daysLeft = subscriptionData.trialDaysLeft ?? 0
+      if (daysLeft > 0) {
+        return `Free Trial — ${daysLeft} day${daysLeft === 1 ? '' : 's'} remaining`
+      } else {
+        return 'Trial Expired'
+      }
+    }
+    
+    // Fall back to Stripe subscription status
     if (!subscriptionData?.subscription) return 'Free Preview'
     if (subscriptionData.subscription.status === 'trialing') return '7-Day Free Trial'
     if (subscriptionData.subscription.status === 'active') return 'Active'
     if (subscriptionData.subscription.status === 'canceled') return 'Canceled'
     return subscriptionData.status || 'Free Preview'
+  }, [subscriptionData])
+
+  const isTrialing = useMemo(() => {
+    return subscriptionData?.status === 'trialing' && 
+           subscriptionData?.trialEndsAt && 
+           new Date(subscriptionData.trialEndsAt) > new Date()
+  }, [subscriptionData])
+
+  const trialDaysLeft = useMemo(() => {
+    return subscriptionData?.trialDaysLeft ?? 0
   }, [subscriptionData])
 
   const isCancelable = useMemo(() => {
@@ -437,12 +495,16 @@ export default function ParentDashboardPage() {
             </div>
             <p className="text-sm text-slate-400 mb-2">Status</p>
             <div className="flex items-center gap-2">
-              {subscriptionData?.subscription?.status === 'active' || subscriptionData?.subscription?.status === 'trialing' ? (
+              {subscriptionData?.subscription?.status === 'active' || subscriptionData?.subscription?.status === 'trialing' || isTrialing ? (
                 <CheckCircle className="w-4 h-4 text-indigo-400" />
               ) : (
                 <XCircle className="w-4 h-4 text-slate-500" />
               )}
-              <span className="text-sm font-semibold text-slate-100">{subscriptionLabel}</span>
+              <span className={`text-sm font-semibold ${
+                isTrialing && trialDaysLeft <= 3 ? 'text-amber-400' : 'text-slate-100'
+              }`}>
+                {subscriptionLabel}
+              </span>
             </div>
             <button
               onClick={loadSubscription}
@@ -451,7 +513,15 @@ export default function ParentDashboardPage() {
             >
               Refresh status
             </button>
-            {subscriptionData?.subscription?.trialEndDate && (
+            {isTrialing && (
+              <Link
+                href="/checkout"
+                className="mt-4 inline-flex items-center justify-center rounded-lg bg-indigo-600 hover:bg-indigo-700 px-4 py-2 text-sm font-semibold text-white transition-colors"
+              >
+                Upgrade to keep your Galaxy →
+              </Link>
+            )}
+            {subscriptionData?.subscription?.trialEndDate && !isTrialing && (
               <p className="text-xs text-slate-400 mt-2">
                 Trial ends {subscriptionData.subscription.trialEndDate}
               </p>

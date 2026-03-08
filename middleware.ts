@@ -163,6 +163,7 @@ export async function middleware(request: NextRequest) {
       '/profiles',
       '/profiles/',
       '/post-login',
+      '/parent',
     ]
     const isAuthOnlyRoute = authOnlyRoutes.some(route => 
       route.endsWith('/') ? pathname.startsWith(route) : pathname === route

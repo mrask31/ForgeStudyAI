@@ -71,7 +71,7 @@ export default function SignupClient() {
     const { data: { session } } = await supabase.auth.getSession()
 
     if (session?.user) {
-      console.log('[Signup] Session found after verification, redirecting to /checkout')
+      console.log('[Signup] Session found after verification, redirecting to /parent')
       setIsVerifying(true)
       setMessage({ 
         text: 'Email verified! Redirecting...', 
@@ -79,7 +79,7 @@ export default function SignupClient() {
       })
 
       setTimeout(() => {
-        router.replace('/checkout')
+        router.replace('/parent')
       }, 1000)
     } else {
       console.log('[Signup] No session yet, waiting for verification...')
@@ -95,7 +95,7 @@ export default function SignupClient() {
     // Listen for auth state changes (works for same device/tab)
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
       if (event === 'SIGNED_IN' && session?.user) {
-        console.log('[Signup] Auth state change: SIGNED_IN, redirecting to /checkout')
+        console.log('[Signup] Auth state change: SIGNED_IN, redirecting to /parent')
         await checkAuthAndRedirect()
       }
     })
@@ -242,8 +242,8 @@ export default function SignupClient() {
         return
       }
 
-      console.log('[Signup] Signup successful, redirecting to /checkout')
-      router.replace('/checkout')
+      console.log('[Signup] Signup successful, redirecting to /parent')
+      router.replace('/parent')
     } catch (error: any) {
       // Handle other errors
       const errorMessage = error.message || 'An error occurred. Please try again.'
@@ -393,10 +393,10 @@ export default function SignupClient() {
                       Check your email to continue
                     </h1>
                     <div className="inline-flex items-center justify-center px-3 py-1 bg-amber-900/20 border border-amber-700/50 rounded-full text-xs font-semibold text-amber-400 mb-3">
-                      Verify to continue to checkout
+                      Verify to continue setup
                     </div>
                     <p className="text-base text-slate-400 mb-2">
-                      Verify your email to unlock checkout. We sent a confirmation link to
+                      Verify your email to start your free trial. We sent a confirmation link to
                     </p>
                     <p className="text-base font-semibold text-indigo-400 mb-6 break-all">
                       {email}
@@ -428,7 +428,7 @@ export default function SignupClient() {
                     )}
                     <div className="flex items-center justify-center gap-2 text-sm text-slate-500 mb-4">
                       <Loader2 className="h-4 w-4 animate-spin text-indigo-400" />
-                      <span>Waiting for verification, then sending you to checkout...</span>
+                      <span>Waiting for verification, then starting your free trial...</span>
                     </div>
                     <div className="flex flex-col gap-3">
                       <button
@@ -440,7 +440,7 @@ export default function SignupClient() {
                           const storedEmail = localStorage.getItem('forgestudy-pending-email')
                           const loginUrl = new URL('/login', window.location.origin)
                           loginUrl.searchParams.set('verified', 'true')
-                          loginUrl.searchParams.set('redirect', '/checkout')
+                          loginUrl.searchParams.set('redirect', '/parent')
                           if (storedEmail) {
                             loginUrl.searchParams.set('email', storedEmail)
                           }

@@ -41,7 +41,7 @@ export default function ClientCallback() {
         setErrorMessage(error.message || 'Unknown error')
         return
       }
-      router.replace('/checkout')
+      router.replace('/parent')
     }
 
     run()
@@ -71,7 +71,7 @@ export default function ClientCallback() {
               const storedEmail = window.localStorage.getItem('forgestudy-pending-email')
               const loginUrl = new URL('/login', window.location.origin)
               loginUrl.searchParams.set('verified', 'true')
-              loginUrl.searchParams.set('redirect', '/checkout')
+              loginUrl.searchParams.set('redirect', '/parent')
               if (storedEmail) {
                 loginUrl.searchParams.set('email', storedEmail)
               }

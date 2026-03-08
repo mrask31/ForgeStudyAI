@@ -12,7 +12,7 @@ export default async function PostLoginPage() {
 
   const { data: profile, error: profileError } = await supabase
     .from('profiles')
-    .select('subscription_status')
+    .select('subscription_status, trial_ends_at')
     .eq('id', user.id)
     .single()
 
@@ -21,11 +21,15 @@ export default async function PostLoginPage() {
   }
 
   const subscriptionStatus = profile?.subscription_status
+  const trialEndsAt = profile?.trial_ends_at
+  const isTrialActive = trialEndsAt && new Date(trialEndsAt) > new Date()
+  
   const isActive =
     subscriptionStatus === 'active' ||
     subscriptionStatus === 'trialing' ||
     subscriptionStatus === 'past_due' ||
-    subscriptionStatus === 'incomplete'
+    subscriptionStatus === 'incomplete' ||
+    isTrialActive
 
   if (!isActive) {
     redirect('/checkout')
