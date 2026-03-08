@@ -27,6 +27,20 @@ type SubscriptionData = {
 const PIN_UNLOCK_KEY = 'parent_pin_unlocked'
 const PIN_UNLOCK_TTL_MS = 30 * 60 * 1000
 
+// Helper function to format grade band display
+function formatGradeBand(gradeBand: string): string {
+  switch (gradeBand) {
+    case 'middle':
+      return 'Middle School'
+    case 'high':
+      return 'High School'
+    case 'elementary':
+      return 'Elementary'
+    default:
+      return gradeBand
+  }
+}
+
 // Weekly Summary Component (Feature C: Parent Actionables)
 function WeeklySummary({ profiles }: { profiles: StudentProfile[] }) {
   const [insights, setInsights] = useState<Array<{ concept: string; sentence: string }>>([]);
@@ -130,16 +144,8 @@ export default function ParentDashboardPage() {
       try {
         const status = await getParentPinStatus()
         setHasPin(status.hasPin)
-
-        const stored = sessionStorage.getItem(PIN_UNLOCK_KEY)
-        if (stored && status.hasPin) {
-          const parsed = JSON.parse(stored) as { timestamp: number }
-          if (Date.now() - parsed.timestamp < PIN_UNLOCK_TTL_MS) {
-            setIsUnlocked(true)
-          } else {
-            sessionStorage.removeItem(PIN_UNLOCK_KEY)
-          }
-        }
+        // PIN auth state is intentionally NOT restored from sessionStorage
+        // User must re-enter PIN every time they visit /parent
       } catch (error) {
         console.error('[Parent Dashboard] Failed to load PIN status:', error)
         setHasPin(false)
@@ -147,6 +153,11 @@ export default function ParentDashboardPage() {
     }
 
     loadStatus()
+
+    // Cleanup: Clear PIN unlock state when component unmounts (user navigates away)
+    return () => {
+      sessionStorage.removeItem(PIN_UNLOCK_KEY)
+    }
   }, [])
 
   const loadSubscription = async () => {
@@ -178,6 +189,7 @@ export default function ParentDashboardPage() {
 
   const unlockSession = () => {
     setIsUnlocked(true)
+    // Note: sessionStorage is used only for within-session state, cleared on unmount
     sessionStorage.setItem(PIN_UNLOCK_KEY, JSON.stringify({ timestamp: Date.now() }))
   }
 
@@ -305,8 +317,8 @@ export default function ParentDashboardPage() {
         <div className="max-w-xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
           <div className="bg-slate-900/80 backdrop-blur-xl border border-slate-800 rounded-2xl p-8 shadow-xl">
             <div className="flex items-center gap-3 mb-4">
-              <div className="w-10 h-10 rounded-2xl bg-emerald-900/50 flex items-center justify-center">
-                <Shield className="w-5 h-5 text-emerald-400" />
+              <div className="w-10 h-10 rounded-2xl bg-indigo-900/50 flex items-center justify-center">
+                <Shield className="w-5 h-5 text-indigo-400" />
               </div>
               <div>
                 <h1 className="text-2xl font-semibold text-slate-100">Set parent PIN</h1>
@@ -320,7 +332,7 @@ export default function ParentDashboardPage() {
                 maxLength={4}
                 value={pinValue}
                 onChange={(e) => setPinValue(e.target.value)}
-                className="w-full rounded-xl border border-slate-700 bg-slate-950/50 px-4 py-3 text-lg tracking-[0.3em] text-center text-slate-100 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
+                className="w-full rounded-xl border border-slate-700 bg-slate-950/50 px-4 py-3 text-lg tracking-[0.3em] text-center text-slate-100 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
                 placeholder="••••"
               />
               {pinError && (
@@ -330,7 +342,7 @@ export default function ParentDashboardPage() {
               )}
               <button
                 type="submit"
-                className="w-full rounded-xl bg-emerald-600 px-4 py-3 text-sm font-semibold text-white hover:bg-emerald-700 disabled:opacity-60"
+                className="w-full rounded-xl bg-indigo-600 px-4 py-3 text-sm font-semibold text-white hover:bg-indigo-700 disabled:opacity-60"
                 disabled={isPinBusy || pinValue.length !== 4}
               >
                 {isPinBusy ? 'Saving…' : 'Set PIN'}
@@ -348,8 +360,8 @@ export default function ParentDashboardPage() {
         <div className="max-w-xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
           <div className="bg-slate-900/80 backdrop-blur-xl border border-slate-800 rounded-2xl p-8 shadow-xl">
             <div className="flex items-center gap-3 mb-4">
-              <div className="w-10 h-10 rounded-2xl bg-emerald-900/50 flex items-center justify-center">
-                <Lock className="w-5 h-5 text-emerald-400" />
+              <div className="w-10 h-10 rounded-2xl bg-indigo-900/50 flex items-center justify-center">
+                <Lock className="w-5 h-5 text-indigo-400" />
               </div>
               <div>
                 <h1 className="text-2xl font-semibold text-slate-100">Parent dashboard</h1>
@@ -363,7 +375,7 @@ export default function ParentDashboardPage() {
                 maxLength={4}
                 value={pinValue}
                 onChange={(e) => setPinValue(e.target.value)}
-                className="w-full rounded-xl border border-slate-700 bg-slate-950/50 px-4 py-3 text-lg tracking-[0.3em] text-center text-slate-100 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
+                className="w-full rounded-xl border border-slate-700 bg-slate-950/50 px-4 py-3 text-lg tracking-[0.3em] text-center text-slate-100 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
                 placeholder="••••"
               />
               {pinError && (
@@ -373,7 +385,7 @@ export default function ParentDashboardPage() {
               )}
               <button
                 type="submit"
-                className="w-full rounded-xl bg-emerald-600 px-4 py-3 text-sm font-semibold text-white hover:bg-emerald-700 disabled:opacity-60"
+                className="w-full rounded-xl bg-indigo-600 px-4 py-3 text-sm font-semibold text-white hover:bg-indigo-700 disabled:opacity-60"
                 disabled={isPinBusy || pinValue.length !== 4}
               >
                 {isPinBusy ? 'Checking…' : 'Unlock'}
@@ -418,15 +430,15 @@ export default function ParentDashboardPage() {
         </div>
 
         <div className="grid gap-6 md:grid-cols-2">
-          <div className="rounded-2xl border border-slate-800 bg-slate-900/80 backdrop-blur-xl p-6 shadow-xl">
+          <div className="rounded-2xl border border-slate-700/50 bg-slate-900/60 backdrop-blur-xl p-6 shadow-xl">
             <div className="flex items-center gap-3 mb-4">
-              <CreditCard className="w-5 h-5 text-emerald-400" />
+              <CreditCard className="w-5 h-5 text-indigo-400" />
               <h2 className="text-lg font-semibold text-slate-100">Subscription</h2>
             </div>
             <p className="text-sm text-slate-400 mb-2">Status</p>
             <div className="flex items-center gap-2">
               {subscriptionData?.subscription?.status === 'active' || subscriptionData?.subscription?.status === 'trialing' ? (
-                <CheckCircle className="w-4 h-4 text-emerald-400" />
+                <CheckCircle className="w-4 h-4 text-indigo-400" />
               ) : (
                 <XCircle className="w-4 h-4 text-slate-500" />
               )}
@@ -434,13 +446,13 @@ export default function ParentDashboardPage() {
             </div>
             <button
               onClick={loadSubscription}
-              className="mt-3 text-xs font-semibold text-emerald-400 hover:text-emerald-300"
+              className="mt-3 text-xs font-semibold text-indigo-400 hover:text-indigo-300"
               disabled={isCanceling}
             >
               Refresh status
             </button>
             {subscriptionData?.subscription?.trialEndDate && (
-              <p className="text-xs text-emerald-400 mt-2">
+              <p className="text-xs text-slate-400 mt-2">
                 Trial ends {subscriptionData.subscription.trialEndDate}
               </p>
             )}
@@ -474,7 +486,7 @@ export default function ParentDashboardPage() {
                     setIsCanceling(false)
                   }
                 }}
-                className="mt-4 inline-flex items-center justify-center rounded-xl border border-rose-800 bg-rose-950/30 px-4 py-2 text-xs font-semibold text-rose-400 hover:bg-rose-950/50"
+                className="mt-4 inline-flex items-center justify-center rounded-xl bg-transparent border border-red-500/50 px-4 py-2 text-xs font-semibold text-red-400 hover:bg-red-500/10"
                 disabled={isCanceling}
               >
                 {isCanceling ? 'Canceling…' : 'Cancel subscription'}
@@ -482,9 +494,9 @@ export default function ParentDashboardPage() {
             )}
           </div>
 
-          <div className="rounded-2xl border border-slate-800 bg-slate-900/80 backdrop-blur-xl p-6 shadow-xl">
+          <div className="rounded-2xl border border-slate-700/50 bg-slate-900/60 backdrop-blur-xl p-6 shadow-xl">
             <div className="flex items-center gap-3 mb-4">
-              <Users className="w-5 h-5 text-emerald-400" />
+              <Users className="w-5 h-5 text-indigo-400" />
               <h2 className="text-lg font-semibold text-slate-100">Profiles</h2>
             </div>
             <p className="text-sm text-slate-400 mb-4">
@@ -494,7 +506,7 @@ export default function ParentDashboardPage() {
               {canAddProfile ? (
                 <Link
                   href="/profiles/new"
-                  className="inline-flex items-center gap-2 rounded-xl bg-emerald-600 px-4 py-2 text-xs font-semibold text-white hover:bg-emerald-700 transition-colors"
+                  className="inline-flex items-center gap-2 rounded-xl bg-indigo-600 px-4 py-2 text-xs font-semibold text-white hover:bg-indigo-700 transition-colors"
                 >
                   <Plus className="w-4 h-4" />
                   Add student profile
@@ -539,7 +551,9 @@ export default function ParentDashboardPage() {
                   <div className="flex items-start justify-between gap-4">
                     <div>
                       <p className="text-sm font-semibold text-slate-100">{profile.display_name}</p>
-                      <p className="text-xs text-slate-400">{profile.grade_band} • {profile.grade || 'Grade not set'}</p>
+                      <p className="text-xs text-slate-400">
+                        {formatGradeBand(profile.grade_band)} • {profile.grade || 'Grade not set'}
+                      </p>
                       <p className="text-xs text-slate-500 mt-1">
                         Interests: {profile.interests || 'None yet'}
                       </p>
@@ -550,7 +564,7 @@ export default function ParentDashboardPage() {
                     <div className="flex flex-col gap-2 text-right">
                       <Link
                         href={`/profiles/${profile.id}/edit`}
-                        className="text-xs font-semibold text-emerald-400 hover:text-emerald-300"
+                        className="text-xs font-semibold text-indigo-400 hover:text-indigo-300"
                       >
                         Edit profile
                       </Link>
@@ -560,7 +574,7 @@ export default function ParentDashboardPage() {
                           setStudentPinValue('')
                           setStudentPinError(null)
                         }}
-                        className="text-xs font-semibold text-slate-400 hover:text-slate-200"
+                        className="text-xs font-semibold text-indigo-400 hover:text-indigo-300"
                       >
                         {profile.has_pin ? 'Reset PIN' : 'Set PIN'}
                       </button>
@@ -605,7 +619,7 @@ export default function ParentDashboardPage() {
                 maxLength={4}
                 value={studentPinValue}
                 onChange={(e) => setStudentPinValue(e.target.value)}
-                className="w-full rounded-xl border border-slate-700 bg-slate-950/50 px-4 py-2 text-lg tracking-[0.3em] text-center text-slate-100 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
+                className="w-full rounded-xl border border-slate-700 bg-slate-950/50 px-4 py-2 text-lg tracking-[0.3em] text-center text-slate-100 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
                 placeholder="••••"
               />
               {studentPinError && (
@@ -624,7 +638,7 @@ export default function ParentDashboardPage() {
                 </button>
                 <button
                   type="submit"
-                  className="flex-1 rounded-xl bg-emerald-600 px-4 py-2 text-sm font-semibold text-white hover:bg-emerald-700 disabled:opacity-60"
+                  className="flex-1 rounded-xl bg-indigo-600 px-4 py-2 text-sm font-semibold text-white hover:bg-indigo-700 disabled:opacity-60"
                   disabled={isStudentPinBusy || studentPinValue.length !== 4}
                 >
                   {isStudentPinBusy ? 'Saving…' : 'Save PIN'}
