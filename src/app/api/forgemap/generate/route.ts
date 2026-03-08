@@ -2,15 +2,14 @@ import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { cookies } from 'next/headers'
 import { createServerClient } from '@supabase/ssr'
-import { openai } from '@ai-sdk/openai'
-import { generateText } from 'ai'
+import Anthropic from '@anthropic-ai/sdk'
 import OpenAI from 'openai'
 
 export const dynamic = 'force-dynamic'
 
 type SupabaseServerClient = ReturnType<typeof createServerClient>
 
-// Lazy-initialize OpenAI client to avoid build-time errors
+// Lazy-initialize OpenAI client for embeddings only
 let openaiClient: OpenAI | null = null
 
 function getOpenAIClient(): OpenAI {
@@ -20,6 +19,18 @@ function getOpenAIClient(): OpenAI {
     })
   }
   return openaiClient
+}
+
+// Lazy-initialize Anthropic client
+let anthropicClient: Anthropic | null = null
+
+function getAnthropicClient(): Anthropic {
+  if (!anthropicClient) {
+    anthropicClient = new Anthropic({
+      apiKey: process.env.ANTHROPIC_API_KEY,
+    })
+  }
+  return anthropicClient
 }
 
 // Helper to generate deterministic message_id
@@ -233,11 +244,15 @@ Rules:
     // The 'ai' package has its own nested @ai-sdk/provider dependency that TypeScript sees as
     // incompatible with the root @ai-sdk/provider used by @ai-sdk/openai, even though they're
     // functionally compatible at runtime. This is a known issue with nested dependencies.
-    const { text: mapMarkdownRaw } = await generateText({
-      model: openai('gpt-4o-mini'),
-      prompt: mapPrompt,
+    const anthropic = getAnthropicClient()
+    const response = await anthropic.messages.create({
+      model: 'claude-haiku-4-5-20251001',
+      max_tokens: 4096,
       temperature: 0.3,
+      messages: [{ role: 'user', content: mapPrompt }],
     })
+
+    const mapMarkdownRaw = response.content[0].type === 'text' ? response.content[0].text : ''
 
     let mapMarkdown = mapMarkdownRaw
     let clarifyingQuestion: string | null = null

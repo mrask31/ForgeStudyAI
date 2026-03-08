@@ -1,8 +1,9 @@
 import OpenAI from 'openai'
+import Anthropic from '@anthropic-ai/sdk'
 import mammoth from 'mammoth'
 import * as pdfjsLib from 'pdfjs-dist/legacy/build/pdf.js'
 
-// Lazy-initialize OpenAI client to avoid build-time errors
+// Lazy-initialize OpenAI client for embeddings only
 let openaiClient: OpenAI | null = null
 
 function getOpenAIClient(): OpenAI {
@@ -12,15 +13,20 @@ function getOpenAIClient(): OpenAI {
   return openaiClient
 }
 
+// Lazy-initialize Anthropic client for vision OCR
+let anthropicClient: Anthropic | null = null
+
+function getAnthropicClient(): Anthropic {
+  if (!anthropicClient) {
+    anthropicClient = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
+  }
+  return anthropicClient
+}
+
 const parseStorageUrl = (fileUrl: string) => {
   const trimmed = fileUrl.replace(/^\/+/, '')
   const [bucket, ...rest] = trimmed.split('/')
   return { bucket, path: rest.join('/') }
-}
-
-const bufferToBase64DataUrl = (buffer: ArrayBuffer, mimeType: string) => {
-  const base64 = Buffer.from(buffer).toString('base64')
-  return `data:${mimeType};base64,${base64}`
 }
 
 const extractPdfText = async (buffer: ArrayBuffer) => {
@@ -39,24 +45,34 @@ const extractPdfText = async (buffer: ArrayBuffer) => {
 }
 
 const extractImageText = async (buffer: ArrayBuffer, mimeType: string) => {
-  const dataUrl = bufferToBase64DataUrl(buffer, mimeType)
-  const response = await getOpenAIClient().chat.completions.create({
-    model: 'gpt-4o-mini',
+  const base64 = Buffer.from(buffer).toString('base64')
+  
+  const anthropic = getAnthropicClient()
+  const response = await anthropic.messages.create({
+    model: 'claude-sonnet-4-5',
+    max_tokens: 4096,
     messages: [
-      {
-        role: 'system',
-        content: 'Extract the full text from the image exactly as written. Return only the text.',
-      },
       {
         role: 'user',
         content: [
-          { type: 'text', text: 'Extract all visible text.' },
-          { type: 'image_url', image_url: { url: dataUrl } },
+          {
+            type: 'image',
+            source: {
+              type: 'base64',
+              media_type: mimeType as 'image/jpeg' | 'image/png' | 'image/gif' | 'image/webp',
+              data: base64,
+            },
+          },
+          {
+            type: 'text',
+            text: 'Extract all visible text from this image exactly as written. Return only the text content, no additional commentary.',
+          },
         ],
       },
     ],
   })
-  return response.choices[0]?.message?.content?.trim() || ''
+  
+  return response.content[0].type === 'text' ? response.content[0].text.trim() : ''
 }
 
 export async function extractTextFromBuffer(buffer: ArrayBuffer, mimeType: string | null) {

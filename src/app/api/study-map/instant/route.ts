@@ -1,12 +1,23 @@
 import { NextResponse } from 'next/server'
 import { createServerClient, type CookieOptions } from '@supabase/ssr'
 import { cookies } from 'next/headers'
-import { generateText } from 'ai'
-import { openai } from '@ai-sdk/openai'
+import Anthropic from '@anthropic-ai/sdk'
 import { extractTextFromBuffer, fetchStorageFile } from '@/lib/server/extractText'
 import { getInstantStudyMapPrompt } from '@/lib/ai/prompts'
 
 export const runtime = 'nodejs'
+
+// Lazy-initialize Anthropic client
+let anthropicClient: Anthropic | null = null
+
+function getAnthropicClient(): Anthropic {
+  if (!anthropicClient) {
+    anthropicClient = new Anthropic({
+      apiKey: process.env.ANTHROPIC_API_KEY,
+    })
+  }
+  return anthropicClient
+}
 
 type SourceItem = {
   id: string
@@ -125,11 +136,15 @@ export async function POST(req: Request) {
       grade,
     })
 
-    const { text: mapMarkdown } = await generateText({
-      model: openai('gpt-4o-mini'),
-      prompt,
+    const anthropic = getAnthropicClient()
+    const response = await anthropic.messages.create({
+      model: 'claude-haiku-4-5-20251001',
+      max_tokens: 4096,
       temperature: 0.3,
+      messages: [{ role: 'user', content: prompt }],
     })
+
+    const mapMarkdown = response.content[0].type === 'text' ? response.content[0].text : ''
 
     const { data: map, error: mapError } = await supabase
       .from('study_maps')

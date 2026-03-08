@@ -528,8 +528,7 @@ Current learning mode: ${effectiveLearningMode.toUpperCase()}
 `;
 
   // Build messages array with binder context handling
-  const coreMessages = convertToCoreMessages(messages);
-  const messagesWithBinder: any[] = [...coreMessages];
+  const messagesWithBinder: any[] = [...messages];
 
   // Add student materials context if available
   if (learningContextResult.hasContext && learningContext && learningContext.trim().length > 0) {
