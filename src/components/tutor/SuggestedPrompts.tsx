@@ -238,7 +238,7 @@ export default function SuggestedPrompts({
               key={index}
               type="button"
               onClick={() => handleClick(prompt)}
-              className="inline-flex items-center rounded-full border border-[var(--tutor-border-subtle)] bg-[var(--tutor-surface)] px-3 h-7 text-xs font-medium text-[var(--tutor-text-main)] transition-all hover:bg-[var(--tutor-primary)]/5 hover:border-[var(--tutor-primary)]/30 hover:text-[var(--tutor-primary)] cursor-pointer whitespace-nowrap flex-shrink-0 shadow-sm"
+              className="inline-flex items-center rounded-full border border-slate-600/50 bg-slate-800/40 px-3 h-7 text-xs font-medium text-slate-300 transition-all hover:border-indigo-500/40 hover:text-slate-100 cursor-pointer whitespace-nowrap flex-shrink-0 shadow-sm"
             >
               {prompt}
             </button>
@@ -257,7 +257,7 @@ export default function SuggestedPrompts({
             key={index}
             type="button"
             onClick={() => handleClick(prompt)}
-            className="inline-flex items-center rounded-full border border-[var(--tutor-border-subtle)] bg-[var(--tutor-surface)] px-4 py-2 text-sm font-medium text-[var(--tutor-text-main)] transition-all hover:bg-[var(--tutor-primary)]/5 hover:border-[var(--tutor-primary)]/30 hover:text-[var(--tutor-primary)] cursor-pointer shadow-sm"
+            className="inline-flex items-center rounded-full border border-slate-600/50 bg-slate-800/40 px-4 py-2 text-sm font-medium text-slate-300 transition-all hover:border-indigo-500/40 hover:text-slate-100 cursor-pointer shadow-sm"
           >
             {prompt}
           </button>

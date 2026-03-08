@@ -59,14 +59,14 @@
     --radius: 0.5rem;
     --font-inter: 'Inter', system-ui, sans-serif;
     
-    /* Tutor-specific color variables */
-    --tutor-bg: #F3F4F6;
-    --tutor-surface: #FFFFFF;
-    --tutor-primary: #0d9488; /* teal-600 - crisp, professional teal */
-    --tutor-primary-strong: #0f766e; /* teal-700 */
-    --tutor-text-main: #111827;
-    --tutor-text-muted: #4B5563;
-    --tutor-border-subtle: #E5E7EB;
+    /* Tutor-specific color variables - Dark Space UI */
+    --tutor-bg: #020617; /* slate-950 */
+    --tutor-surface: rgba(15, 23, 42, 0.6); /* slate-900/60 */
+    --tutor-primary: #6366f1; /* indigo-500 */
+    --tutor-primary-strong: #4f46e5; /* indigo-600 */
+    --tutor-text-main: #f1f5f9; /* slate-100 */
+    --tutor-text-muted: #94a3b8; /* slate-400 */
+    --tutor-border-subtle: rgba(51, 65, 85, 0.5); /* slate-700/50 */
   }
 }
 
