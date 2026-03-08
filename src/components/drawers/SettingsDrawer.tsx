@@ -2,7 +2,7 @@
 
 import { X, Mail, LogOut, Layout, Shield, Settings } from 'lucide-react';
 import { useEffect, useState, useMemo } from 'react';
-import { createBrowserClient } from '@supabase/ssr';
+import { getSupabaseBrowser } from '@/lib/supabase/client';
 import { useRouter } from 'next/navigation';
 import { useDensity } from '@/contexts/DensityContext';
 import { getDensityTokens } from '@/lib/density-tokens';
@@ -21,11 +21,7 @@ export function SettingsDrawer({ isOpen, onClose }: SettingsDrawerProps) {
 
   // Singleton Supabase client - only create once per component instance
   const supabase = useMemo(
-    () =>
-      createBrowserClient(
-        process.env.NEXT_PUBLIC_SUPABASE_URL!,
-        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-      ),
+    () => getSupabaseBrowser(),
     []
   );
 

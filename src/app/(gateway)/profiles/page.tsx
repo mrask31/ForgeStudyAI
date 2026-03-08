@@ -2,7 +2,7 @@
 
 import { Suspense, useEffect, useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
-import { createBrowserClient } from '@supabase/ssr'
+import { getSupabaseBrowser } from '@/lib/supabase/client'
 import { getStudentProfiles, type StudentProfile, deleteStudentProfile } from '@/app/actions/student-profiles'
 import { GraduationCap, BookOpen, Trash2, Plus, User, Lock } from 'lucide-react'
 import Link from 'next/link'
@@ -29,10 +29,7 @@ function ProfilesPageContent() {
   useEffect(() => {
     const loadData = async () => {
       try {
-        const supabase = createBrowserClient(
-          process.env.NEXT_PUBLIC_SUPABASE_URL!,
-          process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-        )
+        const supabase = getSupabaseBrowser()
         const { data: { user } } = await supabase.auth.getUser()
         
         if (!user) {

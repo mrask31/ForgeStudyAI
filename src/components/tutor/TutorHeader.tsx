@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { Plus } from 'lucide-react'
-import { createBrowserClient } from '@supabase/ssr'
+import { getSupabaseBrowser } from '@/lib/supabase/client'
 import { Button } from '@/components/ui/button'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
@@ -43,10 +43,7 @@ export default function TutorHeader({
     const loadActiveExam = async () => {
       if (tutorContext.activeExamId && tutorContext.selectedClassId) {
         try {
-          const supabase = createBrowserClient(
-            process.env.NEXT_PUBLIC_SUPABASE_URL!,
-            process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-          )
+          const supabase = getSupabaseBrowser()
           const { data: { user } } = await supabase.auth.getUser()
           if (user) {
             const exams = await listExams(user.id, tutorContext.selectedClassId)

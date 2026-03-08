@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from 'react'
 import { useParams, useRouter } from 'next/navigation'
-import { createBrowserClient } from '@supabase/ssr'
+import { getSupabaseBrowser } from '@/lib/supabase/client'
 import { GraduationCap, BookOpen } from 'lucide-react'
 import { getStudentProfile, updateStudentProfile, type StudentProfile } from '@/app/actions/student-profiles'
 import { IntegrationPanel } from '@/components/lms/IntegrationPanel'
@@ -24,10 +24,7 @@ export default function EditProfilePage() {
   useEffect(() => {
     const loadProfile = async () => {
       try {
-        const supabase = createBrowserClient(
-          process.env.NEXT_PUBLIC_SUPABASE_URL!,
-          process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-        )
+        const supabase = getSupabaseBrowser()
         const { data: { user } } = await supabase.auth.getUser()
         if (!user) {
           router.push('/login?redirect=/profiles')

@@ -11,7 +11,7 @@ import { listExams, createExam } from '@/lib/api/exams'
 import { listNotebookTopics } from '@/lib/api/notebook'
 import { Calendar, BookOpen, X } from 'lucide-react'
 import { useRouter } from 'next/navigation'
-import { createBrowserClient } from '@supabase/ssr'
+import { getSupabaseBrowser } from '@/lib/supabase/client'
 
 interface ExamModeDialogProps {
   isOpen: boolean
@@ -43,10 +43,7 @@ export default function ExamModeDialog({
   useEffect(() => {
     const getUserId = async () => {
       if (!userId) {
-        const supabase = createBrowserClient(
-          process.env.NEXT_PUBLIC_SUPABASE_URL!,
-          process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-        )
+        const supabase = getSupabaseBrowser()
         const { data: { user } } = await supabase.auth.getUser()
         if (user) {
           setCurrentUserId(user.id)

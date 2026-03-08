@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { createBrowserClient } from '@supabase/ssr'
+import { getSupabaseBrowser } from '@/lib/supabase/client'
 import { useEffect, useState } from 'react'
 
 export default function PublicLayout({ children }: { children: React.ReactNode }) {
@@ -11,10 +11,7 @@ export default function PublicLayout({ children }: { children: React.ReactNode }
   const [hasActiveSubscription, setHasActiveSubscription] = useState(false)
 
   useEffect(() => {
-    const supabase = createBrowserClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-    )
+    const supabase = getSupabaseBrowser()
     
     const checkUserAndSubscription = async () => {
       const { data: { user } } = await supabase.auth.getUser()
@@ -38,7 +35,7 @@ export default function PublicLayout({ children }: { children: React.ReactNode }
 
     checkUserAndSubscription()
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event: any, session: any) => {
       setUser(session?.user ?? null)
       
       // Re-check subscription status when auth state changes

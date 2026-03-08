@@ -1,6 +1,6 @@
 'use client'
 
-import { createBrowserClient } from '@supabase/ssr'
+import { getSupabaseBrowser } from '@/lib/supabase/client'
 import { useEffect, useState } from 'react'
 import { Check, ArrowRight, Sparkles, Shield, Heart } from 'lucide-react'
 import Hero from '@/components/landing/Hero'
@@ -30,15 +30,15 @@ export default function LandingPageContent({ gradeBand }: LandingPageContentProp
     }
     
     try {
-      const supabase = createBrowserClient(supabaseUrl, supabaseAnonKey)
+      const supabase = getSupabaseBrowser()
       
-      supabase.auth.getUser().then(({ data: { user } }) => {
+      supabase.auth.getUser().then(({ data: { user } }: { data: { user: any } }) => {
         setUser(user)
-      }).catch((error) => {
+      }).catch((error: any) => {
         console.error('[Landing Page] Error getting user:', error)
         // Don't break the page if auth check fails
       })
-    } catch (error) {
+    } catch (error: any) {
       console.error('[Landing Page] Error creating Supabase client:', error)
       // Don't break the page if Supabase client creation fails
     }

@@ -15,7 +15,7 @@ import { Checkbox } from '@/components/ui/checkbox'
 import { MessageSquare, FileText, Sparkles, Brain } from 'lucide-react'
 import { listClasses } from '@/lib/api/classes'
 import { StudentClass } from '@/lib/types'
-import { createBrowserClient } from '@supabase/ssr'
+import { getSupabaseBrowser } from '@/lib/supabase/client'
 
 interface Chat {
   id: string
@@ -106,10 +106,7 @@ export default function HistoryButton({ onNavigate }: HistoryButtonProps) {
         }
 
         // Fetch classes to map IDs to names
-        const supabase = createBrowserClient(
-          process.env.NEXT_PUBLIC_SUPABASE_URL!,
-          process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-        )
+        const supabase = getSupabaseBrowser()
         const { data: { user } } = await supabase.auth.getUser()
         if (user) {
           const userClasses = await listClasses(user.id)

@@ -10,7 +10,7 @@ import ChatMessageList, { type ChatMessage } from '@/components/tutor/ChatMessag
 import { useTutorContext } from '@/components/tutor/TutorContext'
 import { listNotebookTopics } from '@/lib/api/notebook'
 import { NotebookTopic } from '@/lib/types'
-import { createBrowserClient } from '@supabase/ssr'
+import { getSupabaseBrowser } from '@/lib/supabase/client'
 
 interface TutorSessionProps {
   sessionId?: string // Optional - will be created on first message if missing
@@ -146,10 +146,7 @@ export default function TutorSession({
       lastLoadedClassIdRef.current = tutorContext.selectedClassId
 
       try {
-        const supabase = createBrowserClient(
-          process.env.NEXT_PUBLIC_SUPABASE_URL!,
-          process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-        )
+        const supabase = getSupabaseBrowser()
         const { data: { user } } = await supabase.auth.getUser()
         if (user) {
           const topics = await listNotebookTopics(user.id, tutorContext.selectedClassId)

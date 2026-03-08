@@ -4,7 +4,7 @@ import { useState, useMemo, useEffect } from 'react'
 import { Search, BookOpen, Bookmark, BookmarkCheck } from 'lucide-react'
 import { VOCABULARY_TERMS } from '@/lib/medicalTerms'
 import { useActiveProfile } from '@/contexts/ActiveProfileContext'
-import { createBrowserClient } from '@supabase/ssr'
+import { getSupabaseBrowser } from '@/lib/supabase/client'
 
 export default function DictionaryPage() {
   const [searchQuery, setSearchQuery] = useState('')
@@ -22,10 +22,7 @@ export default function DictionaryPage() {
         return
       }
       try {
-        const supabase = createBrowserClient(
-          process.env.NEXT_PUBLIC_SUPABASE_URL!,
-          process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-        )
+        const supabase = getSupabaseBrowser()
         const { data: { user } } = await supabase.auth.getUser()
         if (!user) {
           setGradeBand(null)

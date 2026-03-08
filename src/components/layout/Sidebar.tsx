@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { usePathname, useSearchParams } from 'next/navigation'
 import { MessageSquare, FileText, Settings, Activity, GraduationCap, BookOpen, Shield, Sparkles, Folder } from 'lucide-react'
-import { createBrowserClient } from '@supabase/ssr'
+import { getSupabaseBrowser } from '@/lib/supabase/client'
 import HistoryButton from './HistoryButton'
 import { useActiveProfile } from '@/contexts/ActiveProfileContext'
 
@@ -42,10 +42,7 @@ export default function Sidebar({ onNavigate }: SidebarProps = {}) {
     const loadProfile = async () => {
       setIsLoading(true)
       try {
-        const supabase = createBrowserClient(
-          process.env.NEXT_PUBLIC_SUPABASE_URL!,
-          process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-        )
+        const supabase = getSupabaseBrowser()
         const { data: { user } } = await supabase.auth.getUser()
         if (!user) {
           setIsLoading(false)

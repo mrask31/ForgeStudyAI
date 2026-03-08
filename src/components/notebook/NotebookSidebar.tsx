@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { createBrowserClient } from '@supabase/ssr'
+import { getSupabaseBrowser } from '@/lib/supabase/client'
 import { NotebookTopic } from '@/lib/types'
 import { listNotebookTopics, createNotebookTopic } from '@/lib/api/notebook'
 import { Button } from '@/components/ui/button'

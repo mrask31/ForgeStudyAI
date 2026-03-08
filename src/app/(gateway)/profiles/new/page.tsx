@@ -2,7 +2,7 @@
 
 import { useSearchParams, useRouter } from 'next/navigation'
 import { useEffect, useState, Suspense } from 'react'
-import { createBrowserClient } from '@supabase/ssr'
+import { getSupabaseBrowser } from '@/lib/supabase/client'
 import { createStudentProfile, getStudentProfiles } from '@/app/actions/student-profiles'
 import { useActiveProfile } from '@/contexts/ActiveProfileContext'
 import { FAMILY_MAX_PROFILES } from '@/lib/constants'
@@ -33,7 +33,7 @@ function NewProfileContent() {
           return
         }
 
-        const supabase = createBrowserClient(supabaseUrl, supabaseAnonKey)
+        const supabase = getSupabaseBrowser()
         const sessionPromise = supabase.auth.getSession()
         const timeoutPromise = new Promise<null>((resolve) => {
           setTimeout(() => resolve(null), 7000)

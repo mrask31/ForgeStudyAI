@@ -2,7 +2,7 @@
 
 import { FileIcon, ClipboardCheck, Map, Bookmark, Star, AlertCircle, CheckCircle2, FolderPlus } from 'lucide-react'
 import { useTutorContext } from './TutorContext'
-import { createBrowserClient } from '@supabase/ssr'
+import { getSupabaseBrowser } from '@/lib/supabase/client'
 import { setTopicSummaryAndStudiedAt } from '@/lib/api/notebook'
 import clsx from 'clsx'
 import type { TutorEvidenceItem } from './TutorEvidencePanel'
@@ -144,10 +144,7 @@ export default function ChatMessageList({
     }
     
     try {
-      const supabase = createBrowserClient(
-        process.env.NEXT_PUBLIC_SUPABASE_URL!,
-        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-      )
+      const supabase = getSupabaseBrowser()
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) {
         console.error('[ChatMessageList] User not authenticated')

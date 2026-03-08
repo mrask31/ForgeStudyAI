@@ -7,7 +7,7 @@ import { Badge } from '@/components/ui/badge'
 import { BookOpen, Calendar, FileText, GraduationCap, Paperclip, X } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { linkFilesToTopic } from '@/lib/api/notebook'
-import { createBrowserClient } from '@supabase/ssr'
+import { getSupabaseBrowser } from '@/lib/supabase/client'
 import {
   Dialog,
   DialogContent,

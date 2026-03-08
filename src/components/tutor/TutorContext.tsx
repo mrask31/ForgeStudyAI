@@ -5,7 +5,7 @@ import { useSearchParams, useRouter } from 'next/navigation'
 import { StudentClass, NotebookTopic } from '@/lib/types'
 import { listClasses } from '@/lib/api/classes'
 import { listNotebookTopics } from '@/lib/api/notebook'
-import { createBrowserClient } from '@supabase/ssr'
+import { getSupabaseBrowser } from '@/lib/supabase/client'
 
 interface TutorContextState {
   selectedClassId?: string
@@ -49,12 +49,9 @@ export function TutorProvider({ children }: { children: ReactNode }) {
 
   // Get user ID
   useEffect(() => {
-    const supabase = createBrowserClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-    )
+    const supabase = getSupabaseBrowser()
 
-    supabase.auth.getUser().then(({ data: { user } }) => {
+    supabase.auth.getUser().then(({ data: { user } }: { data: { user: any } }) => {
       if (user) {
         setUserId(user.id)
       } else {

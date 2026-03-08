@@ -1,7 +1,7 @@
  'use client'
 
 import { useEffect, useMemo, useState } from 'react'
-import { createBrowserClient } from '@supabase/ssr'
+import { getSupabaseBrowser } from '@/lib/supabase/client'
 import { useRouter, useSearchParams } from 'next/navigation'
 
 export default function ClientCallback() {
@@ -10,14 +10,7 @@ export default function ClientCallback() {
   const [status, setStatus] = useState<'working' | 'error'>('working')
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
 
-  const supabase = useMemo(() => {
-    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
-    const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
-    if (!supabaseUrl || !supabaseAnonKey) {
-      throw new Error('Supabase configuration is missing.')
-    }
-    return createBrowserClient(supabaseUrl, supabaseAnonKey)
-  }, [])
+  const supabase = useMemo(() => getSupabaseBrowser(), [])
 
   useEffect(() => {
     const code = searchParams.get('code')
