@@ -840,7 +840,7 @@ function TutorPageContent() {
       <div className="flex-1 flex flex-col max-w-4xl mx-auto w-full px-3 sm:px-4 md:px-6 min-h-0 overflow-hidden">
         {/* Header - Fixed */}
         {!isSpellingEntryMode && (
-          <div className="flex-shrink-0 bg-slate-50 pt-safe-t pb-2 z-40">
+          <div className="flex-shrink-0 bg-slate-950 pt-safe-t pb-2 z-40">
             <TutorHeader
               strictMode={strictMode}
               onStrictModeChange={handleStrictModeChange}
@@ -900,7 +900,7 @@ function TutorPageContent() {
                 )}
               </div>
               {!showSession && !isEntryMode && (
-                <div className="flex-shrink-0 pt-4 sm:pt-6 bg-slate-50">
+                <div className="flex-shrink-0 pt-4 sm:pt-6 bg-slate-950 border-t border-slate-700/50">
                   <ChatInterface
                     key={`landing-${entryMode ?? 'tutor'}`}
                     sessionId={undefined}
@@ -929,7 +929,7 @@ function TutorPageContent() {
                   profileId={activeProfileSummary?.id ?? null}
                 />
               </div>
-              <div className="flex-shrink-0 pt-4 sm:pt-6 bg-slate-50">
+              <div className="flex-shrink-0 pt-4 sm:pt-6 bg-slate-950 border-t border-slate-700/50">
                 <ChatInterface
                   key={`landing-${entryMode ?? 'tutor'}`}
                   sessionId={undefined}

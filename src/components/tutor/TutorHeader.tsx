@@ -67,7 +67,7 @@ export default function TutorHeader({
 
   return (
     <>
-      <header className="flex flex-col sm:flex-row items-stretch sm:items-center justify-start gap-3 sm:gap-4 border-b border-slate-200/60 bg-white/80 backdrop-blur-sm px-3 sm:px-4 md:px-6 py-3 sm:py-3.5 rounded-xl shadow-lg shadow-slate-200/50 mb-4 sm:mb-5 w-full overflow-hidden">
+      <header className="flex flex-col sm:flex-row items-stretch sm:items-center justify-start gap-3 sm:gap-4 border-b border-slate-700/50 bg-slate-900 backdrop-blur-sm px-3 sm:px-4 md:px-6 py-3 sm:py-3.5 rounded-xl shadow-lg mb-4 sm:mb-5 w-full overflow-hidden">
         {/* New Chat */}
         <div className="flex items-center gap-2 flex-shrink-0">
           {/* Start New Chat button - only show when there's an active session */}
