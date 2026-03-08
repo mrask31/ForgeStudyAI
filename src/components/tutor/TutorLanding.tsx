@@ -309,50 +309,50 @@ export default function TutorLanding({
     }
     if (tool) {
       return (
-        <div className="mt-6 p-6 bg-gradient-to-br from-emerald-50 to-slate-50 border border-emerald-200 rounded-xl max-w-2xl">
-          <h3 className="text-lg font-semibold text-slate-900 mb-3 flex items-center gap-2">
-            <span className="text-emerald-600">💡</span>
+        <div className="mt-6 p-6 bg-slate-900/60 backdrop-blur-sm border border-slate-700/50 rounded-2xl max-w-2xl">
+          <h3 className="text-lg font-semibold text-slate-100 mb-3 flex items-center gap-2">
+            <span className="text-indigo-400">💡</span>
             What I can do in {TOOL_CONFIG[tool].heading.split(':')[0]}:
           </h3>
-          <ul className="space-y-2 text-sm text-slate-700">
+          <ul className="space-y-2 text-sm text-slate-300">
             {TOOL_CONFIG[tool].bullets.map((item) => (
               <li key={item} className="flex items-start gap-2">
-                <span className="text-emerald-600 mt-0.5">•</span>
+                <span className="text-indigo-400 mt-0.5">•</span>
                 <span>{item}</span>
               </li>
             ))}
           </ul>
-          <p className="mt-4 text-xs text-slate-600 italic">
+          <p className="mt-4 text-xs text-slate-400 italic">
             💡 <strong>Tip:</strong> Share your topic or upload materials to get a stronger plan.
           </p>
         </div>
       )
     }
     return (
-      <div className="mt-6 p-6 bg-gradient-to-br from-indigo-50 to-sky-50 border border-indigo-200 rounded-xl max-w-2xl">
-        <h3 className="text-lg font-semibold text-slate-900 mb-3 flex items-center gap-2">
-          <span className="text-indigo-600">💡</span>
+      <div className="mt-6 p-6 bg-slate-900/60 backdrop-blur-sm border border-indigo-500/20 rounded-2xl max-w-2xl">
+        <h3 className="text-lg font-semibold text-slate-100 mb-3 flex items-center gap-2">
+          <span className="text-indigo-400">💡</span>
           How I can help you:
         </h3>
-        <ul className="space-y-2 text-sm text-slate-700">
+        <ul className="space-y-2 text-sm text-slate-300">
           <li className="flex items-start gap-2">
-            <span className="text-indigo-600 mt-0.5">•</span>
+            <span className="text-indigo-400 mt-0.5">•</span>
             <span><strong>Explain concepts:</strong> Ask me to break down any topic step-by-step</span>
           </li>
           <li className="flex items-start gap-2">
-            <span className="text-indigo-600 mt-0.5">•</span>
+            <span className="text-indigo-400 mt-0.5">•</span>
             <span><strong>Practice questions:</strong> Request practice questions on any subject</span>
           </li>
           <li className="flex items-start gap-2">
-            <span className="text-indigo-600 mt-0.5">•</span>
+            <span className="text-indigo-400 mt-0.5">•</span>
             <span><strong>Study strategies:</strong> Get tips on how to study effectively</span>
           </li>
           <li className="flex items-start gap-2">
-            <span className="text-indigo-600 mt-0.5">•</span>
+            <span className="text-indigo-400 mt-0.5">•</span>
             <span><strong>Homework help:</strong> Get guidance on assignments and coursework</span>
           </li>
         </ul>
-        <p className="mt-4 text-xs text-slate-600 italic">
+        <p className="mt-4 text-xs text-slate-400 italic">
           💡 <strong>Tip:</strong> For class-specific help with your uploaded materials, select a class from the dropdown above.
         </p>
       </div>
@@ -376,12 +376,12 @@ export default function TutorLanding({
     const config = MODE_CONFIG[mode]
     return (
       <div className="mt-4 sm:mt-6 w-full max-w-2xl text-left space-y-4">
-        <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-          <p className="text-sm font-semibold text-slate-900 mb-2">How this works</p>
-          <ul className="space-y-2 text-sm text-slate-700">
+        <div className="rounded-2xl border border-slate-700/50 bg-slate-900/60 backdrop-blur-sm p-5 shadow-sm">
+          <p className="text-sm font-semibold text-slate-100 mb-2">How this works</p>
+          <ul className="space-y-2 text-sm text-slate-300">
             {config.steps.map((step) => (
               <li key={step} className="flex items-start gap-2">
-                <span className="text-emerald-600 mt-0.5">•</span>
+                <span className="text-indigo-400 mt-0.5">•</span>
                 <span>{step}</span>
               </li>
             ))}
@@ -400,12 +400,12 @@ export default function TutorLanding({
       {!(mode !== 'tutor' && sessionActive) && (
         <>
           {/* Primary Text */}
-          <h1 className="text-2xl sm:text-3xl font-semibold tracking-tight text-slate-900 max-w-2xl">
+          <h1 className="text-2xl sm:text-3xl font-semibold tracking-tight text-slate-100 max-w-2xl">
             {getMainHeading()}
           </h1>
 
           {/* Secondary Text */}
-          <p className="text-sm sm:text-base text-slate-600 max-w-xl">
+          <p className="text-sm sm:text-base text-slate-400 max-w-xl">
             {getSubtext()}
           </p>
         </>
@@ -415,13 +415,13 @@ export default function TutorLanding({
       {!isGeneralTutor && selectedClassId && (
         <div className="mt-4 sm:mt-6 w-full max-w-2xl">
           {isLoadingWelcome ? (
-            <div className="p-4 sm:p-6 bg-gradient-to-br from-indigo-50 to-sky-50 border border-indigo-200 rounded-xl">
-              <p className="text-slate-600 text-xs sm:text-sm">Loading your study context...</p>
+            <div className="p-4 sm:p-6 bg-slate-900/60 backdrop-blur-sm border border-indigo-500/20 rounded-2xl">
+              <p className="text-slate-400 text-xs sm:text-sm">Loading your study context...</p>
             </div>
           ) : welcomeMessage ? (
-            <div className="p-4 sm:p-6 bg-gradient-to-br from-indigo-50 to-sky-50 border border-indigo-200 rounded-xl text-left welcome-message-card">
+            <div className="p-4 sm:p-6 bg-slate-900/60 backdrop-blur-sm border border-indigo-500/20 rounded-2xl text-left welcome-message-card">
               <div className="prose prose-sm max-w-none">
-                <div className="whitespace-pre-wrap text-xs sm:text-sm text-slate-700 leading-relaxed max-w-full">
+                <div className="whitespace-pre-wrap text-xs sm:text-sm text-slate-300 leading-relaxed max-w-full">
                   {welcomeMessage.split('**').map((part, i) => {
                     // Simple markdown bold rendering
                     if (i % 2 === 1) {

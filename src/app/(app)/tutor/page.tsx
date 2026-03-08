@@ -8,9 +8,9 @@ export const dynamic = 'force-dynamic'
 export default function TutorPage() {
   return (
     <Suspense fallback={
-      <div className="h-full flex items-center justify-center bg-slate-100">
+      <div className="h-full flex items-center justify-center bg-slate-950">
         <div className="text-center">
-          <p className="text-slate-600">Loading...</p>
+          <p className="text-slate-400">Loading...</p>
         </div>
       </div>
     }>
