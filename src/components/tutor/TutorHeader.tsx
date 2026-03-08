@@ -65,6 +65,25 @@ export default function TutorHeader({
     return null
   }
 
+  // Hide header if there's no active session (no New Chat button to show)
+  if (!currentSessionId || hideNewChat) {
+    return (
+      <>
+        {/* Exam Mode Dialog - outside header for portal rendering */}
+        {tutorContext.selectedClassId && (
+          <ExamModeDialog
+            isOpen={isExamDialogOpen}
+            onClose={() => setIsExamDialogOpen(false)}
+            classId={tutorContext.selectedClassId as string}
+            onStartSession={(examId) => {
+              tutorContext.setActiveExamId(examId)
+            }}
+          />
+        )}
+      </>
+    )
+  }
+
   return (
     <>
       <header className="flex flex-col sm:flex-row items-stretch sm:items-center justify-start gap-3 sm:gap-4 border-b border-slate-700/50 bg-slate-900 backdrop-blur-sm px-3 sm:px-4 md:px-6 py-3 sm:py-3.5 rounded-xl shadow-lg mb-4 sm:mb-5 w-full overflow-hidden">
