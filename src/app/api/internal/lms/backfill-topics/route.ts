@@ -7,6 +7,7 @@
  * This is a one-time migration endpoint to populate the Galaxy with existing Canvas assignments.
  * 
  * Security: Service role only (internal endpoint)
+ * Requires: INTERNAL_API_TOKEN environment variable
  */
 
 import { NextResponse } from 'next/server';
