@@ -12,12 +12,9 @@
  */
 
 import { backfillAssignmentTopics } from '../src/lib/lms/services/backfillAssignmentTopics';
-import * as dotenv from 'dotenv';
-
-// Load environment variables
-dotenv.config({ path: '.env.local' });
 
 async function main() {
+  // Environment variables should be loaded from .env.local automatically by Next.js
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
   const anthropicKey = process.env.ANTHROPIC_API_KEY;

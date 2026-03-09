@@ -17,11 +17,18 @@ export const maxDuration = 300; // 5 minutes
 
 export async function POST(req: Request) {
   try {
-    // Verify this is an internal request (you can add auth header check here)
+    // Verify this is an internal request
     const authHeader = req.headers.get('authorization');
     const expectedToken = process.env.INTERNAL_API_TOKEN;
 
-    if (expectedToken && authHeader !== `Bearer ${expectedToken}`) {
+    if (!expectedToken) {
+      return NextResponse.json(
+        { error: 'INTERNAL_API_TOKEN not configured' },
+        { status: 500 }
+      );
+    }
+
+    if (authHeader !== `Bearer ${expectedToken}`) {
       return NextResponse.json(
         { error: 'Unauthorized' },
         { status: 401 }
