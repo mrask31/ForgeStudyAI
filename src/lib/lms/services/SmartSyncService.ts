@@ -26,6 +26,7 @@ import {
 } from '../adapters/GoogleClassroomAdapter';
 import { DeduplicationEngine } from './DeduplicationEngine';
 import { TokenEncryption } from './TokenEncryption';
+import { AssignmentTopicExtractor } from './AssignmentTopicExtractor';
 import {
   acquireLock,
   releaseLock,
@@ -50,6 +51,7 @@ import {
 export class SmartSyncService {
   private supabase: SupabaseClient;
   private deduplicationEngine: DeduplicationEngine;
+  private topicExtractor: AssignmentTopicExtractor;
 
   /**
    * Failure threshold for marking connection as blocked
@@ -69,6 +71,13 @@ export class SmartSyncService {
   constructor(supabaseUrl: string, supabaseKey: string) {
     this.supabase = createClient(supabaseUrl, supabaseKey);
     this.deduplicationEngine = new DeduplicationEngine(supabaseUrl, supabaseKey);
+    
+    // Initialize topic extractor with Anthropic API key
+    const anthropicKey = process.env.ANTHROPIC_API_KEY;
+    if (!anthropicKey) {
+      console.warn('[SmartSync] ANTHROPIC_API_KEY not found - topic extraction will use fallback');
+    }
+    this.topicExtractor = new AssignmentTopicExtractor(anthropicKey || '');
   }
 
   /**
@@ -524,6 +533,7 @@ export class SmartSyncService {
           course_id: assignment.courseId,
           attachment_urls: assignment.attachments.map((a) => a.url),
           sync_status: 'completed',
+          merge_status: 'pending', // Will be updated after topic creation
         })
         .select()
         .single();
@@ -532,6 +542,9 @@ export class SmartSyncService {
         console.error('[SmartSync] Error saving assignment:', error);
         return;
       }
+
+      // CRITICAL: Create study_topic from this assignment
+      await this.createStudyTopicFromAssignment(newAssignment, connection.student_id);
 
       // Check for manual upload match
       const matchingUpload = await this.deduplicationEngine.findMatchingUpload(
@@ -576,6 +589,147 @@ export class SmartSyncService {
       });
     } catch (error: any) {
       console.error('[SmartSync] Error creating parent notification:', error);
+    }
+  }
+
+  /**
+   * Create study topic from synced assignment
+   * Requirements: LMS to Galaxy Pipeline
+   * 
+   * Converts a synced LMS assignment into a Galaxy node (study_topic).
+   * Uses AI to extract clean topic metadata from assignment details.
+   * 
+   * @param assignment Synced assignment record
+   * @param studentId Student ID (auth user ID)
+   */
+  private async createStudyTopicFromAssignment(
+    assignment: any,
+    studentId: string
+  ): Promise<void> {
+    try {
+      console.log(`[SmartSync] Creating study topic for assignment ${assignment.id}`);
+
+      // STEP 1: Get student's profile_id
+      const { data: profile, error: profileError } = await this.supabase
+        .from('student_profiles')
+        .select('id, grade_band')
+        .eq('owner_id', studentId)
+        .single();
+
+      if (profileError || !profile) {
+        console.error('[SmartSync] Failed to find student profile:', profileError);
+        
+        // Update assignment merge_status to failed
+        await this.supabase
+          .from('synced_assignments')
+          .update({ merge_status: 'failed' })
+          .eq('id', assignment.id);
+        
+        return;
+      }
+
+      // STEP 2: Check if study_topic already exists for this assignment
+      const { data: existingTopic } = await this.supabase
+        .from('study_topics')
+        .select('id')
+        .eq('synced_assignment_id', assignment.id)
+        .single();
+
+      if (existingTopic) {
+        console.log(`[SmartSync] Study topic already exists for assignment ${assignment.id}`);
+        
+        // Update assignment to mark as merged
+        await this.supabase
+          .from('synced_assignments')
+          .update({
+            merge_status: 'merged',
+            study_topic_id: existingTopic.id,
+          })
+          .eq('id', assignment.id);
+        
+        return;
+      }
+
+      // STEP 3: Extract topic metadata using AI
+      console.log('[SmartSync] Extracting topic metadata with AI...');
+      
+      const extracted = await this.topicExtractor.extractTopic(
+        assignment.title,
+        assignment.description,
+        assignment.course_name
+      );
+
+      // STEP 4: Insert study_topic
+      const now = new Date();
+      const nextReviewDate = new Date(now.getTime() + 24 * 60 * 60 * 1000); // +1 day
+
+      const { data: newTopic, error: topicError } = await this.supabase
+        .from('study_topics')
+        .insert({
+          profile_id: profile.id,
+          title: extracted.topic_name,
+          description: extracted.description,
+          subject: extracted.subject,
+          grade_band: profile.grade_band,
+          source: 'lms',
+          orbit_state: 1, // Active - skip Quarantine for LMS
+          mastery_score: 0,
+          srs_ease_factor: 2.5, // SM-2 default
+          srs_interval_days: 1,
+          next_review_date: nextReviewDate.toISOString(),
+          synced_assignment_id: assignment.id,
+          metadata: {
+            key_concepts: extracted.key_concepts,
+            course_name: assignment.course_name,
+            course_id: assignment.course_id,
+            due_date: assignment.due_date,
+          },
+        })
+        .select()
+        .single();
+
+      if (topicError || !newTopic) {
+        console.error('[SmartSync] Failed to create study topic:', topicError);
+        
+        // Update assignment merge_status to failed
+        await this.supabase
+          .from('synced_assignments')
+          .update({ merge_status: 'failed' })
+          .eq('id', assignment.id);
+        
+        // Log to sync_logs
+        await this.supabase.from('sync_logs').insert({
+          lms_connection_id: assignment.lms_connection_id,
+          sync_trigger: 'login',
+          sync_status: 'failed',
+          assignments_found: 0,
+          assignments_downloaded: 0,
+          error_message: `Failed to create study topic: ${topicError?.message || 'Unknown error'}`,
+          sync_duration_ms: 0,
+          synced_at: now.toISOString(),
+        });
+        
+        return;
+      }
+
+      // STEP 5: Update synced_assignment with merge_status and study_topic_id
+      await this.supabase
+        .from('synced_assignments')
+        .update({
+          merge_status: 'merged',
+          study_topic_id: newTopic.id,
+        })
+        .eq('id', assignment.id);
+
+      console.log(`[SmartSync] Successfully created study topic ${newTopic.id} for assignment ${assignment.id}`);
+    } catch (error: any) {
+      console.error('[SmartSync] Error in createStudyTopicFromAssignment:', error);
+      
+      // Update assignment merge_status to failed
+      await this.supabase
+        .from('synced_assignments')
+        .update({ merge_status: 'failed' })
+        .eq('id', assignment.id);
     }
   }
 }
