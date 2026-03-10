@@ -159,21 +159,28 @@ export class CanvasAdapter {
    */
   async getCourses(): Promise<Course[]> {
     try {
-      const response = await fetch(
-        `${this.instanceUrl}/api/v1/courses?enrollment_state=active&per_page=100`,
-        {
-          method: 'GET',
-          headers: {
-            Authorization: `Bearer ${this.token}`,
-            Accept: 'application/json',
-          },
-          signal: AbortSignal.timeout(15000), // 15 second timeout
-        }
-      );
+      const url = `${this.instanceUrl}/api/v1/courses?enrollment_state=active&per_page=100`;
+      console.log('[Canvas] Fetching courses from:', url);
+      
+      const response = await fetch(url, {
+        method: 'GET',
+        headers: {
+          Authorization: `Bearer ${this.token}`,
+          Accept: 'application/json',
+        },
+        signal: AbortSignal.timeout(15000), // 15 second timeout
+      });
+
+      console.log('[Canvas] Courses API response status:', response.status);
 
       this.handleErrorResponse(response);
 
       const canvasCourses: CanvasCourse[] = await response.json();
+      
+      console.log('[Canvas] Courses fetch result:', JSON.stringify({
+        count: canvasCourses.length,
+        courses: canvasCourses.map(c => ({ id: c.id, name: c.name }))
+      }));
 
       return canvasCourses.map((course) => ({
         id: course.id.toString(),
@@ -181,6 +188,7 @@ export class CanvasAdapter {
         code: course.course_code || null,
       }));
     } catch (error: any) {
+      console.error('[Canvas] Error fetching courses:', error.message);
       this.handleNetworkError(error, 'Failed to fetch courses');
       throw error; // TypeScript requires this after handleNetworkError
     }
@@ -227,21 +235,28 @@ export class CanvasAdapter {
     courseName: string
   ): Promise<Assignment[]> {
     try {
-      const response = await fetch(
-        `${this.instanceUrl}/api/v1/courses/${courseId}/assignments?per_page=100`,
-        {
-          method: 'GET',
-          headers: {
-            Authorization: `Bearer ${this.token}`,
-            Accept: 'application/json',
-          },
-          signal: AbortSignal.timeout(15000),
-        }
-      );
+      const url = `${this.instanceUrl}/api/v1/courses/${courseId}/assignments?per_page=100`;
+      console.log(`[Canvas] Fetching assignments for course ${courseId} (${courseName}) from:`, url);
+      
+      const response = await fetch(url, {
+        method: 'GET',
+        headers: {
+          Authorization: `Bearer ${this.token}`,
+          Accept: 'application/json',
+        },
+        signal: AbortSignal.timeout(15000),
+      });
+
+      console.log(`[Canvas] Assignments API response status for course ${courseId}:`, response.status);
 
       this.handleErrorResponse(response);
 
       const canvasAssignments: CanvasAssignment[] = await response.json();
+      
+      console.log(`[Canvas] Assignments fetch result for course ${courseId}:`, JSON.stringify({
+        count: canvasAssignments.length,
+        assignments: canvasAssignments.map(a => ({ id: a.id, name: a.name, due_at: a.due_at }))
+      }));
 
       return canvasAssignments.map((assignment) => ({
         lmsAssignmentId: assignment.id.toString(),
@@ -259,7 +274,7 @@ export class CanvasAdapter {
       }));
     } catch (error: any) {
       // Log error but don't fail entire sync if one course fails
-      console.error(`[Canvas] Failed to fetch assignments for course ${courseId}:`, error);
+      console.error(`[Canvas] Failed to fetch assignments for course ${courseId}:`, error.message);
       return [];
     }
   }
