@@ -102,32 +102,33 @@ export async function POST(request: Request) {
         .from('student_profiles')
         .select('id, owner_id')
         .eq('id', requestBody.profileId)
+        .eq('owner_id', user.id)
         .single();
 
       if (profileError || !profile) {
         return NextResponse.json(
-          { error: 'Profile not found' },
-          { status: 404 }
-        );
-      }
-
-      // Check if this parent owns the profile
-      const { data: ownership } = await supabase
-        .from('student_profiles')
-        .select('id')
-        .eq('id', requestBody.profileId)
-        .eq('parent_id', user.id)
-        .single();
-
-      if (!ownership) {
-        return NextResponse.json(
-          { error: 'You do not have permission to sync this profile' },
+          { error: 'Profile not found or you do not have permission' },
           { status: 403 }
         );
       }
 
-      // Use the profile's owner_id (student) for sync
-      studentId = profile.owner_id;
+      // Now find the student_id from lms_connections for this parent
+      // The student_id in lms_connections is what we need for sync
+      const { data: connection } = await supabase
+        .from('lms_connections')
+        .select('student_id')
+        .eq('parent_id', user.id)
+        .eq('status', 'active')
+        .single();
+
+      if (!connection) {
+        return NextResponse.json(
+          { error: 'No active LMS connection found for this profile' },
+          { status: 404 }
+        );
+      }
+
+      studentId = connection.student_id;
     }
 
     // 5. Return 202 Accepted immediately (async execution)
