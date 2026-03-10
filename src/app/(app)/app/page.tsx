@@ -46,6 +46,37 @@ export default function GalaxyPage() {
     loadData()
   }, [activeProfileId, user])
 
+  // Auto-sync LMS on Galaxy page load (once per session)
+  useEffect(() => {
+    async function triggerAutoSync() {
+      if (!activeProfileId || !user) return
+
+      // Check if already synced this session
+      const syncKey = `lms_sync_triggered_${activeProfileId}`
+      if (sessionStorage.getItem(syncKey)) {
+        return
+      }
+
+      try {
+        // Silent sync trigger - fire and forget
+        fetch('/api/internal/sync/trigger', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ studentId: activeProfileId }),
+        }).catch((err) => {
+          console.debug('[Galaxy] Auto-sync failed (non-critical):', err)
+        })
+
+        // Mark as synced for this session
+        sessionStorage.setItem(syncKey, 'true')
+      } catch (err) {
+        console.debug('[Galaxy] Auto-sync error (non-critical):', err)
+      }
+    }
+
+    triggerAutoSync()
+  }, [activeProfileId, user])
+
   return (
     <div className="relative w-full h-screen bg-slate-950 overflow-hidden">
       {/* Decontamination Banner - Floating at top */}
