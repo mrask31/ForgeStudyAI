@@ -17,7 +17,7 @@ export const maxDuration = 10; // 10 second timeout for serverless
 
 export async function POST(request: Request) {
   try {
-    // 1. Authenticate student
+    // 1. Authenticate user
     const cookieStore = cookies();
     const supabase = createServerClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -46,37 +46,91 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    // 2. Verify user is a student
-    const { data: student, error: studentError } = await supabase
+    // 2. Parse request body
+    let requestBody: TriggerSyncRequest | null = null;
+    try {
+      requestBody = await request.json();
+    } catch {
+      // No body provided
+    }
+
+    let studentId: string;
+
+    // 3. Check if user is a student
+    const { data: student } = await supabase
       .from('students')
       .select('id')
       .eq('id', user.id)
       .single();
 
-    if (studentError || !student) {
-      return NextResponse.json(
-        { error: 'Only students can trigger sync' },
-        { status: 403 }
-      );
-    }
-
-    // 3. Parse request (optional - can use authenticated user ID)
-    let studentId = user.id;
-    try {
-      const body: TriggerSyncRequest = await request.json();
-      if (body.studentId && body.studentId !== user.id) {
+    if (student) {
+      // Student-initiated sync
+      studentId = user.id;
+      
+      // Students can only sync their own profile
+      if (requestBody?.studentId && requestBody.studentId !== user.id) {
         return NextResponse.json(
           { error: 'Cannot trigger sync for another student' },
           { status: 403 }
         );
       }
-      studentId = body.studentId || user.id;
-    } catch {
-      // No body provided, use authenticated user ID
+    } else {
+      // 4. Check if user is a parent
+      const { data: parent } = await supabase
+        .from('parents')
+        .select('id')
+        .eq('id', user.id)
+        .single();
+
+      if (!parent) {
+        return NextResponse.json(
+          { error: 'Only students and parents can trigger sync' },
+          { status: 403 }
+        );
+      }
+
+      // Parent-initiated sync - profileId is required
+      if (!requestBody?.profileId) {
+        return NextResponse.json(
+          { error: 'profileId is required for parent-initiated sync' },
+          { status: 400 }
+        );
+      }
+
+      // Verify the profile belongs to this parent
+      const { data: profile, error: profileError } = await supabase
+        .from('student_profiles')
+        .select('id, owner_id')
+        .eq('id', requestBody.profileId)
+        .single();
+
+      if (profileError || !profile) {
+        return NextResponse.json(
+          { error: 'Profile not found' },
+          { status: 404 }
+        );
+      }
+
+      // Check if this parent owns the profile
+      const { data: ownership } = await supabase
+        .from('student_profiles')
+        .select('id')
+        .eq('id', requestBody.profileId)
+        .eq('parent_id', user.id)
+        .single();
+
+      if (!ownership) {
+        return NextResponse.json(
+          { error: 'You do not have permission to sync this profile' },
+          { status: 403 }
+        );
+      }
+
+      // Use the profile's owner_id (student) for sync
+      studentId = profile.owner_id;
     }
 
-    // 4. Return 202 Accepted immediately (async execution)
-    // This prevents serverless timeout on long-running sync operations
+    // 5. Return 202 Accepted immediately (async execution)
     const response = NextResponse.json(
       {
         success: true,
@@ -85,8 +139,7 @@ export async function POST(request: Request) {
       { status: 202 }
     );
 
-    // 5. Trigger sync asynchronously (fire and forget)
-    // Use service role client for background operations
+    // 6. Trigger sync asynchronously (fire and forget)
     const syncService = new SmartSyncService(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
       process.env.SUPABASE_SERVICE_ROLE_KEY!

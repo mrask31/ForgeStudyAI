@@ -73,6 +73,7 @@ export function SettingsDrawer({ isOpen, onClose }: SettingsDrawerProps) {
       const response = await fetch('/api/internal/sync/trigger', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ profileId: activeProfileId }),
       });
 
       if (!response.ok) {

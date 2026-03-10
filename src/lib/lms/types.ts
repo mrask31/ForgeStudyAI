@@ -209,8 +209,9 @@ export interface StudentSyncStatusResponse {
  * POST /api/internal/sync/trigger - Request
  */
 export interface TriggerSyncRequest {
-  studentId: string;
-  triggerType: SyncTriggerType;
+  studentId?: string; // Optional - for student-initiated sync
+  profileId?: string; // Optional - for parent-initiated sync
+  triggerType?: SyncTriggerType;
 }
 
 /**
