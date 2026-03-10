@@ -28,6 +28,7 @@ export function IntegrationPanel({ studentId, studentName }: IntegrationPanelPro
   const [isLoading, setIsLoading] = useState(true);
   const [isConnecting, setIsConnecting] = useState(false);
   const [isDisconnecting, setIsDisconnecting] = useState<string | null>(null);
+  const [isSyncing, setIsSyncing] = useState(false);
 
   // Canvas state
   const [canvasInstanceUrl, setCanvasInstanceUrl] = useState('');
@@ -151,6 +152,35 @@ export function IntegrationPanel({ studentId, studentName }: IntegrationPanelPro
     }
   };
 
+  const handleSyncNow = async () => {
+    setIsSyncing(true);
+
+    try {
+      const response = await fetch('/api/internal/sync/trigger', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ studentId }),
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || 'Sync failed');
+      }
+
+      toast.success('Sync started! Assignments will appear shortly.');
+      
+      // Refresh connection status after a delay to show updated lastSyncAt
+      setTimeout(() => {
+        fetchConnectionStatus();
+      }, 2000);
+    } catch (error: any) {
+      console.error('[IntegrationPanel] Sync error:', error);
+      toast.error(error.message || 'Failed to trigger sync');
+    } finally {
+      setIsSyncing(false);
+    }
+  };
+
   const getConnectionByProvider = (provider: 'canvas' | 'google_classroom') => {
     return connections.find((c) => c.provider === provider);
   };
@@ -209,13 +239,22 @@ export function IntegrationPanel({ studentId, studentName }: IntegrationPanelPro
                    'Connection Failed'}
                 </span>
               </div>
-              <button
-                onClick={() => handleDisconnect(canvasConnection.id, 'Canvas')}
-                disabled={isDisconnecting === canvasConnection.id}
-                className="text-xs text-red-400 hover:text-red-300 transition-colors disabled:opacity-50"
-              >
-                {isDisconnecting === canvasConnection.id ? 'Disconnecting...' : 'Disconnect'}
-              </button>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={handleSyncNow}
+                  disabled={isSyncing || canvasConnection.status !== 'active'}
+                  className="px-3 py-1 text-xs border border-indigo-500 text-indigo-400 hover:bg-indigo-500/10 rounded transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {isSyncing ? 'Syncing...' : 'Sync Now'}
+                </button>
+                <button
+                  onClick={() => handleDisconnect(canvasConnection.id, 'Canvas')}
+                  disabled={isDisconnecting === canvasConnection.id}
+                  className="text-xs text-red-400 hover:text-red-300 transition-colors disabled:opacity-50"
+                >
+                  {isDisconnecting === canvasConnection.id ? 'Disconnecting...' : 'Disconnect'}
+                </button>
+              </div>
             </div>
             {canvasConnection.lastSyncAt && (
               <p className="text-xs text-slate-400">
