@@ -173,7 +173,7 @@ export class CanvasAdapter {
 
       console.log('[Canvas] Courses API response status:', response.status);
 
-      this.handleErrorResponse(response);
+      await this.handleErrorResponse(response);
 
       const canvasCourses: CanvasCourse[] = await response.json();
       
@@ -249,7 +249,7 @@ export class CanvasAdapter {
 
       console.log(`[Canvas] Assignments API response status for course ${courseId}:`, response.status);
 
-      this.handleErrorResponse(response);
+      await this.handleErrorResponse(response);
 
       const canvasAssignments: CanvasAssignment[] = await response.json();
       
@@ -298,7 +298,7 @@ export class CanvasAdapter {
         signal: AbortSignal.timeout(60000), // 60 second timeout for large files
       });
 
-      this.handleErrorResponse(response);
+      await this.handleErrorResponse(response);
 
       const arrayBuffer = await response.arrayBuffer();
       return Buffer.from(arrayBuffer);
@@ -319,9 +319,16 @@ export class CanvasAdapter {
     const startTime = Date.now();
 
     try {
+      console.log('[Canvas] Starting sync with instanceUrl:', this.instanceUrl);
+      
       const assignments = await this.fetchAssignments();
 
       const syncDurationMs = Date.now() - startTime;
+
+      console.log('[Canvas] Sync completed successfully:', {
+        totalAssignments: assignments.length,
+        syncDurationMs
+      });
 
       return {
         success: true,
@@ -332,6 +339,12 @@ export class CanvasAdapter {
       };
     } catch (error: any) {
       const syncDurationMs = Date.now() - startTime;
+
+      console.error('[Canvas] Sync failed:', {
+        error: error.message,
+        errorType: error.name,
+        syncDurationMs
+      });
 
       return {
         success: false,
@@ -349,8 +362,16 @@ export class CanvasAdapter {
    * 
    * Throws appropriate error types based on status code.
    */
-  private handleErrorResponse(response: Response): void {
+  private async handleErrorResponse(response: Response): Promise<void> {
     if (response.ok) return;
+
+    // Log non-OK responses with body
+    const responseText = await response.text();
+    console.error('[Canvas] API error response:', {
+      status: response.status,
+      statusText: response.statusText,
+      body: responseText
+    });
 
     if (response.status === 401 || response.status === 403) {
       throw new CanvasAuthError(

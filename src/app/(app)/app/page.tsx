@@ -62,7 +62,8 @@ export default function GalaxyPage() {
         fetch('/api/internal/sync/trigger', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ studentId: activeProfileId }),
+          credentials: 'include', // Include session cookies
+          body: JSON.stringify({ profileId: activeProfileId }), // Use profileId for student session
         }).catch((err) => {
           console.debug('[Galaxy] Auto-sync failed (non-critical):', err)
         })

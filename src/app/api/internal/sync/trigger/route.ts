@@ -57,7 +57,7 @@ export async function POST(request: Request) {
     let studentId: string;
 
     // 3. Check if user is a student
-    const { data: student } = await supabase
+    const { data: student, error: studentError } = await supabase
       .from('students')
       .select('id')
       .eq('id', user.id)
@@ -73,6 +73,27 @@ export async function POST(request: Request) {
           { error: 'Cannot trigger sync for another student' },
           { status: 403 }
         );
+      }
+
+      // If profileId is provided by student, we need to find the student_id from lms_connections
+      if (requestBody?.profileId) {
+        // Student is using profileId - find their lms_connection
+        const { data: connection } = await supabase
+          .from('lms_connections')
+          .select('student_id')
+          .eq('student_id', user.id)
+          .eq('status', 'active')
+          .single();
+
+        if (!connection) {
+          console.log(`[Sync Trigger] No active LMS connection found for student ${user.id}`);
+          return NextResponse.json(
+            { error: 'No active LMS connection found' },
+            { status: 404 }
+          );
+        }
+
+        studentId = connection.student_id;
       }
     } else {
       // 4. Check if user is a parent
