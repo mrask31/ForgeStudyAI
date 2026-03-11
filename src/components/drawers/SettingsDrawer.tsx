@@ -67,18 +67,36 @@ export function SettingsDrawer({ isOpen, onClose }: SettingsDrawerProps) {
   };
 
   const handleSyncNow = async () => {
+    console.log('[SyncNow] Button clicked');
+    console.log('[SyncNow] Active profile ID:', activeProfileId);
+
+    if (!activeProfileId) {
+      console.error('[SyncNow] No active profile ID available');
+      toast.error('No profile selected');
+      return;
+    }
+
     setIsSyncing(true);
 
     try {
+      console.log('[SyncNow] Attempting sync for profile:', activeProfileId);
+      
       const response = await fetch('/api/internal/sync/trigger', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        headers: {
+          'Content-Type': 'application/json',
+        },
         body: JSON.stringify({ profileId: activeProfileId }),
       });
 
+      console.log('[SyncNow] Response status:', response.status);
+      
+      const data = await response.json();
+      console.log('[SyncNow] Response data:', JSON.stringify(data));
+
       if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.error || 'Sync failed');
+        throw new Error(data.error || 'Sync failed');
       }
 
       toast.success('Synced! Galaxy updating...');
@@ -88,7 +106,7 @@ export function SettingsDrawer({ isOpen, onClose }: SettingsDrawerProps) {
         setIsSyncing(false);
       }, 3000);
     } catch (error: any) {
-      console.error('[SettingsDrawer] Sync error:', error);
+      console.error('[SyncNow] Sync error:', error);
       toast.error(error.message || 'Failed to trigger sync');
       setIsSyncing(false);
     }
