@@ -2,8 +2,9 @@
 
 import { useEffect, useMemo, useState } from 'react'
 import { useParams, useRouter } from 'next/navigation'
+import Link from 'next/link'
 import { getSupabaseBrowser } from '@/lib/supabase/client'
-import { GraduationCap, BookOpen } from 'lucide-react'
+import { GraduationCap, BookOpen, ChevronLeft } from 'lucide-react'
 import { getStudentProfile, updateStudentProfile, type StudentProfile } from '@/app/actions/student-profiles'
 import { IntegrationPanel } from '@/components/lms/IntegrationPanel'
 
@@ -111,6 +112,22 @@ export default function EditProfilePage() {
 
   return (
     <div className="min-h-screen overflow-y-auto bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950">
+      {/* Navigation Header */}
+      <div className="sticky top-0 bg-slate-950/80 backdrop-blur border-b border-white/5 px-6 py-4 z-10">
+        <div className="max-w-2xl mx-auto flex items-center justify-between">
+          <Link 
+            href="/app" 
+            className="flex items-center gap-2 text-sm text-indigo-400 hover:text-indigo-300 transition-colors"
+          >
+            <ChevronLeft className="w-4 h-4" />
+            Back to Dashboard
+          </Link>
+          <div className="text-white font-semibold text-lg">
+            ForgeStudy
+          </div>
+        </div>
+      </div>
+
       <div className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 py-16 sm:py-20">
         <div className="bg-slate-900/60 backdrop-blur-md border border-slate-800 rounded-2xl p-8 sm:p-10 shadow-xl">
           <h1 className="text-3xl sm:text-4xl font-bold text-slate-100 mb-2">
