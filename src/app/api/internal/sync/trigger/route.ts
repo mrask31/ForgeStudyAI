@@ -110,6 +110,8 @@ export async function POST(request: Request) {
         );
       }
 
+      console.log('[SyncTrigger] Parent user id:', user.id);
+
       // Parent-initiated sync - profileId is required
       if (!requestBody?.profileId) {
         return NextResponse.json(
@@ -117,6 +119,8 @@ export async function POST(request: Request) {
           { status: 400 }
         );
       }
+
+      console.log('[SyncTrigger] Profile id received:', requestBody.profileId);
 
       // Verify the profile belongs to this parent
       const { data: profile, error: profileError } = await supabase
@@ -133,6 +137,8 @@ export async function POST(request: Request) {
         );
       }
 
+      console.log('[SyncTrigger] Looking up lms_connection...');
+
       // Now find the student_id from lms_connections for this parent
       // The student_id in lms_connections is what we need for sync
       const { data: connection } = await supabase
@@ -142,6 +148,8 @@ export async function POST(request: Request) {
         .eq('status', 'active')
         .single();
 
+      console.log('[SyncTrigger] LMS connection found:', JSON.stringify(connection));
+
       if (!connection) {
         return NextResponse.json(
           { error: 'No active LMS connection found for this profile' },
@@ -150,6 +158,7 @@ export async function POST(request: Request) {
       }
 
       studentId = connection.student_id;
+      console.log('[SyncTrigger] Student ID being passed to sync:', studentId);
     }
 
     // 5. Return 202 Accepted immediately (async execution)
