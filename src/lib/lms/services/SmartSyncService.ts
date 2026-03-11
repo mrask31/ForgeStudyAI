@@ -231,19 +231,27 @@ export class SmartSyncService {
   ): Promise<SyncResult> {
     const startTime = Date.now();
 
+    console.log('[SmartSync] syncConnection called');
+    console.log('[SmartSync] Connection metadata:', JSON.stringify(connection.metadata));
+    console.log('[SmartSync] Has encrypted token:', !!connection.encrypted_token);
+
     try {
       console.log(
         `[SmartSync] Syncing ${connection.provider} connection ${connection.id} for student ${connection.student_id}`
       );
 
       // Decrypt token
+      console.log('[SmartSync] Decrypting token...');
       const decryptedToken = TokenEncryption.decrypt(connection.encrypted_token);
+      console.log('[SmartSync] Token decrypted successfully, length:', decryptedToken.length);
 
       // Create adapter based on provider
       let syncResult: SyncResult;
 
       if (connection.provider === 'canvas') {
         const metadata = connection.metadata as { instanceUrl: string };
+        console.log('[SmartSync] Calling Canvas API at:', metadata.instanceUrl);
+        
         const adapter = new CanvasAdapter(metadata.instanceUrl, decryptedToken);
         syncResult = await adapter.sync();
       } else if (connection.provider === 'google_classroom') {
@@ -272,6 +280,9 @@ export class SmartSyncService {
 
       return syncResult;
     } catch (error: any) {
+      console.error('[SmartSync] FATAL ERROR in sync:', error.message);
+      console.error('[SmartSync] Error stack:', error.stack);
+      
       // Classify error and update connection status
       const syncDurationMs = Date.now() - startTime;
       const errorMessage = error.message || 'Unknown error';
