@@ -89,17 +89,15 @@ export async function DELETE(request: Request) {
       );
     }
 
-    // 5. Update connection status to 'disconnected'
-    const { error: updateError } = await supabase
+    // 5. Delete the connection record
+    const { error: deleteError } = await supabase
       .from('lms_connections')
-      .update({
-        status: 'disconnected',
-        updated_at: new Date().toISOString(),
-      })
-      .eq('id', body.connectionId);
+      .delete()
+      .eq('id', body.connectionId)
+      .eq('parent_id', user.id); // Security check
 
-    if (updateError) {
-      console.error('[LMS Disconnect] Error updating connection:', updateError);
+    if (deleteError) {
+      console.error('[LMS Disconnect] Error deleting connection:', deleteError);
       return NextResponse.json(
         { error: 'Failed to disconnect LMS connection' },
         { status: 500 }

@@ -129,12 +129,13 @@ export async function POST(request: Request) {
       );
     }
 
-    // 5. Check for existing connection
+    // 5. Check for existing active connection
     const { data: existingConnection } = await supabase
       .from('lms_connections')
       .select('id')
       .eq('student_id', body.studentId)
       .eq('provider', body.provider)
+      .eq('status', 'active')
       .single();
 
     if (existingConnection) {
