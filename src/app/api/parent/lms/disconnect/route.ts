@@ -68,10 +68,10 @@ export async function DELETE(request: Request) {
       );
     }
 
-    // 4. Verify parent owns this connection
+    // 4. Get connection details
     const { data: connection, error: connectionError } = await supabase
       .from('lms_connections')
-      .select('id, parent_id, student_id, provider')
+      .select('id, student_id, provider')
       .eq('id', body.connectionId)
       .single();
 
@@ -82,19 +82,27 @@ export async function DELETE(request: Request) {
       );
     }
 
-    if (connection.parent_id !== user.id) {
+    // 5. Verify parent owns this profile (security check via student_profiles)
+    const { data: profile, error: profileError } = await supabase
+      .from('student_profiles')
+      .select('id')
+      .eq('id', connection.student_id)
+      .eq('owner_id', user.id)
+      .single();
+
+    if (profileError || !profile) {
       return NextResponse.json(
         { error: 'Access denied. You do not own this connection.' },
         { status: 403 }
       );
     }
 
-    // 5. Delete the connection record
+    // 6. Delete the connection record
     const { error: deleteError } = await supabase
       .from('lms_connections')
       .delete()
       .eq('id', body.connectionId)
-      .eq('parent_id', user.id); // Security check
+      .eq('student_id', connection.student_id); // Security check
 
     if (deleteError) {
       console.error('[LMS Disconnect] Error deleting connection:', deleteError);
@@ -104,7 +112,7 @@ export async function DELETE(request: Request) {
       );
     }
 
-    // 6. Create parent notification
+    // 7. Create parent notification
     await supabase.from('parent_notifications').insert({
       parent_id: user.id,
       student_id: connection.student_id,
@@ -114,7 +122,7 @@ export async function DELETE(request: Request) {
       metadata: { connectionId: connection.id, provider: connection.provider },
     });
 
-    // 7. Create audit log entry
+    // 8. Create audit log entry
     await supabase.from('sync_logs').insert({
       lms_connection_id: body.connectionId,
       sync_trigger: 'manual',
