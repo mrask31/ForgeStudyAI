@@ -8,6 +8,7 @@
 
 import { NextResponse } from 'next/server';
 import { createServerClient, type CookieOptions } from '@supabase/ssr';
+import { createClient } from '@supabase/supabase-js';
 import { cookies } from 'next/headers';
 import { SmartSyncService } from '@/lib/lms/services/SmartSyncService';
 import type { TriggerSyncRequest, TriggerSyncResponse } from '@/lib/lms/types';
@@ -135,7 +136,12 @@ export async function POST(request: Request) {
 
       // Look up lms_connection by student_id (which is the profileId)
       // The profileId IS the student_id in lms_connections
-      const { data: connection } = await supabase
+      // Use service role client to bypass RLS — ownership already verified above
+      const supabaseAdmin = createClient(
+        process.env.NEXT_PUBLIC_SUPABASE_URL!,
+        process.env.SUPABASE_SERVICE_ROLE_KEY!
+      );
+      const { data: connection } = await supabaseAdmin
         .from('lms_connections')
         .select('student_id')
         .eq('student_id', requestBody.profileId)

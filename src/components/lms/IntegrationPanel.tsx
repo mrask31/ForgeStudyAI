@@ -125,7 +125,7 @@ export function IntegrationPanel({ studentId, studentName }: IntegrationPanelPro
     setIsDisconnecting(connectionId);
 
     try {
-      const payload: DisconnectLMSRequest = { connectionId };
+      const payload: DisconnectLMSRequest = { profileId: studentId, provider };
 
       const response = await fetch('/api/parent/lms/disconnect', {
         method: 'DELETE',

@@ -164,7 +164,8 @@ export interface ConnectLMSResponse {
  * DELETE /api/parent/lms/disconnect - Request
  */
 export interface DisconnectLMSRequest {
-  connectionId: string;
+  profileId: string;
+  provider: string;
 }
 
 /**

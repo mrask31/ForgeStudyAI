@@ -8,6 +8,7 @@
 
 import { NextResponse } from 'next/server';
 import { createServerClient, type CookieOptions } from '@supabase/ssr';
+import { createClient } from '@supabase/supabase-js';
 import { cookies } from 'next/headers';
 import type { DisconnectLMSRequest, DisconnectLMSResponse } from '@/lib/lms/types';
 
@@ -61,35 +62,39 @@ export async function DELETE(request: Request) {
     // 3. Parse request
     const body: DisconnectLMSRequest = await request.json();
 
-    if (!body.connectionId) {
+    if (!body.profileId || !body.provider) {
       return NextResponse.json(
-        { error: 'Missing required field: connectionId' },
+        { error: 'Missing required fields: profileId, provider' },
         { status: 400 }
       );
     }
 
-    // 4. Get connection details and verify ownership
-    // RLS policy ensures parent can only see their own connections
-    const { data: connection, error: connectionError } = await supabase
-      .from('lms_connections')
-      .select('id, student_id, provider')
-      .eq('id', body.connectionId)
+    // 4. Verify ownership via student_profiles
+    const { data: profile, error: profileError } = await supabase
+      .from('student_profiles')
+      .select('id')
+      .eq('id', body.profileId)
+      .eq('owner_id', user.id)
       .single();
 
-    if (connectionError || !connection) {
-      console.error('[LMS Disconnect] Connection not found:', connectionError);
+    if (profileError || !profile) {
       return NextResponse.json(
-        { error: 'Connection not found or access denied' },
-        { status: 404 }
+        { error: 'Profile not found or access denied' },
+        { status: 403 }
       );
     }
 
-    // 5. Delete the connection record
-    // RLS policy ensures parent can only delete their own connections
-    const { error: deleteError } = await supabase
+    // 5. Delete the connection record by student_id + provider
+    // Use service role client to bypass RLS — ownership already verified above
+    const supabaseAdmin = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!
+    );
+    const { error: deleteError } = await supabaseAdmin
       .from('lms_connections')
       .delete()
-      .eq('id', body.connectionId);
+      .eq('student_id', body.profileId)
+      .eq('provider', body.provider);
 
     if (deleteError) {
       console.error('[LMS Disconnect] Error deleting connection:', deleteError);
@@ -102,27 +107,16 @@ export async function DELETE(request: Request) {
     // 6. Create parent notification
     await supabase.from('parent_notifications').insert({
       parent_id: user.id,
-      student_id: connection.student_id,
+      student_id: body.profileId,
       notification_type: 'connection_disconnected',
       title: 'LMS Connection Disconnected',
-      message: `Successfully disconnected ${connection.provider} for your student.`,
-      metadata: { connectionId: connection.id, provider: connection.provider },
-    });
-
-    // 7. Create audit log entry
-    await supabase.from('sync_logs').insert({
-      lms_connection_id: body.connectionId,
-      sync_trigger: 'manual',
-      sync_status: 'failed',
-      assignments_found: 0,
-      assignments_downloaded: 0,
-      error_message: 'Connection disconnected by parent',
-      synced_at: new Date().toISOString(),
+      message: `Successfully disconnected ${body.provider} for your student.`,
+      metadata: { profileId: body.profileId, provider: body.provider },
     });
 
     return NextResponse.json({
       success: true,
-      message: `Successfully disconnected ${connection.provider} connection.`,
+      message: `Successfully disconnected ${body.provider} connection.`,
     } as DisconnectLMSResponse);
   } catch (error: any) {
     console.error('[LMS Disconnect] Unexpected error:', error);
