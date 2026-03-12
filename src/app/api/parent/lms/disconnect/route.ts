@@ -68,7 +68,8 @@ export async function DELETE(request: Request) {
       );
     }
 
-    // 4. Get connection details
+    // 4. Get connection details and verify ownership
+    // RLS policy ensures parent can only see their own connections
     const { data: connection, error: connectionError } = await supabase
       .from('lms_connections')
       .select('id, student_id, provider')
@@ -76,33 +77,19 @@ export async function DELETE(request: Request) {
       .single();
 
     if (connectionError || !connection) {
+      console.error('[LMS Disconnect] Connection not found:', connectionError);
       return NextResponse.json(
-        { error: 'Connection not found' },
+        { error: 'Connection not found or access denied' },
         { status: 404 }
       );
     }
 
-    // 5. Verify parent owns this profile (security check via student_profiles)
-    const { data: profile, error: profileError } = await supabase
-      .from('student_profiles')
-      .select('id')
-      .eq('id', connection.student_id)
-      .eq('owner_id', user.id)
-      .single();
-
-    if (profileError || !profile) {
-      return NextResponse.json(
-        { error: 'Access denied. You do not own this connection.' },
-        { status: 403 }
-      );
-    }
-
-    // 6. Delete the connection record
+    // 5. Delete the connection record
+    // RLS policy ensures parent can only delete their own connections
     const { error: deleteError } = await supabase
       .from('lms_connections')
       .delete()
-      .eq('id', body.connectionId)
-      .eq('student_id', connection.student_id); // Security check
+      .eq('id', body.connectionId);
 
     if (deleteError) {
       console.error('[LMS Disconnect] Error deleting connection:', deleteError);
@@ -112,7 +99,7 @@ export async function DELETE(request: Request) {
       );
     }
 
-    // 7. Create parent notification
+    // 6. Create parent notification
     await supabase.from('parent_notifications').insert({
       parent_id: user.id,
       student_id: connection.student_id,
@@ -122,7 +109,7 @@ export async function DELETE(request: Request) {
       metadata: { connectionId: connection.id, provider: connection.provider },
     });
 
-    // 8. Create audit log entry
+    // 7. Create audit log entry
     await supabase.from('sync_logs').insert({
       lms_connection_id: body.connectionId,
       sync_trigger: 'manual',
