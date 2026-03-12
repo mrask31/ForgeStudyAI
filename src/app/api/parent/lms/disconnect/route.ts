@@ -104,15 +104,20 @@ export async function DELETE(request: Request) {
       );
     }
 
-    // 6. Create parent notification
-    await supabase.from('parent_notifications').insert({
-      parent_id: user.id,
-      student_id: body.profileId,
-      notification_type: 'connection_disconnected',
-      title: 'LMS Connection Disconnected',
-      message: `Successfully disconnected ${body.provider} for your student.`,
-      metadata: { profileId: body.profileId, provider: body.provider },
-    });
+    // 6. Create parent notification (best-effort — never blocks disconnect response)
+    try {
+      await supabase.from('parent_notifications').insert({
+        parent_id: user.id,
+        student_id: body.profileId,
+        notification_type: 'connection_disconnected',
+        title: 'LMS Connection Disconnected',
+        message: `Successfully disconnected ${body.provider} for your student.`,
+        metadata: { profileId: body.profileId, provider: body.provider },
+      });
+    } catch (notifyError) {
+      console.error('[LMS Disconnect] Failed to create disconnect notification:', notifyError);
+      // Don't throw — notification failure is non-critical
+    }
 
     return NextResponse.json({
       success: true,
