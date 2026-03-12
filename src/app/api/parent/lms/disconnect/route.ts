@@ -47,7 +47,7 @@ export async function DELETE(request: Request) {
 
     // 2. Verify user is a parent
     const { data: parent, error: parentError } = await supabase
-      .from('parents')
+      .from('profiles')
       .select('id')
       .eq('id', user.id)
       .single();

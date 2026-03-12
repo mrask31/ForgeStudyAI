@@ -99,7 +99,7 @@ export async function POST(request: Request) {
     } else {
       // 4. Check if user is a parent
       const { data: parent } = await supabase
-        .from('parents')
+        .from('profiles')
         .select('id')
         .eq('id', user.id)
         .single();
