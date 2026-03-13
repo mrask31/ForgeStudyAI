@@ -14,7 +14,7 @@ import { SmartSyncService } from '@/lib/lms/services/SmartSyncService';
 import type { TriggerSyncRequest, TriggerSyncResponse } from '@/lib/lms/types';
 
 export const dynamic = 'force-dynamic';
-export const maxDuration = 10; // 10 second timeout for serverless
+export const maxDuration = 30; // Allow time for sync to complete
 
 export async function POST(request: Request) {
   try {
@@ -196,32 +196,36 @@ export async function POST(request: Request) {
       studentId = matched.student_id;
     }
 
-    // 5. Return 202 Accepted immediately (async execution)
-    const response = NextResponse.json(
-      {
-        success: true,
-        message: 'Sync triggered successfully',
-      },
-      { status: 202 }
-    );
-
-    // 6. Trigger sync asynchronously (fire and forget)
+    // 5. Run sync and return result
     const syncService = new SmartSyncService(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
       process.env.SUPABASE_SERVICE_ROLE_KEY!
     );
 
-    // Fire and forget - don't await
-    syncService
-      .syncOnLogin(studentId)
-      .then((results) => {
-        console.log(`[Sync Trigger] Completed sync for student ${studentId}:`, results);
-      })
-      .catch((error) => {
-        console.error(`[Sync Trigger] Sync failed for student ${studentId}:`, error);
-      });
+    try {
+      const results = await syncService.syncOnLogin(studentId);
+      console.log(`[Sync Trigger] Completed sync for student ${studentId}:`, results);
 
-    return response;
+      return NextResponse.json(
+        {
+          success: true,
+          message: 'Sync completed successfully',
+          results,
+        },
+        { status: 200 }
+      );
+    } catch (syncError: any) {
+      console.error(`[Sync Trigger] Sync failed for student ${studentId}:`, syncError);
+
+      return NextResponse.json(
+        {
+          success: false,
+          message: 'Sync failed',
+          error: syncError instanceof Error ? syncError.message : String(syncError),
+        },
+        { status: 502 }
+      );
+    }
   } catch (error: any) {
     console.error('[Sync Trigger] Unexpected error:', error);
     return NextResponse.json(
