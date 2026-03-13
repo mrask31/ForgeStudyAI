@@ -620,31 +620,12 @@ export class SmartSyncService {
     try {
       console.log(`[SmartSync] Creating study topic for assignment ${assignment.id}`);
 
-      // STEP 1: Get the parent_id from lms_connections, then find the student profile
-      // The studentId here is from the students table, but student_profiles.owner_id references auth.users (parent)
-      // We need to get the parent_id from lms_connections first
-      const { data: connection, error: connectionError } = await this.supabase
-        .from('lms_connections')
-        .select('parent_id')
-        .eq('id', assignment.lms_connection_id)
-        .single();
-
-      if (connectionError || !connection) {
-        console.error('[SmartSync] Failed to find lms_connection:', connectionError);
-        
-        await this.supabase
-          .from('synced_assignments')
-          .update({ merge_status: 'failed' })
-          .eq('id', assignment.id);
-        
-        return;
-      }
-
-      // Now get the student profile using the parent's user ID
+      // STEP 1: Get the student profile directly by studentId
+      // studentId is lms_connections.student_id which equals student_profiles.id
       const { data: profile, error: profileError } = await this.supabase
         .from('student_profiles')
         .select('id, grade_band')
-        .eq('owner_id', connection.parent_id)
+        .eq('id', studentId)
         .single();
 
       if (profileError || !profile) {
