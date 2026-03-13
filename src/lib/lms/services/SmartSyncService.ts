@@ -630,6 +630,7 @@ export class SmartSyncService {
     assignment: any,
     studentId: string
   ): Promise<void> {
+    console.log('[StudyTopic] Function entered, assignment:', assignment.id, 'studentId:', studentId);
     try {
       console.log(`[SmartSync] Creating study topic for assignment ${assignment.id}`);
 
@@ -748,6 +749,7 @@ export class SmartSyncService {
 
       console.log(`[SmartSync] Successfully created study topic ${newTopic.id} for assignment ${assignment.id}`);
     } catch (error: any) {
+      console.error('[StudyTopic] Error:', error);
       console.error('[SmartSync] Error in createStudyTopicFromAssignment:', error);
       
       // Update assignment merge_status to failed
