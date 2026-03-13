@@ -555,7 +555,20 @@ export class SmartSyncService {
       }
 
       // CRITICAL: Create study_topic from this assignment
-      await this.createStudyTopicFromAssignment(newAssignment, connection.student_id);
+      console.log('[SmartSync] About to create study topic for assignment:', {
+        assignmentId: newAssignment.id,
+        studentId: connection.student_id,
+        title: newAssignment.title,
+      });
+      try {
+        await this.createStudyTopicFromAssignment(newAssignment, connection.student_id);
+        console.log('[SmartSync] Study topic creation returned for assignment:', newAssignment.id);
+      } catch (topicError: any) {
+        console.error('[SmartSync] Study topic creation threw:', {
+          assignmentId: newAssignment.id,
+          error: topicError?.message || String(topicError),
+        });
+      }
 
       // Check for manual upload match
       const matchingUpload = await this.deduplicationEngine.findMatchingUpload(
