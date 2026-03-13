@@ -53,11 +53,13 @@ export async function DELETE(request: Request) {
       .single();
 
     if (parentError || !parent) {
+      console.error('[LMS Disconnect] Profile check failed:', { userId: user.id, parentError });
       return NextResponse.json(
         { error: 'Only parents can disconnect LMS connections' },
         { status: 403 }
       );
     }
+    console.log('[LMS Disconnect] Step 1 passed - user authenticated:', user.id);
 
     // 3. Parse request
     const body: DisconnectLMSRequest = await request.json();
@@ -65,6 +67,22 @@ export async function DELETE(request: Request) {
     if (!body.profileId || !body.provider) {
       return NextResponse.json(
         { error: 'Missing required fields: profileId, provider' },
+        { status: 400 }
+      );
+    }
+
+    // Normalize provider to DB enum value (DB stores 'canvas', 'google_classroom')
+    const providerMap: Record<string, string> = {
+      'canvas': 'canvas',
+      'google classroom': 'google_classroom',
+      'google_classroom': 'google_classroom',
+    };
+    const normalizedProvider = providerMap[body.provider.toLowerCase()];
+
+    if (!normalizedProvider) {
+      console.error('[LMS Disconnect] Unknown provider:', body.provider);
+      return NextResponse.json(
+        { error: `Unknown provider: ${body.provider}` },
         { status: 400 }
       );
     }
@@ -78,11 +96,13 @@ export async function DELETE(request: Request) {
       .single();
 
     if (profileError || !profile) {
+      console.error('[LMS Disconnect] Ownership check failed:', { profileId: body.profileId, userId: user.id, profileError });
       return NextResponse.json(
         { error: 'Profile not found or access denied' },
         { status: 403 }
       );
     }
+    console.log('[LMS Disconnect] Step 2 passed - ownership verified:', body.profileId);
 
     // 5. Delete the connection record by student_id + provider
     // Use service role client to bypass RLS — ownership already verified above
@@ -90,11 +110,14 @@ export async function DELETE(request: Request) {
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
       process.env.SUPABASE_SERVICE_ROLE_KEY!
     );
-    const { error: deleteError } = await supabaseAdmin
+    const { data: deleteResult, error: deleteError } = await supabaseAdmin
       .from('lms_connections')
       .delete()
       .eq('student_id', body.profileId)
-      .eq('provider', body.provider);
+      .eq('provider', normalizedProvider)
+      .select();
+
+    console.log('[LMS Disconnect] Step 3 delete result:', JSON.stringify({ deleteResult, deleteError, normalizedProvider }));
 
     if (deleteError) {
       console.error('[LMS Disconnect] Error deleting connection:', deleteError);
@@ -111,8 +134,8 @@ export async function DELETE(request: Request) {
         student_id: body.profileId,
         notification_type: 'connection_disconnected',
         title: 'LMS Connection Disconnected',
-        message: `Successfully disconnected ${body.provider} for your student.`,
-        metadata: { profileId: body.profileId, provider: body.provider },
+        message: `Successfully disconnected ${normalizedProvider} for your student.`,
+        metadata: { profileId: body.profileId, provider: normalizedProvider },
       });
     } catch (notifyError) {
       console.error('[LMS Disconnect] Failed to create disconnect notification:', notifyError);
@@ -121,7 +144,7 @@ export async function DELETE(request: Request) {
 
     return NextResponse.json({
       success: true,
-      message: `Successfully disconnected ${body.provider} connection.`,
+      message: `Successfully disconnected ${normalizedProvider} connection.`,
     } as DisconnectLMSResponse);
   } catch (error: any) {
     console.error('[LMS Disconnect] Unexpected error:', error);
