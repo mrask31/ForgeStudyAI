@@ -57,17 +57,26 @@ export async function POST(request: Request) {
 
     let studentId: string;
 
-    // 3. Check if user is a student
-    const { data: student, error: studentError } = await supabase
-      .from('students')
-      .select('id')
+    // 3. Determine user role from profiles table
+    const { data: userProfile } = await supabase
+      .from('profiles')
+      .select('id, role')
       .eq('id', user.id)
       .single();
 
-    if (student) {
+    if (!userProfile) {
+      return NextResponse.json(
+        { error: 'Only students and parents can trigger sync' },
+        { status: 403 }
+      );
+    }
+
+    console.log('[Sync Trigger] User role:', { userId: user.id, role: userProfile.role });
+
+    if (userProfile.role !== 'parent') {
       // Student-initiated sync
       studentId = user.id;
-      
+
       // Students can only sync their own profile
       if (requestBody?.studentId && requestBody.studentId !== user.id) {
         return NextResponse.json(
@@ -97,20 +106,6 @@ export async function POST(request: Request) {
         studentId = connection.student_id;
       }
     } else {
-      // 4. Check if user is a parent
-      const { data: parent } = await supabase
-        .from('profiles')
-        .select('id')
-        .eq('id', user.id)
-        .single();
-
-      if (!parent) {
-        return NextResponse.json(
-          { error: 'Only students and parents can trigger sync' },
-          { status: 403 }
-        );
-      }
-
       // Parent-initiated sync - profileId is required
       if (!requestBody?.profileId) {
         return NextResponse.json(
