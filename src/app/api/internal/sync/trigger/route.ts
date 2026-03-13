@@ -119,7 +119,7 @@ export async function POST(request: Request) {
         );
       }
 
-      // Verify the profile belongs to this parent (security check)
+      // Step 1: Verify the profile belongs to this parent via student_profiles
       const { data: profile, error: profileError } = await supabase
         .from('student_profiles')
         .select('id, owner_id')
@@ -128,34 +128,76 @@ export async function POST(request: Request) {
         .single();
 
       if (profileError || !profile) {
+        console.error('[Sync Trigger] Ownership check failed:', {
+          profileId: requestBody.profileId,
+          authUserId: user.id,
+          profileError,
+        });
         return NextResponse.json(
           { error: 'Profile not found or you do not have permission' },
           { status: 403 }
         );
       }
 
-      // Look up lms_connection by student_id (which is the profileId)
-      // The profileId IS the student_id in lms_connections
-      // Use service role client to bypass RLS — ownership already verified above
+      console.log('[Sync Trigger] Step 1 - profile verified:', {
+        profileId: profile.id,
+        ownerId: profile.owner_id,
+        authUserId: user.id,
+      });
+
+      // Step 2: Use service role client to bypass RLS — ownership already verified above
       const supabaseAdmin = createClient(
         process.env.NEXT_PUBLIC_SUPABASE_URL!,
         process.env.SUPABASE_SERVICE_ROLE_KEY!
       );
-      const { data: connection } = await supabaseAdmin
-        .from('lms_connections')
-        .select('student_id')
-        .eq('student_id', requestBody.profileId)
-        .eq('status', 'active')
-        .single();
 
-      if (!connection) {
+      // Step 3: Look up lms_connection by parent_id (= auth user ID stored at connect time)
+      // The connect route stores parent_id = user.id (auth UUID), so we match on that.
+      // Also filter by student_id for specificity when parent has multiple students.
+      const { data: connection, error: connError } = await supabaseAdmin
+        .from('lms_connections')
+        .select('id, student_id, parent_id, provider, status')
+        .eq('parent_id', user.id)
+        .eq('status', 'active')
+        .limit(10);
+
+      console.log('[Sync Trigger] Step 3 - lms_connections for parent:', JSON.stringify({
+        parentAuthId: user.id,
+        profileId: requestBody.profileId,
+        connectionsFound: connection?.length ?? 0,
+        connections: connection?.map(c => ({
+          id: c.id,
+          student_id: c.student_id,
+          parent_id: c.parent_id,
+          provider: c.provider,
+          status: c.status,
+        })),
+        connError,
+      }));
+
+      // Find the connection matching this specific student profile
+      const matched = connection?.find(c => c.student_id === requestBody.profileId);
+
+      if (!matched) {
+        // Fallback diagnostic: dump ALL connections for this parent to see the actual student_id values
+        console.error('[Sync Trigger] No connection matched profileId:', {
+          profileId: requestBody.profileId,
+          parentAuthId: user.id,
+          availableStudentIds: connection?.map(c => c.student_id),
+        });
         return NextResponse.json(
           { error: 'No active LMS connection found for this profile' },
           { status: 404 }
         );
       }
 
-      studentId = connection.student_id;
+      console.log('[Sync Trigger] Matched connection:', {
+        connectionId: matched.id,
+        studentId: matched.student_id,
+        provider: matched.provider,
+      });
+
+      studentId = matched.student_id;
     }
 
     // 5. Return 202 Accepted immediately (async execution)
