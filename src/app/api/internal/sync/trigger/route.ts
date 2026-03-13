@@ -57,10 +57,10 @@ export async function POST(request: Request) {
 
     let studentId: string;
 
-    // 3. Determine user role from profiles table
+    // 3. Determine if user is a parent from profiles table
     const { data: userProfile } = await supabase
       .from('profiles')
-      .select('id, role')
+      .select('id, parent_pin_hash')
       .eq('id', user.id)
       .single();
 
@@ -71,9 +71,10 @@ export async function POST(request: Request) {
       );
     }
 
-    console.log('[Sync Trigger] User role:', { userId: user.id, role: userProfile.role });
+    const isParent = !!userProfile.parent_pin_hash;
+    console.log('[Sync Trigger] User type:', { userId: user.id, isParent });
 
-    if (userProfile.role !== 'parent') {
+    if (!isParent) {
       // Student-initiated sync
       studentId = user.id;
 
