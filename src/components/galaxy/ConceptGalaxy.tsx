@@ -493,7 +493,7 @@ export function ConceptGalaxy({ topics, profileId, onTopicsRefresh }: ConceptGal
       {/* Weave Mode Toggle - Floating button for touch devices */}
       <button
         onClick={() => setIsWeaveModeActive(!isWeaveModeActive)}
-        className={`absolute top-4 right-44 md:right-52 z-50 px-4 py-2 rounded-xl font-medium transition-all shadow-2xl backdrop-blur-md border ${
+        className={`absolute top-16 md:top-[4.5rem] right-4 md:right-6 z-50 px-4 py-2 rounded-xl font-medium transition-all shadow-2xl backdrop-blur-md border ${
           isWeaveModeActive
             ? 'bg-amber-600/90 border-amber-500/50 text-white'
             : 'bg-slate-900/60 border-slate-700/50 text-slate-300 hover:bg-slate-800/60'

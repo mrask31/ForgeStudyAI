@@ -795,9 +795,11 @@ function TutorPageContent() {
   const showError = error && !isResolving
   // Show landing when there's no resolved chat (allows welcome message for both General Tutor and class-specific)
   // Only show session if there's an active resolvedChatId (not just structured context)
-  const showLanding = (!resolvedChatId && !isResolving && !error) || (isEntryMode && !isResolving && !error)
-  // Show session only if there's an active resolved chat
-  const showSession = !!resolvedChatId && !isResolving && !error
+  // When topicId is present (e.g. from Galaxy), skip landing and show session so topic context is used
+  const hasTopicContext = !!tutorContext.selectedTopicId
+  const showLanding = (!resolvedChatId && !isResolving && !error && !hasTopicContext) || (isEntryMode && !isResolving && !error)
+  // Show session only if there's an active resolved chat OR topic context is present (session will be created on first message)
+  const showSession = (!!resolvedChatId || hasTopicContext) && !isResolving && !error
 
   if (showLoading) {
     return (

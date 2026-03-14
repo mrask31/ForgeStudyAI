@@ -204,7 +204,7 @@ export default function ClinicalTutorWorkspace({
   }, [chatId]);
   
   // Get topic context for warm start
-  const topicTitle = tutorContext.selectedTopic?.title
+  const topicTitle = tutorContext.selectedTopic?.title || tutorContext.selectedTopicTitle
   const className = tutorContext.selectedClass ? `${tutorContext.selectedClass.code} — ${tutorContext.selectedClass.name}` : undefined
   const selectedClassName = tutorContext.selectedClass?.name || undefined
   
