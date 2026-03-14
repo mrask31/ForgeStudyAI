@@ -124,14 +124,14 @@ export function FocusPanel({
         aria-modal="true"
         aria-labelledby="focus-panel-title"
         className={`fixed inset-y-0 right-0 z-50 w-full md:w-[420px] lg:w-[460px]
-                   bg-slate-950/95 backdrop-blur-2xl border-l border-slate-800 shadow-2xl
+                   bg-slate-950/95 backdrop-blur-2xl border-l-4 border-indigo-500 shadow-2xl
                    transition-transform duration-300 ease-in-out
                    ${isOpen ? 'translate-x-0' : 'translate-x-full'}`}
       >
         {/* Header */}
         <div className="border-b border-slate-800 p-5 flex items-start justify-between gap-3">
           <div className="min-w-0">
-            <h2 id="focus-panel-title" className="text-lg font-semibold text-slate-100 truncate">
+            <h2 id="focus-panel-title" className="text-lg font-semibold text-slate-100 line-clamp-2">
               {topicTitle}
             </h2>
             <span className={`inline-flex items-center mt-2 px-2.5 py-0.5 rounded-full text-xs font-medium border ${badgeColors[masteryLevel]}`}>
