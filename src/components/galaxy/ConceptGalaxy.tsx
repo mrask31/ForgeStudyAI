@@ -5,6 +5,7 @@ import dynamic from 'next/dynamic';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 import { FocusPanel } from './FocusPanel';
+import { DueSoonTray } from './DueSoonTray';
 
 // Dynamically import ForceGraph2D to avoid SSR issues
 const ForceGraph2D = dynamic(() => import('react-force-graph-2d'), {
@@ -549,6 +550,24 @@ export function ConceptGalaxy({ topics, profileId, onTopicsRefresh }: ConceptGal
             </button>
           </div>
         </div>
+      )}
+
+      {/* Due Soon Tray */}
+      {profileId && (
+        <DueSoonTray
+          profileId={profileId}
+          onSelectTopic={(topicId, topicTitle) => {
+            const topic = topics.find(t => t.id === topicId);
+            setFocusPanelState({
+              isOpen: true,
+              selectedTopicId: topicId,
+              selectedTopicTitle: topicTitle,
+              masteryScore: topic?.mastery_score ?? 0,
+              dueDate: topic?.next_review_date ?? null,
+              lastStudied: topic?.updated_at ?? null,
+            });
+          }}
+        />
       )}
 
       {/* Focus Panel */}
