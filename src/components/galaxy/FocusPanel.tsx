@@ -123,7 +123,7 @@ export function FocusPanel({
         role="dialog"
         aria-modal="true"
         aria-labelledby="focus-panel-title"
-        className={`fixed inset-y-0 right-0 z-50 w-full md:w-[420px] lg:w-[460px]
+        className={`fixed inset-y-0 right-0 z-50 w-full md:w-[380px]
                    bg-slate-950/95 backdrop-blur-2xl border-l-4 border-indigo-500 shadow-2xl
                    transition-transform duration-300 ease-in-out
                    ${isOpen ? 'translate-x-0' : 'translate-x-full'}`}
