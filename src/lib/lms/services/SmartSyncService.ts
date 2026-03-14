@@ -527,6 +527,26 @@ export class SmartSyncService {
           })
           .eq('id', existing.id);
 
+        // Check if study_topic was never created (e.g. due to prior bugs)
+        const { data: existingFull } = await this.supabase
+          .from('synced_assignments')
+          .select('id, title, description, course_name, course_id, due_date, lms_connection_id, merge_status, study_topic_id')
+          .eq('id', existing.id)
+          .single();
+
+        if (existingFull && !existingFull.study_topic_id && existingFull.merge_status !== 'merged') {
+          console.log('[SmartSync] Existing assignment missing study_topic — creating now:', existing.id);
+          try {
+            await this.createStudyTopicFromAssignment(existingFull, connection.student_id);
+            console.log('[SmartSync] Backfill topic creation succeeded for:', existing.id);
+          } catch (topicError: any) {
+            console.error('[SmartSync] Backfill topic creation failed:', {
+              assignmentId: existing.id,
+              error: topicError?.message || String(topicError),
+            });
+          }
+        }
+
         return;
       }
 
