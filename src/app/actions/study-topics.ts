@@ -9,7 +9,7 @@ export async function getStudyTopicsWithMastery(profileId: string) {
   // This hides quarantined topics (orbit_state = 0) from automated email ingestion
   const { data: topics, error } = await supabase
     .from('study_topics')
-    .select('id, title, mastery_score, orbit_state')
+    .select('id, title, mastery_score, orbit_state, next_review_date, last_studied_at')
     .eq('profile_id', profileId)
     .gte('orbit_state', 1) // CRITICAL: Only show active topics
     .order('mastery_score', { ascending: false });

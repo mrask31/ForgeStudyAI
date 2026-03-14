@@ -22,6 +22,7 @@ interface Topic {
   mastery_score: number;
   orbit_state: number; // 0=Quarantine, 1=Active, 2=Mastered, 3=Ghost Node
   next_review_date?: string | null; // For Ghost Nodes
+  last_studied_at?: string | null;
 }
 
 interface Node {
@@ -66,6 +67,9 @@ export function ConceptGalaxy({ topics, profileId, onTopicsRefresh }: ConceptGal
     isOpen: false,
     selectedTopicId: null as string | null,
     selectedTopicTitle: null as string | null,
+    masteryScore: 0,
+    dueDate: null as string | null,
+    lastStudied: null as string | null,
   });
   
   // Permanent edges state
@@ -276,11 +280,15 @@ export function ConceptGalaxy({ topics, profileId, onTopicsRefresh }: ConceptGal
     if (isWeaveModeActive || event.shiftKey) {
       handleConstellationSelection(node);
     } else {
-      // Open Focus Panel instead of navigating
+      // Open Focus Panel — look up full topic data
+      const topic = topics.find(t => t.id === node.id);
       setFocusPanelState({
         isOpen: true,
         selectedTopicId: node.id,
         selectedTopicTitle: node.name,
+        masteryScore: topic?.mastery_score ?? 0,
+        dueDate: topic?.next_review_date ?? null,
+        lastStudied: topic?.last_studied_at ?? null,
       });
     }
   };
@@ -290,6 +298,9 @@ export function ConceptGalaxy({ topics, profileId, onTopicsRefresh }: ConceptGal
       isOpen: false,
       selectedTopicId: null,
       selectedTopicTitle: null,
+      masteryScore: 0,
+      dueDate: null,
+      lastStudied: null,
     });
   };
 
@@ -545,7 +556,19 @@ export function ConceptGalaxy({ topics, profileId, onTopicsRefresh }: ConceptGal
         isOpen={focusPanelState.isOpen}
         topicId={focusPanelState.selectedTopicId}
         topicTitle={focusPanelState.selectedTopicTitle}
+        masteryScore={focusPanelState.masteryScore}
+        masteryLevel={
+          (focusPanelState.masteryScore >= 70 ? 'mastered' :
+          focusPanelState.masteryScore >= 30 ? 'developing' : 'learning') as 'learning' | 'developing' | 'mastered'
+        }
+        dueDate={focusPanelState.dueDate}
+        lastStudied={focusPanelState.lastStudied}
         onClose={handleCloseFocusPanel}
+        onAction={(action: string) => {
+          if (focusPanelState.selectedTopicId && focusPanelState.selectedTopicTitle) {
+            router.push(`/tutor?topicId=${focusPanelState.selectedTopicId}&topicTitle=${encodeURIComponent(focusPanelState.selectedTopicTitle)}&action=${encodeURIComponent(action)}`);
+          }
+        }}
       />
     </div>
   );
