@@ -41,7 +41,9 @@ export function TutorProvider({ children }: { children: ReactNode }) {
   )
   const [selectedClass, setSelectedClass] = useState<StudentClass | null>(null)
   const [selectedTopic, setSelectedTopic] = useState<NotebookTopic | null>(null)
-  const [selectedTopicTitle, setSelectedTopicTitle] = useState<string | undefined>(undefined)
+  const [selectedTopicTitle, setSelectedTopicTitle] = useState<string | undefined>(
+    searchParams.get('topicTitle') || undefined
+  )
   const [selectedTopicFileIds, setSelectedTopicFileIds] = useState<string[] | undefined>(undefined)
   const [classes, setClasses] = useState<StudentClass[]>([])
   const [loading, setLoading] = useState(true)
@@ -99,7 +101,10 @@ export function TutorProvider({ children }: { children: ReactNode }) {
   const loadSelectedTopic = async () => {
     if (!userId || !selectedClassId || !selectedTopicId) {
       setSelectedTopic(null)
-      setSelectedTopicTitle(undefined)
+      // Preserve topicTitle from URL param when there's no classId (e.g. Galaxy navigation)
+      if (!selectedTopicId) {
+        setSelectedTopicTitle(undefined)
+      }
       setSelectedTopicFileIds(undefined)
       return
     }
@@ -195,6 +200,11 @@ export function TutorProvider({ children }: { children: ReactNode }) {
     }
     if (urlTopicId !== stateTopicId) {
       setSelectedTopicIdState(urlTopicId)
+    }
+    // Sync topicTitle from URL (used when navigating from Galaxy without a classId)
+    const urlTopicTitle = searchParams.get('topicTitle') || undefined
+    if (urlTopicTitle && !selectedTopicTitle) {
+      setSelectedTopicTitle(urlTopicTitle)
     }
     if (urlExamId !== stateExamId) {
       setActiveExamIdState(urlExamId)

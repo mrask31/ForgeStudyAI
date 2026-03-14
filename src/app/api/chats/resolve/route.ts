@@ -257,6 +257,7 @@ export async function POST(req: Request) {
     // For class/topic context
     const classId = body.classId as string | undefined
     const topicId = body.topicId as string | undefined
+    const topicTitle = body.topicTitle as string | undefined
     const tool = body.tool as string | undefined
     const entryMode = body.entryMode as string | undefined
 
@@ -386,8 +387,11 @@ export async function POST(req: Request) {
       }
       if (topicId) {
         metadata.topicId = topicId
-        // Also store as topicTerm for backward compatibility
-        metadata.topicTerm = topicId
+        // Store the human-readable title for topic context in chat
+        metadata.topicTerm = topicTitle || topicId
+        if (topicTitle) {
+          metadata.topicTitle = topicTitle
+        }
       }
       if (tool && ['study-map', 'practice', 'exam', 'writing'].includes(tool)) {
         metadata.tool = tool
