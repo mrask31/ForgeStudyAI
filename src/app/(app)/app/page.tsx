@@ -12,13 +12,29 @@ import { calculateSmartCTA, type SmartCTAResult } from '@/lib/smart-cta'
 import { useUser } from '@/contexts/UserContext'
 import Link from 'next/link'
 
+// Module-level cache survives component unmount/remount during client-side navigation
+const galaxyCache: {
+  profileId: string | null
+  topics: any[]
+  smartCTA: SmartCTAResult | null
+  quarantinedCount: number
+} = { profileId: null, topics: [], smartCTA: null, quarantinedCount: 0 }
+
 export default function GalaxyPage() {
   const { activeProfileId } = useActiveProfile()
   const { user } = useUser()
-  const [topics, setTopics] = useState<any[]>([])
-  const [loading, setLoading] = useState(true)
-  const [smartCTA, setSmartCTA] = useState<SmartCTAResult | null>(null)
-  const [quarantinedCount, setQuarantinedCount] = useState(0)
+  const [topics, setTopics] = useState<any[]>(() =>
+    galaxyCache.profileId === activeProfileId ? galaxyCache.topics : []
+  )
+  const [loading, setLoading] = useState(() =>
+    galaxyCache.profileId === activeProfileId && galaxyCache.topics.length > 0 ? false : true
+  )
+  const [smartCTA, setSmartCTA] = useState<SmartCTAResult | null>(() =>
+    galaxyCache.profileId === activeProfileId ? galaxyCache.smartCTA : null
+  )
+  const [quarantinedCount, setQuarantinedCount] = useState(() =>
+    galaxyCache.profileId === activeProfileId ? galaxyCache.quarantinedCount : 0
+  )
 
   useEffect(() => {
     async function loadData() {
@@ -36,6 +52,11 @@ export default function GalaxyPage() {
         setTopics(topicsData)
         setSmartCTA(ctaData)
         setQuarantinedCount(quarantinedData)
+        // Persist to module-level cache for instant render on remount
+        galaxyCache.profileId = activeProfileId
+        galaxyCache.topics = topicsData
+        galaxyCache.smartCTA = ctaData
+        galaxyCache.quarantinedCount = quarantinedData
       } catch (error) {
         console.error('[Galaxy] Error loading data:', error)
       } finally {
@@ -136,6 +157,7 @@ export default function GalaxyPage() {
               if (activeProfileId && user) {
                 const topicsData = await getStudyTopicsWithMastery(activeProfileId);
                 setTopics(topicsData);
+                galaxyCache.topics = topicsData;
               }
             }}
           />
