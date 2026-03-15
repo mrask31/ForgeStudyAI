@@ -49,10 +49,11 @@ interface ConceptGalaxyProps {
   topics: Topic[];
   profileId?: string; // For lazy evaluation
   lmsStatus?: 'no_connection' | 'connected' | null;
+  onDueSoonChange?: (hasDueSoon: boolean) => void;
   onTopicsRefresh?: () => void; // Callback to refresh topics after lazy eval
 }
 
-export function ConceptGalaxy({ topics, profileId, lmsStatus, onTopicsRefresh }: ConceptGalaxyProps) {
+export function ConceptGalaxy({ topics, profileId, lmsStatus, onDueSoonChange, onTopicsRefresh }: ConceptGalaxyProps) {
   const router = useRouter();
   const graphRef = useRef<any>();
   const containerRef = useRef<HTMLDivElement>(null);
@@ -586,6 +587,7 @@ export function ConceptGalaxy({ topics, profileId, lmsStatus, onTopicsRefresh }:
       {profileId && (
         <DueSoonTray
           profileId={profileId}
+          onItemsLoaded={(hasItems) => onDueSoonChange?.(hasItems)}
           onSelectTopic={(topicId, topicTitle) => {
             const topic = topics.find(t => t.id === topicId);
             setFocusPanelState({

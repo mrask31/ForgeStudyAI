@@ -36,6 +36,7 @@ export default function GalaxyPage() {
     galaxyCache.profileId === activeProfileId ? galaxyCache.quarantinedCount : 0
   )
   const [lmsStatus, setLmsStatus] = useState<'no_connection' | 'connected' | null>(null)
+  const [hasDueSoonItems, setHasDueSoonItems] = useState(false)
 
   useEffect(() => {
     async function loadData() {
@@ -176,6 +177,7 @@ export default function GalaxyPage() {
             topics={topics}
             profileId={activeProfileId || undefined}
             lmsStatus={lmsStatus}
+            onDueSoonChange={setHasDueSoonItems}
             onTopicsRefresh={async () => {
               // Refresh topics after lazy eval or snap-back
               if (activeProfileId && user) {
@@ -188,8 +190,8 @@ export default function GalaxyPage() {
         )}
       </div>
       
-      {/* Bottom Center HUD - Smart CTA (Sticky bottom sheet on mobile) */}
-      {smartCTA && (
+      {/* Bottom Center HUD - Smart CTA (only when no due-soon items to avoid overlap) */}
+      {smartCTA && !hasDueSoonItems && (
         <div className="fixed md:absolute bottom-0 md:bottom-8 left-0 md:left-1/2 md:-translate-x-1/2 w-full md:w-auto z-40">
           <div className="bg-slate-900/90 md:bg-slate-900/40 backdrop-blur-md border-t md:border border-slate-700/50 rounded-t-xl md:rounded-xl shadow-2xl p-4 md:p-6">
             <SmartCTA 

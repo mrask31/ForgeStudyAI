@@ -14,6 +14,7 @@ interface Assignment {
 interface DueSoonTrayProps {
   profileId: string;
   onSelectTopic: (topicId: string, topicTitle: string) => void;
+  onItemsLoaded?: (hasItems: boolean) => void;
 }
 
 function getDueDateColor(dueDate: string | null): string {
@@ -39,7 +40,7 @@ function formatDueLabel(dueDate: string | null): string {
   return `${diffDays}d left`;
 }
 
-export function DueSoonTray({ profileId, onSelectTopic }: DueSoonTrayProps) {
+export function DueSoonTray({ profileId, onSelectTopic, onItemsLoaded }: DueSoonTrayProps) {
   const [assignments, setAssignments] = useState<Assignment[]>([]);
 
   useEffect(() => {
@@ -48,14 +49,19 @@ export function DueSoonTray({ profileId, onSelectTopic }: DueSoonTrayProps) {
         const res = await fetch(`/api/assignments/due-soon?profileId=${profileId}`);
         if (res.ok) {
           const data = await res.json();
-          setAssignments(data.assignments || []);
+          const items = data.assignments || [];
+          setAssignments(items);
+          onItemsLoaded?.(items.length > 0);
+        } else {
+          onItemsLoaded?.(false);
         }
       } catch (err) {
         console.error('[DueSoonTray] Failed to fetch:', err);
+        onItemsLoaded?.(false);
       }
     }
     fetchAssignments();
-  }, [profileId]);
+  }, [profileId]); // eslint-disable-line react-hooks/exhaustive-deps
 
   if (assignments.length === 0) return null;
 
