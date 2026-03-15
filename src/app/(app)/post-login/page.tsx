@@ -32,7 +32,8 @@ export default async function PostLoginPage() {
     isTrialActive
 
   if (!isActive) {
-    redirect('/checkout')
+    const reason = subscriptionStatus === 'trialing' || trialEndsAt ? 'trial_expired' : '';
+    redirect(reason ? `/billing/payment-required?reason=${reason}` : '/checkout')
   }
 
   const profiles = await getStudentProfiles()
