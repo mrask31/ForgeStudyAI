@@ -1,6 +1,7 @@
 'use client'
 
-import { Sparkles } from 'lucide-react'
+import { Sparkles, Share2 } from 'lucide-react'
+import { toast } from 'sonner'
 import { useActiveProfile } from '@/contexts/ActiveProfileContext'
 import { ConceptGalaxy } from '@/components/galaxy/ConceptGalaxy'
 import { GalaxyLegend } from '@/components/galaxy/GalaxyLegend'
@@ -145,6 +146,22 @@ export default function GalaxyPage() {
           Each star represents a concept you're mastering. Click any node to study.
         </p>
         <GalaxyLegend />
+        {activeProfileId && (
+          <button
+            onClick={() => {
+              const url = `${window.location.origin}/share/${activeProfileId}`;
+              navigator.clipboard.writeText(url).then(() => {
+                toast.success('Share link copied to clipboard!');
+              }).catch(() => {
+                toast.error('Failed to copy link');
+              });
+            }}
+            className="mt-3 inline-flex items-center gap-2 px-4 py-2 bg-indigo-600/20 hover:bg-indigo-600/30 border border-indigo-500/30 rounded-lg text-sm font-medium text-indigo-300 transition-colors"
+          >
+            <Share2 className="w-4 h-4" />
+            Share Progress
+          </button>
+        )}
       </div>
       
       {/* Top Right HUD - Upload + Photo Drop */}
