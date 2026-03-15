@@ -125,7 +125,7 @@ function BillingSuccessContent() {
           </h1>
           
           <p className="text-slate-600 mb-6 leading-relaxed">
-            Your subscription is active and your 7-day free trial has started. Next, create your first student profile so we can match the right grade band.
+            Your subscription is active. Your Galaxy awaits!
           </p>
 
           {sessionId && (

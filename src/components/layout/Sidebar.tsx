@@ -27,6 +27,7 @@ export default function Sidebar({ onNavigate }: SidebarProps = {}) {
   const [studentName, setStudentName] = useState<string | null>(null)
   const [gradeBand, setGradeBand] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(true)
+  const [trialDaysLeft, setTrialDaysLeft] = useState<number | null>(null)
 
   useEffect(() => {
     const loadProfile = async () => {
@@ -37,6 +38,22 @@ export default function Sidebar({ onNavigate }: SidebarProps = {}) {
         if (!user) {
           setIsLoading(false)
           return
+        }
+
+        // Check trial status
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('subscription_status, trial_ends_at')
+          .eq('id', user.id)
+          .single()
+
+        if (profile?.subscription_status === 'trialing' && profile?.trial_ends_at) {
+          const daysLeft = Math.ceil(
+            (new Date(profile.trial_ends_at).getTime() - Date.now()) / (1000 * 60 * 60 * 24)
+          )
+          setTrialDaysLeft(daysLeft > 0 ? daysLeft : 0)
+        } else {
+          setTrialDaysLeft(null)
         }
 
         if (activeProfileId) {
@@ -173,6 +190,20 @@ export default function Sidebar({ onNavigate }: SidebarProps = {}) {
           </Link>
         </div>
         
+        {/* Trial Banner */}
+        {trialDaysLeft !== null && (
+          <div className="mt-4 mx-2 px-3 py-2 rounded-lg bg-amber-900/20 border border-amber-800/30">
+            <p className="text-xs text-amber-400 font-medium">
+              {trialDaysLeft > 0 ? `${trialDaysLeft} day${trialDaysLeft !== 1 ? 's' : ''} left in trial` : 'Trial expired'}
+            </p>
+            {trialDaysLeft <= 3 && (
+              <Link href="/billing/payment-required?reason=trial_expired" onClick={onNavigate} className="text-xs text-amber-300 hover:text-amber-200 underline">
+                Upgrade now
+              </Link>
+            )}
+          </div>
+        )}
+
         {/* User Profile / Footer */}
         <div className="mt-auto pt-6 border-t border-slate-800">
           {isLoading ? (
