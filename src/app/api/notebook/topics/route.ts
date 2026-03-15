@@ -52,7 +52,7 @@ export async function GET(req: Request) {
       classId: row.class_id || undefined,
       title: row.title,
       description: row.description || undefined,
-      nclexCategory: row.nclex_category || undefined,
+      category: row.nclex_category || undefined,
       fileIds: row.file_ids || undefined,
       lastStudiedAt: row.last_studied_at || undefined,
       confidence: row.confidence !== null && row.confidence !== undefined ? row.confidence : undefined,
@@ -77,7 +77,7 @@ export async function POST(req: Request) {
     }
 
     const body = await req.json()
-    const { userId, classId, title, description, nclexCategory, fileIds } = body
+    const { userId, classId, title, description, category, fileIds } = body
 
     if (userId !== user.id) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
@@ -96,7 +96,7 @@ export async function POST(req: Request) {
         class_id: classId || null,
         title: title.trim(),
         description: description || null,
-        nclex_category: nclexCategory || null,
+        nclex_category: category || null,
         file_ids: fileIds || null,
         created_at: now,
         updated_at: now,
@@ -122,7 +122,7 @@ export async function POST(req: Request) {
       classId: newTopic.class_id || undefined,
       title: newTopic.title,
       description: newTopic.description || undefined,
-      nclexCategory: newTopic.nclex_category || undefined,
+      category: newTopic.nclex_category || undefined,
       fileIds: newTopic.file_ids || undefined,
       lastStudiedAt: newTopic.last_studied_at || undefined,
       confidence: newTopic.confidence !== null && newTopic.confidence !== undefined ? newTopic.confidence : undefined,

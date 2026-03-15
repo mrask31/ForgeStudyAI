@@ -9,7 +9,7 @@ CREATE TABLE IF NOT EXISTS student_classes (
   user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
   code TEXT NOT NULL,
   name TEXT NOT NULL,
-  type TEXT NOT NULL CHECK (type IN ('fundamentals', 'med_surg', 'pharm', 'peds', 'ob', 'psych', 'other')),
+  type TEXT NOT NULL CHECK (type IN ('math', 'science', 'english', 'history', 'foreign_language', 'arts', 'elective', 'other')),
   start_date DATE,
   end_date DATE,
   next_exam_date DATE,

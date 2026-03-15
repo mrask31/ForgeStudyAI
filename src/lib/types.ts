@@ -1,10 +1,11 @@
 export type ClassType =
-  | 'fundamentals'
-  | 'med_surg'
-  | 'pharm'
-  | 'peds'
-  | 'ob'
-  | 'psych'
+  | 'math'
+  | 'science'
+  | 'english'
+  | 'history'
+  | 'foreign_language'
+  | 'arts'
+  | 'elective'
   | 'other'
 
 export interface StudentClass {
@@ -27,7 +28,7 @@ export interface NotebookTopic {
   classId?: string
   title: string
   description?: string
-  nclexCategory?: string
+  category?: string
   fileIds?: string[]
   lastStudiedAt?: string
   confidence?: number
