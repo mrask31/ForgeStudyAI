@@ -49,7 +49,7 @@ const extractImageText = async (buffer: ArrayBuffer, mimeType: string) => {
   
   const anthropic = getAnthropicClient()
   const response = await anthropic.messages.create({
-    model: 'claude-sonnet-4-5',
+    model: 'claude-sonnet-4-6',
     max_tokens: 4096,
     messages: [
       {

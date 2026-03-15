@@ -3,7 +3,7 @@
  * Requirements: 1.6, 2.2, 2.3, 3.1
  * 
  * This file contains all TypeScript interfaces and types for the Dual AI Orchestration system,
- * which combines Gemini Pro Vision for image processing and Claude 3.5 Sonnet for Socratic tutoring.
+ * which combines Gemini Pro Vision for image processing and Claude Sonnet 4.6 for Socratic tutoring.
  */
 
 // ============================================================================
@@ -279,7 +279,7 @@ export const DEFAULT_GEMINI_CONFIG: GeminiVisionConfig = {
  * Default Claude configuration
  */
 export const DEFAULT_CLAUDE_CONFIG: ClaudeConfig = {
-  model: 'claude-3-5-sonnet-20241022',
+  model: 'claude-sonnet-4-6',
   max_tokens: 2048,
   temperature: 0.7,
   cache_threshold: 1024, // Enable caching for content > 1024 tokens

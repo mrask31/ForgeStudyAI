@@ -1,13 +1,13 @@
 /**
  * Anthropic Claude Client for Logic Loom Synthesis Engine
  * 
- * Implements Claude 3.5 Sonnet integration with:
+ * Implements Claude Sonnet 4.6 integration with:
  * - Socratic Master Prompt system
  * - Structured output enforcement (JSON schema)
  * - Input sanitization for security
  * 
  * REASONING QUALITY:
- * - Uses Claude Sonnet for high-quality Socratic synthesis
+ * - Uses Claude Sonnet 4.6 for high-quality Socratic synthesis
  * - Temperature: 0.7 for creative concept connections
  * - Max tokens: 2048 for detailed reasoning
  */
@@ -106,7 +106,7 @@ export class LoomGeminiClient {
     try {
       // Generate response with structured output
       const response = await anthropic.messages.create({
-        model: 'claude-sonnet-4-5',
+        model: 'claude-sonnet-4-6',
         max_tokens: 2048,
         temperature: 0.7,
         system: this.systemPrompt + '\n\nYou MUST respond with valid JSON matching this schema: {"socratic_response": string, "crystallized_thread": string | null, "loom_status": "SPARRING" | "THESIS_ACHIEVED", "cryptographic_proof_of_cognition": string | null}',

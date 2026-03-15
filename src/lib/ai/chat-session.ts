@@ -84,7 +84,7 @@ export async function saveChatMessage(
       output_tokens: metrics?.output_tokens || null,
       cache_creation_tokens: metrics?.cache_creation_input_tokens || null,
       cache_read_tokens: metrics?.cache_read_input_tokens || null,
-      model_version: role === 'assistant' ? 'claude-3-5-sonnet-20241022' : null,
+      model_version: role === 'assistant' ? 'claude-sonnet-4-6' : null,
     })
     .select('id')
     .single();

@@ -114,7 +114,7 @@ type SupabaseServerClient = ReturnType<typeof createServerClient>;
 /**
  * Call Anthropic Claude for main tutoring responses (what students see during teaching mode)
  * 
- * This is the primary teaching AI - uses claude-3-5-sonnet-20241022 for high-quality instruction.
+ * This is the primary teaching AI - uses claude-sonnet-4-6 for high-quality instruction.
  * Separate from evaluation AI to maintain clear boundaries.
  * 
  * @param messages - Conversation messages
@@ -134,7 +134,7 @@ async function callTutorAI(
   }));
 
   const response = await anthropic.messages.create({
-    model: 'claude-3-5-sonnet-20241022',
+    model: 'claude-sonnet-4-6',
     max_tokens: 2048,
     temperature: 0.7,
     system: systemPrompt,
@@ -152,7 +152,7 @@ async function callTutorAI(
 /**
  * Call Anthropic Claude for evaluation/auxiliary operations (validator, classifier, prompt generation, adaptive responses)
  * 
- * This is the evaluation AI - uses claude-3-5-sonnet-20241022 for consistency.
+ * This is the evaluation AI - uses claude-sonnet-4-6 for consistency.
  * Handles all proof engine auxiliary operations:
  * - Understanding validation
  * - Teaching exchange classification
@@ -169,7 +169,7 @@ async function callEvaluationAI(prompt: string): Promise<string> {
   const anthropic = getAnthropicClient();
   
   const response = await anthropic.messages.create({
-    model: 'claude-3-5-sonnet-20241022',
+    model: 'claude-sonnet-4-6',
     max_tokens: 2048,
     temperature: 0, // DETERMINISTIC: No randomness in evaluation
     messages: [{ role: 'user', content: prompt }],

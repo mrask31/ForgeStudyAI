@@ -1,5 +1,5 @@
 /**
- * ClaudeService - Socratic Tutoring with Claude 3.5 Sonnet
+ * ClaudeService - Socratic Tutoring with Claude Sonnet 4.6
  * 
  * Powers the chat interface with anti-cheat Socratic teaching methods,
  * prompt caching for cost optimization, and streaming responses.
@@ -87,7 +87,7 @@ Remember: Your goal is to help students LEARN, not to help them CHEAT.
 
 export class ClaudeService {
   private client: Anthropic;
-  private readonly MODEL = 'claude-3-5-sonnet-20241022';
+  private readonly MODEL = 'claude-sonnet-4-6';
   private readonly CACHE_THRESHOLD = 1024; // tokens
   private readonly MAX_TOKENS = 2048;
   private readonly TEMPERATURE = 0.7;
