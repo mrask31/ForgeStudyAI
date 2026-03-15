@@ -802,13 +802,9 @@ function TutorPageContent() {
   const showSession = (!!resolvedChatId || hasTopicContext) && !isResolving && !error
 
   if (showLoading) {
-    return (
-      <div className="h-full flex items-center justify-center bg-slate-100">
-        <div className="text-center">
-          <p className={`${tokens.bodyText} text-slate-600`}>Loading session...</p>
-        </div>
-      </div>
-    )
+    // Lazy-load skeleton to avoid adding to initial bundle
+    const { TutorSkeleton } = require('@/components/tutor/TutorSkeleton')
+    return <TutorSkeleton />
   }
 
   if (showError) {

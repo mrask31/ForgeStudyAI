@@ -13,6 +13,7 @@ import { calculateSmartCTA, type SmartCTAResult } from '@/lib/smart-cta'
 import { useUser } from '@/contexts/UserContext'
 import Link from 'next/link'
 import { PhotoDropButton } from '@/components/homework/PhotoDropButton'
+import { GalaxySkeleton } from '@/components/galaxy/GalaxySkeleton'
 
 // Module-level cache survives component unmount/remount during client-side navigation
 const galaxyCache: {
@@ -188,9 +189,7 @@ export default function GalaxyPage() {
             </div>
           </div>
         ) : loading ? (
-          <div className="flex items-center justify-center h-full">
-            <div className="text-slate-400">Loading your galaxy...</div>
-          </div>
+          <GalaxySkeleton />
         ) : (
           <ConceptGalaxy
             topics={topics}
