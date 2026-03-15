@@ -35,6 +35,7 @@ export default function GalaxyPage() {
   const [quarantinedCount, setQuarantinedCount] = useState(() =>
     galaxyCache.profileId === activeProfileId ? galaxyCache.quarantinedCount : 0
   )
+  const [lmsStatus, setLmsStatus] = useState<'no_connection' | 'connected' | null>(null)
 
   useEffect(() => {
     async function loadData() {
@@ -66,6 +67,28 @@ export default function GalaxyPage() {
     
     loadData()
   }, [activeProfileId, user])
+
+  // Check LMS connection status for empty state guidance
+  useEffect(() => {
+    async function checkLMS() {
+      if (!activeProfileId) return
+      try {
+        const res = await fetch(`/api/parent/lms/status/${activeProfileId}`)
+        if (res.ok) {
+          const data = await res.json()
+          const canvas = data.connections?.find(
+            (c: any) => c.provider === 'canvas' && c.status === 'active'
+          )
+          setLmsStatus(canvas ? 'connected' : 'no_connection')
+        } else {
+          setLmsStatus('no_connection')
+        }
+      } catch {
+        setLmsStatus('no_connection')
+      }
+    }
+    checkLMS()
+  }, [activeProfileId])
 
   // Auto-sync LMS on Galaxy page load (once per session)
   useEffect(() => {
@@ -149,9 +172,10 @@ export default function GalaxyPage() {
             <div className="text-slate-400">Loading your galaxy...</div>
           </div>
         ) : (
-          <ConceptGalaxy 
-            topics={topics} 
+          <ConceptGalaxy
+            topics={topics}
             profileId={activeProfileId || undefined}
+            lmsStatus={lmsStatus}
             onTopicsRefresh={async () => {
               // Refresh topics after lazy eval or snap-back
               if (activeProfileId && user) {
