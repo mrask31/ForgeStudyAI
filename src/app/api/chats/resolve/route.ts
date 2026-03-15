@@ -202,7 +202,7 @@ async function generateClassWelcomeMessage(
     // Add study options
     welcome += `I can help you:\n`
     welcome += `  • Understand concepts from your materials\n`
-    welcome += `  • Practice NCLEX-style questions\n`
+    welcome += `  • Practice with study questions\n`
     welcome += `  • Review key topics step-by-step\n`
     welcome += `  • Clarify anything you're unsure about\n\n`
     welcome += `What would you like to study today?`
@@ -300,7 +300,7 @@ export async function POST(req: Request) {
       const title = `Reflection — ${formatDateForTitle()}`
       
       // Default system prompt if no reflectionText provided
-      const defaultPrompt = reflectionText || "Let's process your recent clinical experiences. What would you like to reflect on today?"
+      const defaultPrompt = reflectionText || "Let's reflect on what you've been learning. What would you like to think about today?"
       
       const { data: newChat, error: createError } = await supabase
         .from('chats')
@@ -335,12 +335,12 @@ export async function POST(req: Request) {
       
       // If snapshotText provided, extract case title from it
       if (snapshotText) {
-        const caseTitle = snapshotText.split('\n')[0].slice(0, 30) || 'Clinical Case'
+        const caseTitle = snapshotText.split('\n')[0].slice(0, 30) || 'Study Scenario'
         title = `Snapshot — ${caseTitle}`
       }
 
       // Default scenario prompt if no snapshotText provided
-      const defaultPrompt = snapshotText || "Let's work through a clinical scenario step-by-step. I'll present a case, and we'll work through it together."
+      const defaultPrompt = snapshotText || "Let's work through a study scenario step-by-step. I'll present a problem, and we'll work through it together."
 
       // Store attachedFileIds in metadata if provided
       const metadata = attachedFileIds.length > 0 ? { attachedFileIds } : null
@@ -375,7 +375,7 @@ export async function POST(req: Request) {
 
 
     if (intent === 'new_question') {
-      const title = `Clinical Question — ${formatDateForTitle()}`
+      const title = `Study Question — ${formatDateForTitle()}`
 
       // Build metadata object with attachedFileIds, classId, and topicId
       const metadata: any = {}

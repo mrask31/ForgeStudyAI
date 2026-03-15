@@ -21,63 +21,63 @@ function generateFollowUpPrompts(content: string, gradeBand?: 'middle' | 'high')
   ]
 
   // Detect topic/concept mentions for adaptive prompts
-  const hasMedication = /(medication|drug|med|dose|dosage|administration|diuretic|beta-blocker|ace inhibitor|anticoagulant)/i.test(content)
-  const hasPathophysiology = /(pathophysiology|patho|disease|disorder|condition|syndrome|failure|congestion)/i.test(content)
-  const hasAssessment = /(assessment|symptom|sign|finding|vital|lab|monitor|auscultation|palpation)/i.test(content)
-  const hasIntervention = /(intervention|treatment|care|nursing action|management|administer|educate)/i.test(content)
-  const hasPriority = /(priority|first|immediate|urgent|abc|maslow|safety)/i.test(content)
-  const hasHeartFailure = /(heart failure|cardiac|edema|jugular|hepatomegaly|ascites)/i.test(content)
-  const hasRespiratory = /(respiratory|breathing|oxygen|dyspnea|crackles|wheezing|saturation)/i.test(content)
-  const hasComplications = /(complication|risk|adverse|side effect|contraindication|warning)/i.test(content)
+  const hasFormula = /(formula|equation|solve|calculate|expression|variable|function)/i.test(content)
+  const hasDefinition = /(definition|define|meaning|term|vocabulary|concept|theory)/i.test(content)
+  const hasProcess = /(process|steps|procedure|method|approach|strategy|technique)/i.test(content)
+  const hasExample = /(example|instance|demonstrate|illustration|scenario|problem)/i.test(content)
+  const hasPriority = /(priority|first|important|key|main|focus|critical)/i.test(content)
+  const hasComparison = /(compare|contrast|difference|similar|relate|versus|vs)/i.test(content)
+  const hasTimeline = /(timeline|period|era|date|century|event|history|sequence)/i.test(content)
+  const hasWriting = /(essay|thesis|paragraph|argument|evidence|writing|draft)/i.test(content)
 
   // ADAPTIVE PROMPTS (context-specific, choose 2)
   const adaptivePrompts: string[] = []
 
-  if (hasHeartFailure) {
-    adaptivePrompts.push("What's the difference between left-sided and right-sided heart failure?")
-    adaptivePrompts.push("What nursing interventions are priority for heart failure?")
-    adaptivePrompts.push("How do I assess for worsening heart failure?")
+  if (hasFormula) {
+    adaptivePrompts.push("Can you walk me through solving this step-by-step?")
+    adaptivePrompts.push("What's a real-world example of this formula?")
+    adaptivePrompts.push("What mistakes do students commonly make here?")
   }
 
-  if (hasMedication) {
-    adaptivePrompts.push("What are the key side effects I should monitor for?")
-    adaptivePrompts.push("What are the contraindications for this medication?")
-    adaptivePrompts.push("How do I prioritize medication administration?")
+  if (hasDefinition) {
+    adaptivePrompts.push("Can you give me an example to make this clearer?")
+    adaptivePrompts.push("How does this connect to what I already know?")
+    adaptivePrompts.push("What's an easy way to remember this?")
   }
 
-  if (hasPathophysiology && !hasHeartFailure) {
-    adaptivePrompts.push("What are the early warning signs of this condition?")
-    adaptivePrompts.push("What complications should I monitor for?")
-    adaptivePrompts.push("How does this relate to other conditions I've studied?")
+  if (hasProcess) {
+    adaptivePrompts.push("What's the most common mistake in this process?")
+    adaptivePrompts.push("Can you show me a shortcut or trick?")
+    adaptivePrompts.push("When would I use a different approach?")
   }
 
-  if (hasAssessment) {
-    adaptivePrompts.push("What other assessments should I perform?")
-    adaptivePrompts.push("What findings would indicate a problem?")
-    adaptivePrompts.push("How do I prioritize these assessments using ABCs?")
-  }
-
-  if (hasIntervention) {
-    adaptivePrompts.push("What are the expected outcomes of this intervention?")
-    adaptivePrompts.push("What should I monitor after this intervention?")
-    adaptivePrompts.push("Are there any safety considerations I need to know?")
+  if (hasExample) {
+    adaptivePrompts.push("Can you give me a harder example?")
+    adaptivePrompts.push("What's the general rule behind this?")
+    adaptivePrompts.push("How would this show up on a test?")
   }
 
   if (hasPriority) {
-    adaptivePrompts.push("Walk me through the priority reasoning step-by-step")
-    adaptivePrompts.push("What would change the priority in this scenario?")
-    adaptivePrompts.push("How does Maslow's hierarchy apply here?")
+    adaptivePrompts.push("Walk me through the reasoning step-by-step")
+    adaptivePrompts.push("What would change the answer in a different scenario?")
+    adaptivePrompts.push("How does this connect to other topics?")
   }
 
-  if (hasRespiratory) {
-    adaptivePrompts.push("What are the priority assessments for respiratory distress?")
-    adaptivePrompts.push("How do I differentiate between different respiratory conditions?")
-    adaptivePrompts.push("What interventions are most critical for breathing problems?")
+  if (hasComparison) {
+    adaptivePrompts.push("Can you make a comparison chart?")
+    adaptivePrompts.push("What's the most important difference?")
+    adaptivePrompts.push("When would I choose one over the other?")
   }
 
-  if (hasComplications) {
-    adaptivePrompts.push("What are the most serious complications to watch for?")
-    adaptivePrompts.push("How do I recognize early signs of complications?")
+  if (hasTimeline) {
+    adaptivePrompts.push("What caused this event to happen?")
+    adaptivePrompts.push("What were the consequences of this?")
+    adaptivePrompts.push("How does this connect to modern times?")
+  }
+
+  if (hasWriting) {
+    adaptivePrompts.push("How can I make my argument stronger?")
+    adaptivePrompts.push("What evidence would support this point?")
   }
 
   // If no specific context detected, use general adaptive prompts
@@ -85,7 +85,7 @@ function generateFollowUpPrompts(content: string, gradeBand?: 'middle' | 'high')
     adaptivePrompts.push("What are the key concepts here?")
     adaptivePrompts.push("Can you break this down into simpler steps?")
     adaptivePrompts.push("What's the most important thing to remember?")
-    adaptivePrompts.push("How would this appear on a test question?")
+    adaptivePrompts.push("How would this appear on a test?")
   }
 
   // Combine: 2 static + 2 adaptive (randomly selected from adaptive pool)
