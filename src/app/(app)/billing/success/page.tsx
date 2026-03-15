@@ -79,12 +79,25 @@ function BillingSuccessContent() {
 
   useEffect(() => {
     if (!subscriptionVerified) return
+
+    // Apply referral code if present (extends trial from 7 to 30 days)
+    const refCode = localStorage.getItem('forgestudy-referral-code');
+    if (refCode) {
+      fetch('/api/referral/apply', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ code: refCode }),
+      }).catch(() => {}).finally(() => {
+        localStorage.removeItem('forgestudy-referral-code');
+      });
+    }
+
     setLoading(false)
-    
+
     const redirectTimer = setTimeout(() => {
       router.replace('/profiles/new')
     }, 2000)
-    
+
     return () => clearTimeout(redirectTimer)
   }, [subscriptionVerified, router])
 

@@ -64,6 +64,10 @@ export default function SignupClient() {
       if (band && (band === 'high' || band === 'middle')) {
         localStorage.setItem('forgestudy-pending-band', band)
       }
+      const ref = params.get('ref')
+      if (ref) {
+        localStorage.setItem('forgestudy-referral-code', ref.toUpperCase().trim())
+      }
     }
   }, [])
 
