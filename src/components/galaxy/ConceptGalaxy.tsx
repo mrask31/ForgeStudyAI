@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from 'react';
 import dynamic from 'next/dynamic';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
-import { Loader2, Settings, Link as LinkIcon } from 'lucide-react';
+import { Loader2, Settings, Link as LinkIcon, Sparkles } from 'lucide-react';
 import { FocusPanel } from './FocusPanel';
 import { DueSoonTray } from './DueSoonTray';
 
@@ -50,11 +50,12 @@ interface ConceptGalaxyProps {
   topics: Topic[];
   profileId?: string; // For lazy evaluation
   lmsStatus?: 'no_connection' | 'connected' | null;
+  totalTopicCount?: number; // Includes quarantined — if > 0, sync already ran
   onDueSoonChange?: (hasDueSoon: boolean) => void;
   onTopicsRefresh?: () => void; // Callback to refresh topics after lazy eval
 }
 
-export function ConceptGalaxy({ topics, profileId, lmsStatus, onDueSoonChange, onTopicsRefresh }: ConceptGalaxyProps) {
+export function ConceptGalaxy({ topics, profileId, lmsStatus, totalTopicCount = 0, onDueSoonChange, onTopicsRefresh }: ConceptGalaxyProps) {
   const router = useRouter();
   const graphRef = useRef<any>();
   const containerRef = useRef<HTMLDivElement>(null);
@@ -395,14 +396,35 @@ export function ConceptGalaxy({ topics, profileId, lmsStatus, onDueSoonChange, o
 
   if (topics.length === 0) {
     // Determine which empty state to show based on LMS connection status
-    const showNoConnection = lmsStatus === 'no_connection';
-    const showSyncing = lmsStatus === 'connected';
-    const showLoading = lmsStatus === null; // Still checking
+    // Key insight: if totalTopicCount > 0, topics exist but are quarantined (orbit_state = 0).
+    // That means sync already ran — don't show "Syncing..." spinner.
+    const hasAnyTopicsInDb = totalTopicCount > 0;
+    const showNoConnection = lmsStatus === 'no_connection' && !hasAnyTopicsInDb;
+    const showSyncing = lmsStatus === 'connected' && !hasAnyTopicsInDb;
+    const showLoading = lmsStatus === null && !hasAnyTopicsInDb;
+    // If topics exist in DB (quarantined) but none are visible, show the quarantine guidance
+    const showQuarantineWaiting = hasAnyTopicsInDb;
 
     return (
       <div className="w-full h-full bg-slate-950 flex flex-col items-center justify-center gap-6 px-4">
         <div className="flex flex-col items-center gap-6 max-w-md">
-          {showLoading ? (
+          {showQuarantineWaiting ? (
+            <>
+              <Sparkles className="w-12 h-12 text-indigo-400" />
+              <h2 className="text-xl font-semibold text-slate-100 text-center">
+                Your topics are ready to explore!
+              </h2>
+              <p className="text-sm text-slate-400 text-center">
+                {totalTopicCount} topic{totalTopicCount !== 1 ? 's' : ''} synced from Canvas. Tap the button below to start studying.
+              </p>
+              <button
+                onClick={() => router.push('/tutor')}
+                className="bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl px-6 py-3 w-full font-medium transition-colors duration-200"
+              >
+                Start Studying
+              </button>
+            </>
+          ) : showLoading ? (
             <>
               <Loader2 className="w-10 h-10 text-indigo-400 animate-spin" />
               <p className="text-sm text-slate-400">Loading your galaxy...</p>

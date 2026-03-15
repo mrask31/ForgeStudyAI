@@ -40,6 +40,7 @@ export default function GalaxyPage() {
   )
   const [lmsStatus, setLmsStatus] = useState<'no_connection' | 'connected' | null>(null)
   const [hasDueSoonItems, setHasDueSoonItems] = useState(false)
+  const [totalTopicCount, setTotalTopicCount] = useState(0) // Includes quarantined — to detect if sync already ran
 
   useEffect(() => {
     async function loadData() {
@@ -57,6 +58,8 @@ export default function GalaxyPage() {
         setTopics(topicsData)
         setSmartCTA(ctaData)
         setQuarantinedCount(quarantinedData)
+        // Total = visible + quarantined. If > 0, sync already ran — don't show "Syncing..."
+        setTotalTopicCount(topicsData.length + quarantinedData)
         // Persist to module-level cache for instant render on remount
         galaxyCache.profileId = activeProfileId
         galaxyCache.topics = topicsData
@@ -106,12 +109,25 @@ export default function GalaxyPage() {
       }
 
       try {
-        // Silent sync trigger - fire and forget
+        // Trigger sync and re-fetch topics when it completes
         fetch('/api/internal/sync/trigger', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          credentials: 'include', // Include session cookies
-          body: JSON.stringify({ profileId: activeProfileId }), // Use profileId for student session
+          credentials: 'include',
+          body: JSON.stringify({ profileId: activeProfileId }),
+        }).then(async () => {
+          // Re-fetch topics after sync completes so Galaxy updates
+          if (activeProfileId) {
+            const [topicsData, quarantinedData] = await Promise.all([
+              getStudyTopicsWithMastery(activeProfileId),
+              getQuarantinedTopicsCount(activeProfileId)
+            ])
+            setTopics(topicsData)
+            setQuarantinedCount(quarantinedData)
+            setTotalTopicCount(topicsData.length + quarantinedData)
+            galaxyCache.topics = topicsData
+            galaxyCache.quarantinedCount = quarantinedData
+          }
         }).catch((err) => {
           console.debug('[Galaxy] Auto-sync failed (non-critical):', err)
         })
@@ -195,6 +211,7 @@ export default function GalaxyPage() {
             topics={topics}
             profileId={activeProfileId || undefined}
             lmsStatus={lmsStatus}
+            totalTopicCount={totalTopicCount}
             onDueSoonChange={setHasDueSoonItems}
             onTopicsRefresh={async () => {
               // Refresh topics after lazy eval or snap-back
