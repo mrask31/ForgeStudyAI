@@ -68,7 +68,7 @@ export default function SaveClipModal({ isOpen, onClose, onSave, defaultTitle = 
   }
 
   // Get common folders - include class name if available
-  const commonFolders = ['General', 'Cardiovascular', 'Respiratory', 'Pharmacology', 'NCLEX Review', 'Clinical Skills']
+  const commonFolders = ['General', 'Math', 'Science', 'English', 'History', 'Study Tips']
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50" onClick={onClose}>

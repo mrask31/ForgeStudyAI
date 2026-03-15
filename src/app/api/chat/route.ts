@@ -584,7 +584,7 @@ Tone Rules:
 Conflict Rule:
 - If notes are incomplete or inaccurate:
   - Gently flag it:
-    "Your notes mention X. Would you like to compare this with standard NCLEX guidance?"
+    "Your notes mention X. Would you like to compare this with the standard textbook explanation?"
 
 DO NOT:
 - Hallucinate missing details
@@ -615,15 +615,15 @@ Begin your reply with this exact structure:
 
 **What we'll cover:**
 - Key priorities for this topic
-- Key assessment findings
-- Relevant medications/interventions
-- Safety considerations and NCLEX themes
+- Core concepts and definitions
+- Important connections and applications
+- Common mistakes to avoid
 
-Then I'll walk you through it step-by-step and quiz you with NCLEX-style questions.
+Then I'll walk you through it step-by-step and check your understanding along the way.
 
 ---
 
-After the Snapshot section, continue with your normal tutoring style (step-by-step explanations, NCLEX-style questions, etc.). The Snapshot is ONLY for the first reply.
+After the Snapshot section, continue with your normal tutoring style (step-by-step explanations, practice questions, etc.). The Snapshot is ONLY for the first reply.
 `;
     } else {
       // Subsequent replies: Always reference the topic context

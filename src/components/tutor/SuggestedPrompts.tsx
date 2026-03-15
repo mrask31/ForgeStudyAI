@@ -30,7 +30,7 @@ const TEXTBOOK_PROMPTS = [
 const DEFAULT_FILE_PROMPTS = [
   "Summarize this document for me.",
   "Create a 10-question quiz from this file.",
-  "What are the key clinical takeaways?",
+  "What are the key takeaways from this?",
   "Explain the most important concepts for my exam."
 ]
 
@@ -62,64 +62,64 @@ function generateContextualPrompts(lastMessage: string): string[] {
   const lowerContent = lastMessage.toLowerCase()
 
   // Detect key topics/concepts from the last message
-  const hasMedication = /(medication|drug|med|dose|dosage|administration|pharmacology)/i.test(lastMessage)
-  const hasPathophysiology = /(pathophysiology|patho|disease|disorder|condition|syndrome|diagnosis)/i.test(lastMessage)
-  const hasAssessment = /(assessment|symptom|sign|finding|vital|lab|evaluate)/i.test(lastMessage)
-  const hasIntervention = /(intervention|treatment|care|nursing action|management|therapy)/i.test(lastMessage)
-  const hasPriority = /(priority|first|immediate|urgent|abc|maslow|most important)/i.test(lastMessage)
-  const hasNCLEX = /(nclex|question|exam|test|practice|scenario)/i.test(lastMessage)
+  const hasFormula = /(formula|equation|solve|calculate|expression|variable)/i.test(lastMessage)
+  const hasDefinition = /(definition|define|meaning|term|vocabulary|concept)/i.test(lastMessage)
+  const hasExample = /(example|instance|demonstrate|illustration|scenario)/i.test(lastMessage)
+  const hasProcess = /(process|steps|procedure|method|approach|strategy)/i.test(lastMessage)
+  const hasPriority = /(priority|first|immediate|important|key|main|focus)/i.test(lastMessage)
+  const hasQuestion = /(question|quiz|test|practice|exam|review)/i.test(lastMessage)
   const hasConcept = /(concept|topic|understand|explain|clarify)/i.test(lastMessage)
-  const hasComplication = /(complication|risk|side effect|contraindication|warning)/i.test(lastMessage)
+  const hasComparison = /(compare|contrast|difference|similar|relate|connection)/i.test(lastMessage)
 
   // Build contextual prompts based on detected topics
-  if (hasMedication) {
-    prompts.push("What are the side effects I should watch for?")
-    prompts.push("How do I prioritize medication administration?")
-    prompts.push("What are the contraindications for this medication?")
+  if (hasFormula) {
+    prompts.push("Can you walk me through solving this step-by-step?")
+    prompts.push("What's a real-world example of this formula?")
+    prompts.push("What mistakes do students commonly make here?")
   }
 
-  if (hasPathophysiology) {
-    prompts.push("What are the early warning signs of this condition?")
-    prompts.push("What complications should I monitor for?")
-    prompts.push("How does this relate to other conditions I've studied?")
+  if (hasDefinition) {
+    prompts.push("Can you give me an example to make this clearer?")
+    prompts.push("How does this connect to what I already know?")
+    prompts.push("What's an easy way to remember this?")
   }
 
-  if (hasAssessment) {
-    prompts.push("What other assessments should I perform?")
-    prompts.push("What findings would indicate a problem?")
-    prompts.push("How do I prioritize these assessments?")
+  if (hasExample) {
+    prompts.push("Can you give me a harder example?")
+    prompts.push("What's the general rule behind this example?")
+    prompts.push("How would this show up on a test?")
   }
 
-  if (hasIntervention) {
-    prompts.push("What are the expected outcomes of this intervention?")
-    prompts.push("What should I monitor after this intervention?")
-    prompts.push("Are there any safety considerations?")
+  if (hasProcess) {
+    prompts.push("What's the most common mistake in this process?")
+    prompts.push("Can you show me a shortcut?")
+    prompts.push("When would I use a different approach?")
   }
 
   if (hasPriority) {
-    prompts.push("Walk me through the priority reasoning step-by-step")
-    prompts.push("What would change the priority in different scenarios?")
-    prompts.push("How does this apply to other patient situations?")
+    prompts.push("Walk me through the reasoning step-by-step")
+    prompts.push("What would change the answer in a different scenario?")
+    prompts.push("How does this connect to other topics?")
   }
 
-  if (hasNCLEX || hasConcept) {
+  if (hasQuestion || hasConcept) {
     prompts.push("Give me another practice question on this topic")
-    prompts.push("What are common distractors for this type of question?")
+    prompts.push("What are common wrong answers for this type of question?")
     prompts.push("Can you break this down further?")
   }
 
-  if (hasComplication) {
-    prompts.push("How do I recognize this complication early?")
-    prompts.push("What nursing interventions prevent this?")
-    prompts.push("What are the priority actions if this occurs?")
+  if (hasComparison) {
+    prompts.push("Can you make a comparison chart?")
+    prompts.push("What's the most important difference?")
+    prompts.push("When would I choose one over the other?")
   }
 
   // Add some general follow-ups if we don't have enough
   if (prompts.length < 3) {
     prompts.push("Can you explain this in simpler terms?")
     prompts.push("What's the most important thing to remember?")
-    prompts.push("How would this appear on a test question?")
-    prompts.push("Can you give me a practice scenario?")
+    prompts.push("How would this appear on a test?")
+    prompts.push("Can you give me a practice problem?")
   }
 
   // Remove duplicates and limit to 4-5 prompts

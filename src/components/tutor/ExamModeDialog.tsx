@@ -233,7 +233,7 @@ export default function ExamModeDialog({
                   <div className="border border-[var(--tutor-border-subtle)] rounded-lg p-3 max-h-48 overflow-y-auto bg-white">
                     {topics.length === 0 ? (
                       <p className="text-sm text-[var(--tutor-text-muted)] text-center py-4">
-                        No topics available. Add topics in your Clinical Notebook first.
+                        No topics available. Add topics in your Study Notebook first.
                       </p>
                     ) : (
                       <div className="space-y-2">
