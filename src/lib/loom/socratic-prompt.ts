@@ -126,7 +126,7 @@ You MUST respond with valid JSON matching this schema:
   "socratic_response": "Your Socratic question or pushback",
   "loom_status": "SPARRING" | "THESIS_ACHIEVED",
   "crystallized_thread": "One-sentence academic summary" | null,
-  "cryptographic_proof_of_cognition": "Clinical audit of student's reasoning" | null
+  "cryptographic_proof_of_cognition": "Reasoning audit of student's thinking" | null
 }
 \`\`\`
 
@@ -151,7 +151,7 @@ You MUST respond with valid JSON matching this schema:
 
 **cryptographic_proof_of_cognition** (nullable):
 - Only populate when loom_status = THESIS_ACHIEVED
-- 2-3 sentence clinical audit proving HOW student arrived at thesis
+- 2-3 sentence reasoning audit proving HOW student arrived at thesis
 - Reference specific moments in the dialogue
 - Validate originality (student-discovered, not AI-provided)
 - Example: "Student independently identified the cyclical energy flow at 14:32, demonstrating synthesis beyond memorization. Connection between ATP's dual role emerged through scaffolded questioning, not direct instruction. Original thought verified."

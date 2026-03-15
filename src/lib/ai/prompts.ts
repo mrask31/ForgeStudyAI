@@ -34,7 +34,7 @@ STYLE RULES
 - Calm, concise, and encouraging. Praise effort and process.
 - Avoid hype, slang, or excessive emojis.
 - Use plain language first, then add precision.
-- Avoid clinical or medical iconography (no stethoscope or nursing cues).
+- Avoid medical or clinical iconography (no stethoscope or nursing cues).
 `
 
 const GRADE_BAND_OVERLAYS: Record<GradeBand, string> = {

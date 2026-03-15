@@ -67,7 +67,7 @@ export function zodToJsonSchema(schema: typeof SocraticResponseSchema) {
       cryptographic_proof_of_cognition: {
         type: SchemaType.STRING,
         nullable: true,
-        description: 'Clinical audit proving HOW student arrived at thesis. Only populated when loom_status is THESIS_ACHIEVED.',
+        description: 'Reasoning audit proving HOW student arrived at thesis. Only populated when loom_status is THESIS_ACHIEVED.',
       },
     },
     required: ['socratic_response', 'loom_status'],
