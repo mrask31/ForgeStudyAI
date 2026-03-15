@@ -37,6 +37,7 @@ interface Node {
   color: string;
   physicsMode: 'mastered' | 'ghost' | 'snapBack'; // Physics state
   isAnimating: boolean; // Animation state
+  isDueSoon: boolean; // Due within 48 hours
 }
 
 interface Link {
@@ -223,6 +224,22 @@ export function ConceptGalaxy({ topics, profileId, lmsStatus, onDueSoonChange, o
     }
   }, [justRescued]);
 
+  // Continuous repaint for pulse animations (lightweight — only triggers canvas redraw)
+  useEffect(() => {
+    let animFrame: number;
+    const tick = () => {
+      if (graphRef.current) {
+        // Nudge the graph's internal tick to trigger a canvas redraw
+        // without restarting physics simulation
+        graphRef.current.pauseAnimation?.();
+        graphRef.current.resumeAnimation?.();
+      }
+      animFrame = requestAnimationFrame(tick);
+    };
+    animFrame = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(animFrame);
+  }, []);
+
   // Update dock visibility when constellation changes
   useEffect(() => {
     setShowLoomDock(selectedConstellation.length >= 2);
@@ -241,6 +258,13 @@ export function ConceptGalaxy({ topics, profileId, lmsStatus, onDueSoonChange, o
       physicsMode = 'mastered';
     }
     
+    // Check if due within 48 hours
+    let isDueSoon = false;
+    if (topic.next_review_date) {
+      const diff = new Date(topic.next_review_date).getTime() - Date.now();
+      isDueSoon = diff > 0 && diff <= 48 * 60 * 60 * 1000;
+    }
+
     return {
       id: topic.id,
       name: topic.title,
@@ -250,6 +274,7 @@ export function ConceptGalaxy({ topics, profileId, lmsStatus, onDueSoonChange, o
       color: getNodeColor(topic.orbit_state, justRescued.includes(topic.id)),
       physicsMode,
       isAnimating: justRescued.includes(topic.id),
+      isDueSoon,
     };
   });
 
@@ -456,57 +481,84 @@ export function ConceptGalaxy({ topics, profileId, lmsStatus, onDueSoonChange, o
         nodeVal="val"
         onNodeClick={handleNodeClick}
           nodeCanvasObject={(node: any, ctx, globalScale) => {
-            // Custom node rendering with glow effect for mastered topics
+            // Custom node rendering with glow effect and pulse animations
             const label = node.name;
             const fontSize = 12 / globalScale;
             const nodeSize = node.val;
             const isSelected = selectedConstellation.includes(node.id);
             const isGhost = node.orbitState === 3;
             const isSnapBack = node.isAnimating;
-            
+            const mastery = node.masteryScore || 0;
+
+            // Pulse animation based on mastery state
+            const now = Date.now();
+            let pulseScale = 1.0;
+            let glowIntensity = 0;
+
+            if (node.isDueSoon) {
+              // Urgent: fast pulse, 1s period
+              const phase = (now % 1000) / 1000;
+              pulseScale = 1 + 0.15 * Math.sin(phase * Math.PI * 2);
+              glowIntensity = 15 + 10 * Math.sin(phase * Math.PI * 2);
+            } else if (mastery >= 70) {
+              // Mastered: steady glow, no pulse
+              glowIntensity = 20;
+            } else if (mastery >= 30) {
+              // Developing: medium pulse, 2s period
+              const phase = (now % 2000) / 2000;
+              pulseScale = 1 + 0.08 * Math.sin(phase * Math.PI * 2);
+              glowIntensity = 8 + 6 * Math.sin(phase * Math.PI * 2);
+            } else {
+              // Learning: slow dim pulse, 3s period
+              const phase = (now % 3000) / 3000;
+              pulseScale = 1 + 0.05 * Math.sin(phase * Math.PI * 2);
+              glowIntensity = 4 + 3 * Math.sin(phase * Math.PI * 2);
+            }
+
+            const animatedSize = nodeSize * pulseScale;
+
             // Calculate opacity
             let opacity = 1.0;
             if (isGhost && !isSnapBack) {
-              opacity = 0.4; // 40% opacity for Ghost Nodes
+              opacity = 0.4;
             } else if (isSnapBack) {
-              // Animate opacity from 0.4 to 1.0 over 1 second
-              opacity = 1.0; // Simplified - full opacity during snap-back
+              opacity = 1.0;
             }
-            
-            // Draw glow for mastered topics, selected nodes, or snap-back
-            if (node.masteryScore > 70 || isSelected || isSnapBack) {
-              ctx.shadowBlur = isSelected ? 30 : (isSnapBack ? 40 : 20);
-              ctx.shadowColor = isSelected ? '#f59e0b' : node.color; // Amber glow for selected
+
+            // Draw glow
+            if (isSelected || isSnapBack || glowIntensity > 0) {
+              ctx.shadowBlur = isSelected ? 30 : (isSnapBack ? 40 : glowIntensity);
+              ctx.shadowColor = isSelected ? '#f59e0b' : (node.isDueSoon ? '#ef4444' : node.color);
             } else {
               ctx.shadowBlur = 0;
             }
-            
+
             // Apply opacity
             ctx.globalAlpha = opacity;
-            
-            // Draw circle
+
+            // Draw circle with animated size
             ctx.beginPath();
-            ctx.arc(node.x, node.y, nodeSize, 0, 2 * Math.PI);
-            ctx.fillStyle = isSelected ? '#f59e0b' : node.color; // Amber fill for selected
+            ctx.arc(node.x, node.y, animatedSize, 0, 2 * Math.PI);
+            ctx.fillStyle = isSelected ? '#f59e0b' : node.color;
             ctx.fill();
-            
+
             // Draw selection ring for selected nodes
             if (isSelected) {
               ctx.strokeStyle = '#fbbf24';
               ctx.lineWidth = 2 / globalScale;
               ctx.stroke();
             }
-            
+
             // Reset shadow and alpha
             ctx.shadowBlur = 0;
             ctx.globalAlpha = 1.0;
-            
+
             // Draw label
             ctx.font = `${fontSize}px Sans-Serif`;
             ctx.textAlign = 'center';
             ctx.textBaseline = 'middle';
             ctx.fillStyle = '#fff';
-            ctx.fillText(label, node.x, node.y + nodeSize + fontSize + 2);
+            ctx.fillText(label, node.x, node.y + animatedSize + fontSize + 2);
           }}
           backgroundColor="#020617"
           linkColor={(link: any) => {
