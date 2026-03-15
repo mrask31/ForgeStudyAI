@@ -195,23 +195,34 @@ function NewProfileContent() {
     : ['9', '10', '11', '12']
 
   return (
-    <div className="h-full overflow-y-auto bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950">
+    <div className="h-full overflow-y-auto bg-gradient-to-br from-background via-background to-background">
       <div className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 py-16 sm:py-24">
-        <div className="bg-slate-900/80 backdrop-blur-xl border border-slate-800 rounded-2xl p-8 sm:p-10 shadow-xl">
-          <h1 className="text-3xl sm:text-4xl font-bold text-slate-100 mb-2">
+        {/* Progress Indicator */}
+        <div className="mb-12">
+          <div className="flex items-center justify-between mb-2">
+            <h2 className="text-sm font-semibold text-foreground">Step 3 of 5</h2>
+            <div className="text-xs text-muted-foreground">60%</div>
+          </div>
+          <div className="w-full h-2 bg-secondary rounded-full overflow-hidden">
+            <div className="h-full w-3/5 bg-primary rounded-full transition-all duration-500" />
+          </div>
+        </div>
+
+        <div className="bg-card/80 backdrop-blur-xl border border-border rounded-2xl p-8 sm:p-10 shadow-xl">
+          <h1 className="text-3xl sm:text-4xl font-bold text-foreground mb-2">
             Create a student profile
           </h1>
-          <p className="text-lg text-slate-300 mb-2">
+          <p className="text-lg text-muted-foreground mb-2">
             Set up personalized learning support for Grades 6–12
           </p>
-          <p className="text-sm text-slate-400 mb-8">
+          <p className="text-sm text-muted-foreground mb-8">
             ForgeStudy helps students understand their work step-by-step, building confidence and independence.
           </p>
 
           <form onSubmit={handleSubmit} className="space-y-6">
             {/* Display Name */}
             <div>
-              <label htmlFor="displayName" className="block text-sm font-semibold text-slate-100 mb-2">
+              <label htmlFor="displayName" className="block text-sm font-semibold text-foreground mb-2">
                 Student name / nickname *
               </label>
               <input
@@ -221,20 +232,20 @@ function NewProfileContent() {
                 onChange={(e) => setDisplayName(e.target.value)}
                 placeholder="Enter student name or nickname"
                 required
-                className="w-full px-4 py-3 border-2 border-slate-700 bg-slate-950/50 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all text-slate-100 placeholder-slate-500"
+                className="w-full px-4 py-3 border-2 border-border bg-background rounded-xl focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-all text-foreground placeholder-muted-foreground"
                 disabled={isSubmitting}
               />
-              <p className="mt-1.5 text-xs text-slate-400">
+              <p className="mt-1.5 text-xs text-muted-foreground">
                 This helps personalize their learning experience
               </p>
             </div>
 
             {/* Grade Band */}
             <div>
-              <label className="block text-sm font-semibold text-slate-100 mb-3">
+              <label className="block text-sm font-semibold text-foreground mb-3">
                 Grade level *
               </label>
-              <p className="text-xs text-slate-400 mb-3">
+              <p className="text-xs text-muted-foreground mb-3">
                 ForgeStudy adapts its teaching style to match each grade band
               </p>
               <div className="grid grid-cols-2 gap-4">
@@ -250,17 +261,17 @@ function NewProfileContent() {
                     className={`
                       p-4 rounded-xl border-2 transition-all duration-200
                       ${band === value
-                        ? 'border-indigo-500 bg-indigo-950/50 shadow-lg shadow-indigo-500/20'
-                        : 'border-slate-700 bg-slate-950/30 hover:border-indigo-600 hover:bg-slate-900/50'
+                        ? 'border-primary bg-primary/10 shadow-lg shadow-primary/20'
+                        : 'border-border bg-background hover:border-primary hover:bg-card/50'
                       }
                       ${isSubmitting ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}
                     `}
                   >
-                    <Icon className={`w-6 h-6 mx-auto mb-2 ${band === value ? 'text-indigo-400' : 'text-slate-500'}`} />
-                    <span className={`text-sm font-semibold block ${band === value ? 'text-indigo-300' : 'text-slate-300'}`}>
+                    <Icon className={`w-6 h-6 mx-auto mb-2 ${band === value ? 'text-primary' : 'text-muted-foreground'}`} />
+                    <span className={`text-sm font-semibold block ${band === value ? 'text-primary' : 'text-foreground'}`}>
                       {label}
                     </span>
-                    <span className={`text-xs mt-0.5 block ${band === value ? 'text-indigo-400' : 'text-slate-500'}`}>
+                    <span className={`text-xs mt-0.5 block ${band === value ? 'text-primary/80' : 'text-muted-foreground'}`}>
                       {sublabel}
                     </span>
                   </button>
@@ -271,17 +282,17 @@ function NewProfileContent() {
             {/* Grade (Optional) */}
             {band && (
               <div>
-                <label htmlFor="grade" className="block text-sm font-semibold text-slate-100 mb-2">
+                <label htmlFor="grade" className="block text-sm font-semibold text-foreground mb-2">
                   Specific grade (optional)
                 </label>
-                <p className="text-xs text-slate-400 mb-2">
+                <p className="text-xs text-muted-foreground mb-2">
                   Helps us personalize explanations and examples
                 </p>
                 <select
                   id="grade"
                   value={grade}
                   onChange={(e) => setGrade(e.target.value)}
-                  className="w-full px-4 py-3 border-2 border-slate-700 bg-slate-950/50 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all text-slate-100"
+                  className="w-full px-4 py-3 border-2 border-border bg-background rounded-xl focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-all text-foreground"
                   disabled={isSubmitting}
                 >
                   <option value="">Select grade (optional)...</option>
@@ -294,19 +305,52 @@ function NewProfileContent() {
               </div>
             )}
 
+            {/* Interests - Fun UI with Tag Chips */}
             <div>
-              <label htmlFor="interests" className="block text-sm font-semibold text-slate-100 mb-2">
-                Interests & hobbies (optional)
+              <label htmlFor="interests" className="block text-sm font-semibold text-foreground mb-2">
+                What does {displayName || 'your student'} love? (optional)
               </label>
-              <p className="text-xs text-slate-400 mb-2">
-                We use this to make examples more engaging for your student.
+              <p className="text-xs text-muted-foreground mb-3">
+                We use this to make tutoring examples more engaging and fun.
               </p>
+              
+              {/* Quick select chips */}
+              <div className="mb-4">
+                <p className="text-xs text-muted-foreground mb-2">Quick select:</p>
+                <div className="flex flex-wrap gap-2">
+                  {['Gaming', 'Soccer', 'Music', 'Art', 'Science', 'Reading'].map((tag) => (
+                    <button
+                      key={tag}
+                      type="button"
+                      onClick={() => {
+                        const newInterests = interests.split(',').map(i => i.trim()).filter(i => i)
+                        if (newInterests.includes(tag)) {
+                          setInterests(newInterests.filter(i => i !== tag).join(', '))
+                        } else {
+                          newInterests.push(tag)
+                          setInterests(newInterests.join(', '))
+                        }
+                      }}
+                      disabled={isSubmitting}
+                      className={`px-3 py-1.5 rounded-full text-sm font-medium transition-all ${
+                        interests.split(',').map(i => i.trim()).includes(tag)
+                          ? 'bg-primary text-primary-foreground'
+                          : 'bg-secondary text-secondary-foreground hover:bg-secondary/80'
+                      }`}
+                    >
+                      {tag}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Text input for custom interests */}
               <textarea
                 id="interests"
                 value={interests}
                 onChange={(e) => setInterests(e.target.value)}
-                placeholder="e.g., soccer, space, art, Minecraft, dinosaurs"
-                className="w-full min-h-[120px] px-4 py-3 border-2 border-slate-700 bg-slate-950/50 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all text-slate-100 placeholder-slate-500"
+                placeholder="e.g., soccer, space, art, Minecraft, dinosaurs, anime"
+                className="w-full min-h-[100px] px-4 py-3 border-2 border-border bg-background rounded-xl focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-all text-foreground placeholder-muted-foreground"
                 disabled={isSubmitting}
               />
             </div>
@@ -324,16 +368,16 @@ function NewProfileContent() {
                 type="button"
                 onClick={() => router.push('/parent')}
                 disabled={isSubmitting}
-                className="flex-1 px-6 py-3 border-2 border-slate-700 text-slate-300 rounded-xl font-semibold hover:bg-slate-800/50 transition-colors disabled:opacity-50"
+                className="flex-1 px-6 py-3 border-2 border-border text-foreground rounded-xl font-semibold hover:bg-secondary/50 transition-colors disabled:opacity-50"
               >
                 Cancel
               </button>
               <button
                 type="submit"
                 disabled={isSubmitting || !band || !displayName.trim()}
-                className="flex-1 px-6 py-3 bg-gradient-to-r from-indigo-600 to-indigo-500 text-white rounded-xl font-bold hover:from-indigo-700 hover:to-indigo-600 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 focus:ring-offset-slate-950 transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-indigo-500/30 hover:shadow-xl hover:shadow-indigo-500/40"
+                className="flex-1 px-6 py-3 bg-primary hover:bg-primary/90 text-primary-foreground rounded-xl font-bold focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:ring-offset-background transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-primary/30 hover:shadow-xl hover:shadow-primary/40"
               >
-                {isSubmitting ? 'Creating profile...' : 'Create Profile'}
+                {isSubmitting ? 'Creating profile...' : 'Continue to Next Step'}
               </button>
             </div>
           </form>
