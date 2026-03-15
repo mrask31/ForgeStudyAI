@@ -352,71 +352,71 @@ export default function SignupClient() {
 
   if (showSuccess) {
     return (
-      <div className="min-h-[calc(100dvh-4rem)] bg-slate-950">
+      <div className="min-h-[calc(100dvh-4rem)] bg-background">
         <div className="grid grid-cols-1 md:grid-cols-2 min-h-[calc(100dvh-4rem)]">
           {/* Left Column */}
-          <div className="bg-slate-900 md:border-r border-slate-800 flex flex-col justify-center items-center h-full px-8 text-center">
+          <div className="bg-card/50 md:border-r border-border flex flex-col justify-center items-center h-full px-8 text-center">
             <div className="max-w-md space-y-6">
-              <div className="w-16 h-16 bg-indigo-600/20 rounded-xl flex items-center justify-center mx-auto">
-                <MessageSquare className="w-8 h-8 text-indigo-400" />
+              <div className="w-16 h-16 bg-primary/20 rounded-xl flex items-center justify-center mx-auto">
+                <MessageSquare className="w-8 h-8 text-primary" />
               </div>
-              <h2 className="text-2xl font-bold text-slate-100 leading-tight">
-                Unlock their cognitive potential.
+              <h2 className="text-2xl font-bold text-foreground leading-tight">
+                Your Galaxy is Loading
               </h2>
-              <p className="text-base text-slate-400 leading-relaxed">
-                The AI tutor that refuses to cheat.
+              <p className="text-base text-muted-foreground leading-relaxed">
+                Verify your email to connect Canvas and begin.
               </p>
             </div>
           </div>
 
           {/* Right Column - Success State */}
-          <div className="bg-slate-950 flex items-center justify-center px-4 py-12">
+          <div className="bg-background flex items-center justify-center px-4 py-12">
             <div className="w-full max-w-md">
-              <div className="bg-slate-900/60 backdrop-blur-md border border-slate-800 rounded-2xl p-8 shadow-2xl text-center">
+              <div className="bg-card/60 backdrop-blur-md border border-border rounded-2xl p-8 shadow-2xl text-center">
                 {isVerifying && message?.text.includes('Email verified') ? (
                   <>
                     <div className="w-20 h-20 bg-green-900/20 rounded-full flex items-center justify-center mx-auto mb-6">
                       <CheckCircle className="w-10 h-10 text-green-400" />
                     </div>
-                    <h1 className="text-2xl font-semibold text-slate-100 mb-3">
+                    <h1 className="text-2xl font-semibold text-foreground mb-3">
                       Email verified!
                     </h1>
-                    <p className="text-base text-slate-400 mb-6">
+                    <p className="text-base text-muted-foreground mb-6">
                       Redirecting you now...
                     </p>
                     <div className="flex justify-center">
-                      <Loader2 className="h-8 w-8 animate-spin text-indigo-400" />
+                      <Loader2 className="h-8 w-8 animate-spin text-primary" />
                     </div>
                   </>
                 ) : (
                   <>
-                    <div className="w-20 h-20 bg-indigo-600/20 rounded-full flex items-center justify-center mx-auto mb-6">
-                      <Mail className="w-10 h-10 text-indigo-400" />
+                    <div className="w-20 h-20 bg-primary/20 rounded-full flex items-center justify-center mx-auto mb-6">
+                      <Mail className="w-10 h-10 text-primary" />
                     </div>
-                    <h1 className="text-2xl font-semibold text-slate-100 mb-3">
+                    <h1 className="text-2xl font-semibold text-foreground mb-3">
                       Check your email to continue
                     </h1>
                     <div className="inline-flex items-center justify-center px-3 py-1 bg-amber-900/20 border border-amber-700/50 rounded-full text-xs font-semibold text-amber-400 mb-3">
-                      Verify to continue setup
+                      Step 2 of 5: Verify Email
                     </div>
-                    <p className="text-base text-slate-400 mb-2">
+                    <p className="text-base text-muted-foreground mb-2">
                       Verify your email to start your free trial. We sent a confirmation link to
                     </p>
-                    <p className="text-base font-semibold text-indigo-400 mb-6 break-all">
+                    <p className="text-base font-semibold text-primary mb-6 break-all">
                       {email}
                     </p>
-                    <div className="bg-indigo-900/20 border border-indigo-700/50 rounded-xl p-4 mb-6 text-left">
-                      <div className="space-y-2 text-sm text-slate-300">
+                    <div className="bg-primary/10 border border-primary/30 rounded-xl p-4 mb-6 text-left">
+                      <div className="space-y-2 text-sm text-muted-foreground">
                         <div className="flex items-start gap-2">
-                          <span className="text-indigo-400 mt-0.5">•</span>
+                          <span className="text-primary mt-0.5">•</span>
                           <span>Check your Spam/Junk folder if you don't see it</span>
                         </div>
                         <div className="flex items-start gap-2">
-                          <span className="text-indigo-400 mt-0.5">•</span>
+                          <span className="text-primary mt-0.5">•</span>
                           <span>Click the confirmation link (on any device)</span>
                         </div>
                         <div className="flex items-start gap-2">
-                          <span className="text-indigo-400 mt-0.5">•</span>
+                          <span className="text-primary mt-0.5">•</span>
                           <span>This page will automatically refresh when verified</span>
                         </div>
                       </div>
@@ -438,9 +438,9 @@ export default function SignupClient() {
                         </p>
                       </div>
                     </div>
-                    <div className="flex items-center justify-center gap-2 text-sm text-slate-500 mb-4">
-                      <Loader2 className="h-4 w-4 animate-spin text-indigo-400" />
-                      <span>Waiting for verification, then starting your free trial...</span>
+                    <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground mb-4">
+                      <Loader2 className="h-4 w-4 animate-spin text-primary" />
+                      <span>Waiting for verification...</span>
                     </div>
                     <div className="flex flex-col gap-3">
                       <button
@@ -458,13 +458,13 @@ export default function SignupClient() {
                           }
                           window.location.assign(loginUrl.toString())
                         }}
-                        className="inline-flex items-center justify-center gap-2 px-4 py-2 bg-slate-800 text-slate-300 rounded-lg text-sm font-medium hover:bg-slate-700 transition-colors"
+                        className="inline-flex items-center justify-center gap-2 px-4 py-2 bg-secondary text-secondary-foreground rounded-lg text-sm font-medium hover:bg-secondary/80 transition-colors"
                       >
                         <Loader2 className="h-4 w-4" />
                         Refresh after verification
                       </button>
-                      <div className="text-xs text-slate-500 text-center">
-                        If you verified on another device, reopen this page to finish checkout.
+                      <div className="text-xs text-muted-foreground text-center">
+                        If you verified on another device, reopen this page.
                       </div>
                       <button
                         type="button"
@@ -474,7 +474,7 @@ export default function SignupClient() {
                           handleResendEmail(e)
                         }}
                         disabled={resending}
-                        className="inline-flex items-center justify-center gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg text-sm font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed border-none"
+                        className="inline-flex items-center justify-center gap-2 px-4 py-2 bg-primary hover:bg-primary/90 text-primary-foreground rounded-lg text-sm font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                       >
                         {resending ? (
                           <>
@@ -484,31 +484,10 @@ export default function SignupClient() {
                         ) : (
                           <>
                             <Mail className="h-4 w-4" />
-                            Resend Verification Email
+                            Resend Email
                           </>
                         )}
                       </button>
-                      {appUrl && (
-                        <div className="bg-slate-800/50 border border-slate-700 rounded-xl p-4 text-center">
-                          <p className="text-xs font-semibold text-slate-300 mb-2">
-                            Open ForgeStudy on your phone
-                          </p>
-                          <img
-                            src={`https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${encodeURIComponent(appUrl)}`}
-                            alt="ForgeStudy QR code"
-                            className="mx-auto rounded-lg border border-slate-700 bg-white p-2"
-                          />
-                          <p className="text-[11px] text-slate-500 mt-2">
-                            Scan to open the verification flow on mobile.
-                          </p>
-                        </div>
-                      )}
-                      <Link
-                        href="/login"
-                        className="inline-flex items-center gap-2 px-4 py-2 text-indigo-400 hover:text-indigo-300 text-sm font-medium transition-colors"
-                      >
-                        Back to Sign In
-                      </Link>
                     </div>
                   </>
                 )}
