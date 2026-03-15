@@ -11,6 +11,7 @@ import { getStudyTopicsWithMastery, getQuarantinedTopicsCount } from '@/app/acti
 import { calculateSmartCTA, type SmartCTAResult } from '@/lib/smart-cta'
 import { useUser } from '@/contexts/UserContext'
 import Link from 'next/link'
+import { PhotoDropButton } from '@/components/homework/PhotoDropButton'
 
 // Module-level cache survives component unmount/remount during client-side navigation
 const galaxyCache: {
@@ -146,8 +147,9 @@ export default function GalaxyPage() {
         <GalaxyLegend />
       </div>
       
-      {/* Top Right HUD - Upload Button (Smaller on mobile) */}
-      <div className="absolute top-4 md:top-6 right-4 md:right-6 z-40">
+      {/* Top Right HUD - Upload + Photo Drop */}
+      <div className="absolute top-4 md:top-6 right-4 md:right-6 z-40 flex items-center gap-2">
+        <PhotoDropButton />
         <Link
           href="/sources"
           className="inline-flex items-center gap-2 px-4 md:px-6 py-2 md:py-3 bg-slate-900/40 backdrop-blur-md border border-slate-700/50 rounded-xl shadow-2xl text-white text-sm md:text-base font-semibold hover:bg-slate-800/60 transition-all"

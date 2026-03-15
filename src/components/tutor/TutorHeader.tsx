@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { Plus } from 'lucide-react'
+import { PhotoDropButton } from '@/components/homework/PhotoDropButton'
 import { getSupabaseBrowser } from '@/lib/supabase/client'
 import { Button } from '@/components/ui/button'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
@@ -106,6 +107,7 @@ export default function TutorHeader({
               <span className="sm:hidden">New</span>
             </Button>
           )}
+          <PhotoDropButton />
         </div>
       </header>
       <Dialog open={isTitleDialogOpen} onOpenChange={setIsTitleDialogOpen}>
