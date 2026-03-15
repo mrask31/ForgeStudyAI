@@ -391,7 +391,7 @@ export default function AttachedSourcesBar({
                   <p className={`${tokens.bodyText} text-clinical-text-secondary`}>Loading files...</p>
                 ) : binderFiles.length === 0 ? (
                   <p className={`${tokens.bodyText} text-clinical-text-secondary`}>
-                    No files available. Upload files in your Clinical Binder first.
+                    No files available. Upload files in your Study Binder first.
                   </p>
                 ) : (
                   binderFiles.map((file) => {

@@ -61,7 +61,7 @@ export default function ContextPanel({
         <div>
           <h4 className="text-xs font-semibold text-slate-600 uppercase tracking-wide mb-3">Key Concepts Detected</h4>
           <div className="flex flex-wrap gap-2">
-            {['Heart Failure', 'Fluid Overload', 'Diuretics', 'Nursing Care'].map((tag) => (
+            {['Quadratic Equations', 'Factoring', 'Polynomials', 'Graphing'].map((tag) => (
               <span 
                 key={tag} 
                 className="inline-block px-3 py-1 bg-indigo-50 text-indigo-700 text-xs rounded-full border border-indigo-100 mb-2 mr-2"

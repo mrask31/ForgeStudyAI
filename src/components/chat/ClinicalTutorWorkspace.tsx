@@ -626,7 +626,7 @@ export default function ClinicalTutorWorkspace({
             <div className="w-full max-w-lg space-y-6">
               <div className="text-center space-y-2">
                 <h2 className="font-semibold tracking-tight text-slate-900">
-                  Clinical Tutor Ready
+                  Study Tutor Ready
                 </h2>
                 <p className="text-sm sm:text-base text-slate-700 leading-relaxed">
                   How would you like to begin your study session?
@@ -774,7 +774,7 @@ export default function ClinicalTutorWorkspace({
                       ) : (
                         <>
                           <ClipboardCheck className="w-4 h-4 text-[var(--tutor-text-muted)]" />
-                          <span className="text-xs text-[var(--tutor-text-muted)] font-medium">NCLEX Reasoning (Learning Only)</span>
+                          <span className="text-xs text-[var(--tutor-text-muted)] font-medium">Study Reasoning (Learning Only)</span>
                         </>
                       )}
                     </div>
