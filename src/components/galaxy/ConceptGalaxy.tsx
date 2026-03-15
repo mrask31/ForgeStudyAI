@@ -23,7 +23,8 @@ interface Topic {
   mastery_score: number;
   orbit_state: number; // 0=Quarantine, 1=Active, 2=Mastered, 3=Ghost Node
   next_review_date?: string | null; // For Ghost Nodes
-  updated_at?: string | null; // Used as "last studied" proxy
+  updated_at?: string | null;
+  last_studied_at?: string | null;
 }
 
 interface Node {
@@ -289,7 +290,7 @@ export function ConceptGalaxy({ topics, profileId, onTopicsRefresh }: ConceptGal
         selectedTopicTitle: node.name,
         masteryScore: topic?.mastery_score ?? 0,
         dueDate: topic?.next_review_date ?? null,
-        lastStudied: topic?.updated_at ?? null,
+        lastStudied: topic?.last_studied_at ?? topic?.updated_at ?? null,
       });
     }
   };
@@ -564,7 +565,7 @@ export function ConceptGalaxy({ topics, profileId, onTopicsRefresh }: ConceptGal
               selectedTopicTitle: topicTitle,
               masteryScore: topic?.mastery_score ?? 0,
               dueDate: topic?.next_review_date ?? null,
-              lastStudied: topic?.updated_at ?? null,
+              lastStudied: topic?.last_studied_at ?? topic?.updated_at ?? null,
             });
           }}
         />

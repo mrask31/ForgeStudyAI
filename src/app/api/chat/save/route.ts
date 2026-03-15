@@ -214,6 +214,32 @@ export async function POST(req: Request) {
       }
     }
 
+    // Update last_studied_at on study_topics when a user message is saved for a topic-linked chat
+    if (role === 'user' && chatId) {
+      try {
+        const { data: chatMeta } = await supabase
+          .from('chats')
+          .select('metadata')
+          .eq('id', chatId)
+          .eq('user_id', user.id)
+          .single();
+
+        const topicId =
+          chatMeta?.metadata &&
+          typeof chatMeta.metadata === 'object' &&
+          (chatMeta.metadata as any).topicId;
+
+        if (topicId) {
+          await supabase
+            .from('study_topics')
+            .update({ last_studied_at: new Date().toISOString() })
+            .eq('id', topicId);
+        }
+      } catch (err) {
+        console.error('[SAVE] last_studied_at update error (non-critical):', err);
+      }
+    }
+
     return NextResponse.json({ success: true, message });
   } catch (error: any) {
     console.error('[SAVE] Critical error:', error);
