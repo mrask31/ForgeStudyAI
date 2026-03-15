@@ -112,7 +112,7 @@ export default function TutorSession({
   // Check if user has seen onboarding
   useEffect(() => {
     if (typeof window !== 'undefined') {
-      const seen = localStorage.getItem('forgenursing-has-seen-tutor-onboarding')
+      const seen = localStorage.getItem('forgestudy-has-seen-tutor-onboarding')
       setHasSeenOnboarding(seen === 'true')
     }
   }, [])
@@ -120,7 +120,7 @@ export default function TutorSession({
   // Mark onboarding as seen when files are added
   useEffect(() => {
     if (activeChunkCount > 0 && !hasSeenOnboarding && typeof window !== 'undefined') {
-      localStorage.setItem('forgenursing-has-seen-tutor-onboarding', 'true')
+      localStorage.setItem('forgestudy-has-seen-tutor-onboarding', 'true')
       setHasSeenOnboarding(true)
     }
   }, [activeChunkCount, hasSeenOnboarding])

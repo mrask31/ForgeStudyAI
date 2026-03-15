@@ -283,7 +283,7 @@ export default function ProfileDashboard() {
       router.push(`/tutor?${params.toString()}`)
     } else {
       if (typeof window !== 'undefined') {
-        localStorage.setItem('forgenursing-tutor-prefill', `Review this learning moment: ${clip.title}\n\n${clip.content}`)
+        localStorage.setItem('forgestudy-tutor-prefill', `Review this learning moment: ${clip.title}\n\n${clip.content}`)
       }
       const params = new URLSearchParams()
       params.set('mode', 'tutor')

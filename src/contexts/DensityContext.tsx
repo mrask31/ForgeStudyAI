@@ -11,7 +11,7 @@ interface DensityContextType {
 
 const DensityContext = createContext<DensityContextType | undefined>(undefined)
 
-const STORAGE_KEY = 'forgenursing-density-preference'
+const STORAGE_KEY = 'forgestudy-density-preference'
 
 export function DensityProvider({ children }: { children: ReactNode }) {
   const [density, setDensityState] = useState<DensityMode>('comfort')
