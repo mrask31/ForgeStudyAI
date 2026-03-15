@@ -282,6 +282,17 @@ export function SettingsDrawer({ isOpen, onClose }: SettingsDrawerProps) {
             </div>
           </div>
 
+          {/* Privacy & COPPA */}
+          <div className="bg-slate-900/60 backdrop-blur-md border border-slate-800 rounded-2xl shadow-xl p-6">
+            <div className="flex items-center gap-3 mb-4">
+              <Shield className="w-5 h-5 text-emerald-400" />
+              <h3 className="text-base font-semibold text-slate-200">Privacy</h3>
+            </div>
+            <p className="text-sm text-slate-300 leading-relaxed">
+              ForgeStudy AI is COPPA compliant. We never sell student data, show ads, or share information with third parties. All student conversations are private.
+            </p>
+          </div>
+
           {/* Support */}
           <div className="bg-slate-900/60 backdrop-blur-md border border-slate-800 rounded-2xl shadow-xl p-6">
             <h3 className="text-base font-semibold text-slate-200 mb-4">Support</h3>
