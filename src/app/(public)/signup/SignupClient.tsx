@@ -426,6 +426,14 @@ export default function SignupClient() {
                         {message.text}
                       </div>
                     )}
+                    <div className="bg-emerald-900/20 border border-emerald-700/50 rounded-xl p-4 mb-4 text-left">
+                      <div className="flex items-start gap-2">
+                        <Shield className="w-4 h-4 text-emerald-400 mt-0.5 flex-shrink-0" />
+                        <p className="text-xs text-emerald-300 leading-relaxed">
+                          ForgeStudy AI is COPPA compliant. We never sell student data, show ads, or share information with third parties. All student conversations are private.
+                        </p>
+                      </div>
+                    </div>
                     <div className="flex items-center justify-center gap-2 text-sm text-slate-500 mb-4">
                       <Loader2 className="h-4 w-4 animate-spin text-indigo-400" />
                       <span>Waiting for verification, then starting your free trial...</span>
