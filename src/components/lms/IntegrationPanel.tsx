@@ -90,8 +90,6 @@ export function IntegrationPanel({ studentId, studentName }: IntegrationPanelPro
         throw new Error(data.message || 'Failed to connect Canvas');
       }
 
-      toast.success('Canvas connected successfully! Initial sync started.');
-      
       // Clear form
       setCanvasInstanceUrl('');
       setCanvasPAT('');
@@ -99,6 +97,37 @@ export function IntegrationPanel({ studentId, studentName }: IntegrationPanelPro
 
       // Refresh status
       await fetchConnectionStatus();
+
+      // Show syncing toast and poll for completion
+      toast.info('Syncing your assignments...', { duration: 5000 });
+
+      // Poll sync status — server already started sync in background
+      let attempts = 0;
+      const maxAttempts = 20; // ~30 seconds
+      const pollInterval = setInterval(async () => {
+        attempts++;
+        try {
+          const statusRes = await fetch(`/api/parent/lms/status/${studentId}`);
+          if (statusRes.ok) {
+            const statusData = await statusRes.json();
+            const canvas = statusData.connections?.find(
+              (c: any) => c.provider === 'canvas' && c.status === 'active'
+            );
+            if (canvas?.lastSyncAt) {
+              clearInterval(pollInterval);
+              toast.success('Your Galaxy is ready!');
+              await fetchConnectionStatus();
+              return;
+            }
+          }
+        } catch {
+          // Ignore polling errors
+        }
+        if (attempts >= maxAttempts) {
+          clearInterval(pollInterval);
+          toast.success('Canvas connected! Sync may take a moment.');
+        }
+      }, 1500);
     } catch (error: any) {
       console.error('[IntegrationPanel] Canvas connection error:', error);
       toast.error(error.message || 'Failed to connect Canvas');
