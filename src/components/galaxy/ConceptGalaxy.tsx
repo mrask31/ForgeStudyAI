@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from 'react';
 import dynamic from 'next/dynamic';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
+import { Loader2, Settings, Link as LinkIcon } from 'lucide-react';
 import { FocusPanel } from './FocusPanel';
 import { DueSoonTray } from './DueSoonTray';
 
@@ -47,10 +48,11 @@ interface Link {
 interface ConceptGalaxyProps {
   topics: Topic[];
   profileId?: string; // For lazy evaluation
+  lmsStatus?: 'no_connection' | 'connected' | null;
   onTopicsRefresh?: () => void; // Callback to refresh topics after lazy eval
 }
 
-export function ConceptGalaxy({ topics, profileId, onTopicsRefresh }: ConceptGalaxyProps) {
+export function ConceptGalaxy({ topics, profileId, lmsStatus, onTopicsRefresh }: ConceptGalaxyProps) {
   const router = useRouter();
   const graphRef = useRef<any>();
   const containerRef = useRef<HTMLDivElement>(null);
@@ -366,49 +368,76 @@ export function ConceptGalaxy({ topics, profileId, onTopicsRefresh }: ConceptGal
   };
 
   if (topics.length === 0) {
+    // Determine which empty state to show based on LMS connection status
+    const showNoConnection = lmsStatus === 'no_connection';
+    const showSyncing = lmsStatus === 'connected';
+    const showLoading = lmsStatus === null; // Still checking
+
     return (
       <div className="w-full h-full bg-slate-950 flex flex-col items-center justify-center gap-6 px-4">
         <div className="flex flex-col items-center gap-6 max-w-md">
-          {/* Icon */}
-          <svg 
-            className="w-12 h-12 text-indigo-400" 
-            fill="none" 
-            viewBox="0 0 24 24" 
-            stroke="currentColor"
-          >
-            <path 
-              strokeLinecap="round" 
-              strokeLinejoin="round" 
-              strokeWidth={1.5} 
-              d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" 
-            />
-          </svg>
-
-          {/* Headline */}
-          <h2 className="text-xl font-semibold text-slate-100 text-center">
-            Your Galaxy is waiting.
-          </h2>
-
-          {/* Subtext */}
-          <p className="text-sm text-slate-400 text-center">
-            Upload your first document to build your constellation of knowledge — or ask your AI tutor a question to get started.
-          </p>
-
-          {/* Action Buttons */}
-          <div className="flex flex-col gap-3 w-full">
-            <button
-              onClick={() => router.push('/sources')}
-              className="bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl px-6 py-3 w-full font-medium transition-colors duration-200"
-            >
-              Upload to The Airlock →
-            </button>
-            <button
-              onClick={() => router.push('/tutor')}
-              className="bg-slate-800 hover:bg-slate-700 border border-slate-600 hover:border-indigo-500/40 text-slate-300 rounded-xl px-6 py-3 w-full font-medium transition-all duration-200"
-            >
-              Ask Your Tutor →
-            </button>
-          </div>
+          {showLoading ? (
+            <>
+              <Loader2 className="w-10 h-10 text-indigo-400 animate-spin" />
+              <p className="text-sm text-slate-400">Loading your galaxy...</p>
+            </>
+          ) : showNoConnection ? (
+            <>
+              <LinkIcon className="w-12 h-12 text-indigo-400" />
+              <h2 className="text-xl font-semibold text-slate-100 text-center">
+                Your Galaxy is waiting.
+              </h2>
+              <p className="text-sm text-slate-400 text-center">
+                Connect Canvas in Settings to load your assignments, or upload study materials to get started.
+              </p>
+              <div className="flex flex-col gap-3 w-full">
+                <button
+                  onClick={() => {
+                    // Open settings drawer by dispatching a custom event
+                    window.dispatchEvent(new CustomEvent('open-settings'));
+                  }}
+                  className="bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl px-6 py-3 w-full font-medium transition-colors duration-200 flex items-center justify-center gap-2"
+                >
+                  <Settings className="w-4 h-4" />
+                  Connect Canvas in Settings
+                </button>
+                <button
+                  onClick={() => router.push('/sources')}
+                  className="bg-slate-800 hover:bg-slate-700 border border-slate-600 hover:border-indigo-500/40 text-slate-300 rounded-xl px-6 py-3 w-full font-medium transition-all duration-200"
+                >
+                  Upload Materials
+                </button>
+                <button
+                  onClick={() => router.push('/tutor')}
+                  className="bg-slate-800 hover:bg-slate-700 border border-slate-600 hover:border-indigo-500/40 text-slate-300 rounded-xl px-6 py-3 w-full font-medium transition-all duration-200"
+                >
+                  Ask Your Tutor
+                </button>
+              </div>
+            </>
+          ) : showSyncing ? (
+            <>
+              <Loader2 className="w-12 h-12 text-indigo-400 animate-spin" />
+              <h2 className="text-xl font-semibold text-slate-100 text-center">
+                Syncing your assignments...
+              </h2>
+              <p className="text-sm text-slate-400 text-center">
+                We're pulling in your Canvas assignments. This usually takes a few seconds.
+              </p>
+              <p className="text-xs text-slate-500 text-center mt-2">
+                No assignments found? Check your Canvas connection in Settings.
+              </p>
+            </>
+          ) : (
+            <>
+              <h2 className="text-xl font-semibold text-slate-100 text-center">
+                No assignments found.
+              </h2>
+              <p className="text-sm text-slate-400 text-center">
+                Check your Canvas connection in Settings, or upload study materials to get started.
+              </p>
+            </>
+          )}
         </div>
       </div>
     );
