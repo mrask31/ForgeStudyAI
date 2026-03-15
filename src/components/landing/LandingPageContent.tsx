@@ -52,7 +52,7 @@ export default function LandingPageContent({ gradeBand }: LandingPageContentProp
       {/* How studying finally clicks */}
       <HowItClicks />
 
-      {/* Built for how nurses actually learn */}
+      {/* Built for how students actually learn */}
       <ThreeFeatures />
 
       {/* If this sounds like you... */}

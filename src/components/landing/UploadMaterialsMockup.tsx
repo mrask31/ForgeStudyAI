@@ -9,12 +9,12 @@ export default function UploadMaterialsMockup() {
       <div className="mb-3 sm:mb-4">
         <div className="flex items-start justify-between mb-1.5 sm:mb-2">
           <div className="flex items-center gap-1.5 sm:gap-2">
-            <h1 className="text-lg sm:text-xl font-bold text-slate-900">NUR 221</h1>
-            <span className="px-1.5 sm:px-2 py-0.5 bg-slate-200 rounded text-slate-700 text-[10px] sm:text-xs font-medium">Med-Surg</span>
+            <h1 className="text-lg sm:text-xl font-bold text-slate-900">MATH 101</h1>
+            <span className="px-1.5 sm:px-2 py-0.5 bg-slate-200 rounded text-slate-700 text-[10px] sm:text-xs font-medium">Math</span>
           </div>
           <Edit className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-slate-500" />
         </div>
-        <p className="text-xs sm:text-sm text-slate-600 mb-1.5 sm:mb-2">Med-Surg I</p>
+        <p className="text-xs sm:text-sm text-slate-600 mb-1.5 sm:mb-2">Algebra I</p>
         <div className="flex items-center gap-1 sm:gap-1.5 text-[10px] sm:text-xs text-slate-500">
           <Calendar className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
           <span>Next exam: 2/17/2026</span>
@@ -62,7 +62,7 @@ export default function UploadMaterialsMockup() {
             <div className="flex items-start gap-1.5 sm:gap-2">
               <FileText className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-indigo-600 mt-0.5 flex-shrink-0" />
               <div className="flex-1 min-w-0">
-                <p className="text-[10px] sm:text-xs font-medium text-slate-900 truncate">Medical_Surgical_Unit_...</p>
+                <p className="text-[10px] sm:text-xs font-medium text-slate-900 truncate">Algebra_Chapter_5_...</p>
                 <div className="flex items-center gap-1.5 sm:gap-2 mt-0.5 sm:mt-1">
                   <span className="px-1 sm:px-1.5 py-0.5 bg-slate-100 rounded text-slate-600 text-[10px] sm:text-xs">Textbook</span>
                   <span className="text-[10px] sm:text-xs text-slate-500">12/30/2025</span>
@@ -85,7 +85,7 @@ export default function UploadMaterialsMockup() {
             <div className="flex items-start gap-1.5 sm:gap-2">
               <FileText className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-indigo-600 mt-0.5 flex-shrink-0" />
               <div className="flex-1 min-w-0">
-                <p className="text-[10px] sm:text-xs font-medium text-slate-900 truncate">NURS201_Syllabus_Poli...</p>
+                <p className="text-[10px] sm:text-xs font-medium text-slate-900 truncate">MATH101_Syllabus_Fall...</p>
                 <div className="flex items-center gap-1.5 sm:gap-2 mt-0.5 sm:mt-1">
                   <span className="px-1 sm:px-1.5 py-0.5 bg-slate-100 rounded text-slate-600 text-[10px] sm:text-xs">Syllabus</span>
                   <span className="text-[10px] sm:text-xs text-slate-500">12/30/2025</span>

@@ -182,7 +182,7 @@ export default function Hero({ user }: HeroProps) {
                   <div className="bg-white border-2 border-indigo-300 rounded-full px-4 py-3 flex items-center gap-3 shadow-lg">
                     <input 
                       type="text" 
-                      placeholder="Ask a clinical question..." 
+                      placeholder="Ask a study question..."
                       className="flex-1 text-sm outline-none text-slate-700 bg-transparent"
                       disabled
                     />

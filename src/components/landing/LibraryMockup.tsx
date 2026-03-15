@@ -32,11 +32,11 @@ export default function LibraryMockup() {
         </button>
         <button className="px-2 py-1 bg-white text-slate-700 border border-slate-300 rounded-lg text-[9px] sm:text-[10px] font-medium flex items-center gap-1">
           <Folder className="w-2.5 h-2.5 sm:w-3 sm:h-3" />
-          Med-Surg
+          Math
         </button>
         <button className="px-2 py-1 bg-white text-slate-700 border border-slate-300 rounded-lg text-[9px] sm:text-[10px] font-medium flex items-center gap-1">
           <Tag className="w-2.5 h-2.5 sm:w-3 sm:h-3" />
-          Heart Failure
+          Quadratics
         </button>
       </div>
 
@@ -46,24 +46,24 @@ export default function LibraryMockup() {
         <div className="bg-white border border-slate-200 rounded-lg p-2.5 sm:p-3 shadow-sm">
           <div className="mb-2">
             <h3 className="text-xs sm:text-sm font-semibold text-slate-900 mb-1 line-clamp-1">
-              Heart Failure Priority Interventions
+              Quadratic Formula Steps
             </h3>
             <div className="flex items-center gap-1.5 text-[9px] sm:text-[10px] text-slate-500">
               <Folder className="w-2.5 h-2.5 sm:w-3 sm:h-3" />
-              <span>Med-Surg</span>
-              <span>•</span>
+              <span>Math</span>
+              <span>&bull;</span>
               <span>1/2/2026</span>
             </div>
           </div>
           <p className="text-[9px] sm:text-[10px] text-slate-600 mb-2 line-clamp-2">
-            Step 1 — Assess ABCs. Check airway, breathing, and circulation first. In heart failure, look for signs of respiratory distress...
+            Step 1 — Identify a, b, and c. Match each coefficient to the standard form ax^2 + bx + c = 0...
           </p>
           <div className="flex flex-wrap gap-1 mb-2">
             <span className="px-1.5 py-0.5 bg-slate-100 text-slate-700 rounded text-[8px] sm:text-[9px]">
-              Priority
+              Algebra
             </span>
             <span className="px-1.5 py-0.5 bg-slate-100 text-slate-700 rounded text-[8px] sm:text-[9px]">
-              Cardiac
+              Formulas
             </span>
           </div>
           <button className="w-full flex items-center justify-center gap-1 bg-indigo-600 text-white px-2 py-1.5 rounded-lg text-[9px] sm:text-[10px] font-medium hover:bg-indigo-700 transition-colors">
@@ -76,21 +76,21 @@ export default function LibraryMockup() {
         <div className="bg-white border border-slate-200 rounded-lg p-2.5 sm:p-3 shadow-sm">
           <div className="mb-2">
             <h3 className="text-xs sm:text-sm font-semibold text-slate-900 mb-1 line-clamp-1">
-              Diuretic Management
+              Causes of the Civil War
             </h3>
             <div className="flex items-center gap-1.5 text-[9px] sm:text-[10px] text-slate-500">
               <Folder className="w-2.5 h-2.5 sm:w-3 sm:h-3" />
-              <span>Med-Surg</span>
-              <span>•</span>
+              <span>History</span>
+              <span>&bull;</span>
               <span>12/30/2025</span>
             </div>
           </div>
           <p className="text-[9px] sm:text-[10px] text-slate-600 mb-2 line-clamp-2">
-            Monitor electrolytes, especially potassium. Administer diuretics as ordered and assess for signs of dehydration...
+            Key factors include slavery, states rights, economic differences between North and South, and the election of Lincoln...
           </p>
           <div className="flex flex-wrap gap-1 mb-2">
             <span className="px-1.5 py-0.5 bg-slate-100 text-slate-700 rounded text-[8px] sm:text-[9px]">
-              Medications
+              US History
             </span>
           </div>
           <button className="w-full flex items-center justify-center gap-1 bg-indigo-600 text-white px-2 py-1.5 rounded-lg text-[9px] sm:text-[10px] font-medium hover:bg-indigo-700 transition-colors">
@@ -103,24 +103,24 @@ export default function LibraryMockup() {
         <div className="bg-white border border-slate-200 rounded-lg p-2.5 sm:p-3 shadow-sm">
           <div className="mb-2">
             <h3 className="text-xs sm:text-sm font-semibold text-slate-900 mb-1 line-clamp-1">
-              Fluid Overload Assessment
+              Photosynthesis Overview
             </h3>
             <div className="flex items-center gap-1.5 text-[9px] sm:text-[10px] text-slate-500">
               <Folder className="w-2.5 h-2.5 sm:w-3 sm:h-3" />
-              <span>Med-Surg</span>
-              <span>•</span>
+              <span>Science</span>
+              <span>&bull;</span>
               <span>12/28/2025</span>
             </div>
           </div>
           <p className="text-[9px] sm:text-[10px] text-slate-600 mb-2 line-clamp-2">
-            Daily weights, I&O monitoring, and assess for peripheral edema. Track fluid status to prevent complications...
+            Light-dependent reactions happen in the thylakoid membrane. The Calvin cycle occurs in the stroma...
           </p>
           <div className="flex flex-wrap gap-1 mb-2">
             <span className="px-1.5 py-0.5 bg-slate-100 text-slate-700 rounded text-[8px] sm:text-[9px]">
-              Assessment
+              Biology
             </span>
             <span className="px-1.5 py-0.5 bg-slate-100 text-slate-700 rounded text-[8px] sm:text-[9px]">
-              Monitoring
+              Cell Processes
             </span>
           </div>
           <button className="w-full flex items-center justify-center gap-1 bg-indigo-600 text-white px-2 py-1.5 rounded-lg text-[9px] sm:text-[10px] font-medium hover:bg-indigo-700 transition-colors">
@@ -132,4 +132,3 @@ export default function LibraryMockup() {
     </div>
   )
 }
-
