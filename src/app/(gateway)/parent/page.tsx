@@ -2,7 +2,8 @@
 
 import { useEffect, useMemo, useState } from 'react'
 import Link from 'next/link'
-import { Shield, Lock, CreditCard, Users, CheckCircle, XCircle, Plus } from 'lucide-react'
+import { Shield, Lock, CreditCard, Users, CheckCircle, XCircle, Plus, Gift, Copy } from 'lucide-react'
+import { toast } from 'sonner'
 import { createBrowserClient } from '@supabase/ssr'
 import {
   getParentPinStatus,
@@ -125,6 +126,61 @@ function WeeklySummary({ profiles }: { profiles: StudentProfile[] }) {
         </div>
       ))}
     </div>
+  );
+}
+
+// Referral Button Component
+function ReferralButton() {
+  const [code, setCode] = useState<string | null>(null);
+
+  useEffect(() => {
+    async function loadCode() {
+      try {
+        const res = await fetch('/api/stripe/subscription');
+        if (res.ok) {
+          // We need to get the referral code from the profile
+          const supabase = createBrowserClient(
+            process.env.NEXT_PUBLIC_SUPABASE_URL!,
+            process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+          );
+          const { data: { user } } = await supabase.auth.getUser();
+          if (user) {
+            const { data: profile } = await supabase
+              .from('profiles')
+              .select('referral_code')
+              .eq('id', user.id)
+              .single();
+            setCode(profile?.referral_code || null);
+          }
+        }
+      } catch {
+        // Non-critical
+      }
+    }
+    loadCode();
+  }, []);
+
+  const handleCopy = () => {
+    if (!code) return;
+    const url = `${window.location.origin}/signup?ref=${code}`;
+    navigator.clipboard.writeText(url).then(() => {
+      toast.success('Referral link copied!');
+    }).catch(() => {
+      toast.error('Failed to copy');
+    });
+  };
+
+  if (!code) return null;
+
+  return (
+    <button
+      onClick={handleCopy}
+      className="inline-flex items-center gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl text-sm font-medium transition-colors"
+    >
+      <Gift className="w-4 h-4" />
+      Copy Referral Link
+      <Copy className="w-3.5 h-3.5" />
+    </button>
   );
 }
 
@@ -698,6 +754,15 @@ export default function ParentDashboardPage() {
         <div className="mt-8 rounded-2xl border border-slate-800 bg-slate-900/80 backdrop-blur-xl p-6 shadow-xl">
           <h3 className="text-lg font-semibold text-slate-100 mb-2">This Week</h3>
           <WeeklySummary profiles={profiles} />
+        </div>
+
+        {/* Referral Card */}
+        <div className="mt-8 rounded-2xl border border-indigo-800/50 bg-indigo-950/30 backdrop-blur-xl p-6 shadow-xl">
+          <h3 className="text-lg font-semibold text-slate-100 mb-2">Give a Friend 30 Free Days</h3>
+          <p className="text-sm text-slate-400 mb-4">
+            Share your referral link. When a friend signs up, they get a 30-day free trial instead of 7.
+          </p>
+          <ReferralButton />
         </div>
       </div>
 
