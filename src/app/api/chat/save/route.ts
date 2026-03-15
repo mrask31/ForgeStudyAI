@@ -167,6 +167,53 @@ export async function POST(req: Request) {
       );
     }
 
+    // After saving an assistant message, update mastery_score for the linked topic
+    if (role === 'assistant' && chatId) {
+      try {
+        const { data: chatMeta } = await supabase
+          .from('chats')
+          .select('metadata')
+          .eq('id', chatId)
+          .eq('user_id', user.id)
+          .single();
+
+        const topicId =
+          chatMeta?.metadata &&
+          typeof chatMeta.metadata === 'object' &&
+          (chatMeta.metadata as any).topicId;
+
+        if (topicId) {
+          // Fetch current mastery_score
+          const { data: topic } = await supabase
+            .from('study_topics')
+            .select('mastery_score')
+            .eq('id', topicId)
+            .single();
+
+          if (topic) {
+            const current = topic.mastery_score ?? 0;
+            if (current < 100) {
+              // Increment by 10-15 points (random), cap at 100
+              const increment = Math.floor(Math.random() * 6) + 10; // 10-15
+              const newScore = Math.min(current + increment, 100);
+              await supabase
+                .from('study_topics')
+                .update({
+                  mastery_score: newScore,
+                  updated_at: new Date().toISOString(),
+                })
+                .eq('id', topicId);
+
+              console.log('[SAVE] Mastery updated:', { topicId, from: current, to: newScore });
+            }
+          }
+        }
+      } catch (masteryError) {
+        // Non-critical — don't fail the save
+        console.error('[SAVE] Mastery update error (non-critical):', masteryError);
+      }
+    }
+
     return NextResponse.json({ success: true, message });
   } catch (error: any) {
     console.error('[SAVE] Critical error:', error);
