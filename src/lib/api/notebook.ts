@@ -28,7 +28,7 @@ export async function createNotebookTopic(
     classId?: string
     title: string
     description?: string
-    nclexCategory?: string
+    category?: string
     fileIds?: string[]
   }
 ): Promise<NotebookTopic | null> {
@@ -56,7 +56,7 @@ export async function updateNotebookTopic(
   payload: Partial<{
     title: string
     description: string
-    nclexCategory: string
+    category: string
     fileIds: string[]
     lastStudiedAt: string
     confidence: number

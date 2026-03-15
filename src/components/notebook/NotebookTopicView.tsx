@@ -144,9 +144,9 @@ export default function NotebookTopicView({
             <h1 className="text-2xl font-bold text-[var(--tutor-text-main)] mb-2">
               {topic.title}
             </h1>
-            {topic.nclexCategory && (
+            {topic.category && (
               <Badge variant="outline" className="mb-2">
-                {topic.nclexCategory}
+                {topic.category}
               </Badge>
             )}
           </div>

@@ -29,7 +29,7 @@ export default function NotebookSidebar({
   const [formData, setFormData] = useState({
     title: '',
     description: '',
-    nclexCategory: '',
+    category: '',
   })
 
   useEffect(() => {
@@ -51,11 +51,11 @@ export default function NotebookSidebar({
       classId,
       title: formData.title,
       description: formData.description || undefined,
-      nclexCategory: formData.nclexCategory || undefined,
+      category: formData.category || undefined,
     })
 
     if (newTopic) {
-      setFormData({ title: '', description: '', nclexCategory: '' })
+      setFormData({ title: '', description: '', category: '' })
       setShowAddForm(false)
       loadTopics()
     }
@@ -103,9 +103,9 @@ export default function NotebookSidebar({
               rows={2}
             />
             <Input
-              placeholder="NCLEX category (optional)"
-              value={formData.nclexCategory}
-              onChange={(e) => setFormData({ ...formData, nclexCategory: e.target.value })}
+              placeholder="Subject category (optional)"
+              value={formData.category}
+              onChange={(e) => setFormData({ ...formData, category: e.target.value })}
             />
             <div className="flex gap-2">
               <Button type="submit" size="sm" className="flex-1">
@@ -117,7 +117,7 @@ export default function NotebookSidebar({
                 size="sm"
                 onClick={() => {
                   setShowAddForm(false)
-                  setFormData({ title: '', description: '', nclexCategory: '' })
+                  setFormData({ title: '', description: '', category: '' })
                 }}
               >
                 <X className="w-4 h-4" />
@@ -133,7 +133,7 @@ export default function NotebookSidebar({
             <BookOpen className="w-8 h-8 mx-auto mb-2 opacity-50" />
             <p className="text-sm">No topics yet.</p>
             <p className="text-xs mt-1">
-              Add something like "Heart Failure" or "Insulin Safety"
+              Add something like "Quadratic Equations" or "Civil War"
             </p>
           </div>
         ) : (
@@ -151,9 +151,9 @@ export default function NotebookSidebar({
                 <div className="font-medium text-sm text-[var(--tutor-text-main)] mb-1">
                   {topic.title}
                 </div>
-                {topic.nclexCategory && (
+                {topic.category && (
                   <Badge variant="outline" className="text-xs mt-1">
-                    {topic.nclexCategory}
+                    {topic.category}
                   </Badge>
                 )}
                 {topic.confidence !== undefined && (

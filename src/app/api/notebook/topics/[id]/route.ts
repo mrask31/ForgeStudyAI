@@ -31,7 +31,7 @@ export async function PATCH(
     if (updates.classId !== undefined) updatePayload.class_id = updates.classId || null
     if (updates.title !== undefined) updatePayload.title = updates.title.trim()
     if (updates.description !== undefined) updatePayload.description = updates.description || null
-    if (updates.nclexCategory !== undefined) updatePayload.nclex_category = updates.nclexCategory || null
+    if (updates.category !== undefined) updatePayload.nclex_category = updates.category || null
     if (updates.fileIds !== undefined) updatePayload.file_ids = updates.fileIds || null
     if (updates.lastStudiedAt !== undefined) updatePayload.last_studied_at = updates.lastStudiedAt || null
     if (updates.confidence !== undefined) updatePayload.confidence = updates.confidence !== null && updates.confidence !== undefined ? updates.confidence : null
@@ -64,7 +64,7 @@ export async function PATCH(
       classId: updatedTopic.class_id || undefined,
       title: updatedTopic.title,
       description: updatedTopic.description || undefined,
-      nclexCategory: updatedTopic.nclex_category || undefined,
+      category: updatedTopic.nclex_category || undefined,
       fileIds: updatedTopic.file_ids || undefined,
       lastStudiedAt: updatedTopic.last_studied_at || undefined,
       confidence: updatedTopic.confidence !== null && updatedTopic.confidence !== undefined ? updatedTopic.confidence : undefined,

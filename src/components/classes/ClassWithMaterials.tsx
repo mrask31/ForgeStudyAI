@@ -321,12 +321,13 @@ export default function ClassWithMaterials({ classItem, onEdit, onRefresh }: Cla
                 {classItem.code}
               </h3>
               <Badge variant="outline" className="text-xs font-semibold bg-gradient-to-r from-indigo-50 to-purple-50 border-2 border-indigo-200/60 text-indigo-700 shadow-sm">
-                {classItem.type === 'med_surg' ? 'Med-Surg' : 
-                 classItem.type === 'pharm' ? 'Pharmacology' :
-                 classItem.type === 'peds' ? 'Pediatrics' :
-                 classItem.type === 'ob' ? 'OB/GYN' :
-                 classItem.type === 'psych' ? 'Psychiatric' :
-                 classItem.type === 'fundamentals' ? 'Fundamentals' : 'Other'}
+                {classItem.type === 'math' ? 'Math' :
+                 classItem.type === 'science' ? 'Science' :
+                 classItem.type === 'english' ? 'English' :
+                 classItem.type === 'history' ? 'History' :
+                 classItem.type === 'foreign_language' ? 'Foreign Language' :
+                 classItem.type === 'arts' ? 'Arts' :
+                 classItem.type === 'elective' ? 'Elective' : 'Other'}
               </Badge>
             </div>
             <p 

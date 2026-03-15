@@ -10,12 +10,13 @@ import { BookOpen, Edit, Calendar } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 
 const CLASS_TYPE_LABELS: Record<ClassType, string> = {
-  fundamentals: 'Fundamentals',
-  med_surg: 'Med-Surg',
-  pharm: 'Pharmacology',
-  peds: 'Pediatrics',
-  ob: 'OB/GYN',
-  psych: 'Psychiatric',
+  math: 'Math',
+  science: 'Science',
+  english: 'English',
+  history: 'History',
+  foreign_language: 'Foreign Language',
+  arts: 'Arts',
+  elective: 'Elective',
   other: 'Other',
 }
 
@@ -125,7 +126,7 @@ export default function ClassList({ onEdit, onAddClass }: ClassListProps) {
 
           <div className="flex items-center justify-between pt-4 border-t border-[var(--tutor-border-subtle)]">
             <span className="text-xs text-[var(--tutor-text-muted)]">
-              Tracked in Clinical Notebook
+              Tracked in Study Notebook
             </span>
             <Button
               variant="outline"

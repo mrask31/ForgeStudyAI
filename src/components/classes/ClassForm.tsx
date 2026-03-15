@@ -10,12 +10,13 @@ import { Textarea } from '@/components/ui/textarea'
 import { Label } from '@/components/ui/label'
 
 const CLASS_TYPES: { value: ClassType; label: string }[] = [
-  { value: 'fundamentals', label: 'Fundamentals' },
-  { value: 'med_surg', label: 'Med-Surg' },
-  { value: 'pharm', label: 'Pharmacology' },
-  { value: 'peds', label: 'Pediatrics' },
-  { value: 'ob', label: 'OB/GYN' },
-  { value: 'psych', label: 'Psychiatric' },
+  { value: 'math', label: 'Math' },
+  { value: 'science', label: 'Science' },
+  { value: 'english', label: 'English' },
+  { value: 'history', label: 'History' },
+  { value: 'foreign_language', label: 'Foreign Language' },
+  { value: 'arts', label: 'Arts' },
+  { value: 'elective', label: 'Elective' },
   { value: 'other', label: 'Other' },
 ]
 
@@ -90,7 +91,7 @@ export default function ClassForm({ classItem, onSuccess, onCancel }: ClassFormP
             id="code"
             value={formData.code}
             onChange={(e) => setFormData({ ...formData, code: e.target.value })}
-            placeholder="NUR 221"
+            placeholder="MATH 101"
             required
           />
         </div>
@@ -101,7 +102,7 @@ export default function ClassForm({ classItem, onSuccess, onCancel }: ClassFormP
             id="name"
             value={formData.name}
             onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-            placeholder="Med-Surg I"
+            placeholder="Algebra I"
             required
           />
         </div>
