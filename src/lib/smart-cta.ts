@@ -105,17 +105,17 @@ export async function calculateSmartCTA(
   // 4. Check for decay (topics not reviewed in 7+ days)
   const { data: decayTopics } = await supabase
     .from('study_topics')
-    .select('id, title, mastery_score, updated_at, orbit_state')
+    .select('id, title, mastery_score, last_studied_at, orbit_state')
     .eq('profile_id', profileId)
     .gte('orbit_state', 1) // Only active topics
     .gte('mastery_score', 30)
-    .order('updated_at', { ascending: true })
+    .order('last_studied_at', { ascending: true, nullsFirst: true })
     .limit(1);
-  
+
   if (decayTopics && decayTopics.length > 0) {
     const topic = decayTopics[0];
-    const daysSinceReview = topic.updated_at 
-      ? Math.floor((Date.now() - new Date(topic.updated_at).getTime()) / (1000 * 60 * 60 * 24))
+    const daysSinceReview = topic.last_studied_at
+      ? Math.floor((Date.now() - new Date(topic.last_studied_at).getTime()) / (1000 * 60 * 60 * 24))
       : 999;
     
     if (daysSinceReview >= 7) {
