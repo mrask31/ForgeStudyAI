@@ -27,7 +27,7 @@ export default function PaymentRequiredPage() {
     loadUser()
 
     // Check if there's a plan in localStorage from previous checkout attempt
-    const savedPlan = localStorage.getItem('forgenursing-pending-plan')
+    const savedPlan = localStorage.getItem('forgestudy-pending-plan')
     if (savedPlan && (savedPlan === 'monthly' || savedPlan === 'semester' || savedPlan === 'annual')) {
       setPlan(savedPlan as 'monthly' | 'semester' | 'annual')
     }

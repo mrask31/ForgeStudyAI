@@ -42,11 +42,11 @@ function CheckoutContent() {
         setBillingPeriod('annual')
       }
       
-      localStorage.removeItem('forgenursing-pending-plan')
+      localStorage.removeItem('forgestudy-pending-plan')
       return
     }
 
-    const pendingPlan = localStorage.getItem('forgenursing-pending-plan')
+    const pendingPlan = localStorage.getItem('forgestudy-pending-plan')
     const normalizedPendingPlan = normalizePlan(pendingPlan)
     if (normalizedPendingPlan) {
       if (normalizedPendingPlan.includes('individual')) {
@@ -62,7 +62,7 @@ function CheckoutContent() {
       }
     }
 
-    localStorage.removeItem('forgenursing-pending-plan')
+    localStorage.removeItem('forgestudy-pending-plan')
   }, [urlPlan])
 
   const handleStartCheckout = async () => {

@@ -193,8 +193,8 @@ function TutorPageContent() {
       // Step 3: Store message in localStorage for the chat to pick up and auto-send
       // Don't save the message here - let handleSendMessage do it to ensure proper flow
       if (typeof window !== 'undefined') {
-        localStorage.setItem('forgenursing-tutor-prefill', message.trim())
-        localStorage.setItem('forgenursing-tutor-auto-send', 'true')
+        localStorage.setItem('forgestudy-tutor-prefill', message.trim())
+        localStorage.setItem('forgestudy-tutor-auto-send', 'true')
       }
       
       router.push(buildTutorUrl(chatId))
@@ -571,15 +571,15 @@ function TutorPageContent() {
           // Get payload from sessionStorage if available
           let payload: any = {}
           if (typeof window !== 'undefined') {
-            const reflectionText = sessionStorage.getItem('forgenursing-reflection-text')
-            const snapshotText = sessionStorage.getItem('forgenursing-snapshot-text')
+            const reflectionText = sessionStorage.getItem('forgestudy-reflection-text')
+            const snapshotText = sessionStorage.getItem('forgestudy-snapshot-text')
             if (reflectionText) {
               payload.reflectionText = reflectionText
-              sessionStorage.removeItem('forgenursing-reflection-text')
+              sessionStorage.removeItem('forgestudy-reflection-text')
             }
             if (snapshotText) {
               payload.snapshotText = snapshotText
-              sessionStorage.removeItem('forgenursing-snapshot-text')
+              sessionStorage.removeItem('forgestudy-snapshot-text')
             }
           }
 

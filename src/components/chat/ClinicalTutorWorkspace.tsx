@@ -31,12 +31,12 @@ const isValidUUID = (str: string): boolean => {
 // Helper to generate a stable chat ID
 const generateChatId = () => {
   if (typeof window !== 'undefined') {
-    const saved = localStorage.getItem('forgenursing-chat-id');
+    const saved = localStorage.getItem('forgestudy-chat-id');
     if (saved && isValidUUID(saved)) {
       return saved;
     }
     const newId = crypto.randomUUID();
-    localStorage.setItem('forgenursing-chat-id', newId);
+    localStorage.setItem('forgestudy-chat-id', newId);
     return newId;
   }
   return '';
@@ -110,7 +110,7 @@ export default function ClinicalTutorWorkspace({
   // Update localStorage when chatId changes (for Notes Mode)
   useEffect(() => {
     if (chatId && typeof window !== 'undefined' && isValidUUID(chatId)) {
-      localStorage.setItem('forgenursing-chat-id', chatId)
+      localStorage.setItem('forgestudy-chat-id', chatId)
       console.log('[ClinicalTutorWorkspace] Using chatId:', chatId, 'mode:', mode, 'filterMode:', filterMode, 'selectedDocIds:', selectedDocIds.length)
     } else if (!chatId) {
       console.log('[ClinicalTutorWorkspace] Waiting for chatId resolution...', 'mode:', mode)
@@ -479,8 +479,8 @@ export default function ClinicalTutorWorkspace({
     
     // Check if there's a prefilled message that should be auto-sent
     if (typeof window !== 'undefined' && !autoSendProcessedRef.current) {
-      const prefill = localStorage.getItem('forgenursing-tutor-prefill')
-      const shouldAutoSend = localStorage.getItem('forgenursing-tutor-auto-send') === 'true'
+      const prefill = localStorage.getItem('forgestudy-tutor-prefill')
+      const shouldAutoSend = localStorage.getItem('forgestudy-tutor-auto-send') === 'true'
       
       console.log('[ClinicalTutorWorkspace] Auto-send check:', { 
         hasPrefill: !!prefill, 
@@ -494,8 +494,8 @@ export default function ClinicalTutorWorkspace({
         autoSendProcessedRef.current = true
         
         // Clear the flags immediately
-        localStorage.removeItem('forgenursing-tutor-prefill')
-        localStorage.removeItem('forgenursing-tutor-auto-send')
+        localStorage.removeItem('forgestudy-tutor-prefill')
+        localStorage.removeItem('forgestudy-tutor-auto-send')
         
         // Check if message was already sent (might be in messages from history)
         const userMessageIndex = messages.findIndex(m => 

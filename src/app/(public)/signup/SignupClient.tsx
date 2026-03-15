@@ -58,7 +58,7 @@ export default function SignupClient() {
       const params = new URLSearchParams(window.location.search)
       const plan = params.get('plan')
       if (plan && (plan === 'monthly' || plan === 'semester' || plan === 'annual')) {
-        localStorage.setItem('forgenursing-pending-plan', plan)
+        localStorage.setItem('forgestudy-pending-plan', plan)
       }
       const band = params.get('band')
       if (band && (band === 'high' || band === 'middle')) {
@@ -138,7 +138,7 @@ export default function SignupClient() {
 
     // Get plan from localStorage or URL
     const params = new URLSearchParams(window.location.search)
-    const plan = params.get('plan') || localStorage.getItem('forgenursing-pending-plan')
+    const plan = params.get('plan') || localStorage.getItem('forgestudy-pending-plan')
 
     const allowedPlans = [
       'monthly',
@@ -273,7 +273,7 @@ export default function SignupClient() {
     setMessage(null)
     
     // Get plan from localStorage
-    const plan = localStorage.getItem('forgenursing-pending-plan')
+    const plan = localStorage.getItem('forgestudy-pending-plan')
     console.log('Resending email with plan:', plan)
     
     // Build callback URL with plan parameter if present
