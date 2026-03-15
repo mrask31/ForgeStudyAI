@@ -10,13 +10,13 @@ const config: Config = {
   theme: {
   	extend: {
   		colors: {
-  			// Clinical Light Theme Colors
-  			clinical: {
+  			// Study Light Theme Colors
+  			study: {
   				bg: '#F7F9FB',        // Soft off-white background
   				card: '#FFFFFF',      // Pure white cards
   				border: '#E5EAF0',    // Subtle gray borders
-  				primary: '#2F6FED',   // Medical Confidence Blue
-  				secondary: '#5FA8D3', // Calm Supportive Blue
+  				primary: '#4F46E5',   // Indigo (learning-focused)
+  				secondary: '#6366F1', // Lighter indigo
   				text: {
   					primary: '#1F2933',   // Primary text
   					secondary: '#4A5568', // Secondary text
@@ -28,6 +28,26 @@ const config: Config = {
   				message: {
   					ai: '#F0F6FF',        // Light blue tint for AI bubbles
   					user: '#F4F6F8',      // Neutral gray for user bubbles
+  				},
+  			},
+  			// Keep clinical as alias for backward compatibility
+  			clinical: {
+  				bg: '#F7F9FB',
+  				card: '#FFFFFF',
+  				border: '#E5EAF0',
+  				primary: '#4F46E5',
+  				secondary: '#6366F1',
+  				text: {
+  					primary: '#1F2933',
+  					secondary: '#4A5568',
+  				},
+  				accent: {
+  					blue: '#E8F1FD',
+  					green: '#E6F7F0',
+  				},
+  				message: {
+  					ai: '#F0F6FF',
+  					user: '#F4F6F8',
   				},
   			},
   			background: 'hsl(var(--background))',
