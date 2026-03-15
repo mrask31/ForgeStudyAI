@@ -83,6 +83,7 @@ export function ConceptGalaxy({ topics, profileId, lmsStatus, onDueSoonChange, o
   
   // Vault: Snap-back animation state
   const [justRescued, setJustRescued] = useState<string[]>([]);
+  const [syncTimedOut, setSyncTimedOut] = useState(false);
 
   // Dynamic Canvas Observer - Auto-resize on window resize/rotation
   useEffect(() => {
@@ -393,6 +394,15 @@ export function ConceptGalaxy({ topics, profileId, lmsStatus, onDueSoonChange, o
     }
   };
 
+  // Sync timeout: if syncing state persists for 10s with zero topics, show fallback
+  useEffect(() => {
+    if (topics.length === 0 && lmsStatus === 'connected') {
+      const timer = setTimeout(() => setSyncTimedOut(true), 10000);
+      return () => clearTimeout(timer);
+    }
+    setSyncTimedOut(false);
+  }, [topics.length, lmsStatus]);
+
   if (topics.length === 0) {
     // Determine which empty state to show based on LMS connection status
     const showNoConnection = lmsStatus === 'no_connection';
@@ -443,15 +453,14 @@ export function ConceptGalaxy({ topics, profileId, lmsStatus, onDueSoonChange, o
             </>
           ) : showSyncing ? (
             <>
-              <Loader2 className="w-12 h-12 text-indigo-400 animate-spin" />
+              <Loader2 className={`w-12 h-12 text-indigo-400 animate-spin ${syncTimedOut ? 'opacity-50' : ''}`} />
               <h2 className="text-xl font-semibold text-slate-100 text-center">
-                Syncing your assignments...
+                {syncTimedOut ? 'Still syncing...' : 'Syncing your assignments...'}
               </h2>
               <p className="text-sm text-slate-400 text-center">
-                We're pulling in your Canvas assignments. This usually takes a few seconds.
-              </p>
-              <p className="text-xs text-slate-500 text-center mt-2">
-                No assignments found? Check your Canvas connection in Settings.
+                {syncTimedOut
+                  ? 'Taking longer than usual. Try clicking Sync Now in Settings.'
+                  : "We're pulling in your Canvas assignments. This usually takes a few seconds."}
               </p>
             </>
           ) : (
