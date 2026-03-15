@@ -240,7 +240,7 @@ export async function middleware(request: NextRequest) {
         const isTrialActive = trialEndsAt && new Date(trialEndsAt) > new Date()
 
         // Allow access if subscription is active OR trial is active
-        if (!hasSubscriptionAccess(subscriptionStatus) && !isTrialActive) {
+        if (!hasSubscriptionAccess(subscriptionStatus, trialEndsAt) && !isTrialActive) {
           return NextResponse.redirect(new URL('/checkout', request.url))
         }
       } catch (error) {

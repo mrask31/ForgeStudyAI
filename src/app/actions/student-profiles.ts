@@ -154,14 +154,22 @@ export async function createStudentProfile(data: {
     }
 
     const stripe = getStripeClient()
-    const subscription = await stripe.subscriptions.retrieve(
-      parentProfile.stripe_subscription_id
-    )
-    const priceId = subscription.items?.data?.[0]?.price?.id ?? null
-    const planType = resolvePlanType(priceId)
+    try {
+      const subscription = await stripe.subscriptions.retrieve(
+        parentProfile.stripe_subscription_id
+      )
+      const priceId = subscription.items?.data?.[0]?.price?.id ?? null
+      const planType = resolvePlanType(priceId)
 
-    if (planType !== 'family') {
-      throw new Error('Family plan required to add multiple profiles')
+      if (planType !== 'family') {
+        throw new Error('Family plan required to add multiple profiles')
+      }
+    } catch (stripeErr: any) {
+      // If subscription no longer exists on Stripe, deny access gracefully
+      if (stripeErr?.statusCode === 404 || stripeErr?.code === 'resource_missing') {
+        throw new Error('Subscription not found. Please update your billing information.')
+      }
+      throw stripeErr
     }
   }
 

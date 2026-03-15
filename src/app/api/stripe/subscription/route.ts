@@ -158,17 +158,65 @@ export async function GET(req: Request) {
       })
     }
 
-    // Fetch subscription details from Stripe
-    const subscription = await stripe.subscriptions.retrieve(subscriptionId)
+    // Fetch subscription details from Stripe — gracefully handle deleted/expired subscriptions
+    let subscription: Stripe.Subscription | null = null
+    try {
+      subscription = await stripe.subscriptions.retrieve(subscriptionId)
+    } catch (stripeError: unknown) {
+      console.warn('[Stripe Subscription] Failed to retrieve subscription from Stripe:', subscriptionId, stripeError)
+
+      // If subscription no longer exists on Stripe, correct the local status
+      if (stripeError instanceof Stripe.errors.StripeError &&
+          (stripeError.statusCode === 404 || stripeError.code === 'resource_missing')) {
+        // Subscription was deleted on Stripe — update local profile to reflect reality
+        const adminUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
+        const adminKey = process.env.SUPABASE_SERVICE_ROLE_KEY
+        if (adminKey) {
+          const adminClient = createClient(adminUrl, adminKey)
+          await adminClient
+            .from('profiles')
+            .update({ subscription_status: 'expired', stripe_subscription_id: null })
+            .eq('id', user.id)
+        }
+      }
+
+      // Return gracefully instead of 400
+      return NextResponse.json({
+        subscription: null,
+        status: 'expired',
+        planType: 'none',
+      })
+    }
+
+    if (!subscription) {
+      return NextResponse.json({
+        subscription: null,
+        status: profile?.subscription_status || 'none',
+      })
+    }
+
+    // If Stripe says subscription is canceled/unpaid but local says active, fix it
+    if (['canceled', 'unpaid', 'incomplete_expired'].includes(subscription.status) &&
+        profile?.subscription_status === 'active') {
+      const adminUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
+      const adminKey = process.env.SUPABASE_SERVICE_ROLE_KEY
+      if (adminKey) {
+        const adminClient = createClient(adminUrl, adminKey)
+        await adminClient
+          .from('profiles')
+          .update({ subscription_status: subscription.status })
+          .eq('id', user.id)
+      }
+    }
 
     // Calculate trial end date (not days remaining)
     let trialEndDate: string | null = null
     if (subscription.status === 'trialing' && subscription.trial_end) {
       const trialEnd = new Date(subscription.trial_end * 1000)
-      trialEndDate = trialEnd.toLocaleDateString('en-US', { 
-        month: 'short', 
-        day: 'numeric', 
-        year: 'numeric' 
+      trialEndDate = trialEnd.toLocaleDateString('en-US', {
+        month: 'short',
+        day: 'numeric',
+        year: 'numeric'
       })
     }
 
@@ -176,7 +224,6 @@ export async function GET(req: Request) {
     const planType = resolvePlanType(priceId)
 
     // Extract subscription properties safely
-    // Note: current_period_end may not be in TypeScript types but exists on the object
     const subscriptionData = {
       id: subscription.id,
       status: subscription.status,
@@ -190,19 +237,12 @@ export async function GET(req: Request) {
 
     return NextResponse.json({
       subscription: subscriptionData,
-      status: profile.subscription_status,
+      status: subscription.status,
       planType,
     })
 
   } catch (error: unknown) {
     console.error('[Stripe Subscription] Error:', error)
-
-    if (error instanceof Stripe.errors.StripeError) {
-      return NextResponse.json(
-        { error: error.message },
-        { status: 400 }
-      )
-    }
 
     return NextResponse.json(
       { error: 'Internal server error' },
