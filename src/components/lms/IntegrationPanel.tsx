@@ -142,8 +142,22 @@ export function IntegrationPanel({ studentId, studentName }: IntegrationPanelPro
       return;
     }
 
-    toast.error('Google Classroom OAuth flow not yet implemented. Coming soon!');
-    // TODO: Implement Google OAuth flow
+    setIsConnecting(true);
+    try {
+      const res = await fetch(`/api/parent/lms/google-auth?studentId=${studentId}`);
+      const data = await res.json();
+
+      if (!res.ok || !data.url) {
+        throw new Error(data.error || 'Failed to start Google OAuth');
+      }
+
+      // Redirect to Google consent screen
+      window.location.href = data.url;
+    } catch (error: any) {
+      console.error('[IntegrationPanel] Google OAuth error:', error);
+      toast.error(error.message || 'Failed to start Google Classroom connection');
+      setIsConnecting(false);
+    }
   };
 
   const handleDisconnect = async (connectionId: string, provider: string) => {
