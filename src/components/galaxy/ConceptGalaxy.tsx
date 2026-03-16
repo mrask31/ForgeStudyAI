@@ -610,14 +610,14 @@ export function ConceptGalaxy({ topics, profileId, lmsStatus, totalTopicCount = 
       {/* Weave Mode Toggle - Floating button for touch devices */}
       <button
         onClick={() => setIsWeaveModeActive(!isWeaveModeActive)}
-        className={`absolute top-16 md:top-[4.5rem] right-4 md:right-6 z-50 px-4 py-2 rounded-xl font-medium transition-all shadow-2xl backdrop-blur-md border ${
+        className={`absolute top-16 md:top-[4.5rem] right-2 md:right-6 z-50 px-3 md:px-4 py-2 rounded-xl text-sm font-medium transition-all shadow-2xl backdrop-blur-md border min-h-[44px] min-w-[44px] ${
           isWeaveModeActive
             ? 'bg-amber-600/90 border-amber-500/50 text-white'
             : 'bg-slate-900/60 border-slate-700/50 text-slate-300 hover:bg-slate-800/60'
         }`}
         title={isWeaveModeActive ? 'Weave Mode Active - Tap nodes to select' : 'Enable Weave Mode for touch selection'}
       >
-        <span className="flex items-center gap-2">
+        <span className="flex items-center gap-1.5 md:gap-2">
           <span>🕸️</span>
           <span className="hidden sm:inline">Weave Mode</span>
           {isWeaveModeActive && <span className="text-xs">(Active)</span>}
@@ -626,10 +626,10 @@ export function ConceptGalaxy({ topics, profileId, lmsStatus, totalTopicCount = 
 
       {/* Loom Dock - Bottom slide-up panel */}
       {showLoomDock && (
-        <div className="absolute bottom-0 left-0 right-0 bg-slate-900/90 backdrop-blur-md border-t border-slate-700 p-4 rounded-b-lg animate-slide-up">
-          <div className="flex flex-col sm:flex-row items-center justify-between gap-3 max-w-4xl mx-auto">
-            <div className="flex items-center gap-3">
-              <div className="text-amber-400 text-sm font-medium">
+        <div className="absolute bottom-0 left-0 right-0 bg-slate-900/90 backdrop-blur-md border-t border-slate-700 p-3 md:p-4 rounded-b-lg animate-slide-up safe-area-bottom">
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-2 sm:gap-3 max-w-4xl mx-auto">
+            <div className="flex items-center gap-2 sm:gap-3">
+              <div className="text-amber-400 text-sm font-medium truncate">
                 {selectedConstellation.length} concept{selectedConstellation.length !== 1 ? 's' : ''} selected
               </div>
               <div className="text-slate-500 text-xs hidden md:block">
@@ -639,7 +639,7 @@ export function ConceptGalaxy({ topics, profileId, lmsStatus, totalTopicCount = 
             <button
               onClick={handleWeaveThesis}
               disabled={isCreatingSession}
-              className="px-6 py-2 bg-indigo-600 hover:bg-indigo-700 disabled:bg-indigo-800 disabled:cursor-not-allowed text-white rounded-lg font-medium transition-colors flex items-center gap-2"
+              className="w-full sm:w-auto px-6 py-2.5 min-h-[44px] bg-indigo-600 hover:bg-indigo-700 disabled:bg-indigo-800 disabled:cursor-not-allowed text-white rounded-lg font-medium transition-colors flex items-center justify-center gap-2"
             >
               {isCreatingSession ? (
                 <>

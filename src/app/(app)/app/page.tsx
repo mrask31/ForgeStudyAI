@@ -182,13 +182,13 @@ export default function GalaxyPage() {
       </div>
       
       {/* Top Right HUD - Upload + Photo Drop */}
-      <div className="absolute top-4 md:top-6 right-4 md:right-6 z-40 flex items-center gap-2">
+      <div className="absolute top-4 md:top-6 right-2 md:right-6 z-40 flex items-center gap-1.5 md:gap-2">
         <PhotoDropButton />
         <Link
           href="/sources"
-          className="inline-flex items-center gap-2 px-4 md:px-6 py-2 md:py-3 bg-slate-900/40 backdrop-blur-md border border-slate-700/50 rounded-xl shadow-2xl text-white text-sm md:text-base font-semibold hover:bg-slate-800/60 transition-all"
+          className="inline-flex items-center gap-1.5 md:gap-2 px-3 md:px-6 py-2 md:py-3 min-h-[44px] bg-slate-900/40 backdrop-blur-md border border-slate-700/50 rounded-xl shadow-2xl text-white text-xs md:text-base font-semibold hover:bg-slate-800/60 transition-all"
         >
-          <Sparkles className="w-4 h-4 md:w-5 md:h-5" />
+          <Sparkles className="w-4 h-4 md:w-5 md:h-5 flex-shrink-0" />
           <span className="hidden sm:inline">Upload Materials</span>
           <span className="sm:hidden">Upload</span>
         </Link>
