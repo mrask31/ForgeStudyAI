@@ -309,6 +309,53 @@ Rules:
 - Match the grade band tone and vocabulary`
 }
 
+const MATH_KEYWORDS = [
+  'math', 'algebra', 'geometry', 'calculus', 'trigonometry', 'statistics',
+  'equation', 'quadratic', 'polynomial', 'fraction', 'decimal', 'integer',
+  'pre-algebra', 'pre-calculus', 'linear', 'exponential', 'logarithm',
+  'probability', 'arithmetic', 'number theory',
+]
+
+/**
+ * Detect if a topic is math-related based on subject or title keywords.
+ */
+export function isMathTopic(subject?: string | null, title?: string | null): boolean {
+  const text = `${subject || ''} ${title || ''}`.toLowerCase()
+  return MATH_KEYWORDS.some(kw => text.includes(kw))
+}
+
+/**
+ * Math-specific Socratic rules appended when the topic is math.
+ */
+export function getMathSocraticPrompt(): string {
+  return `
+### MATH-SPECIFIC SOCRATIC RULES
+
+This topic involves mathematics. Apply these additional rules:
+
+STEP-BY-STEP APPROACH
+- Show every step of the solution explicitly. Never skip steps.
+- After each major step, ask: "Does that make sense so far?"
+- Wait for the student to confirm before proceeding to the next step.
+
+PROBLEM SETUP
+- Before solving, help the student identify:
+  1. What do we know? (Given information)
+  2. What are we looking for? (Unknown)
+  3. What formula or method applies?
+
+ENCOURAGING LANGUAGE
+- Never say "incorrect" or "wrong." Instead say: "Let's check that step together."
+- When the student makes an error, guide them to find it: "Look at step 2 again — what happens when we..."
+- Celebrate correct steps: "Exactly right! Now for the next part..."
+
+NOTATION
+- Use LaTeX for ALL equations and expressions: $x^2 + 2x + 1$ for inline, $$\\frac{-b \\pm \\sqrt{b^2-4ac}}{2a}$$ for display.
+- Write fractions as $\\frac{a}{b}$, not a/b.
+- Use proper symbols: $\\times$ for multiplication, $\\div$ for division, $\\leq$ $\\geq$ for inequalities.
+`;
+}
+
 export function getStrictModePrompt() {
   return `
 ### STRICT MASTERY MODE

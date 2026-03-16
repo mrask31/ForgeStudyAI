@@ -645,6 +645,15 @@ Remember: The student selected this topic because they want to study it. Keep yo
     }
   }
 
+  // Math-specific Socratic rules (auto-detect from topic subject/title/class name)
+  {
+    const { isMathTopic, getMathSocraticPrompt } = await import('@/lib/ai/prompts');
+    // Check topic title, class name, and any subject metadata
+    if (isMathTopic(effectiveClassName, effectiveTopicTitle)) {
+      systemPrompt += '\n\n' + getMathSocraticPrompt();
+    }
+  }
+
   // Strict mode (optional)
   if (strictMode === true) {
     const { getStrictModePrompt } = await import('@/lib/ai/prompts');
