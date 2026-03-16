@@ -160,7 +160,7 @@ export async function POST(req: NextRequest) {
             }
 
             // Create study topic with orbit_state = 0 (Quarantine/Invisible)
-            // This is the core fix: automated email ingestion creates quarantined topics
+            // Quarantine applies ONLY to manual/email ingestion — never to LMS-sourced topics
             const { data: newTopic, error: topicError } = await supabase
               .from('study_topics')
               .insert({

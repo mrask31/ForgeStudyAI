@@ -709,6 +709,8 @@ export class SmartSyncService {
       const now = new Date();
       const nextReviewDate = new Date(now.getTime() + 24 * 60 * 60 * 1000); // +1 day
 
+      // LMS-sourced topics ALWAYS enter as Active (orbit_state = 1).
+      // Quarantine (orbit_state = 0) is reserved for manual/email ingestion only.
       const { data: newTopic, error: topicError } = await this.supabase
         .from('study_topics')
         .insert({
@@ -718,7 +720,7 @@ export class SmartSyncService {
           subject: extracted.subject,
           grade_band: profile.grade_band,
           source: 'lms',
-          orbit_state: 1, // Active - skip Quarantine for LMS
+          orbit_state: 1, // ALWAYS Active for LMS — never quarantine trusted school data
           mastery_score: 0,
           srs_ease_factor: 2.5, // SM-2 default
           srs_interval_days: 1,
