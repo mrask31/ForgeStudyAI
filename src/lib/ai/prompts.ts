@@ -35,6 +35,12 @@ STYLE RULES
 - Avoid hype, slang, or excessive emojis.
 - Use plain language first, then add precision.
 - Avoid medical or clinical iconography (no stethoscope or nursing cues).
+
+MATH NOTATION
+- When the subject involves math, use LaTeX notation for all equations and expressions.
+- Inline math: wrap with single dollar signs like $x^2 + 2x + 1$.
+- Display math: wrap with double dollar signs on their own lines like $$\\frac{-b \\pm \\sqrt{b^2 - 4ac}}{2a}$$
+- Always prefer LaTeX over plain text for fractions, exponents, roots, and special symbols.
 `
 
 const GRADE_BAND_OVERLAYS: Record<GradeBand, string> = {
