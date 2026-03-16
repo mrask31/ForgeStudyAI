@@ -7,7 +7,7 @@ import { ConceptGalaxy } from '@/components/galaxy/ConceptGalaxy'
 import { GalaxyLegend } from '@/components/galaxy/GalaxyLegend'
 import { SmartCTA } from '@/components/galaxy/SmartCTA'
 import { DecontaminationBanner } from '@/components/galaxy/DecontaminationBanner'
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 import { getStudyTopicsWithMastery, getQuarantinedTopicsCount } from '@/app/actions/study-topics'
 import { calculateSmartCTA, type SmartCTAResult } from '@/lib/smart-cta'
 import { useUser } from '@/contexts/UserContext'
@@ -41,6 +41,7 @@ export default function GalaxyPage() {
   const [lmsStatus, setLmsStatus] = useState<'no_connection' | 'connected' | null>(null)
   const [hasDueSoonItems, setHasDueSoonItems] = useState(false)
   const [totalTopicCount, setTotalTopicCount] = useState(0) // Includes quarantined — to detect if sync already ran
+  const [streakDays, setStreakDays] = useState(0)
 
   useEffect(() => {
     async function loadData() {
@@ -74,6 +75,23 @@ export default function GalaxyPage() {
     
     loadData()
   }, [activeProfileId, user])
+
+  // Fetch streak data
+  useEffect(() => {
+    async function loadStreak() {
+      if (!activeProfileId) return
+      try {
+        const res = await fetch(`/api/streak?profileId=${activeProfileId}`)
+        if (res.ok) {
+          const data = await res.json()
+          setStreakDays(data.current_streak_days || 0)
+        }
+      } catch {
+        // Non-critical
+      }
+    }
+    loadStreak()
+  }, [activeProfileId])
 
   // Check LMS connection status for empty state guidance
   useEffect(() => {
@@ -151,6 +169,15 @@ export default function GalaxyPage() {
         </div>
       )}
       
+      {/* Streak Badge - Top left on mobile, inside HUD on desktop */}
+      {streakDays > 0 && (
+        <div className="md:hidden absolute top-4 left-3 z-40">
+          <div className="bg-slate-900/60 backdrop-blur-md border border-amber-500/30 rounded-xl px-3 py-1.5 shadow-lg">
+            <span className="text-amber-400 text-sm font-bold">🔥 {streakDays} day streak</span>
+          </div>
+        </div>
+      )}
+
       {/* Top Left HUD - Title & Legend (Hidden on mobile) */}
       <div className="hidden md:block absolute top-6 left-6 z-40 bg-slate-900/40 backdrop-blur-md border border-slate-700/50 rounded-xl shadow-2xl p-6 max-w-md">
         <div className="flex items-center gap-3 mb-4">
@@ -158,6 +185,9 @@ export default function GalaxyPage() {
           <h1 className="text-2xl font-bold text-white">
             Your Learning Galaxy
           </h1>
+          {streakDays > 0 && (
+            <span className="ml-auto text-amber-400 text-sm font-bold whitespace-nowrap">🔥 {streakDays} day streak</span>
+          )}
         </div>
         <p className="text-slate-300 text-sm mb-4">
           Each star represents a concept you're mastering. Click any node to study.

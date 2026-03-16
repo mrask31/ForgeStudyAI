@@ -662,6 +662,16 @@ FORMATTING RULES:
 - If student materials were provided, include a "Sources:" line with filenames.
 `;
 
+  // Update streak (fire-and-forget, non-blocking)
+  if (activeProfileId) {
+    const streakUrl = new URL('/api/streak', req.url);
+    fetch(streakUrl.toString(), {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Cookie: req.headers.get('cookie') || '' },
+      body: JSON.stringify({ profileId: activeProfileId }),
+    }).catch(() => { /* non-critical */ });
+  }
+
   // Stream response using Anthropic Claude
   const anthropic = getAnthropicClient();
   
