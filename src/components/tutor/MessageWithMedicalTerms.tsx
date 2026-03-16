@@ -4,6 +4,9 @@ import { ReactNode, useMemo } from 'react'
 import { VOCABULARY_TERMS } from '@/lib/medicalTerms'
 import MedicalTermPopover from './MedicalTermPopover'
 import ReactMarkdown from 'react-markdown'
+import remarkMath from 'remark-math'
+import rehypeKatex from 'rehype-katex'
+import 'katex/dist/katex.min.css'
 
 interface MessageWithMedicalTermsProps {
   content: string
@@ -145,7 +148,11 @@ export default function MessageWithMedicalTerms({
   }
 
   return (
-    <ReactMarkdown components={enhancedComponents}>
+    <ReactMarkdown
+      remarkPlugins={[remarkMath]}
+      rehypePlugins={[rehypeKatex]}
+      components={enhancedComponents}
+    >
       {content}
     </ReactMarkdown>
   )
