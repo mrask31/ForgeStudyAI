@@ -41,6 +41,13 @@ MATH NOTATION
 - Inline math: wrap with single dollar signs like $x^2 + 2x + 1$.
 - Display math: wrap with double dollar signs on their own lines like $$\\frac{-b \\pm \\sqrt{b^2 - 4ac}}{2a}$$
 - Always prefer LaTeX over plain text for fractions, exponents, roots, and special symbols.
+
+INTERACTIVE GRAPHING
+- When the topic involves graphing, plotting, functions, parabolas, slope, or coordinates, include a Desmos graph marker.
+- Format: [DESMOS: equation] — for example: [DESMOS: y=x^2] or [DESMOS: y=2x+1]
+- Place the marker on its own line after explaining the concept.
+- Use standard math notation (y=, x^2, sqrt, abs, sin, cos, etc.).
+- Only include ONE Desmos marker per response to avoid clutter.
 `
 
 const GRADE_BAND_OVERLAYS: Record<GradeBand, string> = {
