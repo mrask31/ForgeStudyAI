@@ -68,6 +68,10 @@ export default function ProfileDashboard() {
   const [activeDays, setActiveDays] = useState<number>(0)
   const [topicsStudied, setTopicsStudied] = useState<number>(0)
   const [clipsCount, setClipsCount] = useState<number>(0)
+  const [averageMastery, setAverageMastery] = useState<number>(0)
+  const [masteredCount, setMasteredCount] = useState<number>(0)
+  const [upcomingDueDates, setUpcomingDueDates] = useState<Array<{ title: string; dueDate: string; courseName: string }>>([])
+  const [lastStudySession, setLastStudySession] = useState<string | null>(null)
   const [searchQuery, setSearchQuery] = useState('')
   const [selectedFolder, setSelectedFolder] = useState<string | null>(null)
   const [selectedTag, setSelectedTag] = useState<string | null>(null)
@@ -210,6 +214,21 @@ export default function ProfileDashboard() {
           }
           classChatCounts.sort((a, b) => b.count - a.count)
           setChatCountsByClass(classChatCounts)
+        }
+
+        // Load real dashboard data from study_topics and synced_assignments
+        try {
+          const dashRes = await fetch(`/api/parent/dashboard?profileId=${profileId}`, { credentials: 'include' })
+          if (dashRes.ok) {
+            const dashData = await dashRes.json()
+            setTopicsStudied(dashData.topicsStudiedThisWeek || 0)
+            setAverageMastery(dashData.averageMastery || 0)
+            setMasteredCount(dashData.masteredCount || 0)
+            setUpcomingDueDates(dashData.upcomingDueDates || [])
+            setLastStudySession(dashData.lastStudySession || null)
+          }
+        } catch (err) {
+          console.error('[Dashboard] Error loading dashboard data:', err)
         }
 
         // Load all clips
@@ -439,10 +458,10 @@ export default function ProfileDashboard() {
               <div className="p-1.5 sm:p-2 bg-gradient-to-br from-teal-100 to-teal-50 rounded-lg">
                 <Brain className="w-4 h-4 sm:w-5 sm:h-5 text-teal-600" />
               </div>
-              <span className="text-[10px] sm:text-xs font-semibold text-slate-500 uppercase tracking-wide">Concepts</span>
+              <span className="text-[10px] sm:text-xs font-semibold text-slate-500 uppercase tracking-wide">Mastery</span>
             </div>
-            <div className="text-2xl sm:text-3xl md:text-4xl font-bold text-slate-900 mb-1">{topicsStudied}</div>
-            <div className="text-xs sm:text-sm text-slate-600">topics explored</div>
+            <div className="text-2xl sm:text-3xl md:text-4xl font-bold text-slate-900 mb-1">{averageMastery}%</div>
+            <div className="text-xs sm:text-sm text-slate-600">{masteredCount} topic{masteredCount !== 1 ? 's' : ''} mastered (&gt;70%)</div>
           </div>
 
           <div className="bg-white/80 backdrop-blur-sm border-l-4 border-l-purple-500 rounded-xl p-3 sm:p-4 md:p-5 shadow-lg shadow-slate-200/50 hover:shadow-xl hover:shadow-purple-200/30 transition-all duration-300">
@@ -490,6 +509,55 @@ export default function ProfileDashboard() {
                 ))}
               </div>
             </div>
+          </div>
+        )}
+
+        {/* Upcoming Due Dates & Last Session */}
+        {(upcomingDueDates.length > 0 || lastStudySession) && (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6 mb-6 sm:mb-8">
+            {upcomingDueDates.length > 0 && (
+              <div className="bg-white/80 backdrop-blur-sm border border-slate-200/60 rounded-2xl shadow-lg shadow-slate-200/50 overflow-hidden">
+                <div className="bg-gradient-to-r from-blue-50/80 to-indigo-50/80 border-b border-blue-200/60 px-6 py-4">
+                  <h3 className="text-base font-bold text-slate-900 flex items-center gap-2.5">
+                    <div className="p-1.5 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-lg">
+                      <Calendar className="w-4 h-4 text-white" />
+                    </div>
+                    Upcoming Due Dates
+                  </h3>
+                </div>
+                <div className="p-4 space-y-3">
+                  {upcomingDueDates.map((item, idx) => (
+                    <div key={idx} className="flex items-center justify-between p-3 bg-slate-50 rounded-xl border border-slate-200/60">
+                      <div className="min-w-0 flex-1">
+                        <p className="text-sm font-semibold text-slate-900 truncate">{item.title}</p>
+                        <p className="text-xs text-slate-500">{item.courseName}</p>
+                      </div>
+                      <span className="text-xs font-bold text-blue-700 bg-blue-50 px-2.5 py-1 rounded-lg border border-blue-200/50 ml-2 flex-shrink-0">
+                        {new Date(item.dueDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+            {lastStudySession && (
+              <div className="bg-white/80 backdrop-blur-sm border border-slate-200/60 rounded-2xl shadow-lg shadow-slate-200/50 p-6">
+                <h3 className="text-base font-bold text-slate-900 flex items-center gap-2.5 mb-3">
+                  <div className="p-1.5 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-lg">
+                    <GraduationCap className="w-4 h-4 text-white" />
+                  </div>
+                  Last Study Session
+                </h3>
+                <p className="text-sm text-slate-600">
+                  {formatTimeAgo(lastStudySession)}
+                </p>
+                <p className="text-xs text-slate-400 mt-1">
+                  {new Date(lastStudySession).toLocaleString('en-US', {
+                    weekday: 'short', month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit'
+                  })}
+                </p>
+              </div>
+            )}
           </div>
         )}
 
