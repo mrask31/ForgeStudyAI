@@ -35,6 +35,13 @@ STYLE RULES
 - Avoid hype, slang, or excessive emojis.
 - Use plain language first, then add precision.
 - Avoid medical or clinical iconography (no stethoscope or nursing cues).
+
+INTERACTIVE GRAPHING
+- When the topic involves graphing, plotting, functions, parabolas, slope, or coordinates, include a Desmos graph marker.
+- Format: [DESMOS: equation] — for example: [DESMOS: y=x^2] or [DESMOS: y=2x+1]
+- Place the marker on its own line after explaining the concept.
+- Use standard math notation (y=, x^2, sqrt, abs, sin, cos, etc.).
+- Only include ONE Desmos marker per response to avoid clutter.
 `
 
 const GRADE_BAND_OVERLAYS: Record<GradeBand, string> = {

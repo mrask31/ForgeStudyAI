@@ -9,6 +9,7 @@ import type { TutorEvidenceItem } from './TutorEvidencePanel'
 import FollowUpPrompts from './FollowUpPrompts'
 import { useState, useEffect } from 'react'
 import MessageWithMedicalTerms from './MessageWithMedicalTerms'
+import { DesmosEmbed, parseDesmosMarkers } from './DesmosEmbed'
 import SaveToTopicModal from '@/components/study-topics/SaveToTopicModal'
 import { useActiveProfileSummary } from '@/hooks/useActiveProfileSummary'
 
@@ -300,49 +301,56 @@ export default function ChatMessageList({
                   </div>
                 </div>
 
-                {/* Document Content */}
+                {/* Document Content — with Desmos graph detection */}
                 <div className="prose prose-slate prose-lg max-w-3xl">
-                  <MessageWithMedicalTerms
-                    content={m.content}
-                    markdownComponents={{
-                      p: ({children}) => <p className="mb-3 last:mb-0 text-sm sm:text-base text-slate-700 leading-relaxed">{children}</p>,
-                      ul: ({children}) => <ul className="list-disc pl-5 space-y-1">{children}</ul>,
-                      ol: ({children}) => <ol className="list-decimal pl-5 space-y-1">{children}</ol>,
-                      li: ({children}) => <li className="my-1 text-slate-700">{children}</li>,
-                      strong: ({children}) => <strong className="font-semibold text-slate-900">{children}</strong>,
-                      code: ({children}) => <code className="bg-slate-50 px-1.5 py-0.5 rounded text-xs font-mono text-slate-900 border border-slate-200">{children}</code>,
-                      pre: ({children}) => (
-                        <pre className="max-w-full overflow-x-auto bg-slate-50 p-4 rounded-lg border border-slate-200 my-4">
-                          {children}
-                        </pre>
-                      ),
-                      table: ({children}) => (
-                        <div className="max-w-full overflow-x-auto my-4">
-                          <table className="min-w-full border-collapse border border-slate-300">
-                            {children}
-                          </table>
-                        </div>
-                      ),
-                      h1: ({children}) => <h1 className="text-2xl font-semibold tracking-tight text-slate-900 mb-3 mt-6 first:mt-0">{children}</h1>,
-                      h2: ({children}) => <h2 className="text-xl font-semibold tracking-tight text-slate-900 mb-2 mt-5 first:mt-0">{children}</h2>,
-                      h3: ({children, ...props}: { children: React.ReactNode; [key: string]: any }) => {
-                        const isSnapshot = typeof children === 'string' && children.trim() === 'Snapshot'
-                        return (
-                          <h3 
-                            className={`text-lg font-semibold tracking-tight text-slate-900 mb-2 mt-6 first:mt-0 ${isSnapshot ? 'font-bold text-[var(--tutor-primary)] mb-3' : ''}`}
-                            {...props}
-                          >
-                            {children}
-                          </h3>
-                        )
-                      },
-                      blockquote: ({children}) => (
-                        <blockquote className="border-l-4 border-[var(--tutor-primary)] bg-teal-50 text-slate-700 not-italic rounded-r pl-4 pr-4 py-3 my-4 text-sm sm:text-base leading-relaxed">
-                          {children}
-                        </blockquote>
-                      ),
-                    }}
-                  />
+                  {parseDesmosMarkers(m.content).map((segment, segIdx) =>
+                    segment.type === 'desmos' ? (
+                      <DesmosEmbed key={`desmos-${segIdx}`} equation={segment.value} />
+                    ) : (
+                      <MessageWithMedicalTerms
+                        key={`text-${segIdx}`}
+                        content={segment.value}
+                        markdownComponents={{
+                          p: ({children}) => <p className="mb-3 last:mb-0 text-sm sm:text-base text-slate-700 leading-relaxed">{children}</p>,
+                          ul: ({children}) => <ul className="list-disc pl-5 space-y-1">{children}</ul>,
+                          ol: ({children}) => <ol className="list-decimal pl-5 space-y-1">{children}</ol>,
+                          li: ({children}) => <li className="my-1 text-slate-700">{children}</li>,
+                          strong: ({children}) => <strong className="font-semibold text-slate-900">{children}</strong>,
+                          code: ({children}) => <code className="bg-slate-50 px-1.5 py-0.5 rounded text-xs font-mono text-slate-900 border border-slate-200">{children}</code>,
+                          pre: ({children}) => (
+                            <pre className="max-w-full overflow-x-auto bg-slate-50 p-4 rounded-lg border border-slate-200 my-4">
+                              {children}
+                            </pre>
+                          ),
+                          table: ({children}) => (
+                            <div className="max-w-full overflow-x-auto my-4">
+                              <table className="min-w-full border-collapse border border-slate-300">
+                                {children}
+                              </table>
+                            </div>
+                          ),
+                          h1: ({children}) => <h1 className="text-2xl font-semibold tracking-tight text-slate-900 mb-3 mt-6 first:mt-0">{children}</h1>,
+                          h2: ({children}) => <h2 className="text-xl font-semibold tracking-tight text-slate-900 mb-2 mt-5 first:mt-0">{children}</h2>,
+                          h3: ({children, ...props}: { children: React.ReactNode; [key: string]: any }) => {
+                            const isSnapshot = typeof children === 'string' && children.trim() === 'Snapshot'
+                            return (
+                              <h3
+                                className={`text-lg font-semibold tracking-tight text-slate-900 mb-2 mt-6 first:mt-0 ${isSnapshot ? 'font-bold text-[var(--tutor-primary)] mb-3' : ''}`}
+                                {...props}
+                              >
+                                {children}
+                              </h3>
+                            )
+                          },
+                          blockquote: ({children}) => (
+                            <blockquote className="border-l-4 border-[var(--tutor-primary)] bg-teal-50 text-slate-700 not-italic rounded-r pl-4 pr-4 py-3 my-4 text-sm sm:text-base leading-relaxed">
+                              {children}
+                            </blockquote>
+                          ),
+                        }}
+                      />
+                    )
+                  )}
                 </div>
 
                 {/* Mobile evidence button */}
