@@ -656,7 +656,9 @@ Remember: The student selected this topic because they want to study it. Keep yo
 FORMATTING RULES:
 - Follow the Mode Overlay response structure exactly.
 - Keep responses scannable with headings and short bullets.
-- End with 1 guided follow-up question when appropriate.
+- End with exactly 1 guided follow-up question — never ask multiple questions at the end.
+- Do NOT use bullet points in your opening sentence or paragraph. Start with prose.
+- Use the student's name at most once per session (the first reply greeting only).
 - If student materials were provided, include a "Sources:" line with filenames.
 `;
 
