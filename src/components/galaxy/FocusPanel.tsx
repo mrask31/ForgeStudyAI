@@ -124,14 +124,14 @@ export function FocusPanel({
         aria-modal="true"
         aria-labelledby="focus-panel-title"
         className={`fixed inset-y-0 right-0 z-50 w-full md:w-[380px]
-                   bg-slate-950/95 backdrop-blur-2xl border-l-4 border-indigo-500 shadow-2xl
-                   transition-transform duration-300 ease-in-out
+                   bg-slate-950/95 backdrop-blur-2xl border-l-0 md:border-l-4 border-indigo-500 shadow-2xl
+                   transition-transform duration-300 ease-in-out overflow-y-auto
                    ${isOpen ? 'translate-x-0' : 'translate-x-full'}`}
       >
         {/* Header */}
         <div className="border-b border-slate-800 p-5 flex items-start justify-between gap-3">
           <div className="min-w-0">
-            <h2 id="focus-panel-title" className="text-lg font-semibold text-slate-100 line-clamp-2">
+            <h2 id="focus-panel-title" className="text-base md:text-lg font-semibold text-slate-100 line-clamp-2 break-words">
               {topicTitle}
             </h2>
             <span className={`inline-flex items-center mt-2 px-2.5 py-0.5 rounded-full text-xs font-medium border ${badgeColors[masteryLevel]}`}>
@@ -189,7 +189,7 @@ export function FocusPanel({
                 <button
                   key={action.id}
                   onClick={() => onAction(action.id)}
-                  className="w-full flex items-center gap-3 p-3 bg-slate-900/40 hover:bg-slate-800/60 border border-slate-800 hover:border-slate-700 rounded-xl transition-all group"
+                  className="w-full flex items-center gap-3 p-3 md:p-3 min-h-[48px] bg-slate-900/40 hover:bg-slate-800/60 active:bg-slate-800/80 border border-slate-800 hover:border-slate-700 rounded-xl transition-all group"
                 >
                   <div className="p-2 bg-slate-800/60 rounded-lg group-hover:bg-indigo-900/30 transition-colors">
                     <action.icon className="w-4 h-4 text-slate-400 group-hover:text-indigo-400 transition-colors" />

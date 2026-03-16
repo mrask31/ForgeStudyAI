@@ -301,7 +301,7 @@ export default function ChatMessageList({
                 </div>
 
                 {/* Document Content */}
-                <div className="prose prose-slate prose-lg max-w-3xl">
+                <div className="prose prose-slate prose-sm sm:prose-lg max-w-full sm:max-w-3xl overflow-x-hidden break-words">
                   <MessageWithMedicalTerms
                     content={m.content}
                     markdownComponents={{
@@ -378,7 +378,7 @@ export default function ChatMessageList({
           return (
             <div key={m.id} className="flex justify-end">
               <div className="ml-auto max-w-[70%]">
-                <div className="inline-block rounded-2xl bg-emerald-600 px-5 py-3 text-sm font-medium text-white shadow-lg hover:shadow-xl transition-all duration-200 leading-relaxed">
+                <div className="inline-block rounded-2xl bg-emerald-600 px-4 sm:px-5 py-3 text-sm font-medium text-white shadow-lg hover:shadow-xl transition-all duration-200 leading-relaxed break-words max-w-full">
                   {m.content}
                 </div>
               </div>

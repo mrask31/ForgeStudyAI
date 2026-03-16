@@ -146,9 +146,9 @@ export function SettingsDrawer({ isOpen, onClose }: SettingsDrawerProps) {
         role="dialog"
         aria-modal="true"
         aria-labelledby="settings-drawer-title"
-        className={`fixed inset-y-0 right-0 z-50 w-full md:w-[450px] lg:w-[500px] 
-                   bg-slate-950/95 backdrop-blur-2xl border-l border-slate-800 shadow-2xl
-                   transition-transform duration-300 ease-in-out overflow-y-auto
+        className={`fixed inset-y-0 right-0 z-50 w-full md:w-[450px] lg:w-[500px]
+                   bg-slate-950/95 backdrop-blur-2xl border-l-0 md:border-l border-slate-800 shadow-2xl
+                   transition-transform duration-300 ease-in-out overflow-y-auto overscroll-contain
                    ${isOpen ? 'translate-x-0' : 'translate-x-full'}`}
       >
         {/* Header */}
