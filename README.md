@@ -1,48 +1,99 @@
 # ForgeStudy Platform
 
-AI-powered study companion for Grades 3–12 students.
-
-## Getting Started
-
-First, run the development server:
-
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
-
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+AI-powered study companion for Grades 6–12 students, built with Anthropic Claude.
 
 ## Features
 
-- **Step-by-Step Learning**: AI-powered guidance to help students understand their work, not just get answers
-- **Grades 3–12 Support**: Tailored learning support from elementary through high school
-- **Family Accounts**: One parent account can manage up to 4 student profiles
-- **Personalized Dashboards**: Each student gets their own readiness dashboard tracking progress and focus areas
+- **Socratic AI Tutoring** — Claude-powered step-by-step guidance that teaches thinking, not just answers
+- **Study Galaxy** — Force-directed graph visualization of concept mastery with spaced repetition
+- **Canvas LMS Integration** — Auto-sync assignments from Canvas into study topics
+- **Logic Loom** — Synthesis engine connecting mastered concepts into deeper understanding
+- **The Vault** — Spaced repetition system with decay/rescue mechanics
+- **Family Accounts** — One parent account manages up to 4 student profiles
+- **Parent Dashboard** — Real-time study vitals, mastery tracking, and due date visibility
+- **Homework Photo Drop** — Snap a photo of homework and get instant study guidance
+- **Streak System** — Track consecutive study days to build habits
 
 ## Tech Stack
 
-- **Framework**: Next.js 14 (App Router)
-- **Language**: TypeScript
-- **Styling**: Tailwind CSS
-- **Database**: Supabase (PostgreSQL with pgvector)
-- **AI**: OpenAI GPT-4o
-- **UI Components**: shadcn/ui, Radix UI
+| Layer | Technology |
+|-------|-----------|
+| Framework | Next.js 14 (App Router) |
+| Language | TypeScript |
+| AI Engine | **Anthropic Claude** (claude-sonnet-4-6) |
+| Embeddings | OpenAI text-embedding-3-small (RAG only) |
+| Database | Supabase (PostgreSQL + pgvector) |
+| Auth | Supabase Auth |
+| Payments | Stripe |
+| Styling | Tailwind CSS + shadcn/ui + Radix UI |
+| Visualization | react-force-graph-2d + D3 |
+| Math | KaTeX |
+| Deployment | Vercel |
 
-## Learn More
+## Getting Started
 
-To learn more about Next.js, take a look at the following resources:
+### Prerequisites
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+- Node.js 18+
+- Supabase project (with pgvector extension)
+- Anthropic API key
+- OpenAI API key (for embeddings only)
 
-## Deploy on Vercel
+### Environment Variables
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+Create a `.env.local` file:
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+```env
+NEXT_PUBLIC_SUPABASE_URL=your_supabase_url
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your_anon_key
+ANTHROPIC_API_KEY=your_anthropic_key
+OPENAI_API_KEY=your_openai_key
+STRIPE_SECRET_KEY=your_stripe_key
+```
+
+### Install & Run
+
+```bash
+npm install
+npm run dev
+```
+
+Open [http://localhost:3000](http://localhost:3000).
+
+### Database Migrations
+
+```bash
+npx supabase db push
+```
+
+## Project Structure
+
+```
+src/
+├── app/              # Next.js App Router pages & API routes
+│   ├── (app)/        # Protected student routes (Galaxy, Tutor, Dashboard)
+│   ├── (gateway)/    # Parent/profile setup flow
+│   ├── (public)/     # Login, signup, landing pages
+│   └── api/          # API routes (chat, sync, streak, etc.)
+├── components/       # React components
+│   ├── galaxy/       # ConceptGalaxy, FocusPanel, DueSoonTray
+│   ├── tutor/        # Chat interface, message rendering
+│   └── ui/           # Shared shadcn/ui components
+├── lib/
+│   ├── ai/           # System prompts, Claude client
+│   ├── lms/          # Canvas/Google Classroom adapters
+│   └── vault/        # Spaced repetition logic
+└── supabase/
+    └── migrations/   # Database schema migrations
+```
+
+## Testing
+
+```bash
+npm test              # Jest unit tests
+npm run test:smoke    # Playwright E2E tests
+```
+
+## License
+
+Private — All rights reserved.
