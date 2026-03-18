@@ -46,16 +46,24 @@ export default function GalaxyPage() {
   useEffect(() => {
     async function loadData() {
       if (!activeProfileId || !user) {
+        // Don't clear loading if we're just waiting for context to initialize
+        if (!activeProfileId && !user) return
         setLoading(false)
         return
       }
-      
+
+      // Show skeleton while fetching (unless cache already has data for this profile)
+      if (galaxyCache.profileId !== activeProfileId || galaxyCache.topics.length === 0) {
+        setLoading(true)
+      }
+
       try {
         const [topicsData, ctaData, quarantinedData] = await Promise.all([
           getStudyTopicsWithMastery(activeProfileId),
           calculateSmartCTA(user.id, activeProfileId),
           getQuarantinedTopicsCount(activeProfileId)
         ])
+        console.log('[Galaxy] Loaded', topicsData.length, 'topics,', quarantinedData, 'quarantined for profile', activeProfileId)
         setTopics(topicsData)
         setSmartCTA(ctaData)
         setQuarantinedCount(quarantinedData)
@@ -72,7 +80,7 @@ export default function GalaxyPage() {
         setLoading(false)
       }
     }
-    
+
     loadData()
   }, [activeProfileId, user])
 
