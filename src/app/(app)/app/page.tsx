@@ -134,20 +134,24 @@ export default function GalaxyPage() {
         return
       }
 
+      // Mark as synced BEFORE firing to prevent duplicate triggers
+      sessionStorage.setItem(syncKey, 'true')
+
       try {
-        // Trigger sync and re-fetch topics when it completes
+        // Trigger sync in background — only update topics if sync returns NEW data
         fetch('/api/internal/sync/trigger', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           credentials: 'include',
           body: JSON.stringify({ profileId: activeProfileId }),
         }).then(async () => {
-          // Re-fetch topics after sync completes so Galaxy updates
-          if (activeProfileId) {
-            const [topicsData, quarantinedData] = await Promise.all([
-              getStudyTopicsWithMastery(activeProfileId),
-              getQuarantinedTopicsCount(activeProfileId)
-            ])
+          if (!activeProfileId) return
+          const [topicsData, quarantinedData] = await Promise.all([
+            getStudyTopicsWithMastery(activeProfileId),
+            getQuarantinedTopicsCount(activeProfileId)
+          ])
+          // Only update state if we got data — never clobber existing topics with empty
+          if (topicsData.length > 0 || quarantinedData > 0) {
             setTopics(topicsData)
             setQuarantinedCount(quarantinedData)
             setTotalTopicCount(topicsData.length + quarantinedData)
@@ -157,9 +161,6 @@ export default function GalaxyPage() {
         }).catch((err) => {
           console.debug('[Galaxy] Auto-sync failed (non-critical):', err)
         })
-
-        // Mark as synced for this session
-        sessionStorage.setItem(syncKey, 'true')
       } catch (err) {
         console.debug('[Galaxy] Auto-sync error (non-critical):', err)
       }

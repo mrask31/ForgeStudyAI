@@ -503,19 +503,21 @@ export class SmartSyncService {
     assignment: Assignment
   ): Promise<void> {
     try {
-      // Check if assignment already exists
+      // Check if assignment already exists — match by student + LMS assignment ID
+      // (not by connection ID, which changes on disconnect/reconnect)
       const { data: existing } = await this.supabase
         .from('synced_assignments')
         .select('id')
-        .eq('lms_connection_id', connection.id)
+        .eq('student_id', connection.student_id)
         .eq('lms_assignment_id', assignment.lmsAssignmentId)
         .single();
 
       if (existing) {
-        // Update existing assignment
+        // Update existing assignment (also update connection ID in case of reconnect)
         await this.supabase
           .from('synced_assignments')
           .update({
+            lms_connection_id: connection.id,
             title: assignment.title,
             description: assignment.description,
             due_date: assignment.dueDate,
@@ -675,24 +677,46 @@ export class SmartSyncService {
       }
 
       // STEP 2: Check if study_topic already exists for this assignment
-      const { data: existingTopic } = await this.supabase
+      // First check by synced_assignment_id (exact match)
+      const { data: existingByAssignment } = await this.supabase
         .from('study_topics')
         .select('id')
         .eq('synced_assignment_id', assignment.id)
         .single();
 
-      if (existingTopic) {
+      if (existingByAssignment) {
         console.log(`[SmartSync] Study topic already exists for assignment ${assignment.id}`);
-        
-        // Update assignment to mark as merged
         await this.supabase
           .from('synced_assignments')
-          .update({
-            merge_status: 'merged',
-            study_topic_id: existingTopic.id,
-          })
+          .update({ merge_status: 'merged', study_topic_id: existingByAssignment.id })
           .eq('id', assignment.id);
-        
+        return;
+      }
+
+      // Also check by profile + title to catch duplicates from reconnects
+      // (different synced_assignment row but same underlying topic)
+      const { data: existingByTitle } = await this.supabase
+        .from('study_topics')
+        .select('id, synced_assignment_id')
+        .eq('profile_id', profile.id)
+        .eq('source', 'lms')
+        .eq('title', assignment.title)
+        .single();
+
+      if (existingByTitle) {
+        console.log(`[SmartSync] Study topic already exists by title for assignment ${assignment.id}:`, existingByTitle.id);
+        // Link the new assignment to the existing topic
+        await this.supabase
+          .from('synced_assignments')
+          .update({ merge_status: 'merged', study_topic_id: existingByTitle.id })
+          .eq('id', assignment.id);
+        // Update the topic to point to the latest assignment if it was orphaned
+        if (!existingByTitle.synced_assignment_id) {
+          await this.supabase
+            .from('study_topics')
+            .update({ synced_assignment_id: assignment.id })
+            .eq('id', existingByTitle.id);
+        }
         return;
       }
 
