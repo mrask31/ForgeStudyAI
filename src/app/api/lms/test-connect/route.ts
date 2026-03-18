@@ -1,3 +1,4 @@
+// Updated: 2026-03-18
 /**
  * GET /api/lms/test-connect
  *
