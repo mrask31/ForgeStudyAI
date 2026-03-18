@@ -19,13 +19,24 @@ export async function GET() {
     checks: {},
   };
 
-  // 1. Environment variables
+  // 1. Environment variables — check all possible encryption key names
+  const encryptionKeyFound = process.env.LMS_ENCRYPTION_KEY
+    || process.env.ENCRYPTION_KEY
+    || process.env.TOKEN_ENCRYPTION_KEY;
+  const encryptionKeySource = process.env.LMS_ENCRYPTION_KEY ? 'LMS_ENCRYPTION_KEY'
+    : process.env.ENCRYPTION_KEY ? 'ENCRYPTION_KEY'
+    : process.env.TOKEN_ENCRYPTION_KEY ? 'TOKEN_ENCRYPTION_KEY'
+    : 'NONE';
+
   diagnostics.checks.envVars = {
     NEXT_PUBLIC_SUPABASE_URL: !!process.env.NEXT_PUBLIC_SUPABASE_URL,
     NEXT_PUBLIC_SUPABASE_ANON_KEY: !!process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
     SUPABASE_SERVICE_ROLE_KEY: !!process.env.SUPABASE_SERVICE_ROLE_KEY,
     LMS_ENCRYPTION_KEY: !!process.env.LMS_ENCRYPTION_KEY,
-    LMS_ENCRYPTION_KEY_LENGTH: process.env.LMS_ENCRYPTION_KEY?.length ?? 0,
+    ENCRYPTION_KEY: !!process.env.ENCRYPTION_KEY,
+    TOKEN_ENCRYPTION_KEY: !!process.env.TOKEN_ENCRYPTION_KEY,
+    encryptionKeySource,
+    encryptionKeyLength: encryptionKeyFound?.length ?? 0,
     ANTHROPIC_API_KEY: !!process.env.ANTHROPIC_API_KEY,
     GOOGLE_OAUTH_CLIENT_ID: !!process.env.GOOGLE_OAUTH_CLIENT_ID,
     GOOGLE_OAUTH_CLIENT_SECRET: !!process.env.GOOGLE_OAUTH_CLIENT_SECRET,
@@ -36,7 +47,7 @@ export async function GET() {
   if (!process.env.NEXT_PUBLIC_SUPABASE_URL) missingRequired.push('NEXT_PUBLIC_SUPABASE_URL');
   if (!process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) missingRequired.push('NEXT_PUBLIC_SUPABASE_ANON_KEY');
   if (!process.env.SUPABASE_SERVICE_ROLE_KEY) missingRequired.push('SUPABASE_SERVICE_ROLE_KEY');
-  if (!process.env.LMS_ENCRYPTION_KEY) missingRequired.push('LMS_ENCRYPTION_KEY');
+  if (!encryptionKeyFound) missingRequired.push('LMS_ENCRYPTION_KEY (or ENCRYPTION_KEY or TOKEN_ENCRYPTION_KEY)');
   diagnostics.checks.missingRequired = missingRequired;
 
   // 2. Encryption roundtrip test

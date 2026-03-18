@@ -24,12 +24,32 @@ export class TokenEncryption {
    * 
    * CRITICAL: LMS_ENCRYPTION_KEY must be set in environment.
    */
+  private static readonly ENV_VAR_NAMES = [
+    'LMS_ENCRYPTION_KEY',
+    'ENCRYPTION_KEY',
+    'TOKEN_ENCRYPTION_KEY',
+  ] as const;
+
   private static getEncryptionKey(): Buffer {
-    const key = process.env.LMS_ENCRYPTION_KEY;
-    
-    if (!key) {
-      throw new Error('LMS_ENCRYPTION_KEY environment variable is not set');
+    let key: string | undefined;
+    let foundVarName: string | undefined;
+
+    for (const varName of this.ENV_VAR_NAMES) {
+      const value = process.env[varName];
+      if (value) {
+        key = value;
+        foundVarName = varName;
+        break;
+      }
     }
+
+    if (!key || !foundVarName) {
+      throw new Error(
+        `Encryption key not found. Set one of: ${this.ENV_VAR_NAMES.join(', ')}`
+      );
+    }
+
+    console.log(`[TokenEncryption] Using encryption key from ${foundVarName}`);
 
     // Derive 256-bit key from environment variable using PBKDF2
     return crypto.pbkdf2Sync(key, 'forgestudy-lms-salt', 100000, 32, 'sha256');

@@ -28,9 +28,9 @@ export async function POST(request: Request) {
   try {
     // 0. Pre-flight: verify encryption is configured
     if (!TokenEncryption.isConfigured()) {
-      console.error('[LMS Connect] LMS_ENCRYPTION_KEY is not set — cannot encrypt tokens');
+      console.error('[LMS Connect] No encryption key found. Set one of: LMS_ENCRYPTION_KEY, ENCRYPTION_KEY, TOKEN_ENCRYPTION_KEY');
       return errorResponse(
-        'Server configuration error: encryption is not configured. Please contact support.',
+        'Server configuration error: encryption key not found. Set LMS_ENCRYPTION_KEY, ENCRYPTION_KEY, or TOKEN_ENCRYPTION_KEY in environment.',
         500
       );
     }
@@ -209,7 +209,14 @@ export async function POST(request: Request) {
     }
 
     // 7. Create connection record (use service role to avoid RLS issues)
-    console.log('[LMS Connect] Step 7: Creating connection record');
+    // parent_id & authorized_by = auth.uid() → profiles.id
+    // student_id = student_profiles.id
+    console.log('[LMS Connect] Step 7: Creating connection record', {
+      student_id: body.studentId,
+      parent_id: user.id,
+      authorized_by: user.id,
+      provider: body.provider,
+    });
     const { data: connection, error: insertError } = await supabaseAdmin
       .from('lms_connections')
       .insert({
