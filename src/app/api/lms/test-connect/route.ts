@@ -4,6 +4,9 @@
  * TEMPORARY diagnostic endpoint for debugging Canvas connect failures.
  * Returns detailed diagnostic info without exposing secrets.
  *
+ * IMPORTANT: Uses bracket notation process.env['VAR'] to avoid
+ * Next.js webpack build-time replacement of process.env.VAR.
+ *
  * DELETE THIS FILE after debugging is complete.
  */
 
@@ -13,44 +16,66 @@ import { TokenEncryption } from '@/lib/lms/services/TokenEncryption';
 
 export const dynamic = 'force-dynamic';
 
+/**
+ * Read env var using bracket notation to bypass Next.js webpack DefinePlugin.
+ * process.env.FOO gets replaced at build time; process.env['FOO'] reads at runtime.
+ */
+function env(name: string): string | undefined {
+  return process.env[name];
+}
+
 export async function GET() {
   const diagnostics: Record<string, any> = {
     timestamp: new Date().toISOString(),
     checks: {},
   };
 
-  // 1. Environment variables — check all possible encryption key names
-  const encryptionKeyFound = process.env.LMS_ENCRYPTION_KEY
-    || process.env.ENCRYPTION_KEY
-    || process.env.TOKEN_ENCRYPTION_KEY;
-  const encryptionKeySource = process.env.LMS_ENCRYPTION_KEY ? 'LMS_ENCRYPTION_KEY'
-    : process.env.ENCRYPTION_KEY ? 'ENCRYPTION_KEY'
-    : process.env.TOKEN_ENCRYPTION_KEY ? 'TOKEN_ENCRYPTION_KEY'
+  // 0. List all env var NAMES (no values) to debug naming mismatches
+  // Filter out anything that could contain a secret in its name
+  const sensitivePatterns = ['SECRET', 'KEY', 'TOKEN', 'PASSWORD', 'CREDENTIAL', 'PRIVATE'];
+  diagnostics.checks.allEnvKeys = Object.keys(process.env)
+    .filter(k => !sensitivePatterns.some(p => k.toUpperCase().includes(p)))
+    .sort()
+    .join(', ');
+
+  // Also show env var names that DO contain KEY/TOKEN/SECRET — just the names, not values
+  diagnostics.checks.sensitiveEnvKeyNames = Object.keys(process.env)
+    .filter(k => sensitivePatterns.some(p => k.toUpperCase().includes(p)))
+    .sort()
+    .join(', ');
+
+  // 1. Environment variables — use bracket notation for runtime reads
+  const encryptionKeyFound = env('LMS_ENCRYPTION_KEY')
+    || env('ENCRYPTION_KEY')
+    || env('TOKEN_ENCRYPTION_KEY');
+  const encryptionKeySource = env('LMS_ENCRYPTION_KEY') ? 'LMS_ENCRYPTION_KEY'
+    : env('ENCRYPTION_KEY') ? 'ENCRYPTION_KEY'
+    : env('TOKEN_ENCRYPTION_KEY') ? 'TOKEN_ENCRYPTION_KEY'
     : 'NONE';
 
   diagnostics.checks.envVars = {
-    NEXT_PUBLIC_SUPABASE_URL: !!process.env.NEXT_PUBLIC_SUPABASE_URL,
-    NEXT_PUBLIC_SUPABASE_ANON_KEY: !!process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
-    SUPABASE_SERVICE_ROLE_KEY: !!process.env.SUPABASE_SERVICE_ROLE_KEY,
-    LMS_ENCRYPTION_KEY: !!process.env.LMS_ENCRYPTION_KEY,
-    ENCRYPTION_KEY: !!process.env.ENCRYPTION_KEY,
-    TOKEN_ENCRYPTION_KEY: !!process.env.TOKEN_ENCRYPTION_KEY,
+    NEXT_PUBLIC_SUPABASE_URL: !!env('NEXT_PUBLIC_SUPABASE_URL'),
+    NEXT_PUBLIC_SUPABASE_ANON_KEY: !!env('NEXT_PUBLIC_SUPABASE_ANON_KEY'),
+    SUPABASE_SERVICE_ROLE_KEY: !!env('SUPABASE_SERVICE_ROLE_KEY'),
+    LMS_ENCRYPTION_KEY: !!env('LMS_ENCRYPTION_KEY'),
+    ENCRYPTION_KEY: !!env('ENCRYPTION_KEY'),
+    TOKEN_ENCRYPTION_KEY: !!env('TOKEN_ENCRYPTION_KEY'),
     encryptionKeySource,
     encryptionKeyLength: encryptionKeyFound?.length ?? 0,
-    ANTHROPIC_API_KEY: !!process.env.ANTHROPIC_API_KEY,
-    GOOGLE_OAUTH_CLIENT_ID: !!process.env.GOOGLE_OAUTH_CLIENT_ID,
-    GOOGLE_OAUTH_CLIENT_SECRET: !!process.env.GOOGLE_OAUTH_CLIENT_SECRET,
-    REDIS_URL: !!process.env.REDIS_URL,
+    ANTHROPIC_API_KEY: !!env('ANTHROPIC_API_KEY'),
+    GOOGLE_OAUTH_CLIENT_ID: !!env('GOOGLE_OAUTH_CLIENT_ID'),
+    GOOGLE_OAUTH_CLIENT_SECRET: !!env('GOOGLE_OAUTH_CLIENT_SECRET'),
+    REDIS_URL: !!env('REDIS_URL'),
   };
 
   const missingRequired: string[] = [];
-  if (!process.env.NEXT_PUBLIC_SUPABASE_URL) missingRequired.push('NEXT_PUBLIC_SUPABASE_URL');
-  if (!process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) missingRequired.push('NEXT_PUBLIC_SUPABASE_ANON_KEY');
-  if (!process.env.SUPABASE_SERVICE_ROLE_KEY) missingRequired.push('SUPABASE_SERVICE_ROLE_KEY');
+  if (!env('NEXT_PUBLIC_SUPABASE_URL')) missingRequired.push('NEXT_PUBLIC_SUPABASE_URL');
+  if (!env('NEXT_PUBLIC_SUPABASE_ANON_KEY')) missingRequired.push('NEXT_PUBLIC_SUPABASE_ANON_KEY');
+  if (!env('SUPABASE_SERVICE_ROLE_KEY')) missingRequired.push('SUPABASE_SERVICE_ROLE_KEY');
   if (!encryptionKeyFound) missingRequired.push('LMS_ENCRYPTION_KEY (or ENCRYPTION_KEY or TOKEN_ENCRYPTION_KEY)');
   diagnostics.checks.missingRequired = missingRequired;
 
-  // 2. Encryption roundtrip test
+  // 2. Encryption roundtrip test (TokenEncryption already uses bracket notation internally)
   try {
     diagnostics.checks.encryptionConfigured = TokenEncryption.isConfigured();
     diagnostics.checks.encryptionRoundtrip = TokenEncryption.test();
@@ -90,12 +115,12 @@ export async function GET() {
   }
 
   // 4. Supabase connectivity + table checks
-  if (process.env.NEXT_PUBLIC_SUPABASE_URL && process.env.SUPABASE_SERVICE_ROLE_KEY) {
+  const supabaseUrl = env('NEXT_PUBLIC_SUPABASE_URL');
+  const supabaseKey = env('SUPABASE_SERVICE_ROLE_KEY');
+
+  if (supabaseUrl && supabaseKey) {
     try {
-      const supabase = createClient(
-        process.env.NEXT_PUBLIC_SUPABASE_URL,
-        process.env.SUPABASE_SERVICE_ROLE_KEY
-      );
+      const supabase = createClient(supabaseUrl, supabaseKey);
 
       // Check lms_connections table
       const { data: connections, error: connError } = await supabase
@@ -119,19 +144,6 @@ export async function GET() {
         },
       };
 
-      // Check if students table exists and what IDs are in it
-      const { data: students, error: studentsError } = await supabase
-        .from('students')
-        .select('id')
-        .limit(5);
-
-      diagnostics.checks.studentsTable = {
-        accessible: !studentsError,
-        error: studentsError ? { code: studentsError.code, message: studentsError.message, hint: studentsError.hint } : null,
-        rowCount: students?.length ?? 0,
-        sampleIds: students?.map(s => s.id) ?? [],
-      };
-
       // Check student_profiles table
       const { data: profiles, error: profilesError } = await supabase
         .from('student_profiles')
@@ -145,20 +157,7 @@ export async function GET() {
         sampleRows: profiles?.map(p => ({ id: p.id, owner_id: p.owner_id })) ?? [],
       };
 
-      // Check parents table
-      const { data: parents, error: parentsError } = await supabase
-        .from('parents')
-        .select('id')
-        .limit(5);
-
-      diagnostics.checks.parentsTable = {
-        accessible: !parentsError,
-        error: parentsError ? { code: parentsError.code, message: parentsError.message, hint: parentsError.hint } : null,
-        rowCount: parents?.length ?? 0,
-        sampleIds: parents?.map(p => p.id) ?? [],
-      };
-
-      // Check profiles table (used by disconnect route)
+      // Check profiles table (parent_id FK target)
       const { data: profilesMain, error: profilesMainError } = await supabase
         .from('profiles')
         .select('id')
@@ -171,41 +170,26 @@ export async function GET() {
         sampleIds: profilesMain?.map(p => p.id) ?? [],
       };
 
-      // FK CONSTRAINT TEST: Try to insert and immediately rollback
-      // This tests if the FK from lms_connections.student_id -> students(id) would pass
-      // Use a known student profile ID
-      if (profiles && profiles.length > 0) {
+      // FK constraint test using correct tables (profiles + student_profiles)
+      if (profiles && profiles.length > 0 && profilesMain && profilesMain.length > 0) {
         const testStudentId = profiles[0].id;
         const testParentId = profiles[0].owner_id;
 
-        // Check: does this student_profiles.id exist in the students table?
-        const { data: studentMatch, error: studentMatchError } = await supabase
-          .from('students')
+        // Check: does owner_id exist in profiles table?
+        const { data: parentMatch } = await supabase
+          .from('profiles')
           .select('id')
-          .eq('id', testStudentId)
+          .eq('id', testParentId)
           .single();
 
         diagnostics.checks.fkConstraintTest = {
           studentProfileId: testStudentId,
           parentId: testParentId,
-          existsInStudentsTable: !!studentMatch && !studentMatchError,
-          existsInParentsTable: false, // will check below
-          note: !studentMatch
-            ? 'CRITICAL: student_profiles.id does NOT exist in students table — FK constraint will FAIL on insert!'
-            : 'OK: student_profiles.id found in students table',
+          parentExistsInProfilesTable: !!parentMatch,
+          parentNote: parentMatch
+            ? 'OK: parent auth.uid() found in profiles table'
+            : 'WARNING: parent auth.uid() NOT found in profiles table',
         };
-
-        // Check: does the parent (owner_id) exist in the parents table?
-        const { data: parentMatch, error: parentMatchError } = await supabase
-          .from('parents')
-          .select('id')
-          .eq('id', testParentId)
-          .single();
-
-        diagnostics.checks.fkConstraintTest.existsInParentsTable = !!parentMatch && !parentMatchError;
-        diagnostics.checks.fkConstraintTest.parentNote = !parentMatch
-          ? 'CRITICAL: parent auth.uid() does NOT exist in parents table — FK constraint will FAIL on insert!'
-          : 'OK: parent auth.uid() found in parents table';
       }
 
     } catch (e: any) {
@@ -226,12 +210,6 @@ export async function GET() {
   }
   if (diagnostics.checks.canvasReachability && !diagnostics.checks.canvasReachability.reachable) {
     issues.push('Canvas API is NOT reachable from server');
-  }
-  if (diagnostics.checks.fkConstraintTest && !diagnostics.checks.fkConstraintTest.existsInStudentsTable) {
-    issues.push('FK MISMATCH: student_profiles.id not found in students table');
-  }
-  if (diagnostics.checks.fkConstraintTest && !diagnostics.checks.fkConstraintTest.existsInParentsTable) {
-    issues.push('FK MISMATCH: parent auth.uid() not found in parents table');
   }
 
   diagnostics.verdict = issues.length === 0
