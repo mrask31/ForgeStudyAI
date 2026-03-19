@@ -70,19 +70,16 @@ export default function TutorSession({
   const [hasSeenOnboarding, setHasSeenOnboarding] = useState<boolean>(false)
   const [showScrollToBottom, setShowScrollToBottom] = useState<boolean>(false)
   const scrollContainerRef = useRef<HTMLDivElement>(null)
-  const shouldAutoScrollRef = useRef<boolean>(true) // Track if we should auto-scroll
-  const isProgrammaticScrollRef = useRef<boolean>(false) // Prevent scroll handler from resetting shouldAutoScroll during programmatic scrolls
+  const bottomRef = useRef<HTMLDivElement>(null)
   const [availableTopics, setAvailableTopics] = useState<NotebookTopic[]>([])
   const lastLoadedClassIdRef = useRef<string | undefined>(undefined) // Prevent duplicate loads
   const [openerMessage, setOpenerMessage] = useState<string | null>(null)
   const openerSetRef = useRef(false)
   
-  // Update localSessionId when prop changes and reset auto-scroll
+  // Update localSessionId when prop changes
   useEffect(() => {
     if (propSessionId) {
       setLocalSessionId(propSessionId)
-      // Reset auto-scroll when session changes
-      shouldAutoScrollRef.current = true
     }
   }, [propSessionId])
   
@@ -392,16 +389,7 @@ export default function TutorSession({
 
     let effectiveSessionId = sessionId
     const scrollToBottom = () => {
-      const container = scrollContainerRef.current
-      if (!container) return
-      isProgrammaticScrollRef.current = true
-      shouldAutoScrollRef.current = true
-      container.scrollTo({
-        top: container.scrollHeight,
-        behavior: 'instant',
-      })
-      // Release the programmatic scroll guard after a tick
-      requestAnimationFrame(() => { isProgrammaticScrollRef.current = false })
+      bottomRef.current?.scrollIntoView({ behavior: 'instant' })
     }
 
     // Create session if it doesn't exist
@@ -577,18 +565,11 @@ export default function TutorSession({
     setTimeout(tryScroll, 200)
   }, [scrollToMessageId, sessionId]) // Use sessionId as dependency to retry when session changes
 
-  // Auto-scroll to bottom when session loads or messages change (only if user hasn't manually scrolled up and no scrollToMessageId)
+  // Auto-scroll to bottom when messages change (unless scrollToMessageId is set)
   useEffect(() => {
-    if (!scrollContainerRef.current || !shouldAutoScrollRef.current || scrollToMessageId) return
-
-    const container = scrollContainerRef.current
-    isProgrammaticScrollRef.current = true
-    container.scrollTo({
-      top: container.scrollHeight,
-      behavior: 'instant',
-    })
-    requestAnimationFrame(() => { isProgrammaticScrollRef.current = false })
-  }, [messages.length, scrollToMessageId, sessionId]) // Added sessionId to trigger on initial load
+    if (scrollToMessageId) return
+    bottomRef.current?.scrollIntoView({ behavior: 'instant' })
+  }, [messages.length, scrollToMessageId, sessionId])
 
   // Listen for scroll events to show/hide scroll-to-bottom button
   useEffect(() => {
@@ -596,14 +577,8 @@ export default function TutorSession({
     if (!container) return
 
     const handleScroll = () => {
-      // Don't update auto-scroll state during programmatic scrolls
-      if (isProgrammaticScrollRef.current) return
-
       const { scrollTop, scrollHeight, clientHeight } = container
-      const isNearBottom = scrollHeight - scrollTop - clientHeight < 100 // 100px threshold
-
-      // Update auto-scroll flag: only auto-scroll if user is near bottom
-      shouldAutoScrollRef.current = isNearBottom
+      const isNearBottom = scrollHeight - scrollTop - clientHeight < 100
 
       // Show button if user has scrolled up
       setShowScrollToBottom(!isNearBottom)
@@ -624,12 +599,7 @@ export default function TutorSession({
     const handleForceScroll = (event: Event) => {
       const container = scrollContainerRef.current
       if (!container) return
-      const behavior =
-        (event as CustomEvent<{ behavior?: ScrollBehavior }>).detail?.behavior || 'smooth'
-      isProgrammaticScrollRef.current = true
-      shouldAutoScrollRef.current = true
-      container.scrollTo({ top: container.scrollHeight, behavior })
-      requestAnimationFrame(() => { isProgrammaticScrollRef.current = false })
+      bottomRef.current?.scrollIntoView({ behavior: 'instant' })
     }
 
     window.addEventListener('tutor-scroll-to-bottom', handleForceScroll as EventListener)
@@ -639,14 +609,7 @@ export default function TutorSession({
   }, [])
 
   const handleScrollToBottom = () => {
-    if (!scrollContainerRef.current) return
-    isProgrammaticScrollRef.current = true
-    shouldAutoScrollRef.current = true
-    scrollContainerRef.current.scrollTo({
-      top: scrollContainerRef.current.scrollHeight,
-      behavior: 'smooth'
-    })
-    requestAnimationFrame(() => { isProgrammaticScrollRef.current = false })
+    bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
   }
 
   return (
@@ -654,28 +617,31 @@ export default function TutorSession({
       {/* Scrollable messages OR landing */}
       <div ref={scrollContainerRef} className="flex-1 overflow-y-auto pr-1 min-h-0">
         {hasMessages ? (
-          <ClinicalTutorWorkspace 
-            key={sessionId}
-            strictMode={strictMode} 
-            chatId={sessionId} 
-            filterMode="mixed"
-            mode="tutor"
-            attachedFiles={attachedFiles}
-            selectedMessageId={selectedMessageId}
-            onSelectMessage={setSelectedMessageId}
-            scrollToMessageId={scrollToMessageId}
-            scrollContainerRef={scrollContainerRef}
-            onMessagesChange={(msgs) => {
-              const chatMessages = msgs as ChatMessage[]
-              if (propOnMessagesChange) {
-                // Parent manages messages
-                propOnMessagesChange(chatMessages)
-              } else if (propMessages.length === 0) {
-                // Local state management
-                setLocalMessages(chatMessages)
-              }
-            }}
-          />
+          <>
+            <ClinicalTutorWorkspace
+              key={sessionId}
+              strictMode={strictMode}
+              chatId={sessionId}
+              filterMode="mixed"
+              mode="tutor"
+              attachedFiles={attachedFiles}
+              selectedMessageId={selectedMessageId}
+              onSelectMessage={setSelectedMessageId}
+              scrollToMessageId={scrollToMessageId}
+              scrollContainerRef={scrollContainerRef}
+              onMessagesChange={(msgs) => {
+                const chatMessages = msgs as ChatMessage[]
+                if (propOnMessagesChange) {
+                  // Parent manages messages
+                  propOnMessagesChange(chatMessages)
+                } else if (propMessages.length === 0) {
+                  // Local state management
+                  setLocalMessages(chatMessages)
+                }
+              }}
+            />
+            <div ref={bottomRef} />
+          </>
         ) : openerMessage ? (
           <div className="flex flex-col gap-4 p-4 pt-8">
             <div className="flex gap-3 items-start">
