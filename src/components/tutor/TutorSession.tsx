@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { useRouter } from 'next/navigation'
-import { ChevronDown } from 'lucide-react'
+import { ChevronDown, BookOpenCheck } from 'lucide-react'
 import ClinicalTutorWorkspace from '@/components/chat/ClinicalTutorWorkspace'
 import ChatInterface from '@/components/tutor/ChatInterface'
 import TutorEmptyState from '@/components/tutor/TutorEmptyState'
@@ -74,6 +74,8 @@ export default function TutorSession({
   const isProgrammaticScrollRef = useRef<boolean>(false) // Prevent scroll handler from resetting shouldAutoScroll during programmatic scrolls
   const [availableTopics, setAvailableTopics] = useState<NotebookTopic[]>([])
   const lastLoadedClassIdRef = useRef<string | undefined>(undefined) // Prevent duplicate loads
+  const [openerMessage, setOpenerMessage] = useState<string | null>(null)
+  const openerSetRef = useRef(false)
   
   // Update localSessionId when prop changes and reset auto-scroll
   useEffect(() => {
@@ -488,6 +490,29 @@ export default function TutorSession({
     setTimeout(scrollToBottom, Math.max(150, delay))
   }
 
+  // Auto-send opening message when session is empty on mount
+  useEffect(() => {
+    if (sessionId) return // existing session — history will load
+    if (openerSetRef.current) return // already set
+
+    const topicTitle = tutorContext.selectedTopic?.title || tutorContext.selectedTopicTitle
+    const topicId = tutorContext.selectedTopicId
+
+    if (topicId && !topicTitle) return // wait for title to load
+
+    openerSetRef.current = true
+
+    if (topicId && topicTitle) {
+      setOpenerMessage(
+        `You're working on "${topicTitle}" — let's dig in. What's your current understanding of this topic? Walk me through the key concepts you've covered so far.`
+      )
+    } else {
+      setOpenerMessage(
+        "What would you like to study today? You can ask me about anything from your classes, or tell me what you're working on and we'll figure it out together."
+      )
+    }
+  }, [sessionId, tutorContext.selectedTopicId, tutorContext.selectedTopicTitle, tutorContext.selectedTopic])
+
   const hasMessages = !!sessionId
 
   // Calculate attached context for ChatInterface
@@ -651,10 +676,21 @@ export default function TutorSession({
               }
             }}
           />
+        ) : openerMessage ? (
+          <div className="flex flex-col gap-4 p-4 pt-8">
+            <div className="flex gap-3 items-start">
+              <div className="w-8 h-8 rounded-full bg-indigo-100 flex items-center justify-center flex-shrink-0 mt-0.5">
+                <BookOpenCheck className="w-4 h-4 text-indigo-600" />
+              </div>
+              <div className="flex-1 bg-slate-50 border border-slate-200 rounded-2xl px-4 py-3 text-sm text-slate-800 leading-relaxed">
+                {openerMessage}
+              </div>
+            </div>
+          </div>
         ) : activeChunkCount === 0 && !sessionId && !tutorContext.selectedClassId ? (
           // Only show empty state if there's no active session, no files, AND no class selected
           // If a class is selected, the landing page will show the welcome message instead
-          <TutorEmptyState 
+          <TutorEmptyState
             activeChunkCount={activeChunkCount}
             hasSeenOnboarding={hasSeenOnboarding}
           />
