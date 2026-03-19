@@ -46,7 +46,7 @@ const detectBinderUsage = (content: string): boolean => {
     'your binder',
     'your document',
   ]
-  return binderIndicators.some(indicator => 
+  return binderIndicators.some(indicator =>
     content.toLowerCase().includes(indicator)
   )
 }
@@ -107,7 +107,7 @@ export default function ChatMessageList({
     setIsTogglingHelp(true)
     const isCurrentlyFlagged = flaggedMessages.has(messageId)
     const newFlaggedSet = new Set(flaggedMessages)
-    
+
     if (isCurrentlyFlagged) {
       newFlaggedSet.delete(messageId)
     } else {
@@ -139,11 +139,11 @@ export default function ChatMessageList({
 
   const handleSaveToNotebook = async (messageId: string, content: string) => {
     if (!tutorContext.selectedTopicId || savingToNotebook === messageId) return
-    
+
     if (onSaveToNotebook) {
       onSaveToNotebook(messageId)
     }
-    
+
     try {
       const supabase = getSupabaseBrowser()
       const { data: { user } } = await supabase.auth.getUser()
@@ -177,7 +177,7 @@ export default function ChatMessageList({
           const prevMessage = index > 0 ? messages[index - 1] : null
           const showDivider = prevMessage && prevMessage.role === 'assistant'
           // Show follow-up prompts only on the last assistant message
-          const isLastMessage = index === messages.length - 1 || 
+          const isLastMessage = index === messages.length - 1 ||
             (index < messages.length - 1 && messages[index + 1]?.role === 'user')
 
           return (
@@ -198,13 +198,91 @@ export default function ChatMessageList({
                   }
                 }}
               >
-                {/* Grounding Indicator Strip + Actions */}
-                <div className="flex items-center justify-between mb-4 pb-3 border-b border-slate-100">
+                {/* Document Content — with Desmos graph detection */}
+                <div className="prose prose-slate prose-sm sm:prose-lg max-w-full sm:max-w-3xl overflow-x-hidden break-words">
+                  {parseDesmosMarkers(m.content).map((segment, segIdx) =>
+                    segment.type === 'desmos' ? (
+                      <DesmosEmbed key={`desmos-${segIdx}`} equation={segment.value} />
+                    ) : (
+                      <MessageWithMedicalTerms
+                        key={`text-${segIdx}`}
+                        content={segment.value}
+                        markdownComponents={{
+                          p: ({children}) => <p className="mb-3 last:mb-0 text-sm sm:text-base text-[#e8e4dc] leading-relaxed">{children}</p>,
+                          ul: ({children}) => <ul className="list-disc pl-5 space-y-1">{children}</ul>,
+                          ol: ({children}) => <ol className="list-decimal pl-5 space-y-1">{children}</ol>,
+                          li: ({children}) => <li className="my-1 text-[#e8e4dc]">{children}</li>,
+                          strong: ({children}) => <strong className="font-semibold text-white">{children}</strong>,
+                          code: ({children}) => <code className="bg-slate-700 px-1.5 py-0.5 rounded text-xs font-mono text-[#e8e4dc] border border-slate-600">{children}</code>,
+                          pre: ({children}) => (
+                            <pre className="max-w-full overflow-x-auto bg-slate-800 p-4 rounded-lg border border-slate-700 my-4">
+                              {children}
+                            </pre>
+                          ),
+                          table: ({children}) => (
+                            <div className="max-w-full overflow-x-auto my-4">
+                              <table className="min-w-full border-collapse border border-slate-600">
+                                {children}
+                              </table>
+                            </div>
+                          ),
+                          h1: ({children}) => <h1 className="text-2xl font-semibold tracking-tight text-white mb-3 mt-6 first:mt-0">{children}</h1>,
+                          h2: ({children}) => <h2 className="text-xl font-semibold tracking-tight text-white mb-2 mt-5 first:mt-0">{children}</h2>,
+                          h3: ({children, ...props}: { children: React.ReactNode; [key: string]: any }) => {
+                            const isSnapshot = typeof children === 'string' && children.trim() === 'Snapshot'
+                            return (
+                              <h3
+                                className={`text-lg font-semibold tracking-tight text-white mb-2 mt-6 first:mt-0 ${isSnapshot ? 'font-bold text-[var(--tutor-primary)] mb-3' : ''}`}
+                                {...props}
+                              >
+                                {children}
+                              </h3>
+                            )
+                          },
+                          blockquote: ({children}) => (
+                            <blockquote className="border-l-4 border-[var(--tutor-primary)] bg-slate-700/50 text-[#e8e4dc] not-italic rounded-r pl-4 pr-4 py-3 my-4 text-sm sm:text-base leading-relaxed">
+                              {children}
+                            </blockquote>
+                          ),
+                        }}
+                      />
+                    )
+                  )}
+                </div>
+
+                {/* Mobile evidence button */}
+                {hasEvidence && (
+                  <button
+                    type="button"
+                    className="mt-3 inline-flex items-center gap-1 rounded-full bg-slate-700 px-2.5 py-1 text-[11px] font-medium text-slate-300 xl:hidden"
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      if (onSelectMessage) {
+                        onSelectMessage(m.id)
+                      }
+                    }}
+                  >
+                    🔍 View evidence from your binder
+                  </button>
+                )}
+
+                {/* Follow-up prompts - only on last assistant message */}
+                {onSendMessage && (
+                  <FollowUpPrompts
+                    messageContent={m.content}
+                    onPromptClick={onSendMessage}
+                    isLastMessage={isLastMessage}
+                    gradeBand={activeProfile?.gradeBand}
+                  />
+                )}
+
+                {/* Grounding Indicator Strip + Actions — rendered below AI response */}
+                <div className="flex items-center justify-between mt-4 pt-3 border-t border-slate-700">
                   <div className="flex items-center gap-2">
                     {hasBinderContext ? (
                       <div className="flex items-center gap-2">
-                        <FileIcon className="w-4 h-4 text-teal-600" />
-                        <span className="text-xs text-teal-700 font-medium">
+                        <FileIcon className="w-4 h-4 text-teal-400" />
+                        <span className="text-xs text-teal-400 font-medium">
                           ✅ Using: {(() => {
                             const filenameMatches = m.content.match(/From\s+["']?([^"'\n]+\.(pdf|docx?|txt))["']?/gi)
                             if (filenameMatches && filenameMatches.length > 0) {
@@ -243,8 +321,8 @@ export default function ChatMessageList({
                       }}
                       className={`flex items-center gap-1 px-2 py-1 text-xs rounded-lg transition-all duration-200 ${
                         savedClipId === m.id
-                          ? 'text-emerald-600 bg-emerald-50'
-                          : 'text-slate-500 hover:text-indigo-600 hover:bg-indigo-50'
+                          ? 'text-emerald-400 bg-emerald-900/40'
+                          : 'text-slate-400 hover:text-indigo-400 hover:bg-indigo-900/30'
                       }`}
                       title="Save this explanation to your Learning Library (accessible from sidebar)"
                     >
@@ -265,7 +343,7 @@ export default function ChatMessageList({
                         onClick={() => {
                           setSaveToTopicPayload({ messageId: m.id, content: m.content })
                         }}
-                        className="flex items-center gap-1 px-2 py-1 text-xs rounded-lg text-slate-500 hover:text-emerald-600 hover:bg-emerald-50 transition-all duration-200"
+                        className="flex items-center gap-1 px-2 py-1 text-xs rounded-lg text-slate-400 hover:text-emerald-400 hover:bg-emerald-900/30 transition-all duration-200"
                         title="Save to Study Topics"
                       >
                         <FolderPlus className="w-3 h-3" />
@@ -278,8 +356,8 @@ export default function ChatMessageList({
                         disabled={isTogglingHelp}
                         className={`flex items-center gap-1 px-2 py-1 text-xs rounded-lg transition-all duration-200 ${
                           flaggedMessages.has(m.id)
-                            ? 'text-amber-600 bg-amber-50 hover:bg-amber-100 font-medium'
-                            : 'text-slate-500 hover:text-amber-600 hover:bg-amber-50'
+                            ? 'text-amber-400 bg-amber-900/40 hover:bg-amber-900/60 font-medium'
+                            : 'text-slate-400 hover:text-amber-400 hover:bg-amber-900/30'
                         } disabled:opacity-50`}
                         title={flaggedMessages.has(m.id) ? 'Flagged for review - Click to remove. This appears in your Dashboard under "Flagged for Review"' : 'Flag this Q&A pair for focused review (appears in Dashboard)'}
                       >
@@ -291,7 +369,7 @@ export default function ChatMessageList({
                       <button
                         onClick={() => handleSaveToNotebook(m.id, m.content)}
                         disabled={savingToNotebook === m.id}
-                        className="flex items-center gap-1 px-2 py-1 text-[11px] font-medium text-teal-600 hover:text-teal-700 hover:bg-teal-50 rounded transition-colors disabled:opacity-50"
+                        className="flex items-center gap-1 px-2 py-1 text-[11px] font-medium text-teal-400 hover:text-teal-300 hover:bg-teal-900/30 rounded transition-colors disabled:opacity-50"
                         title="Save to Notebook"
                       >
                         <Star className={`w-3 h-3 ${savingToNotebook === m.id ? 'animate-spin' : ''}`} />
@@ -300,84 +378,6 @@ export default function ChatMessageList({
                     )}
                   </div>
                 </div>
-
-                {/* Document Content — with Desmos graph detection */}
-                <div className="prose prose-slate prose-sm sm:prose-lg max-w-full sm:max-w-3xl overflow-x-hidden break-words">
-                  {parseDesmosMarkers(m.content).map((segment, segIdx) =>
-                    segment.type === 'desmos' ? (
-                      <DesmosEmbed key={`desmos-${segIdx}`} equation={segment.value} />
-                    ) : (
-                      <MessageWithMedicalTerms
-                        key={`text-${segIdx}`}
-                        content={segment.value}
-                        markdownComponents={{
-                          p: ({children}) => <p className="mb-3 last:mb-0 text-sm sm:text-base text-slate-700 leading-relaxed">{children}</p>,
-                          ul: ({children}) => <ul className="list-disc pl-5 space-y-1">{children}</ul>,
-                          ol: ({children}) => <ol className="list-decimal pl-5 space-y-1">{children}</ol>,
-                          li: ({children}) => <li className="my-1 text-slate-700">{children}</li>,
-                          strong: ({children}) => <strong className="font-semibold text-slate-900">{children}</strong>,
-                          code: ({children}) => <code className="bg-slate-50 px-1.5 py-0.5 rounded text-xs font-mono text-slate-900 border border-slate-200">{children}</code>,
-                          pre: ({children}) => (
-                            <pre className="max-w-full overflow-x-auto bg-slate-50 p-4 rounded-lg border border-slate-200 my-4">
-                              {children}
-                            </pre>
-                          ),
-                          table: ({children}) => (
-                            <div className="max-w-full overflow-x-auto my-4">
-                              <table className="min-w-full border-collapse border border-slate-300">
-                                {children}
-                              </table>
-                            </div>
-                          ),
-                          h1: ({children}) => <h1 className="text-2xl font-semibold tracking-tight text-slate-900 mb-3 mt-6 first:mt-0">{children}</h1>,
-                          h2: ({children}) => <h2 className="text-xl font-semibold tracking-tight text-slate-900 mb-2 mt-5 first:mt-0">{children}</h2>,
-                          h3: ({children, ...props}: { children: React.ReactNode; [key: string]: any }) => {
-                            const isSnapshot = typeof children === 'string' && children.trim() === 'Snapshot'
-                            return (
-                              <h3
-                                className={`text-lg font-semibold tracking-tight text-slate-900 mb-2 mt-6 first:mt-0 ${isSnapshot ? 'font-bold text-[var(--tutor-primary)] mb-3' : ''}`}
-                                {...props}
-                              >
-                                {children}
-                              </h3>
-                            )
-                          },
-                          blockquote: ({children}) => (
-                            <blockquote className="border-l-4 border-[var(--tutor-primary)] bg-teal-50 text-slate-700 not-italic rounded-r pl-4 pr-4 py-3 my-4 text-sm sm:text-base leading-relaxed">
-                              {children}
-                            </blockquote>
-                          ),
-                        }}
-                      />
-                    )
-                  )}
-                </div>
-
-                {/* Mobile evidence button */}
-                {hasEvidence && (
-                  <button
-                    type="button"
-                    className="mt-3 inline-flex items-center gap-1 rounded-full bg-slate-100 px-2.5 py-1 text-[11px] font-medium text-slate-600 xl:hidden"
-                    onClick={(e) => {
-                      e.stopPropagation()
-                      if (onSelectMessage) {
-                        onSelectMessage(m.id)
-                      }
-                    }}
-                  >
-                    🔍 View evidence from your binder
-                  </button>
-                )}
-
-                {/* Follow-up prompts - only on last assistant message */}
-                {onSendMessage && (
-                  <FollowUpPrompts
-                    messageContent={m.content}
-                    onPromptClick={onSendMessage}
-                    isLastMessage={isLastMessage}
-                    gradeBand={activeProfile?.gradeBand}
-                  />
-                )}
               </article>
             </div>
           )
