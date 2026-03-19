@@ -71,6 +71,7 @@ export default function TutorSession({
   const [showScrollToBottom, setShowScrollToBottom] = useState<boolean>(false)
   const scrollContainerRef = useRef<HTMLDivElement>(null)
   const shouldAutoScrollRef = useRef<boolean>(true) // Track if we should auto-scroll
+  const isProgrammaticScrollRef = useRef<boolean>(false) // Prevent scroll handler from resetting shouldAutoScroll during programmatic scrolls
   const [availableTopics, setAvailableTopics] = useState<NotebookTopic[]>([])
   const lastLoadedClassIdRef = useRef<string | undefined>(undefined) // Prevent duplicate loads
   
@@ -391,11 +392,14 @@ export default function TutorSession({
     const scrollToBottom = () => {
       const container = scrollContainerRef.current
       if (!container) return
+      isProgrammaticScrollRef.current = true
       shouldAutoScrollRef.current = true
       container.scrollTo({
         top: container.scrollHeight,
-        behavior: 'smooth',
+        behavior: 'instant',
       })
+      // Release the programmatic scroll guard after a tick
+      requestAnimationFrame(() => { isProgrammaticScrollRef.current = false })
     }
 
     // Create session if it doesn't exist
@@ -551,17 +555,14 @@ export default function TutorSession({
   // Auto-scroll to bottom when session loads or messages change (only if user hasn't manually scrolled up and no scrollToMessageId)
   useEffect(() => {
     if (!scrollContainerRef.current || !shouldAutoScrollRef.current || scrollToMessageId) return
-    
+
     const container = scrollContainerRef.current
-    // Small delay to ensure DOM is updated
-    setTimeout(() => {
-      if (container && shouldAutoScrollRef.current) {
-        container.scrollTo({
-          top: container.scrollHeight,
-          behavior: 'auto' // Instant scroll on load, smooth for new messages
-        })
-      }
-    }, 150)
+    isProgrammaticScrollRef.current = true
+    container.scrollTo({
+      top: container.scrollHeight,
+      behavior: 'instant',
+    })
+    requestAnimationFrame(() => { isProgrammaticScrollRef.current = false })
   }, [messages.length, scrollToMessageId, sessionId]) // Added sessionId to trigger on initial load
 
   // Listen for scroll events to show/hide scroll-to-bottom button
@@ -570,12 +571,15 @@ export default function TutorSession({
     if (!container) return
 
     const handleScroll = () => {
+      // Don't update auto-scroll state during programmatic scrolls
+      if (isProgrammaticScrollRef.current) return
+
       const { scrollTop, scrollHeight, clientHeight } = container
       const isNearBottom = scrollHeight - scrollTop - clientHeight < 100 // 100px threshold
-      
+
       // Update auto-scroll flag: only auto-scroll if user is near bottom
       shouldAutoScrollRef.current = isNearBottom
-      
+
       // Show button if user has scrolled up
       setShowScrollToBottom(!isNearBottom)
     }
@@ -597,8 +601,10 @@ export default function TutorSession({
       if (!container) return
       const behavior =
         (event as CustomEvent<{ behavior?: ScrollBehavior }>).detail?.behavior || 'smooth'
+      isProgrammaticScrollRef.current = true
       shouldAutoScrollRef.current = true
       container.scrollTo({ top: container.scrollHeight, behavior })
+      requestAnimationFrame(() => { isProgrammaticScrollRef.current = false })
     }
 
     window.addEventListener('tutor-scroll-to-bottom', handleForceScroll as EventListener)
@@ -609,11 +615,13 @@ export default function TutorSession({
 
   const handleScrollToBottom = () => {
     if (!scrollContainerRef.current) return
+    isProgrammaticScrollRef.current = true
     shouldAutoScrollRef.current = true
     scrollContainerRef.current.scrollTo({
       top: scrollContainerRef.current.scrollHeight,
       behavior: 'smooth'
     })
+    requestAnimationFrame(() => { isProgrammaticScrollRef.current = false })
   }
 
   return (

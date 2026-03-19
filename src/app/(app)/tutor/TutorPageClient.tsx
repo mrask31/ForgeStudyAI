@@ -846,17 +846,11 @@ function TutorPageContent() {
               hidePracticeControls={isSpellingEntryMode}
               hideNewChat={isSpellingEntryMode}
               onStartNewSession={async () => {
-                // Clear the resolved session to show landing page
+                // Clear the resolved session immediately
                 setResolvedChatId(null)
                 setAttachedFiles([])
-                // Clear sessionId from URL and add intent=new_question to prevent auto-resume
-                const params = new URLSearchParams(searchParams.toString())
-                params.delete('sessionId')
-                params.delete('chatId')
-                params.delete('id')
-                // Add intent to signal we want a NEW chat, not auto-resume
-                params.set('intent', 'new_question')
-                router.replace(`/tutor?${params.toString()}`)
+                // Create a new session and navigate directly to it, bypassing auto-resume
+                await handleNewSession()
               }}
             />
           </div>
