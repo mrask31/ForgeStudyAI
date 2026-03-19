@@ -654,6 +654,12 @@ Remember: The student selected this topic because they want to study it. Keep yo
     }
   }
 
+  // Frustration/confusion detection (always active in tutor mode)
+  if (resolvedInteractionMode === 'tutor') {
+    const { getFrustrationDetectionPrompt } = await import('@/lib/ai/prompts');
+    systemPrompt += '\n\n' + getFrustrationDetectionPrompt(activeProfile?.grade_band);
+  }
+
   // Strict mode (optional)
   if (strictMode === true) {
     const { getStrictModePrompt } = await import('@/lib/ai/prompts');
