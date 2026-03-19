@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from 'react';
 import dynamic from 'next/dynamic';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
-import { Loader2, Settings, Link as LinkIcon, Sparkles } from 'lucide-react';
+import { Loader2, Settings, Link as LinkIcon, Sparkles, Maximize2 } from 'lucide-react';
 import { FocusPanel } from './FocusPanel';
 import { DueSoonTray } from './DueSoonTray';
 
@@ -228,16 +228,34 @@ export function ConceptGalaxy({ topics, coursePlanets, profileId, lmsStatus, tot
     return () => clearTimeout(t);
   }, [expandedCourseId]);
 
-  // Apply custom D3 forces for Ghost Node physics
+  // Apply custom D3 forces — centering, bounds, and Ghost Node physics
   useEffect(() => {
     if (!graphRef.current) return;
-    
+
     const graph = graphRef.current;
-    
-    // Apply custom radial force based on node physics mode
+    const { width, height } = dimensions;
+    const nodeCount = nodes.length;
+    const padding = 60;
+    const isMobile = width < 768;
+
     try {
       const d3 = require('d3-force');
-      
+
+      // forceX/forceY: keep nodes centered. Stronger on mobile and for tiny graphs.
+      const centerStrength = nodeCount <= 3 ? 0.8 : isMobile ? 0.3 : 0.15;
+      graph.d3Force('x', d3.forceX(width / 2).strength(centerStrength));
+      graph.d3Force('y', d3.forceY(height / 2).strength(centerStrength));
+
+      // Boundary force: hard clamp so no node escapes the visible canvas.
+      graph.d3Force('boundary', () => {
+        const simNodes = graph.graphData().nodes;
+        for (const n of simNodes) {
+          if (n.x !== undefined) n.x = Math.max(padding, Math.min(width - padding, n.x));
+          if (n.y !== undefined) n.y = Math.max(padding, Math.min(height - padding, n.y));
+        }
+      });
+
+      // Radial force for Ghost Node physics (drift / snap-back).
       graph.d3Force('radial', d3.forceRadial((node: Node) => {
         if (node.physicsMode === 'snapBack') {
           return 2.0 * 100; // Very strong pull to center (snap-back)
@@ -247,15 +265,16 @@ export function ConceptGalaxy({ topics, coursePlanets, profileId, lmsStatus, tot
           return 0.5 * 100; // Normal pull to center
         }
       }));
-      
-      // Reheat simulation when physics mode changes
+
+      // Reheat simulation when physics mode changes or canvas resizes.
       if (justRescued.length > 0) {
         graph.d3ReheatSimulation();
       }
     } catch (error) {
       console.error('[Galaxy] Failed to apply custom forces:', error);
     }
-  }, [justRescued]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [justRescued, dimensions.width, dimensions.height, nodes.length]);
 
   // Continuous repaint for pulse animations (lightweight — only triggers canvas redraw)
   useEffect(() => {
@@ -672,13 +691,27 @@ export function ConceptGalaxy({ topics, coursePlanets, profileId, lmsStatus, tot
           d3VelocityDecay={0.3}
           cooldownTicks={100}
           onEngineStop={() => {
-            // Center the graph after initial layout
             if (graphRef.current) {
-              graphRef.current.zoomToFit(400, 50);
+              // On mobile use tighter padding so nodes fill the smaller screen
+              const isMobile = dimensions.width < 768;
+              const padding = isMobile ? 30 : 50;
+              graphRef.current.zoomToFit(400, padding);
             }
           }}
         />
       
+      {/* Reset View button — re-fits all nodes into the viewport */}
+      <button
+        onClick={() => graphRef.current?.zoomToFit(400, dimensions.width < 768 ? 30 : 50)}
+        className="absolute top-4 right-4 z-30 px-3 py-2 rounded-xl text-sm font-medium transition-all shadow-xl backdrop-blur-md border min-h-[44px] min-w-[44px] bg-slate-900/60 border-slate-700/50 text-slate-300 hover:bg-slate-800/60"
+        title="Reset view to show all nodes"
+      >
+        <span className="flex items-center gap-1.5">
+          <Maximize2 className="w-4 h-4" />
+          <span className="hidden sm:inline">Reset View</span>
+        </span>
+      </button>
+
       {/* Weave Mode Toggle - Floating button for touch devices */}
       <button
         onClick={() => setIsWeaveModeActive(!isWeaveModeActive)}
