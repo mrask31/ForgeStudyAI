@@ -139,8 +139,10 @@ export async function getTopicsGroupedByCourse(profileId: string): Promise<Cours
   const courseMap = new Map<string, CoursePlanet>();
   for (const topic of topics) {
     const courseInfo = topic.synced_assignment_id ? assignmentMap.get(topic.synced_assignment_id) : null;
-    const courseId = courseInfo?.courseId || '__uncategorized__';
-    const courseName = courseInfo?.courseName || 'Other Topics';
+    // Unlinked topics use their own title as the planet label (e.g. "Honors Physics").
+    // Only fall back to "Other Topics" if the title is somehow empty.
+    const courseId = courseInfo?.courseId ?? `unlinked_${topic.title || topic.id}`;
+    const courseName = courseInfo?.courseName ?? (topic.title || 'Other Topics');
 
     if (!courseMap.has(courseId)) {
       courseMap.set(courseId, { courseId, courseName, topicCount: 0, avgMastery: 0, topics: [] });
