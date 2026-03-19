@@ -62,9 +62,10 @@ interface ConceptGalaxyProps {
   totalTopicCount?: number; // Includes quarantined — if > 0, sync already ran
   onDueSoonChange?: (hasDueSoon: boolean) => void;
   onTopicsRefresh?: () => void; // Callback to refresh topics after lazy eval
+  onDrillDownChange?: (isInDrillDown: boolean) => void; // Notify parent when drill-down state changes
 }
 
-export function ConceptGalaxy({ topics, coursePlanets, profileId, lmsStatus, totalTopicCount = 0, onDueSoonChange, onTopicsRefresh }: ConceptGalaxyProps) {
+export function ConceptGalaxy({ topics, coursePlanets, profileId, lmsStatus, totalTopicCount = 0, onDueSoonChange, onTopicsRefresh, onDrillDownChange }: ConceptGalaxyProps) {
   const router = useRouter();
   const graphRef = useRef<any>();
   const containerRef = useRef<HTMLDivElement>(null);
@@ -73,6 +74,11 @@ export function ConceptGalaxy({ topics, coursePlanets, profileId, lmsStatus, tot
   // Course planet expansion — null = show planets, string = show that course's topics
   const [expandedCourseId, setExpandedCourseId] = useState<string | null>(null);
   const hasPlanets = (coursePlanets?.length ?? 0) > 0;
+
+  // Notify parent when drill-down state changes (for hiding HelperChips etc.)
+  useEffect(() => {
+    onDrillDownChange?.(expandedCourseId !== null);
+  }, [expandedCourseId, onDrillDownChange]);
 
   // Constellation state management
   const [selectedConstellation, setSelectedConstellation] = useState<string[]>([]);
@@ -209,6 +215,19 @@ export function ConceptGalaxy({ topics, coursePlanets, profileId, lmsStatus, tot
     return () => clearTimeout(timer);
   }, [justRescued]);
   
+  // Reheat simulation and zoom-to-fit when switching between planet view and constellation view
+  useEffect(() => {
+    if (!graphRef.current) return;
+    // Small delay ensures graphData with new nodes has been processed by ForceGraph2D
+    const t = setTimeout(() => {
+      graphRef.current?.d3ReheatSimulation();
+      setTimeout(() => {
+        graphRef.current?.zoomToFit(400, 50);
+      }, 800);
+    }, 50);
+    return () => clearTimeout(t);
+  }, [expandedCourseId]);
+
   // Apply custom D3 forces for Ghost Node physics
   useEffect(() => {
     if (!graphRef.current) return;
@@ -546,6 +565,7 @@ export function ConceptGalaxy({ topics, coursePlanets, profileId, lmsStatus, tot
         </div>
       )}
       <ForceGraph2D
+        key={expandedCourseId ?? 'planets'}
         ref={graphRef}
         graphData={{ nodes, links }}
         width={dimensions.width}
