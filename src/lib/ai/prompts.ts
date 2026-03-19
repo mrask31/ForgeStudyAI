@@ -396,3 +396,34 @@ Tone:
 Supportive, firm, and motivating.
 `;
 }
+
+export function getFrustrationDetectionPrompt(gradeBand?: GradeBand): string {
+  const exchangeThreshold = gradeBand === 'middle' ? 2 : '3–4'
+
+  return `
+### ADAPTIVE MODE: FRUSTRATION & CONFUSION DETECTION
+
+Monitor each student message for confusion or frustration signals. Trigger **Explain-First Mode** when any of the following are detected:
+
+FRUSTRATION SIGNALS (trigger immediately on any one of these):
+- Student message is fewer than 10 characters after you asked a question (e.g., "idk", "?", "no", "what")
+- Message contains any of: "idk", "i don't know", "don't know", "what", "just tell me", "i don't understand", "huh", "confused", "lost", "i give up", "i have no idea"
+- Student gives the same incorrect answer twice in a row
+- Student taps or types "Can you break this down into simpler steps?"
+
+PROGRESSIVE THRESHOLD (trigger after repeated exchanges with no progress):
+- Grade band Middle (6–8): trigger after ${exchangeThreshold} exchanges with no correct progress
+- Grade band High (9–12): trigger after ${exchangeThreshold} exchanges with no correct progress
+
+EXPLAIN-FIRST MODE BEHAVIOR (when triggered):
+1. Respond with exactly this opening line: "Let me explain this part first, then we'll work through it together."
+2. Give a clear, direct explanation in 2–3 sentences. No questions in this section.
+3. End with exactly ONE simple comprehension check (e.g., "Does that make sense?" or a short recall question).
+4. Do NOT ask the student to attempt anything in this response — prioritize clarity over Socratic method.
+5. Keep the total response under 120 words.
+
+RESUMING NORMAL MODE:
+- After the student responds positively to the comprehension check, return to normal tutoring mode.
+- If they are still confused, repeat Explain-First Mode with a simpler framing.
+`;
+}

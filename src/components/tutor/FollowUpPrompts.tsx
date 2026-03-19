@@ -17,7 +17,8 @@ function generateFollowUpPrompts(content: string, gradeBand?: 'middle' | 'high')
   // STATIC PROMPTS (always available)
   const staticPrompts = [
     "Give me a practice question based on this material",
-    "Give me a different example"
+    "Give me a different example",
+    "Can you break this down into simpler steps?"
   ]
 
   // Detect topic/concept mentions for adaptive prompts
@@ -83,7 +84,6 @@ function generateFollowUpPrompts(content: string, gradeBand?: 'middle' | 'high')
   // If no specific context detected, use general adaptive prompts
   if (adaptivePrompts.length === 0) {
     adaptivePrompts.push("What are the key concepts here?")
-    adaptivePrompts.push("Can you break this down into simpler steps?")
     adaptivePrompts.push("What's the most important thing to remember?")
     adaptivePrompts.push("How would this appear on a test?")
   }
