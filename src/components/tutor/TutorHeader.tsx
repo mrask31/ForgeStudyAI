@@ -100,7 +100,7 @@ export default function TutorHeader({
                 setTitleDraft('')
                 setIsTitleDialogOpen(true)
               }}
-              className="flex-shrink-0 flex items-center gap-1.5 bg-gradient-to-r from-emerald-600 to-teal-600 text-white border-0 shadow-md shadow-emerald-500/30 hover:from-emerald-700 hover:to-teal-700 hover:shadow-lg hover:shadow-emerald-500/40 transition-all duration-200 font-semibold px-3 py-1.5 text-xs sm:text-sm whitespace-nowrap"
+              className="flex-shrink-0 flex items-center gap-1.5 bg-indigo-600 text-white border-0 shadow-md shadow-indigo-500/30 hover:bg-indigo-700 hover:shadow-lg hover:shadow-indigo-500/40 transition-all duration-200 font-semibold px-3 py-1.5 text-xs sm:text-sm whitespace-nowrap"
             >
               <Plus className="w-3.5 h-3.5 flex-shrink-0" />
               <span className="hidden sm:inline">New Chat</span>
