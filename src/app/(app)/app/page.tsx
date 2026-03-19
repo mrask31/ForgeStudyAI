@@ -14,6 +14,7 @@ import { useUser } from '@/contexts/UserContext'
 import Link from 'next/link'
 import { PhotoDropButton } from '@/components/homework/PhotoDropButton'
 import { GalaxySkeleton } from '@/components/galaxy/GalaxySkeleton'
+import { HelperChips } from '@/components/galaxy/HelperChips'
 
 // Module-level cache survives component unmount/remount during client-side navigation
 const galaxyCache: {
@@ -223,6 +224,13 @@ export default function GalaxyPage() {
         )}
       </div>
       
+      {/* Helper Chips - contextual suggestions */}
+      {!loading && topics.length > 0 && (
+        <div className="absolute top-16 md:top-auto md:bottom-24 left-1/2 -translate-x-1/2 z-30">
+          <HelperChips topics={topics} profileId={activeProfileId} />
+        </div>
+      )}
+
       {/* Top Right HUD - Upload + Photo Drop */}
       <div className="absolute top-4 md:top-6 right-2 md:right-6 z-40 flex items-center gap-1.5 md:gap-2">
         <PhotoDropButton />
