@@ -685,6 +685,9 @@ export default function TutorSession({
                   : ''
                 return `I want to study ${tutorContext.selectedTopic.title}${classInfo}. Please explain it step by step at my level and then quiz me with practice questions.`
               }
+              if (tutorContext.selectedTopicTitle) {
+                return `I want to study ${tutorContext.selectedTopicTitle}. Please explain it step by step at my level and then quiz me with practice questions.`
+              }
               return undefined
             })()}
             attachedFiles={attachedFiles}

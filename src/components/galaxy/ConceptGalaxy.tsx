@@ -94,6 +94,7 @@ export function ConceptGalaxy({ topics, coursePlanets, profileId, lmsStatus, tot
     isOpen: false,
     selectedTopicId: null as string | null,
     selectedTopicTitle: null as string | null,
+    courseId: null as string | null,
     masteryScore: 0,
     dueDate: null as string | null,
     lastStudied: null as string | null,
@@ -399,6 +400,7 @@ export function ConceptGalaxy({ topics, coursePlanets, profileId, lmsStatus, tot
         isOpen: true,
         selectedTopicId: node.id,
         selectedTopicTitle: node.name,
+        courseId: expandedCourseId,
         masteryScore: topic?.mastery_score ?? 0,
         dueDate: topic?.next_review_date ?? null,
         lastStudied: topic?.last_studied_at ?? topic?.updated_at ?? null,
@@ -411,6 +413,7 @@ export function ConceptGalaxy({ topics, coursePlanets, profileId, lmsStatus, tot
       isOpen: false,
       selectedTopicId: null,
       selectedTopicTitle: null,
+      courseId: null,
       masteryScore: 0,
       dueDate: null,
       lastStudied: null,
@@ -793,6 +796,7 @@ export function ConceptGalaxy({ topics, coursePlanets, profileId, lmsStatus, tot
               isOpen: true,
               selectedTopicId: topicId,
               selectedTopicTitle: topicTitle,
+              courseId: expandedCourseId,
               masteryScore: topic?.mastery_score ?? 0,
               dueDate: topic?.next_review_date ?? null,
               lastStudied: topic?.last_studied_at ?? topic?.updated_at ?? null,
@@ -816,7 +820,15 @@ export function ConceptGalaxy({ topics, coursePlanets, profileId, lmsStatus, tot
         onClose={handleCloseFocusPanel}
         onAction={(action: string) => {
           if (focusPanelState.selectedTopicId && focusPanelState.selectedTopicTitle) {
-            router.push(`/tutor?topicId=${focusPanelState.selectedTopicId}&topicTitle=${encodeURIComponent(focusPanelState.selectedTopicTitle)}&action=${encodeURIComponent(action)}`);
+            const params = new URLSearchParams({
+              topicId: focusPanelState.selectedTopicId,
+              topicTitle: focusPanelState.selectedTopicTitle,
+              action,
+            });
+            if (focusPanelState.courseId) {
+              params.set('classId', focusPanelState.courseId);
+            }
+            router.push(`/tutor?${params.toString()}`);
           }
         }}
       />

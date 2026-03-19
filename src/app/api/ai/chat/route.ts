@@ -38,6 +38,7 @@ export async function POST(req: NextRequest) {
     // Extract context IDs from body
     const parsed_content_id = body.parsed_content_id || body.attachedFileIds?.[0];
     const synced_assignment_id = body.synced_assignment_id;
+    const topicTitle = body.topicTitle as string | undefined;
 
     console.log('[AI Chat Adapter] Request:', {
       chatId,
@@ -139,6 +140,18 @@ export async function POST(req: NextRequest) {
       content: msg.content,
     }));
 
+    // Inject topic context as opening exchange when it's the first message and a topic is set
+    if (topicTitle && chatHistory.length === 0) {
+      chatHistory.push({
+        role: 'user',
+        content: `I want to study "${topicTitle}". Please help me understand it.`,
+      });
+      chatHistory.push({
+        role: 'assistant',
+        content: `Great! Let's explore "${topicTitle}" together. I'll guide you through it with questions to help you truly understand the material. What do you already know about ${topicTitle}?`,
+      });
+    }
+
     // Add current user message to history
     chatHistory.push({
       role: 'user',
@@ -179,12 +192,80 @@ export async function POST(req: NextRequest) {
       latencyMs,
     });
 
-    // COMPATIBILITY LAYER: Return streaming response compatible with Vercel AI SDK useChat hook
-    // The frontend useChat hook expects a text/plain stream with newline-delimited chunks
+    // Convert Anthropic stream to AI SDK data stream protocol expected by useChat from @ai-sdk/react
+    // Anthropic toReadableStream() emits JSON lines like {"type":"content_block_delta",...}
+    // AI SDK useChat expects lines like: 0:"text chunk"\n and d:{finishReason}\n
     if (stream instanceof ReadableStream) {
-      return new Response(stream, {
+      const encoder = new TextEncoder();
+      const decoder = new TextDecoder();
+
+      const aiDataStream = new ReadableStream({
+        async start(controller) {
+          const reader = stream.getReader();
+          let buffer = '';
+
+          try {
+            while (true) {
+              const { done, value } = await reader.read();
+              if (done) break;
+
+              buffer += decoder.decode(value, { stream: true });
+              const lines = buffer.split('\n');
+              buffer = lines.pop() ?? '';
+
+              for (const line of lines) {
+                if (!line.trim()) continue;
+                // Handle both raw JSON objects and SSE "data: {...}" lines
+                const jsonStr = line.startsWith('data: ') ? line.slice(6) : line;
+                if (jsonStr === '[DONE]') continue;
+                try {
+                  const event = JSON.parse(jsonStr);
+                  if (
+                    event.type === 'content_block_delta' &&
+                    event.delta?.type === 'text_delta' &&
+                    typeof event.delta.text === 'string'
+                  ) {
+                    controller.enqueue(encoder.encode(`0:${JSON.stringify(event.delta.text)}\n`));
+                  }
+                } catch {
+                  // Skip non-JSON lines
+                }
+              }
+            }
+
+            // Flush remaining buffer
+            if (buffer.trim()) {
+              const jsonStr = buffer.startsWith('data: ') ? buffer.slice(6) : buffer;
+              try {
+                const event = JSON.parse(jsonStr);
+                if (
+                  event.type === 'content_block_delta' &&
+                  event.delta?.type === 'text_delta' &&
+                  typeof event.delta.text === 'string'
+                ) {
+                  controller.enqueue(encoder.encode(`0:${JSON.stringify(event.delta.text)}\n`));
+                }
+              } catch {
+                // ignore
+              }
+            }
+          } catch (err) {
+            controller.error(err);
+            return;
+          }
+
+          // Send AI SDK finish event
+          controller.enqueue(
+            encoder.encode('d:{"finishReason":"stop","usage":{"promptTokens":0,"completionTokens":0}}\n')
+          );
+          controller.close();
+        },
+      });
+
+      return new Response(aiDataStream, {
         headers: {
           'Content-Type': 'text/plain; charset=utf-8',
+          'x-vercel-ai-data-stream': 'v1',
           'Cache-Control': 'no-cache',
           'Connection': 'keep-alive',
         },
