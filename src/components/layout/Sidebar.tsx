@@ -11,6 +11,7 @@ import { useActiveProfile } from '@/contexts/ActiveProfileContext'
 const NAV_ITEMS = [
   { label: '🌌 My Galaxy', href: '/app', icon: Sparkles, type: 'route' as const },
   { label: 'Tutor Workspace', href: '/tutor', icon: MessageSquare, type: 'route' as const },
+  { label: 'Courses', href: '/courses', icon: Folder, type: 'route' as const },
   { label: 'My Classes', href: '/classes', icon: GraduationCap, type: 'route' as const },
   { label: 'Sources', href: '/sources', icon: FileText, type: 'route' as const },
   { label: 'Vocabulary Bank', href: '/dictionary', icon: BookOpen, type: 'route' as const },
