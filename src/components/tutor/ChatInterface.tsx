@@ -99,7 +99,7 @@ export default function ChatInterface({
   }
 
   return (
-    <div className="flex-shrink-0 pt-3 bg-slate-950 relative">
+    <div className="flex-shrink-0 pt-3 bg-[#0f0f1e] relative">
       {/* Calculator Panel */}
       <MedicalMathCalculator 
         isOpen={isCalculatorOpen} 
@@ -132,7 +132,7 @@ export default function ChatInterface({
       {/* Chat Input Dock */}
       <form 
         onSubmit={handleSubmit}
-        className="rounded-full bg-slate-900 shadow-lg border border-slate-700 px-3 sm:px-4 py-2 flex items-center gap-2 sm:gap-3"
+        className="rounded-full bg-[#1a1a2e] shadow-lg border border-slate-700 px-3 sm:px-4 py-2 flex items-center gap-2 sm:gap-3"
       >
         {/* Paperclip */}
         <button 
