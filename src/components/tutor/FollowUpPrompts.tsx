@@ -115,14 +115,14 @@ export default function FollowUpPrompts({
     <div className="mt-4 pt-4 border-t border-slate-200">
       <p className="text-xs text-slate-500 mb-2 font-medium">Continue learning:</p>
       <div className="flex flex-wrap gap-2">
-        {prompts.map((prompt, index) => (
+        {prompts.slice(0, 4).map((prompt, index) => (
           <button
             key={index}
             onClick={(e) => {
               e.stopPropagation()
               onPromptClick(prompt)
             }}
-            className="inline-flex items-center rounded-full border border-slate-200 bg-white px-3 py-1.5 text-xs font-medium text-slate-700 transition-all hover:bg-indigo-50 hover:border-indigo-300 hover:text-indigo-700 cursor-pointer shadow-sm"
+            className={`items-center rounded-full border border-slate-200 bg-white px-3 py-1.5 text-xs font-medium text-slate-700 transition-all hover:bg-indigo-50 hover:border-indigo-300 hover:text-indigo-700 cursor-pointer shadow-sm ${index >= 3 ? 'hidden md:inline-flex' : 'inline-flex'}`}
           >
             {prompt}
           </button>
