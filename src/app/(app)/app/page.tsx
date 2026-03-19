@@ -8,7 +8,7 @@ import { GalaxyLegend } from '@/components/galaxy/GalaxyLegend'
 import { SmartCTA } from '@/components/galaxy/SmartCTA'
 import { DecontaminationBanner } from '@/components/galaxy/DecontaminationBanner'
 import { useEffect, useState, useCallback } from 'react'
-import { getStudyTopicsWithMastery, getQuarantinedTopicsCount } from '@/app/actions/study-topics'
+import { getStudyTopicsWithMastery, getQuarantinedTopicsCount, getTopicsGroupedByCourse, type CoursePlanet } from '@/app/actions/study-topics'
 import { calculateSmartCTA, type SmartCTAResult } from '@/lib/smart-cta'
 import { useUser } from '@/contexts/UserContext'
 import Link from 'next/link'
@@ -42,6 +42,7 @@ export default function GalaxyPage() {
   const [hasDueSoonItems, setHasDueSoonItems] = useState(false)
   const [totalTopicCount, setTotalTopicCount] = useState(0) // Includes quarantined — to detect if sync already ran
   const [streakDays, setStreakDays] = useState(0)
+  const [coursePlanets, setCoursePlanets] = useState<CoursePlanet[]>([])
 
   useEffect(() => {
     async function loadData() {
@@ -58,15 +59,17 @@ export default function GalaxyPage() {
       }
 
       try {
-        const [topicsData, ctaData, quarantinedData] = await Promise.all([
+        const [topicsData, ctaData, quarantinedData, planetsData] = await Promise.all([
           getStudyTopicsWithMastery(activeProfileId),
           calculateSmartCTA(user.id, activeProfileId),
-          getQuarantinedTopicsCount(activeProfileId)
+          getQuarantinedTopicsCount(activeProfileId),
+          getTopicsGroupedByCourse(activeProfileId),
         ])
-        console.log('[Galaxy] Loaded', topicsData.length, 'topics,', quarantinedData, 'quarantined for profile', activeProfileId)
+        console.log('[Galaxy] Loaded', topicsData.length, 'topics,', quarantinedData, 'quarantined,', planetsData.length, 'courses for profile', activeProfileId)
         setTopics(topicsData)
         setSmartCTA(ctaData)
         setQuarantinedCount(quarantinedData)
+        setCoursePlanets(planetsData)
         // Total = visible + quarantined. If > 0, sync already ran — don't show "Syncing..."
         setTotalTopicCount(topicsData.length + quarantinedData)
         // Persist to module-level cache for instant render on remount
@@ -248,6 +251,7 @@ export default function GalaxyPage() {
         ) : (
           <ConceptGalaxy
             topics={topics}
+            coursePlanets={coursePlanets}
             profileId={activeProfileId || undefined}
             lmsStatus={lmsStatus}
             totalTopicCount={totalTopicCount}

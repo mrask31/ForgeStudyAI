@@ -46,8 +46,17 @@ interface Link {
   isConstellation?: boolean; // Mark constellation threads
 }
 
+interface CoursePlanet {
+  courseId: string;
+  courseName: string;
+  topicCount: number;
+  avgMastery: number;
+  topics: { id: string; title: string; mastery_score: number; orbit_state: number; next_review_date: string | null; last_studied_at: string | null }[];
+}
+
 interface ConceptGalaxyProps {
   topics: Topic[];
+  coursePlanets?: CoursePlanet[];
   profileId?: string; // For lazy evaluation
   lmsStatus?: 'no_connection' | 'connected' | null;
   totalTopicCount?: number; // Includes quarantined — if > 0, sync already ran
@@ -55,17 +64,21 @@ interface ConceptGalaxyProps {
   onTopicsRefresh?: () => void; // Callback to refresh topics after lazy eval
 }
 
-export function ConceptGalaxy({ topics, profileId, lmsStatus, totalTopicCount = 0, onDueSoonChange, onTopicsRefresh }: ConceptGalaxyProps) {
+export function ConceptGalaxy({ topics, coursePlanets, profileId, lmsStatus, totalTopicCount = 0, onDueSoonChange, onTopicsRefresh }: ConceptGalaxyProps) {
   const router = useRouter();
   const graphRef = useRef<any>();
   const containerRef = useRef<HTMLDivElement>(null);
   const [dimensions, setDimensions] = useState({ width: 800, height: 600 });
-  
+
+  // Course planet expansion — null = show planets, string = show that course's topics
+  const [expandedCourseId, setExpandedCourseId] = useState<string | null>(null);
+  const hasPlanets = (coursePlanets?.length ?? 0) > 0;
+
   // Constellation state management
   const [selectedConstellation, setSelectedConstellation] = useState<string[]>([]);
   const [showLoomDock, setShowLoomDock] = useState(false);
   const [isCreatingSession, setIsCreatingSession] = useState(false);
-  
+
   // Weave Mode for touch devices (replaces Shift+Click)
   const [isWeaveModeActive, setIsWeaveModeActive] = useState(false);
   
@@ -246,38 +259,59 @@ export function ConceptGalaxy({ topics, profileId, lmsStatus, totalTopicCount = 
     setShowLoomDock(selectedConstellation.length >= 2);
   }, [selectedConstellation]);
 
-  // Transform topics into graph nodes
-  const nodes: Node[] = topics.map(topic => {
-    // Determine physics mode
-    let physicsMode: 'mastered' | 'ghost' | 'snapBack';
-    
-    if (justRescued.includes(topic.id)) {
-      physicsMode = 'snapBack';
-    } else if (topic.orbit_state === 3) {
-      physicsMode = 'ghost';
-    } else {
-      physicsMode = 'mastered';
-    }
-    
-    // Check if due within 48 hours
-    let isDueSoon = false;
-    if (topic.next_review_date) {
-      const diff = new Date(topic.next_review_date).getTime() - Date.now();
-      isDueSoon = diff > 0 && diff <= 48 * 60 * 60 * 1000;
-    }
+  // Transform topics into graph nodes — planet view or topic view
+  const showPlanetView = hasPlanets && !expandedCourseId;
+  const expandedPlanet = expandedCourseId ? coursePlanets?.find(p => p.courseId === expandedCourseId) : null;
+  const visibleTopics = expandedPlanet ? expandedPlanet.topics.map(t => ({
+    id: t.id,
+    title: t.title,
+    mastery_score: t.mastery_score,
+    orbit_state: t.orbit_state,
+    next_review_date: t.next_review_date,
+    updated_at: null as string | null,
+    last_studied_at: t.last_studied_at,
+  })) : topics;
 
-    return {
-      id: topic.id,
-      name: topic.title,
-      masteryScore: topic.mastery_score || 0,
-      orbitState: topic.orbit_state || 1,
-      val: 10 + (topic.mastery_score || 0) / 10, // Size based on mastery (10-20)
-      color: getNodeColor(topic.orbit_state, justRescued.includes(topic.id)),
-      physicsMode,
-      isAnimating: justRescued.includes(topic.id),
-      isDueSoon,
-    };
-  });
+  const nodes: Node[] = showPlanetView
+    ? (coursePlanets || []).map(planet => ({
+        id: `planet_${planet.courseId}`,
+        name: planet.courseName,
+        masteryScore: planet.avgMastery,
+        orbitState: 1,
+        val: 12 + planet.topicCount * 3, // Size based on topic count
+        color: planet.avgMastery >= 70 ? '#6366f1' : planet.avgMastery >= 30 ? '#f59e0b' : '#64748b',
+        physicsMode: 'mastered' as const,
+        isAnimating: false,
+        isDueSoon: false,
+      }))
+    : visibleTopics.map(topic => {
+        let physicsMode: 'mastered' | 'ghost' | 'snapBack';
+        if (justRescued.includes(topic.id)) {
+          physicsMode = 'snapBack';
+        } else if (topic.orbit_state === 3) {
+          physicsMode = 'ghost';
+        } else {
+          physicsMode = 'mastered';
+        }
+
+        let isDueSoon = false;
+        if (topic.next_review_date) {
+          const diff = new Date(topic.next_review_date).getTime() - Date.now();
+          isDueSoon = diff > 0 && diff <= 48 * 60 * 60 * 1000;
+        }
+
+        return {
+          id: topic.id,
+          name: topic.title,
+          masteryScore: topic.mastery_score || 0,
+          orbitState: topic.orbit_state || 1,
+          val: 10 + (topic.mastery_score || 0) / 10,
+          color: getNodeColor(topic.orbit_state, justRescued.includes(topic.id)),
+          physicsMode,
+          isAnimating: justRescued.includes(topic.id),
+          isDueSoon,
+        };
+      });
 
   // Create constellation links (native canvas approach)
   const links: Link[] = [];
@@ -307,12 +341,19 @@ export function ConceptGalaxy({ topics, profileId, lmsStatus, totalTopicCount = 
   }
 
   const handleNodeClick = (node: any, event: MouseEvent) => {
+    // Planet click → expand to show assignment topics
+    if (showPlanetView && node.id.startsWith('planet_')) {
+      const courseId = node.id.replace('planet_', '');
+      setExpandedCourseId(courseId);
+      return;
+    }
+
     // Check if Weave Mode is active OR Shift key is pressed for constellation selection
     if (isWeaveModeActive || event.shiftKey) {
       handleConstellationSelection(node);
     } else {
       // Open Focus Panel — look up full topic data
-      const topic = topics.find(t => t.id === node.id);
+      const topic = (expandedPlanet ? visibleTopics : topics).find(t => t.id === node.id);
       setFocusPanelState({
         isOpen: true,
         selectedTopicId: node.id,
@@ -493,6 +534,17 @@ export function ConceptGalaxy({ topics, profileId, lmsStatus, totalTopicCount = 
 
   return (
     <div ref={containerRef} className="w-full h-full relative overflow-hidden">
+      {/* Back to planets button when viewing a course's topics */}
+      {expandedCourseId && expandedPlanet && (
+        <div className="absolute top-4 left-4 z-30">
+          <button
+            onClick={() => setExpandedCourseId(null)}
+            className="inline-flex items-center gap-2 px-4 py-2 bg-slate-900/80 backdrop-blur-md border border-slate-700/50 rounded-xl text-sm text-slate-200 hover:bg-slate-800/80 transition-colors"
+          >
+            &larr; {expandedPlanet.courseName}
+          </button>
+        </div>
+      )}
       <ForceGraph2D
         ref={graphRef}
         graphData={{ nodes, links }}

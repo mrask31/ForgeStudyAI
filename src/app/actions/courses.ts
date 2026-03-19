@@ -85,7 +85,7 @@ export async function getCourses(profileId: string): Promise<CourseInfo[]> {
   }
 
   const result: CourseInfo[] = [];
-  for (const [courseId, info] of courseMap) {
+  for (const [courseId, info] of Array.from(courseMap)) {
     const scores = info.topicIds.map(id => topicMap.get(id) ?? 0);
     const avgMastery = scores.length > 0 ? Math.round(scores.reduce((a, b) => a + b, 0) / scores.length) : 0;
     const upcomingDue = info.dues
