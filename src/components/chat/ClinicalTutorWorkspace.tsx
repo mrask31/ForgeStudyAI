@@ -95,7 +95,8 @@ export default function ClinicalTutorWorkspace({
   const [savingToNotebook, setSavingToNotebook] = useState<string | null>(null) // messageId being saved
   const [flaggedMessages, setFlaggedMessages] = useState<Set<string>>(new Set())
   const [isTogglingHelp, setIsTogglingHelp] = useState<boolean>(false)
-  
+  const openerSentRef = useRef(false)
+
   // If selection props are provided, we'll use ChatMessageList for rendering
   const useMessageList = !!selectedMessageId || !!onSelectMessage
   
@@ -263,13 +264,33 @@ export default function ClinicalTutorWorkspace({
 
   useEffect(() => {
     if (initialMessages.length > 0 && !isLoadingHistory) {
-      if (messages.length === 0 || 
-          (messages.length !== initialMessages.length && 
+      if (messages.length === 0 ||
+          (messages.length !== initialMessages.length &&
            JSON.stringify(messages) !== JSON.stringify(initialMessages))) {
         setMessages(initialMessages);
       }
     }
   }, [initialMessages, isLoadingHistory, setMessages]);
+
+  // Auto-opening message for new sessions with no history
+  useEffect(() => {
+    // If a chatId exists, wait until history has finished loading
+    if (chatId && isLoadingHistory) return
+    // Don't fire more than once
+    if (openerSentRef.current) return
+    // Don't fire if there's already history
+    if (initialMessages.length > 0) return
+    // Don't fire if messages already present (e.g. from a previous render)
+    if (messages.length > 0) return
+
+    openerSentRef.current = true
+
+    const content = topicTitle
+      ? `You're working on **${topicTitle}** — let's dig in. What do you already know about this topic?`
+      : "What would you like to study today? You can ask me about anything from your classes, or tell me what you're working on and we'll figure it out together."
+
+    setMessages([{ id: crypto.randomUUID(), role: 'assistant', content }])
+  }, [chatId, isLoadingHistory, initialMessages.length, messages.length, topicTitle, setMessages])
 
   // Load flagged messages from chat metadata
   useEffect(() => {
