@@ -232,6 +232,60 @@ export function ConceptGalaxy({ topics, coursePlanets, profileId, lmsStatus, tot
     return () => clearTimeout(t);
   }, [expandedCourseId]);
 
+  // Transform topics into graph nodes — planet view or topic view
+  const showPlanetView = hasPlanets && !expandedCourseId;
+  const expandedPlanet = expandedCourseId ? coursePlanets?.find(p => p.courseId === expandedCourseId) : null;
+  const visibleTopics = expandedPlanet ? expandedPlanet.topics.map(t => ({
+    id: t.id,
+    title: t.title,
+    mastery_score: t.mastery_score,
+    orbit_state: t.orbit_state,
+    next_review_date: t.next_review_date,
+    updated_at: null as string | null,
+    last_studied_at: t.last_studied_at,
+  })) : topics;
+
+  const nodes: Node[] = showPlanetView
+    ? (coursePlanets || []).map(planet => ({
+        id: `planet_${planet.courseId}`,
+        name: planet.courseName,
+        masteryScore: planet.avgMastery,
+        orbitState: 1,
+        val: 12 + planet.topicCount * 3, // Size based on topic count
+        color: planet.avgMastery >= 70 ? '#6366f1' : planet.avgMastery >= 30 ? '#f59e0b' : '#64748b',
+        physicsMode: 'mastered' as const,
+        isAnimating: false,
+        isDueSoon: false,
+      }))
+    : visibleTopics.map(topic => {
+        let physicsMode: 'mastered' | 'ghost' | 'snapBack';
+        if (justRescued.includes(topic.id)) {
+          physicsMode = 'snapBack';
+        } else if (topic.orbit_state === 3) {
+          physicsMode = 'ghost';
+        } else {
+          physicsMode = 'mastered';
+        }
+
+        let isDueSoon = false;
+        if (topic.next_review_date) {
+          const diff = new Date(topic.next_review_date).getTime() - Date.now();
+          isDueSoon = diff > 0 && diff <= 48 * 60 * 60 * 1000;
+        }
+
+        return {
+          id: topic.id,
+          name: topic.title,
+          masteryScore: topic.mastery_score || 0,
+          orbitState: topic.orbit_state || 1,
+          val: 10 + (topic.mastery_score || 0) / 10,
+          color: getNodeColor(topic.orbit_state, justRescued.includes(topic.id)),
+          physicsMode,
+          isAnimating: justRescued.includes(topic.id),
+          isDueSoon,
+        };
+      });
+
   // Apply custom D3 forces — centering, bounds, and Ghost Node physics
   useEffect(() => {
     if (!graphRef.current) return;
@@ -300,60 +354,6 @@ export function ConceptGalaxy({ topics, coursePlanets, profileId, lmsStatus, tot
   useEffect(() => {
     setShowLoomDock(selectedConstellation.length >= 2);
   }, [selectedConstellation]);
-
-  // Transform topics into graph nodes — planet view or topic view
-  const showPlanetView = hasPlanets && !expandedCourseId;
-  const expandedPlanet = expandedCourseId ? coursePlanets?.find(p => p.courseId === expandedCourseId) : null;
-  const visibleTopics = expandedPlanet ? expandedPlanet.topics.map(t => ({
-    id: t.id,
-    title: t.title,
-    mastery_score: t.mastery_score,
-    orbit_state: t.orbit_state,
-    next_review_date: t.next_review_date,
-    updated_at: null as string | null,
-    last_studied_at: t.last_studied_at,
-  })) : topics;
-
-  const nodes: Node[] = showPlanetView
-    ? (coursePlanets || []).map(planet => ({
-        id: `planet_${planet.courseId}`,
-        name: planet.courseName,
-        masteryScore: planet.avgMastery,
-        orbitState: 1,
-        val: 12 + planet.topicCount * 3, // Size based on topic count
-        color: planet.avgMastery >= 70 ? '#6366f1' : planet.avgMastery >= 30 ? '#f59e0b' : '#64748b',
-        physicsMode: 'mastered' as const,
-        isAnimating: false,
-        isDueSoon: false,
-      }))
-    : visibleTopics.map(topic => {
-        let physicsMode: 'mastered' | 'ghost' | 'snapBack';
-        if (justRescued.includes(topic.id)) {
-          physicsMode = 'snapBack';
-        } else if (topic.orbit_state === 3) {
-          physicsMode = 'ghost';
-        } else {
-          physicsMode = 'mastered';
-        }
-
-        let isDueSoon = false;
-        if (topic.next_review_date) {
-          const diff = new Date(topic.next_review_date).getTime() - Date.now();
-          isDueSoon = diff > 0 && diff <= 48 * 60 * 60 * 1000;
-        }
-
-        return {
-          id: topic.id,
-          name: topic.title,
-          masteryScore: topic.mastery_score || 0,
-          orbitState: topic.orbit_state || 1,
-          val: 10 + (topic.mastery_score || 0) / 10,
-          color: getNodeColor(topic.orbit_state, justRescued.includes(topic.id)),
-          physicsMode,
-          isAnimating: justRescued.includes(topic.id),
-          isDueSoon,
-        };
-      });
 
   // Create constellation links (native canvas approach)
   const links: Link[] = [];
