@@ -69,7 +69,8 @@ export function ConceptGalaxy({ topics, coursePlanets, profileId, lmsStatus, tot
   const router = useRouter();
   const graphRef = useRef<any>();
   const containerRef = useRef<HTMLDivElement>(null);
-  const [dimensions, setDimensions] = useState({ width: 800, height: 600 });
+  const [dimensions, setDimensions] = useState({ width: 0, height: 0 });
+  const [canvasReady, setCanvasReady] = useState(false);
 
   // Course planet expansion — null = show planets, string = show that course's topics
   const [expandedCourseId, setExpandedCourseId] = useState<string | null>(null);
@@ -108,10 +109,12 @@ export function ConceptGalaxy({ topics, coursePlanets, profileId, lmsStatus, tot
   useEffect(() => {
     const updateDimensions = () => {
       if (containerRef.current) {
-        setDimensions({
-          width: containerRef.current.clientWidth,
-          height: containerRef.current.clientHeight,
-        });
+        const w = containerRef.current.clientWidth;
+        const h = containerRef.current.clientHeight;
+        if (w > 0 && h > 0) {
+          setDimensions({ width: w, height: h });
+          setCanvasReady(true);
+        }
       }
     };
 
@@ -570,8 +573,25 @@ export function ConceptGalaxy({ topics, coursePlanets, profileId, lmsStatus, tot
     );
   }
 
+  // On mobile with 1-2 nodes, skip physics and place nodes manually in the center
+  const isMobileView = dimensions.width > 0 && dimensions.width < 768;
+  const useManualLayout = isMobileView && nodes.length <= 2 && dimensions.width > 0;
+  const graphNodes = useManualLayout
+    ? nodes.map((node, i) => ({
+        ...node,
+        fx: dimensions.width / 2 + (nodes.length === 2 ? (i === 0 ? -80 : 80) : 0),
+        fy: dimensions.height / 2,
+      }))
+    : nodes;
+
   return (
     <div ref={containerRef} className="w-full h-full relative overflow-hidden">
+      {/* Wait for canvas dimensions before rendering the force graph */}
+      {!canvasReady && (
+        <div className="absolute inset-0 bg-slate-950 flex items-center justify-center">
+          <div className="text-slate-500 text-sm">Initializing galaxy...</div>
+        </div>
+      )}
       {/* Back to planets button when viewing a course's topics */}
       {expandedCourseId && expandedPlanet && (
         <div className="absolute top-4 left-4 z-30">
@@ -583,10 +603,10 @@ export function ConceptGalaxy({ topics, coursePlanets, profileId, lmsStatus, tot
           </button>
         </div>
       )}
-      <ForceGraph2D
+      {canvasReady && <ForceGraph2D
         key={expandedCourseId ?? 'planets'}
         ref={graphRef}
-        graphData={{ nodes, links }}
+        graphData={{ nodes: graphNodes, links }}
         width={dimensions.width}
         height={dimensions.height}
         nodeLabel="name"
@@ -698,7 +718,7 @@ export function ConceptGalaxy({ topics, coursePlanets, profileId, lmsStatus, tot
               graphRef.current.zoomToFit(400, padding);
             }
           }}
-        />
+        />}
       
       {/* Reset View button — re-fits all nodes into the viewport */}
       <button
