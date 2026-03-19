@@ -44,6 +44,7 @@ export default function GalaxyPage() {
   const [totalTopicCount, setTotalTopicCount] = useState(0) // Includes quarantined — to detect if sync already ran
   const [streakDays, setStreakDays] = useState(0)
   const [coursePlanets, setCoursePlanets] = useState<CoursePlanet[]>([])
+  const [isGalaxyDrillDown, setIsGalaxyDrillDown] = useState(false)
 
   useEffect(() => {
     async function loadData() {
@@ -224,8 +225,8 @@ export default function GalaxyPage() {
         )}
       </div>
       
-      {/* Helper Chips - contextual suggestions */}
-      {!loading && topics.length > 0 && (
+      {/* Helper Chips - contextual suggestions, hidden when drilling into a course */}
+      {!loading && topics.length > 0 && !isGalaxyDrillDown && (
         <div className="absolute top-16 md:top-auto md:bottom-24 left-1/2 -translate-x-1/2 z-30">
           <HelperChips topics={topics} profileId={activeProfileId} />
         </div>
@@ -264,6 +265,7 @@ export default function GalaxyPage() {
             lmsStatus={lmsStatus}
             totalTopicCount={totalTopicCount}
             onDueSoonChange={setHasDueSoonItems}
+            onDrillDownChange={setIsGalaxyDrillDown}
             onTopicsRefresh={async () => {
               // Refresh topics after lazy eval or snap-back
               if (activeProfileId && user) {
