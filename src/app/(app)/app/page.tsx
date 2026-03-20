@@ -22,7 +22,8 @@ const galaxyCache: {
   topics: any[]
   smartCTA: SmartCTAResult | null
   quarantinedCount: number
-} = { profileId: null, topics: [], smartCTA: null, quarantinedCount: 0 }
+  coursePlanets: CoursePlanet[]
+} = { profileId: null, topics: [], smartCTA: null, quarantinedCount: 0, coursePlanets: [] }
 
 export default function GalaxyPage() {
   const { activeProfileId } = useActiveProfile()
@@ -31,7 +32,7 @@ export default function GalaxyPage() {
     galaxyCache.profileId === activeProfileId ? galaxyCache.topics : []
   )
   const [loading, setLoading] = useState(() =>
-    galaxyCache.profileId === activeProfileId && galaxyCache.topics.length > 0 ? false : true
+    galaxyCache.profileId === activeProfileId && (galaxyCache.topics.length > 0 || galaxyCache.coursePlanets.length > 0) ? false : true
   )
   const [smartCTA, setSmartCTA] = useState<SmartCTAResult | null>(() =>
     galaxyCache.profileId === activeProfileId ? galaxyCache.smartCTA : null
@@ -43,7 +44,9 @@ export default function GalaxyPage() {
   const [hasDueSoonItems, setHasDueSoonItems] = useState(false)
   const [totalTopicCount, setTotalTopicCount] = useState(0) // Includes quarantined — to detect if sync already ran
   const [streakDays, setStreakDays] = useState(0)
-  const [coursePlanets, setCoursePlanets] = useState<CoursePlanet[]>([])
+  const [coursePlanets, setCoursePlanets] = useState<CoursePlanet[]>(() =>
+    galaxyCache.profileId === activeProfileId ? galaxyCache.coursePlanets : []
+  )
   const [isGalaxyDrillDown, setIsGalaxyDrillDown] = useState(false)
 
   useEffect(() => {
@@ -56,7 +59,7 @@ export default function GalaxyPage() {
       }
 
       // Show skeleton while fetching (unless cache already has data for this profile)
-      if (galaxyCache.profileId !== activeProfileId || galaxyCache.topics.length === 0) {
+      if (galaxyCache.profileId !== activeProfileId || (galaxyCache.topics.length === 0 && galaxyCache.coursePlanets.length === 0)) {
         setLoading(true)
       }
 
@@ -79,6 +82,7 @@ export default function GalaxyPage() {
         galaxyCache.topics = topicsData
         galaxyCache.smartCTA = ctaData
         galaxyCache.quarantinedCount = quarantinedData
+        galaxyCache.coursePlanets = planetsData
       } catch (error) {
         console.error('[Galaxy] Error loading data:', error)
       } finally {
@@ -233,7 +237,7 @@ export default function GalaxyPage() {
       )}
 
       {/* Top Right HUD - Upload + Photo Drop */}
-      <div className="absolute top-4 md:top-6 right-2 md:right-6 z-40 flex items-center gap-1.5 md:gap-2">
+      <div className="absolute top-4 md:top-6 right-2 md:right-6 z-40 pointer-events-auto flex items-center gap-1.5 md:gap-2">
         <PhotoDropButton />
         <Link
           href="/sources"

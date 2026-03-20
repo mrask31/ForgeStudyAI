@@ -541,7 +541,8 @@ export function ConceptGalaxy({ topics, coursePlanets, profileId, lmsStatus, tot
     }
   };
 
-  if (topics.length === 0) {
+  // Skip empty state if we have course planets to show (Level 1)
+  if (topics.length === 0 && !hasPlanets) {
     // Determine which empty state to show based on LMS connection status
     // Key insight: if totalTopicCount > 0, topics exist but are quarantined (orbit_state = 0).
     // That means sync already ran — don't show "Syncing..." spinner.
