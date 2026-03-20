@@ -223,15 +223,19 @@ export function ConceptGalaxy({ topics, coursePlanets, profileId, lmsStatus, tot
     return () => clearTimeout(timer);
   }, [justRescued]);
   
-  // Reheat simulation and zoom-to-fit when switching between planet view and constellation view
+  // Fit viewport on mount, node changes, and view switches
   useEffect(() => {
     if (!graphRef.current) return;
+    const isMobile = dimensions.width < 768;
+    const padding = isMobile ? 30 : 50;
     // Small delay ensures graphData with new nodes has been processed by ForceGraph2D
     const t = setTimeout(() => {
       graphRef.current?.d3ReheatSimulation();
+      // Fit immediately then again after simulation settles
+      graphRef.current?.zoomToFit(300, padding);
       setTimeout(() => {
-        graphRef.current?.zoomToFit(400, 50);
-      }, 800);
+        graphRef.current?.zoomToFit(400, padding);
+      }, 600);
     }, 50);
     return () => clearTimeout(t);
   }, [expandedCourseId]);
@@ -662,9 +666,9 @@ export function ConceptGalaxy({ topics, coursePlanets, profileId, lmsStatus, tot
           <div className="text-slate-500 text-sm">Initializing galaxy...</div>
         </div>
       )}
-      {/* Back to planets button when viewing a course's topics */}
+      {/* Back to planets button — top-left on mobile, below legend panel on desktop */}
       {expandedCourseId && expandedPlanet && (
-        <div className="absolute top-4 left-4 z-30">
+        <div className="absolute top-4 left-4 md:top-6 md:left-6 z-50">
           <button
             onClick={() => setExpandedCourseId(null)}
             className="inline-flex items-center gap-2 px-4 py-2 bg-slate-900/80 backdrop-blur-md border border-slate-700/50 rounded-xl text-sm text-slate-200 hover:bg-slate-800/80 transition-colors"
@@ -777,9 +781,9 @@ export function ConceptGalaxy({ topics, coursePlanets, profileId, lmsStatus, tot
             return 1.5; // Subtle for permanent edges
           }}
           linkDirectionalParticles={0}
-          d3AlphaDecay={0.02}
-          d3VelocityDecay={0.3}
-          cooldownTicks={100}
+          d3AlphaDecay={0.05}
+          d3VelocityDecay={0.4}
+          cooldownTicks={60}
           onEngineStop={() => {
             if (graphRef.current) {
               // On mobile use tighter padding so nodes fill the smaller screen

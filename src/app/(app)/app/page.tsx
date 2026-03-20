@@ -196,20 +196,17 @@ export default function GalaxyPage() {
         </div>
       )}
 
-      {/* Top Left HUD - Title & Legend (Hidden on mobile) */}
-      <div className="hidden md:block absolute top-6 left-6 z-50 pointer-events-auto bg-slate-900/70 backdrop-blur-md border border-slate-700/50 rounded-xl shadow-2xl p-6 max-w-xs lg:max-w-sm">
-        <div className="flex items-center gap-3 mb-4">
-          <Sparkles className="w-6 h-6 text-indigo-400" />
-          <h1 className="text-2xl font-bold text-white">
-            Your Learning Galaxy
+      {/* Top Left HUD - Title & Legend (Hidden on mobile, compact to avoid canvas overlap) */}
+      <div className="hidden md:block absolute top-4 left-4 z-50 pointer-events-auto bg-slate-900/80 backdrop-blur-md border border-slate-700/50 rounded-xl shadow-2xl p-4 max-w-[280px]">
+        <div className="flex items-center gap-2 mb-2">
+          <Sparkles className="w-5 h-5 text-indigo-400" />
+          <h1 className="text-lg font-bold text-white">
+            Your Galaxy
           </h1>
           {streakDays > 0 && (
-            <span className="ml-auto text-amber-400 text-sm font-bold whitespace-nowrap">🔥 {streakDays} day streak</span>
+            <span className="ml-auto text-amber-400 text-xs font-bold whitespace-nowrap">🔥 {streakDays}d</span>
           )}
         </div>
-        <p className="text-slate-300 text-sm mb-4">
-          Each star represents a concept you're mastering. Click any node to study.
-        </p>
         <GalaxyLegend />
         {activeProfileId && (
           <button
