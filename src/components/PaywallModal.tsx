@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { Lock, LogOut } from 'lucide-react';
 import { startStripeCheckout } from '@/lib/stripeClient';
 import { getSupabaseBrowser } from '@/lib/supabase/client';
+import { clearAuthStorage } from '@/lib/auth-cleanup';
 
 interface PaywallModalProps {
   isOpen: boolean;
@@ -32,6 +33,7 @@ export function PaywallModal({ isOpen }: PaywallModalProps) {
   const handleLogout = async () => {
     const supabase = getSupabaseBrowser();
     await supabase.auth.signOut();
+    clearAuthStorage();
     router.push('/login');
   };
 

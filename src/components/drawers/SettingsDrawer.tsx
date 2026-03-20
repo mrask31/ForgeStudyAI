@@ -6,6 +6,7 @@ import { getSupabaseBrowser } from '@/lib/supabase/client';
 import { useRouter } from 'next/navigation';
 import { useDensity } from '@/contexts/DensityContext';
 import { getDensityTokens } from '@/lib/density-tokens';
+import { clearAuthStorage } from '@/lib/auth-cleanup';
 import { useActiveProfile } from '@/contexts/ActiveProfileContext';
 import { toast } from 'sonner';
 import Link from 'next/link';
@@ -114,7 +115,8 @@ export function SettingsDrawer({ isOpen, onClose }: SettingsDrawerProps) {
 
   const handleLogout = async () => {
     await supabase.auth.signOut();
-    router.push('/');
+    clearAuthStorage();
+    router.push('/login');
     router.refresh();
   };
 

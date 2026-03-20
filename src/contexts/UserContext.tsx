@@ -2,6 +2,7 @@
 
 import { createContext, useContext, useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabaseClient';
+import { clearAuthStorage } from '@/lib/auth-cleanup';
 import type { User } from '@supabase/supabase-js';
 
 interface UserContextType {
@@ -19,8 +20,12 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Get initial user
-    supabase.auth.getUser().then(({ data: { user } }) => {
+    // Get initial user — clear stale storage on auth error
+    supabase.auth.getUser().then(({ data: { user }, error }) => {
+      if (error) {
+        console.warn('[UserProvider] Auth error on init, clearing stale session:', error.message);
+        clearAuthStorage();
+      }
       setUser(user);
       setLoading(false);
     });
@@ -28,8 +33,13 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
     // Listen for auth changes
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
+    } = supabase.auth.onAuthStateChange((event, session) => {
       setUser(session?.user ?? null);
+
+      // On sign-out or token refresh failure, clear all stale storage
+      if (event === 'SIGNED_OUT' || event === 'TOKEN_REFRESHED' && !session) {
+        clearAuthStorage();
+      }
     });
 
     return () => {
