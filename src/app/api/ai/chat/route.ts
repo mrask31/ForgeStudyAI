@@ -36,9 +36,11 @@ export async function POST(req: NextRequest) {
     const latestUserMessage = userMessages.length > 0 ? userMessages[userMessages.length - 1]?.content : body.message;
     
     // Extract context IDs from body
-    const parsed_content_id = body.parsed_content_id || body.attachedFileIds?.[0];
+    const attachedFileIds: string[] = Array.isArray(body.attachedFileIds) ? body.attachedFileIds.filter(Boolean) : [];
+    const parsed_content_id = body.parsed_content_id || attachedFileIds[0];
     const synced_assignment_id = body.synced_assignment_id;
     const topicTitle = body.topicTitle as string | undefined;
+    const activeProfileId = body.activeProfileId as string | undefined;
 
     console.log('[AI Chat Adapter] Request:', {
       chatId,
@@ -46,6 +48,8 @@ export async function POST(req: NextRequest) {
       latestUserMessage: latestUserMessage?.substring(0, 50),
       parsed_content_id,
       synced_assignment_id,
+      attachedFileIds,
+      activeProfileId,
     });
 
     // Validate request
@@ -163,17 +167,57 @@ export async function POST(req: NextRequest) {
       chatId,
     });
 
-    // Retrieve source material (LMS context, parsed content)
+    // Retrieve source material (LMS context, parsed content, binder docs)
     const sourceMaterial = await buildSourceMaterial(
       parsed_content_id,
       synced_assignment_id
     );
 
+    // If no parsed content yet but we have attached file IDs, fetch binder content directly
+    if (!sourceMaterial.parsed_content && attachedFileIds.length > 0) {
+      const supabaseForDocs = await createClient();
+      const { data: docs } = await supabaseForDocs
+        .from('documents')
+        .select('content, metadata')
+        .in('id', attachedFileIds)
+        .limit(5);
+
+      if (docs && docs.length > 0) {
+        const binderContent = docs
+          .map(d => {
+            const filename = (d.metadata as any)?.filename || 'document';
+            return `[Source: ${filename}]\n${d.content}`;
+          })
+          .join('\n\n');
+        sourceMaterial.parsed_content = binderContent;
+      }
+    }
+
+    // Also try to fetch learning sources for this profile's topic
+    if (!sourceMaterial.parsed_content && activeProfileId && topicTitle) {
+      const supabaseForSources = await createClient();
+      const { data: sourceItems } = await supabaseForSources
+        .from('learning_source_items')
+        .select('title, text_content, learning_sources!inner(profile_id)')
+        .eq('learning_sources.profile_id', activeProfileId)
+        .ilike('title', `%${topicTitle.split(' ')[0]}%`)
+        .limit(3);
+
+      if (sourceItems && sourceItems.length > 0) {
+        const learningContent = sourceItems
+          .map(s => `[Source: ${s.title}]\n${s.text_content}`)
+          .join('\n\n');
+        sourceMaterial.parsed_content = learningContent;
+      }
+    }
+
     console.log('[AI Chat Adapter] Source material:', {
       hasParsedContent: !!sourceMaterial.parsed_content,
+      parsedContentLength: sourceMaterial.parsed_content?.length ?? 0,
       hasAssignmentDescription: !!sourceMaterial.assignment_description,
       hasTeacherRubric: !!sourceMaterial.teacher_rubric,
       hasPdfText: !!sourceMaterial.pdf_text,
+      attachedFileIdsUsed: attachedFileIds.length,
     });
 
     // Initialize Claude Service

@@ -384,8 +384,23 @@ export default function TutorSession({
     }
   }
 
+  // Track file loading in a ref so handleSend can check it without closure staling
+  const isLoadingFilesRef = useRef(false);
+  isLoadingFilesRef.current = isLoadingAttachedFiles;
+
   const handleSend = async (message: string) => {
     if (!message.trim()) return
+
+    // Wait for attached files to finish loading before sending
+    if (isLoadingFilesRef.current) {
+      console.log('[TutorSession] Waiting for attached files to load...');
+      await new Promise<void>(resolve => {
+        const check = setInterval(() => {
+          if (!isLoadingFilesRef.current) { clearInterval(check); resolve(); }
+        }, 100);
+        setTimeout(() => { clearInterval(check); resolve(); }, 3000);
+      });
+    }
 
     let effectiveSessionId = sessionId
     const scrollToBottom = () => {
