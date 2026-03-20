@@ -2,7 +2,6 @@
 
 import { useState, useRef, useEffect } from 'react'
 import { ArrowUp, Paperclip, Calculator } from 'lucide-react'
-import SuggestedPrompts from '@/components/tutor/SuggestedPrompts'
 import { useTutorContext } from './TutorContext'
 import MedicalMathCalculator from './MedicalMathCalculator'
 
@@ -99,7 +98,7 @@ export default function ChatInterface({
   }
 
   return (
-    <div className="flex-shrink-0 pt-3 bg-[#0f0f1e] relative">
+    <div className="flex-shrink-0 pt-3 pb-safe-b relative">
       {/* Calculator Panel */}
       <MedicalMathCalculator 
         isOpen={isCalculatorOpen} 

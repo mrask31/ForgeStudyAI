@@ -891,20 +891,6 @@ function TutorPageContent() {
                   </div>
                 )}
               </div>
-              {!showSession && !isEntryMode && (
-                <div className="flex-shrink-0 pt-4 sm:pt-6 bg-slate-950 border-t border-slate-700/50">
-                  <ChatInterface
-                    key={`landing-${entryMode ?? 'tutor'}`}
-                    sessionId={undefined}
-                    onSend={handleInstantStart}
-                    initialPrompt={entryPrompt}
-                    attachedFiles={attachedFiles}
-                    attachedContext={attachedContext}
-                    onDetach={handleDetachFile}
-                    messages={[]}
-                  />
-                </div>
-              )}
             </>
           ) : showLanding ? (
             <>
