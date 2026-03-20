@@ -224,27 +224,32 @@ export function ConceptGalaxy({ topics, coursePlanets, studentName, profileId, l
   // Center viewport and fit to nodes — runs on mount, view switches, dimension changes
   useEffect(() => {
     if (!graphRef.current || !canvasReady) return;
-    const isMobile = dimensions.width < 768;
-    const padding = isMobile ? 30 : 50;
+    const { width, height } = dimensions;
+    const isMobile = width < 768;
+    const padding = isMobile ? 40 : 60;
 
-    // Immediately center the camera on the canvas midpoint so nodes aren't off-screen
-    graphRef.current.centerAt(dimensions.width / 2, dimensions.height / 2, 0);
+    // Immediately center camera and set zoom to show the full radial layout
+    graphRef.current.centerAt(width / 2, height / 2, 0);
+
+    // Calculate initial zoom so the orbit circle fits in the viewport
+    const orbitDiameter = Math.min(width, height) * 0.6 + padding * 2;
+    const containerMin = Math.min(width, height);
+    const initialZoom = containerMin / orbitDiameter;
+    graphRef.current.zoom(Math.min(initialZoom, 1.5), 0); // Cap at 1.5x
 
     const timers: ReturnType<typeof setTimeout>[] = [];
     const fit = (delay: number, duration: number) => {
       timers.push(setTimeout(() => {
         if (!graphRef.current) return;
-        graphRef.current.centerAt(dimensions.width / 2, dimensions.height / 2, 100);
         graphRef.current.zoomToFit(duration, padding);
       }, delay));
     };
 
-    // Reheat then fit repeatedly as simulation converges
+    // Reheat then fit as simulation converges
     timers.push(setTimeout(() => graphRef.current?.d3ReheatSimulation(), 30));
-    fit(50, 200);
-    fit(300, 300);
-    fit(700, 400);
-    fit(1200, 400);
+    fit(100, 300);
+    fit(500, 400);
+    fit(1000, 400);
 
     return () => timers.forEach(clearTimeout);
   }, [expandedCourseId, topics.length, canvasReady, dimensions.width, dimensions.height]);
@@ -284,28 +289,44 @@ export function ConceptGalaxy({ topics, coursePlanets, studentName, profileId, l
     fy: cy,
   };
 
+  // Orbit radius for radial placement — scales to container
+  const spreadRadius = Math.min(dimensions.width, dimensions.height) * 0.3;
+  const effectiveOrbitRadius = Math.min(orbitRadius, spreadRadius);
+
+  // Helper: place items in a radial layout around (cx, cy)
+  function radialPosition(index: number, total: number, radius: number) {
+    const angle = (index / total) * 2 * Math.PI - Math.PI / 2;
+    return { x: cx + radius * Math.cos(angle), y: cy + radius * Math.sin(angle) };
+  }
+
   // Build child nodes depending on view level
   let childNodes: Node[];
 
   if (showPlanetView) {
-    // Level 1: course planets — no initial positions, D3 forces handle layout
-    childNodes = (coursePlanets || []).map(planet => ({
-      id: `planet_${planet.courseId}`,
-      name: planet.courseName,
-      masteryScore: planet.avgMastery,
-      orbitState: 1,
-      val: 12 + planet.topicCount * 3,
-      color: planet.avgMastery >= 70 ? '#6366f1' : planet.avgMastery >= 30 ? '#f59e0b' : '#64748b',
-      physicsMode: 'mastered' as const,
-      isAnimating: false,
-      isDueSoon: false,
-    }));
+    // Level 1: course planets — radial positions around anchor
+    const total = (coursePlanets || []).length;
+    const r = total === 1 ? effectiveOrbitRadius * 0.6 : effectiveOrbitRadius;
+    childNodes = (coursePlanets || []).map((planet, i) => {
+      const pos = radialPosition(i, total, r);
+      return {
+        id: `planet_${planet.courseId}`,
+        name: planet.courseName,
+        masteryScore: planet.avgMastery,
+        orbitState: 1,
+        val: 12 + planet.topicCount * 3,
+        color: planet.avgMastery >= 70 ? '#6366f1' : planet.avgMastery >= 30 ? '#f59e0b' : '#64748b',
+        physicsMode: 'mastered' as const,
+        isAnimating: false,
+        isDueSoon: false,
+        x: pos.x,
+        y: pos.y,
+      };
+    });
   } else if (expandedPlanet) {
     // Level 2 (class galaxy): assignment nodes pinned in orbit
-    const maxRadius = Math.min(dimensions.width, dimensions.height) * 0.3;
-    const effectiveRadius = Math.min(orbitRadius, maxRadius);
+    const total = visibleTopics.length;
     childNodes = visibleTopics.map((topic, i) => {
-      const angle = (2 * Math.PI * i) / visibleTopics.length - Math.PI / 2;
+      const pos = radialPosition(i, total, effectiveOrbitRadius);
       return {
         id: topic.id,
         name: topic.title,
@@ -316,13 +337,15 @@ export function ConceptGalaxy({ topics, coursePlanets, studentName, profileId, l
         physicsMode: 'mastered' as const,
         isAnimating: false,
         isDueSoon: topic.next_review_date ? (new Date(topic.next_review_date).getTime() - Date.now()) <= 48 * 60 * 60 * 1000 : false,
-        fx: cx + Math.cos(angle) * effectiveRadius,
-        fy: cy + Math.sin(angle) * effectiveRadius,
+        fx: pos.x,
+        fy: pos.y,
       } as any;
     });
   } else {
-    // Default: individual topic nodes — no initial positions, D3 forces handle layout
-    childNodes = visibleTopics.map(topic => {
+    // Default: individual topic nodes — radial positions around anchor
+    const total = visibleTopics.length;
+    const r = total === 1 ? effectiveOrbitRadius * 0.6 : effectiveOrbitRadius;
+    childNodes = visibleTopics.map((topic, i) => {
       let physicsMode: 'mastered' | 'ghost' | 'snapBack';
       if (justRescued.includes(topic.id)) {
         physicsMode = 'snapBack';
@@ -338,6 +361,7 @@ export function ConceptGalaxy({ topics, coursePlanets, studentName, profileId, l
         isDueSoon = diff > 0 && diff <= 48 * 60 * 60 * 1000;
       }
 
+      const pos = radialPosition(i, total, r);
       return {
         id: topic.id,
         name: topic.title,
@@ -348,6 +372,8 @@ export function ConceptGalaxy({ topics, coursePlanets, studentName, profileId, l
         physicsMode,
         isAnimating: justRescued.includes(topic.id),
         isDueSoon,
+        x: pos.x,
+        y: pos.y,
       };
     });
   }
