@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect, useCallback, useMemo } from 'react'
-import { createBrowserClient } from '@supabase/ssr'
+import { getSupabaseBrowser } from '@/lib/supabase/client'
 import { useRouter } from 'next/navigation'
 import { Mail, Lock, ArrowRight, Loader2, CheckCircle, MessageSquare, BookOpen, GraduationCap, Shield, Sparkles } from 'lucide-react'
 import Link from 'next/link'
@@ -18,15 +18,7 @@ export default function SignupClient() {
   const [resending, setResending] = useState(false)
   const router = useRouter()
 
-  // Singleton Supabase client
-  const supabase = useMemo(
-    () =>
-      createBrowserClient(
-        process.env.NEXT_PUBLIC_SUPABASE_URL!,
-        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-      ),
-    []
-  )
+  const supabase = useMemo(() => getSupabaseBrowser(), [])
 
   const normalizeAppUrl = useCallback((url?: string | null) => {
     if (!url) return ''

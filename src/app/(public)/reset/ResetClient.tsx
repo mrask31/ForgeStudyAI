@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from 'react'
 import Link from 'next/link'
-import { createBrowserClient } from '@supabase/ssr'
+import { getSupabaseBrowser } from '@/lib/supabase/client'
 import { Mail, ArrowRight, Loader2 } from 'lucide-react'
 
 export default function ResetClient() {
@@ -10,14 +10,7 @@ export default function ResetClient() {
   const [loading, setLoading] = useState(false)
   const [message, setMessage] = useState<{ text: string; type: 'error' | 'success' } | null>(null)
 
-  const supabase = useMemo(() => {
-    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
-    const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
-    if (!supabaseUrl || !supabaseAnonKey) {
-      throw new Error('Supabase configuration is missing.')
-    }
-    return createBrowserClient(supabaseUrl, supabaseAnonKey)
-  }, [])
+  const supabase = useMemo(() => getSupabaseBrowser(), [])
 
   const handleReset = async (e: React.FormEvent) => {
     e.preventDefault()

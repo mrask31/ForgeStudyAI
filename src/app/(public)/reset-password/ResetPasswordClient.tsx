@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from 'react'
 import Link from 'next/link'
-import { createBrowserClient } from '@supabase/ssr'
+import { getSupabaseBrowser } from '@/lib/supabase/client'
 import { Lock, ArrowRight, Loader2 } from 'lucide-react'
 
 export default function ResetPasswordClient() {
@@ -12,14 +12,7 @@ export default function ResetPasswordClient() {
   const [message, setMessage] = useState<{ text: string; type: 'error' | 'success' } | null>(null)
   const [hasSession, setHasSession] = useState<boolean | null>(null)
 
-  const supabase = useMemo(() => {
-    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
-    const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
-    if (!supabaseUrl || !supabaseAnonKey) {
-      throw new Error('Supabase configuration is missing.')
-    }
-    return createBrowserClient(supabaseUrl, supabaseAnonKey)
-  }, [])
+  const supabase = useMemo(() => getSupabaseBrowser(), [])
 
   useEffect(() => {
     const checkSession = async () => {

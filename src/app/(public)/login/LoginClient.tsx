@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect, useMemo, useRef } from 'react'
-import { createBrowserClient } from '@supabase/ssr'
+import { getSupabaseBrowser } from '@/lib/supabase/client'
 import { useRouter } from 'next/navigation'
 import { Mail, Lock, ArrowRight, Loader2, MessageSquare, BookOpen, GraduationCap, Shield } from 'lucide-react'
 import Link from 'next/link'
@@ -17,28 +17,7 @@ export default function LoginClient() {
   
   const router = useRouter()
 
-  // Memoize Supabase client to prevent recreation on every render
-  // Ensure Supabase client configuration for production
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
-  const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
-
-  const supabase = useMemo(() => {
-
-    // Sanity check: log warning in dev if env vars are missing
-    if (process.env.NODE_ENV === 'development') {
-      if (!supabaseUrl || !supabaseAnonKey) {
-        console.warn('⚠️ [Login] Supabase environment variables are missing!')
-        console.warn('NEXT_PUBLIC_SUPABASE_URL:', supabaseUrl ? '✓' : '✗')
-        console.warn('NEXT_PUBLIC_SUPABASE_ANON_KEY:', supabaseAnonKey ? '✓' : '✗')
-      }
-    }
-
-    if (!supabaseUrl || !supabaseAnonKey) {
-      throw new Error('Supabase configuration is missing. Please check your environment variables.')
-    }
-
-    return createBrowserClient(supabaseUrl, supabaseAnonKey)
-  }, [])
+  const supabase = useMemo(() => getSupabaseBrowser(), [])
 
   const debugAuth = process.env.NEXT_PUBLIC_DEBUG_AUTH === 'true'
   const debugLog = (...args: any[]) => {

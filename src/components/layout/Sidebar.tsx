@@ -23,7 +23,7 @@ interface SidebarProps {
 export default function Sidebar({ onNavigate }: SidebarProps = {}) {
   const pathname = usePathname()
   const searchParams = useSearchParams()
-  const { activeProfileId } = useActiveProfile()
+  const { activeProfileId, setActiveProfileId } = useActiveProfile()
   const [studentName, setStudentName] = useState<string | null>(null)
   const [gradeBand, setGradeBand] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(true)
@@ -73,8 +73,22 @@ export default function Sidebar({ onNavigate }: SidebarProps = {}) {
             setGradeBand(null)
           }
         } else {
-          setStudentName(null)
-          setGradeBand(null)
+          // No active profile — auto-select if user has exactly one profile
+          const { data: allProfiles } = await supabase
+            .from('student_profiles')
+            .select('id, display_name, grade_band')
+            .eq('owner_id', user.id)
+
+          if (allProfiles && allProfiles.length === 1) {
+            const only = allProfiles[0]
+            setActiveProfileId(only.id)
+            setStudentName(only.display_name || null)
+            const normalizedBand = only.grade_band === 'elementary' ? 'middle' : only.grade_band
+            setGradeBand(normalizedBand || null)
+          } else {
+            setStudentName(null)
+            setGradeBand(null)
+          }
         }
       } catch (error) {
         console.error('[Sidebar] Error loading profile:', error)
