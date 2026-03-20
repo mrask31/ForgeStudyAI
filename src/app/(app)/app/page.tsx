@@ -15,6 +15,7 @@ import Link from 'next/link'
 import { PhotoDropButton } from '@/components/homework/PhotoDropButton'
 import { GalaxySkeleton } from '@/components/galaxy/GalaxySkeleton'
 import { HelperChips } from '@/components/galaxy/HelperChips'
+import { useActiveProfileSummary } from '@/hooks/useActiveProfileSummary'
 
 // Module-level cache survives component unmount/remount during client-side navigation
 const galaxyCache: {
@@ -28,6 +29,7 @@ const galaxyCache: {
 export default function GalaxyPage() {
   const { activeProfileId } = useActiveProfile()
   const { user } = useUser()
+  const profileSummary = useActiveProfileSummary()
   const [topics, setTopics] = useState<any[]>(() =>
     galaxyCache.profileId === activeProfileId ? galaxyCache.topics : []
   )
@@ -262,6 +264,7 @@ export default function GalaxyPage() {
           <ConceptGalaxy
             topics={topics}
             coursePlanets={coursePlanets}
+            studentName={profileSummary.summary?.displayName?.split(' ')[0] || undefined}
             profileId={activeProfileId || undefined}
             lmsStatus={lmsStatus}
             totalTopicCount={totalTopicCount}

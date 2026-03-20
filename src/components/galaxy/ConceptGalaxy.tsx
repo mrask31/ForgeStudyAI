@@ -57,6 +57,7 @@ interface CoursePlanet {
 interface ConceptGalaxyProps {
   topics: Topic[];
   coursePlanets?: CoursePlanet[];
+  studentName?: string; // For the central anchor node label
   profileId?: string; // For lazy evaluation
   lmsStatus?: 'no_connection' | 'connected' | null;
   totalTopicCount?: number; // Includes quarantined — if > 0, sync already ran
@@ -65,7 +66,7 @@ interface ConceptGalaxyProps {
   onDrillDownChange?: (isInDrillDown: boolean) => void; // Notify parent when drill-down state changes
 }
 
-export function ConceptGalaxy({ topics, coursePlanets, profileId, lmsStatus, totalTopicCount = 0, onDueSoonChange, onTopicsRefresh, onDrillDownChange }: ConceptGalaxyProps) {
+export function ConceptGalaxy({ topics, coursePlanets, studentName, profileId, lmsStatus, totalTopicCount = 0, onDueSoonChange, onTopicsRefresh, onDrillDownChange }: ConceptGalaxyProps) {
   const router = useRouter();
   const graphRef = useRef<any>();
   const containerRef = useRef<HTMLDivElement>(null);
@@ -264,108 +265,94 @@ export function ConceptGalaxy({ topics, coursePlanets, profileId, lmsStatus, tot
   const isMobileCanvas = dimensions.width > 0 && dimensions.width < 768;
   const orbitRadius = isMobileCanvas ? 110 : 175;
 
-  // Center point for positioning nodes
+  // Center point for positioning
   const cx = dimensions.width / 2;
   const cy = dimensions.height / 2;
 
-  const nodes: Node[] = showPlanetView
-    ? (coursePlanets || []).map((planet, i, arr) => {
-        // Distribute planets in a circle around center
-        const angle = (2 * Math.PI * i) / arr.length - Math.PI / 2;
-        const spread = Math.min(dimensions.width, dimensions.height) * 0.25;
-        const r = arr.length === 1 ? 0 : spread;
-        return {
-          id: `planet_${planet.courseId}`,
-          name: planet.courseName,
-          masteryScore: planet.avgMastery,
-          orbitState: 1,
-          val: 12 + planet.topicCount * 3,
-          color: planet.avgMastery >= 70 ? '#6366f1' : planet.avgMastery >= 30 ? '#f59e0b' : '#64748b',
-          physicsMode: 'mastered' as const,
-          isAnimating: false,
-          isDueSoon: false,
-          x: cx + Math.cos(angle) * r,
-          y: cy + Math.sin(angle) * r,
-        };
-      })
-    : expandedPlanet
-    ? // Solar system: center sun + orbiting assignment nodes
-      // All nodes use fx/fy to pin to exact positions based on current container dimensions
-      (() => {
-        const cx = dimensions.width / 2;
-        const cy = dimensions.height / 2;
-        // Scale orbit radius to fit within the container (use smaller of width/height)
-        const maxRadius = Math.min(dimensions.width, dimensions.height) * 0.3;
-        const effectiveRadius = Math.min(orbitRadius, maxRadius);
-        return [
-          // Sun node — pinned to center
-          {
-            id: `sun_${expandedPlanet.courseId}`,
-            name: expandedPlanet.courseName,
-            masteryScore: expandedPlanet.avgMastery,
-            orbitState: 1,
-            val: 20 + expandedPlanet.topicCount * 2,
-            color: expandedPlanet.avgMastery >= 70 ? '#6366f1' : expandedPlanet.avgMastery >= 30 ? '#f59e0b' : '#64748b',
-            physicsMode: 'mastered' as const,
-            isAnimating: false,
-            isDueSoon: false,
-            fx: cx,
-            fy: cy,
-          } as any,
-          // Assignment nodes — pinned in orbit around center
-          ...visibleTopics.map((topic, i) => {
-            const angle = (2 * Math.PI * i) / visibleTopics.length - Math.PI / 2;
-            return {
-              id: topic.id,
-              name: topic.title,
-              masteryScore: topic.mastery_score || 0,
-              orbitState: topic.orbit_state || 1,
-              val: 10 + (topic.mastery_score || 0) / 10,
-              color: getNodeColor(topic.orbit_state, justRescued.includes(topic.id)),
-              physicsMode: 'mastered' as const,
-              isAnimating: false,
-              isDueSoon: topic.next_review_date ? (new Date(topic.next_review_date).getTime() - Date.now()) <= 48 * 60 * 60 * 1000 : false,
-              fx: cx + Math.cos(angle) * effectiveRadius,
-              fy: cy + Math.sin(angle) * effectiveRadius,
-            };
-          }),
-        ];
-      })()
-    : visibleTopics.map((topic, i, arr) => {
-        let physicsMode: 'mastered' | 'ghost' | 'snapBack';
-        if (justRescued.includes(topic.id)) {
-          physicsMode = 'snapBack';
-        } else if (topic.orbit_state === 3) {
-          physicsMode = 'ghost';
-        } else {
-          physicsMode = 'mastered';
-        }
+  // Anchor node — central hub of the galaxy (student name or course name)
+  const anchorNode: any = {
+    id: '__anchor__',
+    name: expandedPlanet ? expandedPlanet.courseName : (studentName || 'My Galaxy'),
+    masteryScore: 0,
+    orbitState: 1,
+    val: 28, // Larger than any topic/planet node
+    color: '#818cf8', // Indigo-400 — visually distinct
+    physicsMode: 'mastered' as const,
+    isAnimating: false,
+    isDueSoon: false,
+    fx: cx, // Always pinned to center
+    fy: cy,
+  };
 
-        let isDueSoon = false;
-        if (topic.next_review_date) {
-          const diff = new Date(topic.next_review_date).getTime() - Date.now();
-          isDueSoon = diff > 0 && diff <= 48 * 60 * 60 * 1000;
-        }
+  // Build child nodes depending on view level
+  let childNodes: Node[];
 
-        // Start nodes near center in a circle — forces will adjust from here
-        const angle = (2 * Math.PI * i) / arr.length - Math.PI / 2;
-        const spread = Math.min(dimensions.width, dimensions.height) * 0.2;
-        const r = arr.length === 1 ? 0 : spread;
+  if (showPlanetView) {
+    // Level 1: course planets — no initial positions, D3 forces handle layout
+    childNodes = (coursePlanets || []).map(planet => ({
+      id: `planet_${planet.courseId}`,
+      name: planet.courseName,
+      masteryScore: planet.avgMastery,
+      orbitState: 1,
+      val: 12 + planet.topicCount * 3,
+      color: planet.avgMastery >= 70 ? '#6366f1' : planet.avgMastery >= 30 ? '#f59e0b' : '#64748b',
+      physicsMode: 'mastered' as const,
+      isAnimating: false,
+      isDueSoon: false,
+    }));
+  } else if (expandedPlanet) {
+    // Level 2 (class galaxy): assignment nodes pinned in orbit
+    const maxRadius = Math.min(dimensions.width, dimensions.height) * 0.3;
+    const effectiveRadius = Math.min(orbitRadius, maxRadius);
+    childNodes = visibleTopics.map((topic, i) => {
+      const angle = (2 * Math.PI * i) / visibleTopics.length - Math.PI / 2;
+      return {
+        id: topic.id,
+        name: topic.title,
+        masteryScore: topic.mastery_score || 0,
+        orbitState: topic.orbit_state || 1,
+        val: 10 + (topic.mastery_score || 0) / 10,
+        color: getNodeColor(topic.orbit_state, justRescued.includes(topic.id)),
+        physicsMode: 'mastered' as const,
+        isAnimating: false,
+        isDueSoon: topic.next_review_date ? (new Date(topic.next_review_date).getTime() - Date.now()) <= 48 * 60 * 60 * 1000 : false,
+        fx: cx + Math.cos(angle) * effectiveRadius,
+        fy: cy + Math.sin(angle) * effectiveRadius,
+      } as any;
+    });
+  } else {
+    // Default: individual topic nodes — no initial positions, D3 forces handle layout
+    childNodes = visibleTopics.map(topic => {
+      let physicsMode: 'mastered' | 'ghost' | 'snapBack';
+      if (justRescued.includes(topic.id)) {
+        physicsMode = 'snapBack';
+      } else if (topic.orbit_state === 3) {
+        physicsMode = 'ghost';
+      } else {
+        physicsMode = 'mastered';
+      }
 
-        return {
-          id: topic.id,
-          name: topic.title,
-          masteryScore: topic.mastery_score || 0,
-          orbitState: topic.orbit_state || 1,
-          val: 10 + (topic.mastery_score || 0) / 10,
-          color: getNodeColor(topic.orbit_state, justRescued.includes(topic.id)),
-          physicsMode,
-          isAnimating: justRescued.includes(topic.id),
-          isDueSoon,
-          x: cx + Math.cos(angle) * r,
-          y: cy + Math.sin(angle) * r,
-        };
-      });
+      let isDueSoon = false;
+      if (topic.next_review_date) {
+        const diff = new Date(topic.next_review_date).getTime() - Date.now();
+        isDueSoon = diff > 0 && diff <= 48 * 60 * 60 * 1000;
+      }
+
+      return {
+        id: topic.id,
+        name: topic.title,
+        masteryScore: topic.mastery_score || 0,
+        orbitState: topic.orbit_state || 1,
+        val: 10 + (topic.mastery_score || 0) / 10,
+        color: getNodeColor(topic.orbit_state, justRescued.includes(topic.id)),
+        physicsMode,
+        isAnimating: justRescued.includes(topic.id),
+        isDueSoon,
+      };
+    });
+  }
+
+  const nodes: Node[] = [anchorNode, ...childNodes];
 
   // Apply custom D3 forces — centering, bounds, Ghost Node physics, and solar system orbit
   useEffect(() => {
@@ -388,13 +375,13 @@ export function ConceptGalaxy({ topics, coursePlanets, profileId, lmsStatus, tot
         graph.d3Force('x', d3.forceX(cx).strength(0.3));
         graph.d3Force('y', d3.forceY(cy).strength(0.3));
         graph.d3Force('radial', d3.forceRadial(orbitRadius, cx, cy).strength((node: any) => {
-          return node.id.startsWith('sun_') ? 0 : 0.8;
+          return node.id === '__anchor__' ? 0 : 0.8;
         }));
         // Keep nodes within viewport
         graph.d3Force('boundary', () => {
           const simNodes = graph.graphData().nodes;
           for (const n of simNodes) {
-            if (n.fx !== undefined) continue; // Skip pinned sun node
+            if (n.fx !== undefined) continue; // Skip pinned anchor node
             if (n.x !== undefined) n.x = Math.max(padding, Math.min(width - padding, n.x));
             if (n.y !== undefined) n.y = Math.max(padding, Math.min(height - padding, n.y));
           }
@@ -462,28 +449,11 @@ export function ConceptGalaxy({ topics, coursePlanets, profileId, lmsStatus, tot
     setShowLoomDock(selectedConstellation.length >= 2);
   }, [selectedConstellation]);
 
-  // Create links
+  // Create links — anchor → each child node (radial hub layout)
   const links: Link[] = [];
 
-  // Solar system orbital links (sun → each assignment)
-  if (expandedPlanet) {
-    const sunId = `sun_${expandedPlanet.courseId}`;
-    for (const topic of visibleTopics) {
-      links.push({ source: sunId, target: topic.id, isConstellation: false });
-    }
-  }
-
-  // Add permanent edges (indigo threads between mastered nodes)
-  const masteredTopicIds = topics.filter(t => t.orbit_state === 2).map(t => t.id);
-  for (const edge of permanentEdges) {
-    // Only render edges between mastered nodes
-    if (masteredTopicIds.includes(edge.source) && masteredTopicIds.includes(edge.target)) {
-      links.push({
-        source: edge.source,
-        target: edge.target,
-        isConstellation: false, // Permanent edges are not constellation threads
-      });
-    }
+  for (const child of childNodes) {
+    links.push({ source: '__anchor__', target: child.id, isConstellation: false });
   }
   
   // Generate all pairs of selected nodes as constellation threads
@@ -505,8 +475,8 @@ export function ConceptGalaxy({ topics, coursePlanets, profileId, lmsStatus, tot
       return;
     }
 
-    // Sun node in solar system view — ignore clicks (decorative center node)
-    if (node.id.startsWith('sun_')) return;
+    // Anchor/sun node — ignore clicks (decorative center node)
+    if (node.id === '__anchor__') return;
 
     // Check if Weave Mode is active OR Shift key is pressed for constellation selection
     if (isWeaveModeActive || event.shiftKey) {
@@ -736,6 +706,42 @@ export function ConceptGalaxy({ topics, coursePlanets, profileId, lmsStatus, tot
         nodeVal="val"
         onNodeClick={handleNodeClick}
           nodeCanvasObject={(node: any, ctx, globalScale) => {
+            // Anchor node — distinct central hub rendering
+            if (node.id === '__anchor__') {
+              const label = node.name;
+              const size = node.val;
+              const fontSize = 13 / globalScale;
+
+              // Outer glow
+              ctx.beginPath();
+              ctx.arc(node.x, node.y, size * 1.6, 0, 2 * Math.PI);
+              ctx.fillStyle = 'rgba(129, 140, 248, 0.08)';
+              ctx.fill();
+
+              // Inner glow
+              ctx.beginPath();
+              ctx.arc(node.x, node.y, size * 1.2, 0, 2 * Math.PI);
+              ctx.fillStyle = 'rgba(129, 140, 248, 0.15)';
+              ctx.fill();
+
+              // Core circle
+              ctx.beginPath();
+              ctx.arc(node.x, node.y, size, 0, 2 * Math.PI);
+              ctx.fillStyle = '#818cf8';
+              ctx.fill();
+              ctx.strokeStyle = 'rgba(255, 255, 255, 0.3)';
+              ctx.lineWidth = 1.5 / globalScale;
+              ctx.stroke();
+
+              // Label
+              ctx.font = `bold ${fontSize}px Inter, system-ui, sans-serif`;
+              ctx.textAlign = 'center';
+              ctx.textBaseline = 'middle';
+              ctx.fillStyle = '#ffffff';
+              ctx.fillText(label, node.x, node.y);
+              return;
+            }
+
             // Custom node rendering with glow effect and pulse animations
             const label = node.name;
             const fontSize = 12 / globalScale;
