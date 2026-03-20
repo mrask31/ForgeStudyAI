@@ -680,14 +680,20 @@ export default function ParentDashboardPage() {
                             method: 'POST',
                             credentials: 'include',
                           })
-                          if (res.ok) {
-                            const data = await res.json()
-                            if (data.url) {
-                              window.location.href = data.url
-                            }
+                          const data = await res.json()
+                          if (!res.ok) {
+                            console.error('[Parent Dashboard] Portal error:', data)
+                            toast.error(data.error || 'Failed to open billing portal')
+                            return
                           }
-                        } catch (error) {
+                          if (data.url) {
+                            window.location.href = data.url
+                          } else {
+                            toast.error('No redirect URL returned from billing portal')
+                          }
+                        } catch (error: any) {
                           console.error('[Parent Dashboard] Failed to open customer portal:', error)
+                          toast.error('Failed to connect to billing. Please try again.')
                         }
                       }}
                       className="inline-flex items-center gap-2 rounded-xl bg-indigo-600 px-4 py-2 text-xs font-semibold text-white hover:bg-indigo-700 transition-colors"
