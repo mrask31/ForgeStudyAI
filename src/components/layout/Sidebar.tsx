@@ -143,7 +143,7 @@ export default function Sidebar({ onNavigate }: SidebarProps = {}) {
                 : pathname === item.href ||
                   pathname.startsWith(item.href + '/') ||
                   (item.href === '/app' && pathname.startsWith('/app')) ||
-                  (item.href === '/classes' && pathname.startsWith('/classes')) ||
+                  (item.href === '/courses' && pathname.startsWith('/courses')) ||
                   (item.href === '/dictionary' && pathname.startsWith('/dictionary'))
               const Icon = item.icon
 
