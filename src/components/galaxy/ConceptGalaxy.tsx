@@ -228,17 +228,16 @@ export function ConceptGalaxy({ topics, coursePlanets, profileId, lmsStatus, tot
     if (!graphRef.current) return;
     const isMobile = dimensions.width < 768;
     const padding = isMobile ? 30 : 50;
-    // Small delay ensures graphData with new nodes has been processed by ForceGraph2D
+    // Small delay ensures graphData with new nodes has been processed
     const t = setTimeout(() => {
       graphRef.current?.d3ReheatSimulation();
-      // Fit immediately then again after simulation settles
+      // Fit multiple times as simulation converges
       graphRef.current?.zoomToFit(300, padding);
-      setTimeout(() => {
-        graphRef.current?.zoomToFit(400, padding);
-      }, 600);
+      setTimeout(() => graphRef.current?.zoomToFit(300, padding), 400);
+      setTimeout(() => graphRef.current?.zoomToFit(400, padding), 900);
     }, 50);
     return () => clearTimeout(t);
-  }, [expandedCourseId]);
+  }, [expandedCourseId, topics.length]);
 
   // Transform topics into graph nodes — planet view or solar system drill-down
   const showPlanetView = hasPlanets && !expandedCourseId;
@@ -349,13 +348,21 @@ export function ConceptGalaxy({ topics, coursePlanets, profileId, lmsStatus, tot
         // Solar system mode: assignment nodes orbit around center
         const cx = width / 2;
         const cy = height / 2;
-        graph.d3Force('x', d3.forceX(cx).strength(0.05));
-        graph.d3Force('y', d3.forceY(cy).strength(0.05));
+        // Strong centering so nodes converge quickly
+        graph.d3Force('x', d3.forceX(cx).strength(0.3));
+        graph.d3Force('y', d3.forceY(cy).strength(0.3));
         graph.d3Force('radial', d3.forceRadial(orbitRadius, cx, cy).strength((node: any) => {
-          // Sun stays pinned (fx/fy), assignments pull to orbit
           return node.id.startsWith('sun_') ? 0 : 0.8;
         }));
-        graph.d3Force('boundary', null);
+        // Keep nodes within viewport
+        graph.d3Force('boundary', () => {
+          const simNodes = graph.graphData().nodes;
+          for (const n of simNodes) {
+            if (n.fx !== undefined) continue; // Skip pinned sun node
+            if (n.x !== undefined) n.x = Math.max(padding, Math.min(width - padding, n.x));
+            if (n.y !== undefined) n.y = Math.max(padding, Math.min(height - padding, n.y));
+          }
+        });
       } else {
         // Normal galaxy mode
         const centerStrength = nodeCount <= 3 ? 0.8 : isMobile ? 0.3 : 0.15;
@@ -678,7 +685,7 @@ export function ConceptGalaxy({ topics, coursePlanets, profileId, lmsStatus, tot
         </div>
       )}
       {canvasReady && <ForceGraph2D
-        key={expandedCourseId ?? 'planets'}
+        /* No key prop — avoid destroying/recreating simulation on drill-down */
         ref={graphRef}
         graphData={{ nodes: graphNodes, links }}
         width={dimensions.width}
