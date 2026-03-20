@@ -285,12 +285,18 @@ export default function ClinicalTutorWorkspace({
 
     openerSentRef.current = true
 
-    const content = topicTitle
-      ? `You're working on **${topicTitle}** — let's dig in. What do you already know about this topic?`
-      : "What would you like to study today? You can ask me about anything from your classes, or tell me what you're working on and we'll figure it out together."
+    let content: string;
+    if (topicTitle && selectedClassName) {
+      content = `You're working on **${topicTitle}** in **${selectedClassName}** — let's dig in. What do you already know about this topic?`;
+    } else if (topicTitle) {
+      content = `You're working on **${topicTitle}** — let's dig in. What do you already know about this topic?`;
+    } else {
+      content = "What would you like to study today? You can ask me about anything from your classes, or tell me what you're working on and we'll figure it out together.";
+    }
 
     setMessages([{ id: crypto.randomUUID(), role: 'assistant', content }])
-  }, [chatId, isLoadingHistory, initialMessages.length, messages.length, topicTitle, setMessages])
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [chatId, isLoadingHistory, initialMessages.length, messages.length])
 
   // Load flagged messages from chat metadata
   useEffect(() => {

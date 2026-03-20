@@ -144,15 +144,22 @@ export async function POST(req: NextRequest) {
       content: msg.content,
     }));
 
-    // Inject topic context as opening exchange when it's the first message and a topic is set
-    if (topicTitle && chatHistory.length === 0) {
-      chatHistory.push({
+    // Inject topic/class context so the AI knows what the student is working on
+    const className = body.className as string | undefined;
+    const selectedClassName = body.selectedClassName as string | undefined;
+    const courseName = selectedClassName || className;
+
+    if (topicTitle || courseName) {
+      const contextParts: string[] = [];
+      if (courseName) contextParts.push(`Course: ${courseName}`);
+      if (topicTitle) contextParts.push(`Topic/Assignment: ${topicTitle}`);
+      chatHistory.unshift({
         role: 'user',
-        content: `I want to study "${topicTitle}". Please help me understand it.`,
+        content: `[CONTEXT] ${contextParts.join(' | ')}. Help me study this.`,
       });
-      chatHistory.push({
-        role: 'assistant',
-        content: `Great! Let's explore "${topicTitle}" together. I'll guide you through it with questions to help you truly understand the material. What do you already know about ${topicTitle}?`,
+      chatHistory.unshift({
+        role: 'assistant' as const,
+        content: `Got it — I have your ${topicTitle ? `"${topicTitle}"` : 'course'} context loaded${courseName ? ` from ${courseName}` : ''}. Let's work through it together.`,
       });
     }
 

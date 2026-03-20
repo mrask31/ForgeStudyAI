@@ -493,28 +493,8 @@ export default function TutorSession({
     setTimeout(scrollToBottom, Math.max(150, delay))
   }
 
-  // Auto-send opening message when session is empty on mount
-  useEffect(() => {
-    if (sessionId) return // existing session — history will load
-    if (openerSetRef.current) return // already set
-
-    const topicTitle = tutorContext.selectedTopic?.title || tutorContext.selectedTopicTitle
-    const topicId = tutorContext.selectedTopicId
-
-    if (topicId && !topicTitle) return // wait for title to load
-
-    openerSetRef.current = true
-
-    if (topicId && topicTitle) {
-      setOpenerMessage(
-        `You're working on "${topicTitle}" — let's dig in. What's your current understanding of this topic? Walk me through the key concepts you've covered so far.`
-      )
-    } else {
-      setOpenerMessage(
-        "What would you like to study today? You can ask me about anything from your classes, or tell me what you're working on and we'll figure it out together."
-      )
-    }
-  }, [sessionId, tutorContext.selectedTopicId, tutorContext.selectedTopicTitle, tutorContext.selectedTopic])
+  // Opening message is handled by ClinicalTutorWorkspace (which is connected to the chat API).
+  // TutorSession no longer sets its own opener to avoid double-send.
 
   const hasMessages = !!sessionId
 
