@@ -220,21 +220,33 @@ export function ConceptGalaxy({ topics, coursePlanets, profileId, lmsStatus, tot
     return () => clearTimeout(timer);
   }, [justRescued]);
   
-  // Fit viewport on mount, node changes, and view switches
+  // Center viewport and fit to nodes — runs on mount, view switches, dimension changes
   useEffect(() => {
-    if (!graphRef.current) return;
+    if (!graphRef.current || !canvasReady) return;
     const isMobile = dimensions.width < 768;
     const padding = isMobile ? 30 : 50;
-    // Small delay ensures graphData with new nodes has been processed
-    const t = setTimeout(() => {
-      graphRef.current?.d3ReheatSimulation();
-      // Fit multiple times as simulation converges
-      graphRef.current?.zoomToFit(300, padding);
-      setTimeout(() => graphRef.current?.zoomToFit(300, padding), 400);
-      setTimeout(() => graphRef.current?.zoomToFit(400, padding), 900);
-    }, 50);
-    return () => clearTimeout(t);
-  }, [expandedCourseId, topics.length]);
+
+    // Immediately center the camera on the canvas midpoint so nodes aren't off-screen
+    graphRef.current.centerAt(dimensions.width / 2, dimensions.height / 2, 0);
+
+    const timers: ReturnType<typeof setTimeout>[] = [];
+    const fit = (delay: number, duration: number) => {
+      timers.push(setTimeout(() => {
+        if (!graphRef.current) return;
+        graphRef.current.centerAt(dimensions.width / 2, dimensions.height / 2, 100);
+        graphRef.current.zoomToFit(duration, padding);
+      }, delay));
+    };
+
+    // Reheat then fit repeatedly as simulation converges
+    timers.push(setTimeout(() => graphRef.current?.d3ReheatSimulation(), 30));
+    fit(50, 200);
+    fit(300, 300);
+    fit(700, 400);
+    fit(1200, 400);
+
+    return () => timers.forEach(clearTimeout);
+  }, [expandedCourseId, topics.length, canvasReady, dimensions.width, dimensions.height]);
 
   // Transform topics into graph nodes — planet view or solar system drill-down
   const showPlanetView = hasPlanets && !expandedCourseId;
@@ -798,9 +810,9 @@ export function ConceptGalaxy({ topics, coursePlanets, profileId, lmsStatus, tot
           cooldownTicks={60}
           onEngineStop={() => {
             if (graphRef.current) {
-              // On mobile use tighter padding so nodes fill the smaller screen
               const isMobile = dimensions.width < 768;
               const padding = isMobile ? 30 : 50;
+              graphRef.current.centerAt(dimensions.width / 2, dimensions.height / 2, 200);
               graphRef.current.zoomToFit(400, padding);
             }
           }}
