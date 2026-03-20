@@ -232,7 +232,7 @@ export function ConceptGalaxy({ topics, coursePlanets, profileId, lmsStatus, tot
     return () => clearTimeout(t);
   }, [expandedCourseId]);
 
-  // Transform topics into graph nodes — planet view or topic view
+  // Transform topics into graph nodes — planet view or solar system drill-down
   const showPlanetView = hasPlanets && !expandedCourseId;
   const expandedPlanet = expandedCourseId ? coursePlanets?.find(p => p.courseId === expandedCourseId) : null;
   const visibleTopics = expandedPlanet ? expandedPlanet.topics.map(t => ({
@@ -245,18 +245,56 @@ export function ConceptGalaxy({ topics, coursePlanets, profileId, lmsStatus, tot
     last_studied_at: t.last_studied_at,
   })) : topics;
 
+  const isMobileCanvas = dimensions.width > 0 && dimensions.width < 768;
+  const orbitRadius = isMobileCanvas ? 110 : 175;
+
   const nodes: Node[] = showPlanetView
     ? (coursePlanets || []).map(planet => ({
         id: `planet_${planet.courseId}`,
         name: planet.courseName,
         masteryScore: planet.avgMastery,
         orbitState: 1,
-        val: 12 + planet.topicCount * 3, // Size based on topic count
+        val: 12 + planet.topicCount * 3,
         color: planet.avgMastery >= 70 ? '#6366f1' : planet.avgMastery >= 30 ? '#f59e0b' : '#64748b',
         physicsMode: 'mastered' as const,
         isAnimating: false,
         isDueSoon: false,
       }))
+    : expandedPlanet
+    ? // Solar system: center sun + orbiting assignment nodes
+      [
+        // Sun node (course planet) — pinned to center
+        {
+          id: `sun_${expandedPlanet.courseId}`,
+          name: expandedPlanet.courseName,
+          masteryScore: expandedPlanet.avgMastery,
+          orbitState: 1,
+          val: 20 + expandedPlanet.topicCount * 2,
+          color: expandedPlanet.avgMastery >= 70 ? '#6366f1' : expandedPlanet.avgMastery >= 30 ? '#f59e0b' : '#64748b',
+          physicsMode: 'mastered' as const,
+          isAnimating: false,
+          isDueSoon: false,
+          fx: dimensions.width / 2,
+          fy: dimensions.height / 2,
+        } as any,
+        // Assignment nodes — positioned in orbit
+        ...visibleTopics.map((topic, i) => {
+          const angle = (2 * Math.PI * i) / visibleTopics.length - Math.PI / 2;
+          return {
+            id: topic.id,
+            name: topic.title,
+            masteryScore: topic.mastery_score || 0,
+            orbitState: topic.orbit_state || 1,
+            val: 10 + (topic.mastery_score || 0) / 10,
+            color: getNodeColor(topic.orbit_state, justRescued.includes(topic.id)),
+            physicsMode: 'mastered' as const,
+            isAnimating: false,
+            isDueSoon: topic.next_review_date ? (new Date(topic.next_review_date).getTime() - Date.now()) <= 48 * 60 * 60 * 1000 : false,
+            x: dimensions.width / 2 + Math.cos(angle) * orbitRadius,
+            y: dimensions.height / 2 + Math.sin(angle) * orbitRadius,
+          };
+        }),
+      ]
     : visibleTopics.map(topic => {
         let physicsMode: 'mastered' | 'ghost' | 'snapBack';
         if (justRescued.includes(topic.id)) {
@@ -286,7 +324,7 @@ export function ConceptGalaxy({ topics, coursePlanets, profileId, lmsStatus, tot
         };
       });
 
-  // Apply custom D3 forces — centering, bounds, and Ghost Node physics
+  // Apply custom D3 forces — centering, bounds, Ghost Node physics, and solar system orbit
   useEffect(() => {
     if (!graphRef.current) return;
 
@@ -299,40 +337,53 @@ export function ConceptGalaxy({ topics, coursePlanets, profileId, lmsStatus, tot
     try {
       const d3 = require('d3-force');
 
-      // forceX/forceY: keep nodes centered. Stronger on mobile and for tiny graphs.
-      const centerStrength = nodeCount <= 3 ? 0.8 : isMobile ? 0.3 : 0.15;
-      graph.d3Force('x', d3.forceX(width / 2).strength(centerStrength));
-      graph.d3Force('y', d3.forceY(height / 2).strength(centerStrength));
+      if (expandedPlanet) {
+        // Solar system mode: assignment nodes orbit around center
+        const cx = width / 2;
+        const cy = height / 2;
+        graph.d3Force('x', d3.forceX(cx).strength(0.05));
+        graph.d3Force('y', d3.forceY(cy).strength(0.05));
+        graph.d3Force('radial', d3.forceRadial(orbitRadius, cx, cy).strength((node: any) => {
+          // Sun stays pinned (fx/fy), assignments pull to orbit
+          return node.id.startsWith('sun_') ? 0 : 0.8;
+        }));
+        graph.d3Force('boundary', null);
+      } else {
+        // Normal galaxy mode
+        const centerStrength = nodeCount <= 3 ? 0.8 : isMobile ? 0.3 : 0.15;
+        graph.d3Force('x', d3.forceX(width / 2).strength(centerStrength));
+        graph.d3Force('y', d3.forceY(height / 2).strength(centerStrength));
 
-      // Boundary force: hard clamp so no node escapes the visible canvas.
-      graph.d3Force('boundary', () => {
-        const simNodes = graph.graphData().nodes;
-        for (const n of simNodes) {
-          if (n.x !== undefined) n.x = Math.max(padding, Math.min(width - padding, n.x));
-          if (n.y !== undefined) n.y = Math.max(padding, Math.min(height - padding, n.y));
-        }
-      });
+        // Boundary force: hard clamp so no node escapes the visible canvas.
+        graph.d3Force('boundary', () => {
+          const simNodes = graph.graphData().nodes;
+          for (const n of simNodes) {
+            if (n.x !== undefined) n.x = Math.max(padding, Math.min(width - padding, n.x));
+            if (n.y !== undefined) n.y = Math.max(padding, Math.min(height - padding, n.y));
+          }
+        });
 
-      // Radial force for Ghost Node physics (drift / snap-back).
-      graph.d3Force('radial', d3.forceRadial((node: Node) => {
-        if (node.physicsMode === 'snapBack') {
-          return 2.0 * 100; // Very strong pull to center (snap-back)
-        } else if (node.physicsMode === 'ghost') {
-          return -0.3 * 100; // Weak push to rim (drift away)
-        } else {
-          return 0.5 * 100; // Normal pull to center
-        }
-      }));
+        // Radial force for Ghost Node physics (drift / snap-back).
+        graph.d3Force('radial', d3.forceRadial((node: Node) => {
+          if (node.physicsMode === 'snapBack') {
+            return 2.0 * 100;
+          } else if (node.physicsMode === 'ghost') {
+            return -0.3 * 100;
+          } else {
+            return 0.5 * 100;
+          }
+        }));
+      }
 
       // Reheat simulation when physics mode changes or canvas resizes.
-      if (justRescued.length > 0) {
+      if (justRescued.length > 0 || expandedPlanet) {
         graph.d3ReheatSimulation();
       }
     } catch (error) {
       console.error('[Galaxy] Failed to apply custom forces:', error);
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [justRescued, dimensions.width, dimensions.height, nodes.length]);
+  }, [justRescued, dimensions.width, dimensions.height, nodes.length, expandedCourseId]);
 
   // Continuous repaint for pulse animations (lightweight — only triggers canvas redraw)
   useEffect(() => {
@@ -355,9 +406,17 @@ export function ConceptGalaxy({ topics, coursePlanets, profileId, lmsStatus, tot
     setShowLoomDock(selectedConstellation.length >= 2);
   }, [selectedConstellation]);
 
-  // Create constellation links (native canvas approach)
+  // Create links
   const links: Link[] = [];
-  
+
+  // Solar system orbital links (sun → each assignment)
+  if (expandedPlanet) {
+    const sunId = `sun_${expandedPlanet.courseId}`;
+    for (const topic of visibleTopics) {
+      links.push({ source: sunId, target: topic.id, isConstellation: false });
+    }
+  }
+
   // Add permanent edges (indigo threads between mastered nodes)
   const masteredTopicIds = topics.filter(t => t.orbit_state === 2).map(t => t.id);
   for (const edge of permanentEdges) {
@@ -383,12 +442,15 @@ export function ConceptGalaxy({ topics, coursePlanets, profileId, lmsStatus, tot
   }
 
   const handleNodeClick = (node: any, event: MouseEvent) => {
-    // Planet click → expand to show assignment topics
+    // Planet click → immediately drill down to solar system view
     if (showPlanetView && node.id.startsWith('planet_')) {
       const courseId = node.id.replace('planet_', '');
       setExpandedCourseId(courseId);
       return;
     }
+
+    // Sun node in solar system view — ignore clicks (it's decorative)
+    if (node.id.startsWith('sun_')) return;
 
     // Check if Weave Mode is active OR Shift key is pressed for constellation selection
     if (isWeaveModeActive || event.shiftKey) {

@@ -193,7 +193,7 @@ export default function GalaxyPage() {
       )}
 
       {/* Top Left HUD - Title & Legend (Hidden on mobile) */}
-      <div className="hidden md:block absolute top-6 left-6 z-40 bg-slate-900/40 backdrop-blur-md border border-slate-700/50 rounded-xl shadow-2xl p-6 max-w-md">
+      <div className="hidden md:block absolute top-6 left-6 z-50 pointer-events-auto bg-slate-900/70 backdrop-blur-md border border-slate-700/50 rounded-xl shadow-2xl p-6 max-w-xs lg:max-w-sm">
         <div className="flex items-center gap-3 mb-4">
           <Sparkles className="w-6 h-6 text-indigo-400" />
           <h1 className="text-2xl font-bold text-white">
