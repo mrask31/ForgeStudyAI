@@ -69,12 +69,9 @@ export function ConceptGalaxy({ topics, coursePlanets, profileId, lmsStatus, tot
   const router = useRouter();
   const graphRef = useRef<any>();
   const containerRef = useRef<HTMLDivElement>(null);
-  // Initialize with window dimensions for instant first render (avoids "Initializing galaxy..." delay)
-  const [dimensions, setDimensions] = useState(() => ({
-    width: typeof window !== 'undefined' ? window.innerWidth : 800,
-    height: typeof window !== 'undefined' ? window.innerHeight : 600,
-  }));
-  const [canvasReady, setCanvasReady] = useState(() => typeof window !== 'undefined' && window.innerWidth > 0);
+  // Initialize with conservative dimensions — ResizeObserver will correct to actual container size
+  const [dimensions, setDimensions] = useState({ width: 800, height: 600 });
+  const [canvasReady, setCanvasReady] = useState(false);
 
   // Course planet expansion — null = show planets, string = show that course's topics
   const [expandedCourseId, setExpandedCourseId] = useState<string | null>(null);
@@ -269,39 +266,47 @@ export function ConceptGalaxy({ topics, coursePlanets, profileId, lmsStatus, tot
       }))
     : expandedPlanet
     ? // Solar system: center sun + orbiting assignment nodes
-      [
-        // Sun node (course planet) — pinned to center
-        {
-          id: `sun_${expandedPlanet.courseId}`,
-          name: expandedPlanet.courseName,
-          masteryScore: expandedPlanet.avgMastery,
-          orbitState: 1,
-          val: 20 + expandedPlanet.topicCount * 2,
-          color: expandedPlanet.avgMastery >= 70 ? '#6366f1' : expandedPlanet.avgMastery >= 30 ? '#f59e0b' : '#64748b',
-          physicsMode: 'mastered' as const,
-          isAnimating: false,
-          isDueSoon: false,
-          fx: dimensions.width / 2,
-          fy: dimensions.height / 2,
-        } as any,
-        // Assignment nodes — positioned in orbit
-        ...visibleTopics.map((topic, i) => {
-          const angle = (2 * Math.PI * i) / visibleTopics.length - Math.PI / 2;
-          return {
-            id: topic.id,
-            name: topic.title,
-            masteryScore: topic.mastery_score || 0,
-            orbitState: topic.orbit_state || 1,
-            val: 10 + (topic.mastery_score || 0) / 10,
-            color: getNodeColor(topic.orbit_state, justRescued.includes(topic.id)),
+      // All nodes use fx/fy to pin to exact positions based on current container dimensions
+      (() => {
+        const cx = dimensions.width / 2;
+        const cy = dimensions.height / 2;
+        // Scale orbit radius to fit within the container (use smaller of width/height)
+        const maxRadius = Math.min(dimensions.width, dimensions.height) * 0.3;
+        const effectiveRadius = Math.min(orbitRadius, maxRadius);
+        return [
+          // Sun node — pinned to center
+          {
+            id: `sun_${expandedPlanet.courseId}`,
+            name: expandedPlanet.courseName,
+            masteryScore: expandedPlanet.avgMastery,
+            orbitState: 1,
+            val: 20 + expandedPlanet.topicCount * 2,
+            color: expandedPlanet.avgMastery >= 70 ? '#6366f1' : expandedPlanet.avgMastery >= 30 ? '#f59e0b' : '#64748b',
             physicsMode: 'mastered' as const,
             isAnimating: false,
-            isDueSoon: topic.next_review_date ? (new Date(topic.next_review_date).getTime() - Date.now()) <= 48 * 60 * 60 * 1000 : false,
-            x: dimensions.width / 2 + Math.cos(angle) * orbitRadius,
-            y: dimensions.height / 2 + Math.sin(angle) * orbitRadius,
-          };
-        }),
-      ]
+            isDueSoon: false,
+            fx: cx,
+            fy: cy,
+          } as any,
+          // Assignment nodes — pinned in orbit around center
+          ...visibleTopics.map((topic, i) => {
+            const angle = (2 * Math.PI * i) / visibleTopics.length - Math.PI / 2;
+            return {
+              id: topic.id,
+              name: topic.title,
+              masteryScore: topic.mastery_score || 0,
+              orbitState: topic.orbit_state || 1,
+              val: 10 + (topic.mastery_score || 0) / 10,
+              color: getNodeColor(topic.orbit_state, justRescued.includes(topic.id)),
+              physicsMode: 'mastered' as const,
+              isAnimating: false,
+              isDueSoon: topic.next_review_date ? (new Date(topic.next_review_date).getTime() - Date.now()) <= 48 * 60 * 60 * 1000 : false,
+              fx: cx + Math.cos(angle) * effectiveRadius,
+              fy: cy + Math.sin(angle) * effectiveRadius,
+            };
+          }),
+        ];
+      })()
     : visibleTopics.map(topic => {
         let physicsMode: 'mastered' | 'ghost' | 'snapBack';
         if (justRescued.includes(topic.id)) {
