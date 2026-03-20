@@ -264,18 +264,30 @@ export function ConceptGalaxy({ topics, coursePlanets, profileId, lmsStatus, tot
   const isMobileCanvas = dimensions.width > 0 && dimensions.width < 768;
   const orbitRadius = isMobileCanvas ? 110 : 175;
 
+  // Center point for positioning nodes
+  const cx = dimensions.width / 2;
+  const cy = dimensions.height / 2;
+
   const nodes: Node[] = showPlanetView
-    ? (coursePlanets || []).map(planet => ({
-        id: `planet_${planet.courseId}`,
-        name: planet.courseName,
-        masteryScore: planet.avgMastery,
-        orbitState: 1,
-        val: 12 + planet.topicCount * 3,
-        color: planet.avgMastery >= 70 ? '#6366f1' : planet.avgMastery >= 30 ? '#f59e0b' : '#64748b',
-        physicsMode: 'mastered' as const,
-        isAnimating: false,
-        isDueSoon: false,
-      }))
+    ? (coursePlanets || []).map((planet, i, arr) => {
+        // Distribute planets in a circle around center
+        const angle = (2 * Math.PI * i) / arr.length - Math.PI / 2;
+        const spread = Math.min(dimensions.width, dimensions.height) * 0.25;
+        const r = arr.length === 1 ? 0 : spread;
+        return {
+          id: `planet_${planet.courseId}`,
+          name: planet.courseName,
+          masteryScore: planet.avgMastery,
+          orbitState: 1,
+          val: 12 + planet.topicCount * 3,
+          color: planet.avgMastery >= 70 ? '#6366f1' : planet.avgMastery >= 30 ? '#f59e0b' : '#64748b',
+          physicsMode: 'mastered' as const,
+          isAnimating: false,
+          isDueSoon: false,
+          x: cx + Math.cos(angle) * r,
+          y: cy + Math.sin(angle) * r,
+        };
+      })
     : expandedPlanet
     ? // Solar system: center sun + orbiting assignment nodes
       // All nodes use fx/fy to pin to exact positions based on current container dimensions
@@ -319,7 +331,7 @@ export function ConceptGalaxy({ topics, coursePlanets, profileId, lmsStatus, tot
           }),
         ];
       })()
-    : visibleTopics.map(topic => {
+    : visibleTopics.map((topic, i, arr) => {
         let physicsMode: 'mastered' | 'ghost' | 'snapBack';
         if (justRescued.includes(topic.id)) {
           physicsMode = 'snapBack';
@@ -335,6 +347,11 @@ export function ConceptGalaxy({ topics, coursePlanets, profileId, lmsStatus, tot
           isDueSoon = diff > 0 && diff <= 48 * 60 * 60 * 1000;
         }
 
+        // Start nodes near center in a circle — forces will adjust from here
+        const angle = (2 * Math.PI * i) / arr.length - Math.PI / 2;
+        const spread = Math.min(dimensions.width, dimensions.height) * 0.2;
+        const r = arr.length === 1 ? 0 : spread;
+
         return {
           id: topic.id,
           name: topic.title,
@@ -345,6 +362,8 @@ export function ConceptGalaxy({ topics, coursePlanets, profileId, lmsStatus, tot
           physicsMode,
           isAnimating: justRescued.includes(topic.id),
           isDueSoon,
+          x: cx + Math.cos(angle) * r,
+          y: cy + Math.sin(angle) * r,
         };
       });
 
@@ -381,10 +400,15 @@ export function ConceptGalaxy({ topics, coursePlanets, profileId, lmsStatus, tot
           }
         });
       } else {
-        // Normal galaxy mode
-        const centerStrength = nodeCount <= 3 ? 0.8 : isMobile ? 0.3 : 0.15;
+        // Normal galaxy mode — stronger centering for small graphs
+        const centerStrength = nodeCount <= 3 ? 0.8 : nodeCount <= 6 ? 0.4 : isMobile ? 0.3 : 0.15;
         graph.d3Force('x', d3.forceX(width / 2).strength(centerStrength));
         graph.d3Force('y', d3.forceY(height / 2).strength(centerStrength));
+
+        // Reduce charge repulsion for small graphs to prevent corner scatter
+        if (nodeCount <= 5) {
+          graph.d3Force('charge', d3.forceManyBody().strength(-30));
+        }
 
         // Boundary force: hard clamp so no node escapes the visible canvas.
         graph.d3Force('boundary', () => {
