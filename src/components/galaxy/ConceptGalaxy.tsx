@@ -37,8 +37,8 @@ interface ConceptGalaxyProps {
   onDrillDownChange?: (isInDrillDown: boolean) => void;
 }
 
-const ORBIT_RADIUS = 160; // px — constant, not dynamically calculated
-const ORBIT_RADIUS_MOBILE = 100;
+const ORBIT_RADIUS = 200; // px — constant, room for pill-shaped nodes
+const ORBIT_RADIUS_MOBILE = 130;
 
 function getNodeColor(orbitState: number): string {
   if (orbitState === 3) return '#94a3b8';
@@ -233,12 +233,12 @@ export function ConceptGalaxy({ topics, coursePlanets, studentName, profileId, l
       >
         <div className="relative flex items-center justify-center">
           {/* Outer glow */}
-          <div className="absolute w-32 h-32 rounded-full bg-indigo-500/5" />
+          <div className="absolute rounded-full bg-indigo-500/5" style={{ width: 120, height: 120, top: '50%', left: '50%', transform: 'translate(-50%, -50%)' }} />
           {/* Inner glow */}
-          <div className="absolute w-24 h-24 rounded-full bg-indigo-500/10" />
-          {/* Core */}
-          <div className="w-20 h-20 rounded-full bg-indigo-400 border-2 border-white/20 flex items-center justify-center shadow-lg shadow-indigo-500/20 z-10">
-            <span className="text-white font-bold text-sm text-center leading-tight px-1 truncate max-w-[72px]">
+          <div className="absolute rounded-full bg-indigo-500/10" style={{ width: 96, height: 96, top: '50%', left: '50%', transform: 'translate(-50%, -50%)' }} />
+          {/* Core — pill shape to fit long names */}
+          <div className="bg-indigo-400 border-2 border-white/20 flex items-center justify-center shadow-lg shadow-indigo-500/20 z-10 rounded-full px-5 py-3 min-w-[80px]">
+            <span className="text-white font-bold text-sm text-center leading-tight whitespace-nowrap">
               {anchorLabel}
             </span>
           </div>
@@ -250,7 +250,6 @@ export function ConceptGalaxy({ topics, coursePlanets, studentName, profileId, l
         const angle = (i / orbitItems.length) * 2 * Math.PI - Math.PI / 2;
         const offsetX = Math.cos(angle) * radius;
         const offsetY = Math.sin(angle) * radius;
-        const nodeSize = Math.min(item.size, 56);
 
         return (
           <button
@@ -265,30 +264,24 @@ export function ConceptGalaxy({ topics, coursePlanets, studentName, profileId, l
           >
             {/* Glow ring */}
             <div
-              className="absolute inset-0 rounded-full opacity-30 group-hover:opacity-50 transition-opacity"
-              style={{
-                backgroundColor: item.color,
-                filter: 'blur(8px)',
-                margin: '-4px',
-              }}
+              className="absolute inset-[-6px] rounded-full opacity-25 group-hover:opacity-50 transition-opacity"
+              style={{ backgroundColor: item.color, filter: 'blur(10px)' }}
             />
-            {/* Node circle */}
+            {/* Node — pill shape to fit full title */}
             <div
-              className="relative rounded-full flex items-center justify-center border border-white/10 shadow-lg"
+              className="relative rounded-full flex items-center justify-center border border-white/10 shadow-lg px-4 py-2 min-w-[60px]"
               style={{
-                width: nodeSize,
-                height: nodeSize,
                 backgroundColor: item.color,
                 opacity: item.orbitState === 3 ? 0.5 : 1,
               }}
             >
-              <span className="text-white text-[10px] font-medium text-center leading-tight px-1 truncate max-w-[48px]">
+              <span className="text-white text-xs font-medium text-center leading-tight whitespace-nowrap">
                 {item.label}
               </span>
             </div>
             {/* Mastery badge */}
-            <div className="absolute -bottom-5 left-1/2 -translate-x-1/2 whitespace-nowrap">
-              <span className="text-[9px] text-slate-400">{item.mastery}%</span>
+            <div className="absolute -bottom-4 left-1/2 -translate-x-1/2 whitespace-nowrap">
+              <span className="text-[10px] text-slate-400">{item.mastery}%</span>
             </div>
           </button>
         );

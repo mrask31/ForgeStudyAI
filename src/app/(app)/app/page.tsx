@@ -198,8 +198,8 @@ export default function GalaxyPage() {
         </div>
       )}
 
-      {/* Top Left HUD - Title & Legend (Hidden on mobile, compact to avoid canvas overlap) */}
-      <div className="hidden md:block absolute top-4 left-4 z-50 pointer-events-auto bg-slate-900/80 backdrop-blur-md border border-slate-700/50 rounded-xl shadow-2xl p-4 max-w-[280px]">
+      {/* Top Left HUD - Title & Legend (Hidden on mobile and during drill-down to avoid overlap with back button) */}
+      <div className={`hidden md:block absolute top-4 left-4 z-50 pointer-events-auto bg-slate-900/80 backdrop-blur-md border border-slate-700/50 rounded-xl shadow-2xl p-4 max-w-[240px] ${isGalaxyDrillDown ? 'md:hidden' : ''}`}>
         <div className="flex items-center gap-2 mb-2">
           <Sparkles className="w-5 h-5 text-indigo-400" />
           <h1 className="text-lg font-bold text-white">
