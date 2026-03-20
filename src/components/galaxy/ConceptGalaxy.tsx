@@ -413,35 +413,34 @@ export function ConceptGalaxy({ topics, coursePlanets, studentName, profileId, l
           }
         });
       } else {
-        // Normal galaxy mode — stronger centering for small graphs
-        const centerStrength = nodeCount <= 3 ? 0.8 : nodeCount <= 6 ? 0.4 : isMobile ? 0.3 : 0.15;
-        graph.d3Force('x', d3.forceX(width / 2).strength(centerStrength));
-        graph.d3Force('y', d3.forceY(height / 2).strength(centerStrength));
+        // Normal galaxy mode — radial orbit around center
+        const gcx = width / 2;
+        const gcy = height / 2;
+        const galaxyOrbit = Math.min(width, height) * 0.3;
 
-        // Reduce charge repulsion for small graphs to prevent corner scatter
-        if (nodeCount <= 5) {
-          graph.d3Force('charge', d3.forceManyBody().strength(-30));
-        }
+        // Center force pulls everything toward center
+        graph.d3Force('x', d3.forceX(gcx).strength(0.15));
+        graph.d3Force('y', d3.forceY(gcy).strength(0.15));
 
-        // Boundary force: hard clamp so no node escapes the visible canvas.
+        // Radial force: keep non-anchor nodes at orbit radius from center
+        graph.d3Force('radial', d3.forceRadial(galaxyOrbit, gcx, gcy).strength((node: any) => {
+          if (node.id === '__anchor__') return 0; // Anchor is pinned with fx/fy
+          if (node.physicsMode === 'ghost') return 0.3; // Ghosts drift outward
+          return 0.6; // Normal orbit strength
+        }));
+
+        // Gentle charge to spread nodes along the orbit
+        graph.d3Force('charge', d3.forceManyBody().strength(-40));
+
+        // Boundary clamp
         graph.d3Force('boundary', () => {
           const simNodes = graph.graphData().nodes;
           for (const n of simNodes) {
+            if (n.fx !== undefined) continue;
             if (n.x !== undefined) n.x = Math.max(padding, Math.min(width - padding, n.x));
             if (n.y !== undefined) n.y = Math.max(padding, Math.min(height - padding, n.y));
           }
         });
-
-        // Radial force for Ghost Node physics (drift / snap-back).
-        graph.d3Force('radial', d3.forceRadial((node: Node) => {
-          if (node.physicsMode === 'snapBack') {
-            return 2.0 * 100;
-          } else if (node.physicsMode === 'ghost') {
-            return -0.3 * 100;
-          } else {
-            return 0.5 * 100;
-          }
-        }));
       }
 
       // Reheat simulation when physics mode changes or canvas resizes.
@@ -691,16 +690,8 @@ export function ConceptGalaxy({ topics, coursePlanets, studentName, profileId, l
     );
   }
 
-  // On mobile with 1-2 nodes, skip physics and place nodes manually in the center
-  const isMobileView = dimensions.width > 0 && dimensions.width < 768;
-  const useManualLayout = isMobileView && nodes.length <= 2 && dimensions.width > 0;
-  const graphNodes = useManualLayout
-    ? nodes.map((node, i) => ({
-        ...node,
-        fx: dimensions.width / 2 + (nodes.length === 2 ? (i === 0 ? -80 : 80) : 0),
-        fy: dimensions.height / 2,
-      }))
-    : nodes;
+  // Nodes already have radial positions from the layout above — use as-is
+  const graphNodes = nodes;
 
   return (
     <div ref={containerRef} className="w-full h-full relative overflow-hidden">
