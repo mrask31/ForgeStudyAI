@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback, useMemo } from 'react'
 import { getSupabaseBrowser } from '@/lib/supabase/client'
+import type { AuthChangeEvent, Session } from '@supabase/supabase-js'
 import { useRouter } from 'next/navigation'
 import { Mail, Lock, ArrowRight, Loader2, CheckCircle, MessageSquare, BookOpen, GraduationCap, Shield, Sparkles } from 'lucide-react'
 import Link from 'next/link'
@@ -89,7 +90,7 @@ export default function SignupClient() {
     let pollInterval: NodeJS.Timeout | null = null
 
     // Listen for auth state changes (works for same device/tab)
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event: AuthChangeEvent, session: Session | null) => {
       if (event === 'SIGNED_IN' && session?.user) {
         console.log('[Signup] Auth state change: SIGNED_IN, redirecting to /parent')
         await checkAuthAndRedirect()
