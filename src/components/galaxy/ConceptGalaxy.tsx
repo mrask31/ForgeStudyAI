@@ -69,8 +69,12 @@ export function ConceptGalaxy({ topics, coursePlanets, profileId, lmsStatus, tot
   const router = useRouter();
   const graphRef = useRef<any>();
   const containerRef = useRef<HTMLDivElement>(null);
-  const [dimensions, setDimensions] = useState({ width: 0, height: 0 });
-  const [canvasReady, setCanvasReady] = useState(false);
+  // Initialize with window dimensions for instant first render (avoids "Initializing galaxy..." delay)
+  const [dimensions, setDimensions] = useState(() => ({
+    width: typeof window !== 'undefined' ? window.innerWidth : 800,
+    height: typeof window !== 'undefined' ? window.innerHeight : 600,
+  }));
+  const [canvasReady, setCanvasReady] = useState(() => typeof window !== 'undefined' && window.innerWidth > 0);
 
   // Course planet expansion — null = show planets, string = show that course's topics
   const [expandedCourseId, setExpandedCourseId] = useState<string | null>(null);
@@ -442,21 +446,21 @@ export function ConceptGalaxy({ topics, coursePlanets, profileId, lmsStatus, tot
   }
 
   const handleNodeClick = (node: any, event: MouseEvent) => {
-    // Planet click → immediately drill down to solar system view
-    if (showPlanetView && node.id.startsWith('planet_')) {
+    // Course planet click → always drill down (never open FocusPanel)
+    if (node.id.startsWith('planet_')) {
       const courseId = node.id.replace('planet_', '');
       setExpandedCourseId(courseId);
       return;
     }
 
-    // Sun node in solar system view — ignore clicks (it's decorative)
+    // Sun node in solar system view — ignore clicks (decorative center node)
     if (node.id.startsWith('sun_')) return;
 
     // Check if Weave Mode is active OR Shift key is pressed for constellation selection
     if (isWeaveModeActive || event.shiftKey) {
       handleConstellationSelection(node);
     } else {
-      // Open Focus Panel — look up full topic data
+      // Open Focus Panel for assignment/topic nodes only
       const topic = (expandedPlanet ? visibleTopics : topics).find(t => t.id === node.id);
       setFocusPanelState({
         isOpen: true,
@@ -786,10 +790,10 @@ export function ConceptGalaxy({ topics, coursePlanets, profileId, lmsStatus, tot
           }}
         />}
       
-      {/* Reset View button — re-fits all nodes into the viewport */}
+      {/* Reset View button — bottom-right to avoid top-right HUD overlap */}
       <button
         onClick={() => graphRef.current?.zoomToFit(400, dimensions.width < 768 ? 30 : 50)}
-        className="absolute top-4 right-4 z-30 px-3 py-2 rounded-xl text-sm font-medium transition-all shadow-xl backdrop-blur-md border min-h-[44px] min-w-[44px] bg-slate-900/60 border-slate-700/50 text-slate-300 hover:bg-slate-800/60"
+        className="absolute bottom-4 right-4 z-30 px-3 py-2 rounded-xl text-sm font-medium transition-all shadow-xl backdrop-blur-md border min-h-[44px] min-w-[44px] bg-slate-900/60 border-slate-700/50 text-slate-300 hover:bg-slate-800/60"
         title="Reset view to show all nodes"
       >
         <span className="flex items-center gap-1.5">
@@ -798,10 +802,10 @@ export function ConceptGalaxy({ topics, coursePlanets, profileId, lmsStatus, tot
         </span>
       </button>
 
-      {/* Weave Mode Toggle - Floating button for touch devices */}
+      {/* Weave Mode Toggle - Positioned below the page-level top-right HUD */}
       <button
         onClick={() => setIsWeaveModeActive(!isWeaveModeActive)}
-        className={`absolute top-16 md:top-[4.5rem] right-2 md:right-6 z-50 px-3 md:px-4 py-2 rounded-xl text-sm font-medium transition-all shadow-2xl backdrop-blur-md border min-h-[44px] min-w-[44px] ${
+        className={`absolute top-[4.5rem] md:top-24 right-2 md:right-6 z-30 px-3 md:px-4 py-2 rounded-xl text-sm font-medium transition-all shadow-2xl backdrop-blur-md border min-h-[44px] min-w-[44px] ${
           isWeaveModeActive
             ? 'bg-amber-600/90 border-amber-500/50 text-white'
             : 'bg-slate-900/60 border-slate-700/50 text-slate-300 hover:bg-slate-800/60'

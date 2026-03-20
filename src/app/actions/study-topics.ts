@@ -135,14 +135,16 @@ export async function getTopicsGroupedByCourse(profileId: string): Promise<Cours
 
   const assignmentMap = new Map((assignments || []).map(a => [a.id, { courseId: a.course_id, courseName: a.course_name }]));
 
-  // Group topics by course
+  // Group topics by course — only include topics linked to a real course
   const courseMap = new Map<string, CoursePlanet>();
   for (const topic of topics) {
     const courseInfo = topic.synced_assignment_id ? assignmentMap.get(topic.synced_assignment_id) : null;
-    // Unlinked topics use their own title as the planet label (e.g. "Honors Physics").
-    // Only fall back to "Other Topics" if the title is somehow empty.
-    const courseId = courseInfo?.courseId ?? `unlinked_${topic.title || topic.id}`;
-    const courseName = courseInfo?.courseName ?? (topic.title || 'Other Topics');
+
+    // Skip topics with no course linkage — they don't belong in the planet view
+    if (!courseInfo?.courseId || !courseInfo?.courseName) continue;
+
+    const courseId = courseInfo.courseId;
+    const courseName = courseInfo.courseName;
 
     if (!courseMap.has(courseId)) {
       courseMap.set(courseId, { courseId, courseName, topicCount: 0, avgMastery: 0, topics: [] });
