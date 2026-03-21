@@ -273,28 +273,20 @@ export default function ClinicalTutorWorkspace({
   }, [initialMessages, isLoadingHistory, setMessages]);
 
   // Auto-opening message for new sessions with no history
+  // Skip if topic context is present — the pre-filled prompt will be the first message
   useEffect(() => {
-    // If a chatId exists, wait until history has finished loading
     if (chatId && isLoadingHistory) return
-    // Don't fire more than once
     if (openerSentRef.current) return
-    // Don't fire if there's already history
     if (initialMessages.length > 0) return
-    // Don't fire if messages already present (e.g. from a previous render)
     if (messages.length > 0) return
+    // Don't show opener when topic is set — the user's pre-filled prompt handles the intro
+    if (topicTitle) return
 
     openerSentRef.current = true
 
-    let content: string;
-    if (topicTitle && selectedClassName) {
-      content = `You're working on **${topicTitle}** in **${selectedClassName}** — let's dig in. What do you already know about this topic?`;
-    } else if (topicTitle) {
-      content = `You're working on **${topicTitle}** — let's dig in. What do you already know about this topic?`;
-    } else {
-      content = "What would you like to study today? You can ask me about anything from your classes, or tell me what you're working on and we'll figure it out together.";
-    }
-
-    setMessages([{ id: crypto.randomUUID(), role: 'assistant', content }])
+    setMessages([{ id: crypto.randomUUID(), role: 'assistant', content:
+      "What would you like to study today? You can ask me about anything from your classes, or tell me what you're working on and we'll figure it out together."
+    }])
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [chatId, isLoadingHistory, initialMessages.length, messages.length])
 
@@ -463,22 +455,11 @@ export default function ClinicalTutorWorkspace({
         return
       }
       
-      // If chatId matches OR if we don't have a chatId yet (session just created), handle the message
-      // This allows the message to be processed even during component re-initialization
-      if (message && (eventSessionId === chatId || (!chatId && eventSessionId))) {
+      // Accept the message if chatId matches OR if no chatId yet (session just created)
+      if (message && (eventSessionId === chatId || !chatId)) {
         processedMessagesRef.current.add(messageKey)
-        
-        // If chatId doesn't match yet but we have a sessionId, wait a bit for component to update
-        if (eventSessionId !== chatId && eventSessionId) {
-          // Wait for chatId to update, then send
-          setTimeout(async () => {
-            if (eventSessionId === chatId || chatId === eventSessionId) {
-              await handleSendMessage(message, eventSessionId)
-            }
-          }, 100)
-        } else {
-          await handleSendMessage(message, eventSessionId)
-        }
+        // Always use eventSessionId — it's the authoritative session ID from the creator
+        await handleSendMessage(message, eventSessionId)
       }
     }
     
