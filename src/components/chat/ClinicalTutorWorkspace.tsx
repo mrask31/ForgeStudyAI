@@ -240,8 +240,16 @@ export default function ClinicalTutorWorkspace({
     initialMessages: initialMessages,
     body: requestBody,
     onError: (err) => {
-      console.error("Chat Error:", err)
-      setCustomError(err.message || "Failed to connect to AI")
+      console.error('[ClinicalTutorWorkspace] AI response error:', err.message);
+      // Append an inline error message — NEVER clear existing messages
+      setMessages(prev => [
+        ...prev,
+        {
+          id: `error-${Date.now()}`,
+          role: 'assistant' as const,
+          content: 'Something went wrong generating a response. Please try sending your message again.',
+        },
+      ]);
     },
     onFinish: async (message) => {
       if (message.role === 'assistant' && chatId && message.content) {
@@ -263,14 +271,13 @@ export default function ClinicalTutorWorkspace({
   });
 
   useEffect(() => {
-    if (initialMessages.length > 0 && !isLoadingHistory) {
-      if (messages.length === 0 ||
-          (messages.length !== initialMessages.length &&
-           JSON.stringify(messages) !== JSON.stringify(initialMessages))) {
-        setMessages(initialMessages);
-      }
+    // Only sync initial messages when history finishes loading AND we have history
+    // Never overwrite messages that are already present (user may have sent a message)
+    if (initialMessages.length > 0 && !isLoadingHistory && messages.length === 0) {
+      setMessages(initialMessages);
     }
-  }, [initialMessages, isLoadingHistory, setMessages]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [initialMessages.length, isLoadingHistory]);
 
   // Auto-opening message for new sessions with no history
   // Skip if topic context is present — the pre-filled prompt will be the first message
@@ -431,8 +438,16 @@ export default function ClinicalTutorWorkspace({
       }
       await append({ role: 'user', content: trimmedMessage });
     } catch (e: any) {
-      console.error("Send failed:", e);
-      setCustomError(e.message || "Message failed to send.");
+      console.error('[ClinicalTutorWorkspace] Send failed:', e.message);
+      // Show inline error — never clear messages
+      setMessages(prev => [
+        ...prev,
+        {
+          id: `error-${Date.now()}`,
+          role: 'assistant' as const,
+          content: 'Failed to send your message. Please try again.',
+        },
+      ]);
     }
   }, [chatId, append]);
 

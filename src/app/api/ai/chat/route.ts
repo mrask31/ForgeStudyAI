@@ -52,15 +52,17 @@ export async function POST(req: NextRequest) {
       activeProfileId,
     });
 
-    // Validate request
-    if (!chatId || !latestUserMessage) {
+    // Validate request — chatId can be missing for first message (session just created)
+    if (!latestUserMessage) {
+      console.error('[AI Chat Adapter] Missing user message in request');
       return NextResponse.json(
-        {
-          success: false,
-          error: 'Missing required fields: chatId and message',
-        },
+        { success: false, error: 'Missing required field: message' },
         { status: 400 }
       );
+    }
+
+    if (!chatId) {
+      console.warn('[AI Chat Adapter] No chatId in request — proceeding without chat history');
     }
 
     // Check API key
@@ -106,36 +108,35 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // COMPATIBILITY LAYER: Load from OLD schema (chats + messages tables)
-    // Verify chat ownership
-    const { data: chat, error: chatError } = await supabase
-      .from('chats')
-      .select('id, user_id, metadata')
-      .eq('id', chatId)
-      .single();
+    // Load chat history if chatId is available
+    let historyMessages: any[] = [];
+    if (chatId) {
+      const { data: chat, error: chatError } = await supabase
+        .from('chats')
+        .select('id, user_id, metadata')
+        .eq('id', chatId)
+        .single();
 
-    if (chatError || !chat) {
-      console.log('[AI Chat Adapter] Chat not found, will be created on first message save');
-    } else if (chat.user_id !== user.id) {
-      return NextResponse.json(
-        {
-          success: false,
-          error: 'Forbidden: Chat does not belong to user',
-        },
-        { status: 403 }
-      );
-    }
+      if (chatError || !chat) {
+        console.log('[AI Chat Adapter] Chat not found, will be created on first message save');
+      } else if (chat.user_id !== user.id) {
+        return NextResponse.json(
+          { success: false, error: 'Forbidden: Chat does not belong to user' },
+          { status: 403 }
+        );
+      }
 
-    // Load chat history from OLD messages table
-    const { data: historyMessages, error: historyError } = await supabase
-      .from('messages')
-      .select('role, content')
-      .eq('chat_id', chatId)
-      .order('sequence_number', { ascending: true })
-      .limit(20); // Last 20 messages for context
+      const { data: msgs, error: historyError } = await supabase
+        .from('messages')
+        .select('role, content')
+        .eq('chat_id', chatId)
+        .order('sequence_number', { ascending: true })
+        .limit(20);
 
-    if (historyError) {
-      console.error('[AI Chat Adapter] Failed to load history:', historyError);
+      if (historyError) {
+        console.error('[AI Chat Adapter] Failed to load history:', historyError);
+      }
+      historyMessages = msgs || [];
     }
 
     // Build chat history for Claude
@@ -333,7 +334,12 @@ export async function POST(req: NextRequest) {
     );
 
   } catch (error: any) {
-    console.error('[Chat API] Error:', error);
+    console.error('[AI Chat Adapter] FATAL ERROR:', {
+      message: error?.message,
+      name: error?.name,
+      status: error?.status,
+      stack: error?.stack?.split('\n').slice(0, 5).join('\n'),
+    });
 
     // Handle AI service errors
     if (error instanceof AIServiceError) {
