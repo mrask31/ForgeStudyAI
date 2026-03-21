@@ -88,6 +88,9 @@ export default function TutorSession({
   
   // Use localSessionId for rendering (will be updated when session is created)
   const sessionId = localSessionId
+  // Ref survives re-renders — used in event handlers to avoid stale closures
+  const sessionIdRef = useRef(sessionId)
+  sessionIdRef.current = sessionId
   const hideChatInput = mode === 'spelling'
   const deEmphasizeChatInput = false
 
@@ -456,41 +459,39 @@ export default function TutorSession({
         }
         
         effectiveSessionId = chatId
-        
-        // Update local state immediately so UI re-renders with the new session
+
+        // Update local state — this re-renders ClinicalTutorWorkspace with new chatId
         setLocalSessionId(chatId)
-        
-        // Update URL to include sessionId (without reload)
+
+        // Update URL without triggering Next.js navigation
         const params = new URLSearchParams(window.location.search)
         params.set('sessionId', chatId)
         window.history.replaceState({}, '', `${window.location.pathname}?${params.toString()}`)
-        
-        // Notify parent that session was created
-        if (onSessionCreated) {
-          onSessionCreated(chatId)
-        }
       } catch (error) {
         console.error('[TutorSession] Failed to create session:', error)
-        throw error // Re-throw so ChatInterface can handle it
+        throw error
       }
     }
 
-    // Dispatch the event to trigger AI response
-    // ClinicalTutorWorkspace will handle saving the message
-    // If session was just created, wait longer for ClinicalTutorWorkspace to re-initialize
-    const delay = !sessionId ? 500 : 100 // Longer delay if session was just created
-    
-    setTimeout(() => {
-      window.dispatchEvent(new CustomEvent('tutor-send-message', { 
-        detail: { 
-          message: message.trim(), 
-          sessionId: effectiveSessionId,
-          // classId and topicId will be available via TutorContext in the chat API
-        } 
-      }))
-    }, delay)
+    // Wait for React to re-render with the new sessionId before dispatching
+    // This ensures ClinicalTutorWorkspace has the correct chatId in its requestBody
+    const wasNewSession = !sessionId
 
-    setTimeout(scrollToBottom, Math.max(150, delay))
+    setTimeout(() => {
+      window.dispatchEvent(new CustomEvent('tutor-send-message', {
+        detail: {
+          message: message.trim(),
+          sessionId: effectiveSessionId,
+        }
+      }))
+
+      // Notify parent AFTER message is dispatched to avoid premature state changes
+      if (wasNewSession && onSessionCreated) {
+        onSessionCreated(effectiveSessionId!)
+      }
+    }, wasNewSession ? 300 : 50) // Shorter delay — no remount to wait for now
+
+    setTimeout(scrollToBottom, wasNewSession ? 350 : 100)
   }
 
   // Opening message is handled by ClinicalTutorWorkspace (which is connected to the chat API).
@@ -614,7 +615,6 @@ export default function TutorSession({
         {hasMessages ? (
           <>
             <ClinicalTutorWorkspace
-              key={sessionId}
               strictMode={strictMode}
               chatId={sessionId}
               filterMode="mixed"
