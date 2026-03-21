@@ -209,30 +209,28 @@ export default function ClinicalTutorWorkspace({
   const className = tutorContext.selectedClass ? `${tutorContext.selectedClass.code} — ${tutorContext.selectedClass.name}` : undefined
   const selectedClassName = tutorContext.selectedClass?.name || undefined
   
+  // Mutable body object — chatId can be updated by handleSendMessage before append fires
+  const requestBodyRef = useRef<any>({});
+
   const requestBody = useMemo(() => {
-    // CRITICAL: Always send array, never 'none' or undefined
     const attachedFileIds = Array.isArray(attachedFiles) && attachedFiles.length > 0
-      ? attachedFiles.map(f => f.id).filter(id => id) // Filter out any falsy IDs
+      ? attachedFiles.map(f => f.id).filter(id => id)
       : [];
-    
-    console.log('[ChatInterface] Submitting with files:', {
-      attachedFilesCount: attachedFiles.length,
-      attachedFileIds: attachedFileIds,
-      fileNames: attachedFiles.map(f => f.name),
-    });
-    
-    return {
-      chatId, 
-      strictMode, 
-      filterMode, 
-      selectedDocIds, 
+
+    const body = {
+      chatId,
+      strictMode,
+      filterMode,
+      selectedDocIds,
       mode,
       topicTitle,
       className,
       selectedClassName,
-      attachedFileIds, // Always an array, never 'none'
+      attachedFileIds,
       activeProfileId,
     };
+    requestBodyRef.current = body;
+    return body;
   }, [chatId, strictMode, filterMode, selectedDocIds, mode, topicTitle, className, selectedClassName, attachedFiles, activeProfileId]);
   
   const { messages, append, isLoading, setMessages } = useChat({
@@ -240,7 +238,7 @@ export default function ClinicalTutorWorkspace({
     initialMessages: initialMessages,
     body: requestBody,
     onError: (err) => {
-      console.error('[ClinicalTutorWorkspace] AI response error:', err.message);
+      console.error('[ClinicalTutorWorkspace] AI response error:', err.message, err);
       // Append an inline error message — NEVER clear existing messages
       setMessages(prev => [
         ...prev,
@@ -436,6 +434,16 @@ export default function ClinicalTutorWorkspace({
       if (!append) {
         throw new Error("Chat initialization failed");
       }
+      // Patch the chatId into the body ref so useChat sends the correct ID
+      // (the memo may still have the old chatId if the prop hasn't updated yet)
+      if (effectiveChatId && requestBodyRef.current) {
+        requestBodyRef.current.chatId = effectiveChatId;
+      }
+      console.log('[Chat] Firing AI request via useChat.append', {
+        chatId: effectiveChatId,
+        bodyChatId: requestBodyRef.current?.chatId,
+        messageLength: trimmedMessage.length,
+      });
       await append({ role: 'user', content: trimmedMessage });
     } catch (e: any) {
       console.error('[ClinicalTutorWorkspace] Send failed:', e.message);

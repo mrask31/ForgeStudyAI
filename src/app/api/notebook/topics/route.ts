@@ -36,13 +36,9 @@ export async function GET(req: Request) {
     const { data: topics, error } = await query.order('created_at', { ascending: false })
 
     if (error) {
-      console.error('[Notebook API] Error fetching topics:', error)
-      // If table doesn't exist, return empty array (graceful degradation)
-      if (error.code === 'PGRST116' || error.code === '42P01') {
-        console.warn('[Notebook API] notebook_topics table not found. Returning empty array.')
-        return NextResponse.json({ topics: [] })
-      }
-      return NextResponse.json({ error: 'Failed to fetch topics' }, { status: 500 })
+      console.error('[Notebook API] Error fetching topics:', { code: error.code, message: error.message })
+      // Return empty array for any table/schema error (table may not exist in production)
+      return NextResponse.json({ topics: [] })
     }
 
     // Map database columns to TypeScript interface
@@ -105,14 +101,8 @@ export async function POST(req: Request) {
       .single()
 
     if (error) {
-      console.error('[Notebook API] Error creating topic:', error)
-      if (error.code === 'PGRST116' || error.code === '42P01') {
-        return NextResponse.json(
-          { error: 'Database table not found. Please run the SQL schema.' },
-          { status: 503 }
-        )
-      }
-      return NextResponse.json({ error: 'Failed to create topic' }, { status: 500 })
+      console.error('[Notebook API] Error creating topic:', { code: error.code, message: error.message })
+      return NextResponse.json({ error: 'Table not available' }, { status: 503 })
     }
 
     // Map database columns to TypeScript interface
