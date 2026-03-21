@@ -417,8 +417,10 @@ export async function POST(req: Request) {
         return NextResponse.json({ error: 'Failed to create chat' }, { status: 500 })
       }
 
-      // If classId is provided, generate and seed a welcome message
-      if (classId) {
+      // If classId is provided BUT no topicId, generate and seed a welcome message.
+      // When topicId is present (e.g. from Galaxy "Study This Topic"), skip the welcome
+      // message — the user's pre-filled prompt will be the first interaction.
+      if (classId && !topicId) {
         try {
           // Fetch class name for welcome message
           let className: string | undefined
