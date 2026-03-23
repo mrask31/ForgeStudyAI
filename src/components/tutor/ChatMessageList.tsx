@@ -160,6 +160,7 @@ export default function ChatMessageList({
         summary = content.substring(0, 400) + (content.length > 400 ? '...' : '')
       }
 
+      if (!chatId) return
       await setTopicSummaryAndStudiedAt(user.id, chatId, summary)
     } catch (error) {
       console.error('[ChatMessageList] Error saving to notebook:', error)
