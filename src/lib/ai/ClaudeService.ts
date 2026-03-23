@@ -103,20 +103,23 @@ export class ClaudeService {
   async generateResponse(
     messages: ClaudeChatMessage[],
     sourceMaterial: SourceMaterial,
-    stream: boolean = true
+    stream: boolean = true,
+    systemPromptPrefix: string = ''
   ): Promise<ChatResponse | ReadableStream> {
     const contextMessages = this.buildContextWithCaching(sourceMaterial);
-    
+
     // Convert chat messages to Anthropic format
     const anthropicMessages = messages.map(msg => ({
       role: msg.role,
       content: msg.content,
     }));
 
+    const systemPrompt = systemPromptPrefix + SOCRATIC_SYSTEM_PROMPT;
+
     if (stream) {
-      return this.generateStreamingResponse(contextMessages, anthropicMessages);
+      return this.generateStreamingResponse(contextMessages, anthropicMessages, systemPrompt);
     } else {
-      return this.generateNonStreamingResponse(contextMessages, anthropicMessages);
+      return this.generateNonStreamingResponse(contextMessages, anthropicMessages, systemPrompt);
     }
   }
 
@@ -126,13 +129,14 @@ export class ClaudeService {
    */
   private async generateStreamingResponse(
     contextMessages: Anthropic.MessageParam[],
-    chatMessages: Anthropic.MessageParam[]
+    chatMessages: Anthropic.MessageParam[],
+    systemPrompt: string = SOCRATIC_SYSTEM_PROMPT
   ): Promise<ReadableStream> {
     const stream = await this.client.messages.stream({
       model: this.MODEL,
       max_tokens: this.MAX_TOKENS,
       temperature: this.TEMPERATURE,
-      system: SOCRATIC_SYSTEM_PROMPT,
+      system: systemPrompt,
       messages: [...contextMessages, ...chatMessages],
     });
 
@@ -145,13 +149,14 @@ export class ClaudeService {
    */
   private async generateNonStreamingResponse(
     contextMessages: Anthropic.MessageParam[],
-    chatMessages: Anthropic.MessageParam[]
+    chatMessages: Anthropic.MessageParam[],
+    systemPrompt: string = SOCRATIC_SYSTEM_PROMPT
   ): Promise<ChatResponse> {
     const response = await this.client.messages.create({
       model: this.MODEL,
       max_tokens: this.MAX_TOKENS,
       temperature: this.TEMPERATURE,
-      system: SOCRATIC_SYSTEM_PROMPT,
+      system: systemPrompt,
       messages: [...contextMessages, ...chatMessages],
     });
 

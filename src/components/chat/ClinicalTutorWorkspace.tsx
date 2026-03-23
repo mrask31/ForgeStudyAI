@@ -3,6 +3,7 @@
 import { useChat } from '@ai-sdk/react'
 import { Send, BookOpenCheck, User, Brain, FileText, Pill, Paperclip, FileIcon, ClipboardCheck, Bookmark, Map, Star, AlertCircle } from 'lucide-react'
 import { useEffect, useState, useMemo, useCallback, useRef } from 'react'
+import { useSearchParams } from 'next/navigation'
 import ReactMarkdown from 'react-markdown'
 import MessageWithMedicalTerms from '../tutor/MessageWithMedicalTerms'
 import { useDensity } from '@/contexts/DensityContext'
@@ -89,6 +90,7 @@ export default function ClinicalTutorWorkspace({
   scrollContainerRef,
 }: ClinicalTutorWorkspaceProps) {
   const [customError, setCustomError] = useState('')
+  const searchParams = useSearchParams()
   const tutorContext = useTutorContext()
   const { activeProfileId } = useActiveProfile()
   const { summary: activeProfileSummary } = useActiveProfileSummary()
@@ -220,7 +222,9 @@ export default function ClinicalTutorWorkspace({
       filterMode,
       selectedDocIds,
       mode,
-      topicTitle,
+      topicTitle: searchParams.get('topicTitle') || topicTitle,
+      topicId: searchParams.get('topicId'),
+      classId: searchParams.get('classId'),
       className,
       selectedClassName,
       attachedFileIds,
@@ -228,7 +232,7 @@ export default function ClinicalTutorWorkspace({
     };
     requestBodyRef.current = body;
     return body;
-  }, [chatId, strictMode, filterMode, selectedDocIds, mode, topicTitle, className, selectedClassName, attachedFiles, activeProfileId]);
+  }, [chatId, strictMode, filterMode, selectedDocIds, mode, topicTitle, className, selectedClassName, attachedFiles, activeProfileId, searchParams]);
   
   // Absolute API URL to prevent relative path resolution issues with redirects
   const chatApiUrl = typeof window !== 'undefined'

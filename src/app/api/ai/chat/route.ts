@@ -40,6 +40,7 @@ export async function POST(req: NextRequest) {
     const parsed_content_id = body.parsed_content_id || attachedFileIds[0];
     const synced_assignment_id = body.synced_assignment_id;
     const topicTitle = body.topicTitle as string | undefined;
+    const classId = body.classId as string | undefined;
     const activeProfileId = body.activeProfileId as string | undefined;
 
     console.log('[AI Chat Adapter] Request:', {
@@ -228,13 +229,18 @@ export async function POST(req: NextRequest) {
       attachedFileIdsUsed: attachedFileIds.length,
     });
 
+    // Build topic context prefix for system prompt
+    const topicContext = topicTitle
+      ? `STUDENT CONTEXT: The student is currently studying: ${topicTitle}. classId: ${classId || 'unknown'}. Use this context in all responses. Do not ask the student what class or topic they are working on.\n\n`
+      : '';
+
     // Initialize Claude Service
     const claudeService = new ClaudeService(apiKey);
 
     // Generate streaming response
     const startTime = Date.now();
     const stream = await getResponseWithFallback(
-      () => claudeService.generateResponse(chatHistory, sourceMaterial, true),
+      () => claudeService.generateResponse(chatHistory, sourceMaterial, true, topicContext),
       'I\'m having trouble connecting to the tutoring service right now. Please try again in a moment.'
     );
     const latencyMs = Date.now() - startTime;
