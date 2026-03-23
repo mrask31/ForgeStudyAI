@@ -73,6 +73,7 @@ export default function ChatMessageList({
   const [savedClipId, setSavedClipId] = useState<string | null>(null)
   const [showMapId, setShowMapId] = useState<string | null>(null)
   const [saveToTopicPayload, setSaveToTopicPayload] = useState<{ messageId: string; content: string } | null>(null)
+  const [localSavingToNotebook, setLocalSavingToNotebook] = useState<string | null>(null)
 
   const canSaveToTopic = !!activeProfile && (activeProfile.gradeBand === 'middle' || activeProfile.gradeBand === 'high')
 
@@ -138,8 +139,10 @@ export default function ChatMessageList({
   }
 
   const handleSaveToNotebook = async (messageId: string, content: string) => {
-    if (!tutorContext.selectedTopicId || savingToNotebook === messageId) return
+    if (!tutorContext.selectedTopicId || localSavingToNotebook === messageId) return
+    if (!chatId) return
 
+    setLocalSavingToNotebook(messageId)
     if (onSaveToNotebook) {
       onSaveToNotebook(messageId)
     }
@@ -149,6 +152,7 @@ export default function ChatMessageList({
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) {
         console.error('[ChatMessageList] User not authenticated')
+        setLocalSavingToNotebook(null)
         return
       }
 
@@ -160,10 +164,11 @@ export default function ChatMessageList({
         summary = content.substring(0, 400) + (content.length > 400 ? '...' : '')
       }
 
-      if (!chatId) return
       await setTopicSummaryAndStudiedAt(user.id, chatId, summary)
+      setTimeout(() => setLocalSavingToNotebook(null), 1500)
     } catch (error) {
       console.error('[ChatMessageList] Error saving to notebook:', error)
+      setLocalSavingToNotebook(null)
     }
   }
 
@@ -369,12 +374,12 @@ export default function ChatMessageList({
                     {tutorContext.selectedTopicId && !hasBinderContext && (
                       <button
                         onClick={() => handleSaveToNotebook(m.id, m.content)}
-                        disabled={savingToNotebook === m.id}
+                        disabled={localSavingToNotebook === m.id}
                         className="flex items-center gap-1 px-2 py-1 text-[11px] font-medium text-teal-400 hover:text-teal-300 hover:bg-teal-900/30 rounded transition-colors disabled:opacity-50"
                         title="Save to Notebook"
                       >
-                        <Star className={`w-3 h-3 ${savingToNotebook === m.id ? 'animate-spin' : ''}`} />
-                        <span>{savingToNotebook === m.id ? 'Saving...' : 'Save to Notebook'}</span>
+                        <Star className={`w-3 h-3 ${localSavingToNotebook === m.id ? 'animate-spin' : ''}`} />
+                        <span>{localSavingToNotebook === m.id ? 'Saving...' : 'Save to Notebook'}</span>
                       </button>
                     )}
                   </div>
