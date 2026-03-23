@@ -181,7 +181,7 @@ export default function GalaxyPage() {
   }, [activeProfileId, user])
 
   return (
-    <div className="relative w-full h-screen bg-slate-950 overflow-hidden">
+    <div className="relative w-full h-screen bg-slate-950 overflow-hidden flex flex-col">
       {/* Decontamination Banner - Floating at top */}
       {quarantinedCount > 0 && (
         <div className="absolute top-4 md:top-6 left-1/2 -translate-x-1/2 z-50 px-4 w-full max-w-md">
@@ -228,9 +228,9 @@ export default function GalaxyPage() {
         )}
       </div>
       
-      {/* Helper Chips - contextual suggestions, hidden when drilling into a course */}
+      {/* Helper Chips (desktop) - floating over canvas */}
       {!loading && topics.length > 0 && !isGalaxyDrillDown && (
-        <div className="absolute top-16 md:top-auto md:bottom-24 left-1/2 -translate-x-1/2 z-30">
+        <div className="hidden md:block absolute bottom-24 left-1/2 -translate-x-1/2 z-30">
           <HelperChips topics={topics} profileId={activeProfileId} />
         </div>
       )}
@@ -248,8 +248,8 @@ export default function GalaxyPage() {
         </Link>
       </div>
       
-      {/* Full-Bleed Galaxy Canvas */}
-      <div className="w-full h-full">
+      {/* Galaxy Canvas — fixed 60vh on mobile so chips can sit below; full height on desktop */}
+      <div className="w-full h-[60vh] flex-shrink-0 md:flex-1 md:h-full relative">
         {!activeProfileId ? (
           <div className="flex items-center justify-center h-full px-4">
             <div className="bg-slate-900/60 backdrop-blur-md border border-slate-700/50 rounded-xl shadow-2xl p-6 md:p-8 max-w-md text-center">
@@ -281,7 +281,14 @@ export default function GalaxyPage() {
           />
         )}
       </div>
-      
+
+      {/* Helper Chips (mobile) — rendered below canvas in normal document flow */}
+      {!loading && topics.length > 0 && !isGalaxyDrillDown && (
+        <div className="md:hidden flex-shrink-0 flex flex-wrap justify-center gap-2 px-4 py-3 bg-slate-950">
+          <HelperChips topics={topics} profileId={activeProfileId} />
+        </div>
+      )}
+
       {/* Bottom Center HUD - Smart CTA (only when no due-soon items to avoid overlap) */}
       {smartCTA && !hasDueSoonItems && (
         <div className="fixed md:absolute bottom-0 md:bottom-8 left-0 md:left-1/2 md:-translate-x-1/2 w-full md:w-auto z-40">
