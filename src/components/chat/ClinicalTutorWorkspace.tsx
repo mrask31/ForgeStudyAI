@@ -97,6 +97,7 @@ export default function ClinicalTutorWorkspace({
   const [flaggedMessages, setFlaggedMessages] = useState<Set<string>>(new Set())
   const [isTogglingHelp, setIsTogglingHelp] = useState<boolean>(false)
   const openerSentRef = useRef(false)
+  const userScrolledUpRef = useRef(false)
 
   // If selection props are provided, we'll use ChatMessageList for rendering
   const useMessageList = !!selectedMessageId || !!onSelectMessage
@@ -365,6 +366,42 @@ export default function ClinicalTutorWorkspace({
     // Start trying after messages have a chance to load
     setTimeout(tryScroll, 300)
   }, [scrollToMessageId, scrollContainerRef, messages.length]) // Retry when messages change
+
+  // Track whether the user has manually scrolled up (so we don't fight them during streaming)
+  useEffect(() => {
+    if (!scrollContainerRef?.current) return
+    const container = scrollContainerRef.current
+
+    const handleScroll = () => {
+      const { scrollTop, scrollHeight, clientHeight } = container
+      userScrolledUpRef.current = scrollHeight - scrollTop - clientHeight > 100
+    }
+
+    container.addEventListener('scroll', handleScroll, { passive: true })
+    return () => container.removeEventListener('scroll', handleScroll)
+  }, [scrollContainerRef])
+
+  // Auto-scroll to bottom as content streams in and when new messages arrive
+  const lastMsgLen = messages[messages.length - 1]?.content?.length ?? 0
+  useEffect(() => {
+    if (!scrollContainerRef?.current) return
+    if (userScrolledUpRef.current) return
+    const container = scrollContainerRef.current
+    container.scrollTop = container.scrollHeight
+  }, [lastMsgLen, messages.length, isLoading, scrollContainerRef])
+
+  // Reset userScrolledUp and snap to bottom when the user sends a message
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+    const handleSend = () => {
+      userScrolledUpRef.current = false
+      if (scrollContainerRef?.current) {
+        scrollContainerRef.current.scrollTop = scrollContainerRef.current.scrollHeight
+      }
+    }
+    window.addEventListener('tutor-scroll-to-bottom', handleSend)
+    return () => window.removeEventListener('tutor-scroll-to-bottom', handleSend)
+  }, [scrollContainerRef])
 
   const handleToggleNeedsHelp = async (messageId: string) => {
     if (!chatId || isTogglingHelp) return
