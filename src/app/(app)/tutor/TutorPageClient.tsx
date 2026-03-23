@@ -184,20 +184,17 @@ function TutorPageContent() {
         return
       }
 
-      // Step 2: Wait a moment to ensure welcome message (if any) is committed
-      // This is especially important when classId is present and a welcome message was seeded
-      if (tutorContext.selectedClassId) {
-        await new Promise(resolve => setTimeout(resolve, 300))
-      }
-
-      // Step 3: Store message in localStorage for the chat to pick up and auto-send
-      // Don't save the message here - let handleSendMessage do it to ensure proper flow
+      // Update state directly and dispatch the message (no localStorage needed)
+      setResolvedChatId(chatId)
       if (typeof window !== 'undefined') {
-        localStorage.setItem('forgestudy-tutor-prefill', message.trim())
-        localStorage.setItem('forgestudy-tutor-auto-send', 'true')
+        window.history.replaceState({}, '', buildTutorUrl(chatId))
       }
-      
-      router.push(buildTutorUrl(chatId))
+      // Dispatch the message after a short delay to allow ClinicalTutorWorkspace to mount
+      setTimeout(() => {
+        window.dispatchEvent(new CustomEvent('tutor-send-message', {
+          detail: { message: message.trim(), sessionId: chatId }
+        }))
+      }, 350)
     } catch (error) {
       console.error('[TutorPage] Failed to start session:', error)
       setError('Failed to start session. Please try again.')

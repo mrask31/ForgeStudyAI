@@ -1,16 +1,59 @@
 'use client'
 
 import { useState, useEffect, useCallback, useRef } from 'react'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { ChevronDown, BookOpenCheck } from 'lucide-react'
 import ClinicalTutorWorkspace from '@/components/chat/ClinicalTutorWorkspace'
 import ChatInterface from '@/components/tutor/ChatInterface'
 import TutorEmptyState from '@/components/tutor/TutorEmptyState'
 import ChatMessageList, { type ChatMessage } from '@/components/tutor/ChatMessageList'
 import { useTutorContext } from '@/components/tutor/TutorContext'
+import { useActiveProfileSummary } from '@/hooks/useActiveProfileSummary'
 import { listNotebookTopics } from '@/lib/api/notebook'
 import { NotebookTopic } from '@/lib/types'
 import { getSupabaseBrowser } from '@/lib/supabase/client'
+
+function getChipsForTopic(title: string): string[] {
+  const lower = title.toLowerCase()
+  if (/physics|chemistry|biology|science|lab/.test(lower)) {
+    return [
+      'Explain the current topic step by step',
+      'Quiz me on what I should know',
+      'Help me understand a concept I\'m stuck on',
+      'Review key formulas or terms',
+    ]
+  }
+  if (/history|social studies|geography|government|civics|economics/.test(lower)) {
+    return [
+      'Walk me through the key events',
+      'Quiz me on important dates and people',
+      'Help me understand why this matters',
+      'Review vocabulary terms',
+    ]
+  }
+  if (/math|algebra|geometry|calculus|statistics|trigonometry/.test(lower)) {
+    return [
+      'Show me how to solve this type of problem',
+      'Quiz me on the formulas',
+      'Help me understand where I went wrong',
+      'Practice problems with hints',
+    ]
+  }
+  if (/english|writing|essay|literature|reading|grammar|language arts/.test(lower)) {
+    return [
+      'Help me outline my essay',
+      'Quiz me on literary terms',
+      'Review my thesis statement',
+      'Explain this reading passage',
+    ]
+  }
+  return [
+    'Explain this topic step by step',
+    'Quiz me on what we covered',
+    'Help me understand a concept',
+    'Give me a practice problem',
+  ]
+}
 
 interface TutorSessionProps {
   sessionId?: string // Optional - will be created on first message if missing
@@ -42,7 +85,11 @@ export default function TutorSession({
   mode = 'tutor',
 }: TutorSessionProps) {
   const router = useRouter()
+  const searchParams = useSearchParams()
   const tutorContext = useTutorContext()
+  const { summary: activeProfileSummary } = useActiveProfileSummary()
+  const topicTitle = searchParams.get('topicTitle') || tutorContext.selectedTopicTitle || tutorContext.selectedTopic?.title || ''
+  const firstName = activeProfileSummary?.displayName?.split(' ')[0] || 'there'
   // Use prop attachedFiles if provided, otherwise use local state
   const [localAttachedFiles, setLocalAttachedFiles] = useState<{ id: string, name: string, document_type: string | null }[]>([])
   const [isLoadingAttachedFiles, setIsLoadingAttachedFiles] = useState(false)
@@ -73,8 +120,6 @@ export default function TutorSession({
   const bottomRef = useRef<HTMLDivElement>(null)
   const [availableTopics, setAvailableTopics] = useState<NotebookTopic[]>([])
   const lastLoadedClassIdRef = useRef<string | undefined>(undefined) // Prevent duplicate loads
-  const [openerMessage, setOpenerMessage] = useState<string | null>(null)
-  const openerSetRef = useRef(false)
   
   // Update localSessionId when prop changes
   useEffect(() => {
@@ -494,9 +539,6 @@ export default function TutorSession({
     setTimeout(scrollToBottom, wasNewSession ? 350 : 100)
   }
 
-  // Opening message is handled by ClinicalTutorWorkspace (which is connected to the chat API).
-  // TutorSession no longer sets its own opener to avoid double-send.
-
   const hasMessages = !!sessionId
 
   // Calculate attached context for ChatInterface
@@ -637,15 +679,27 @@ export default function TutorSession({
             />
             <div ref={bottomRef} />
           </>
-        ) : openerMessage ? (
+        ) : topicTitle ? (
+          // Topic greeting + chips (launched from Galaxy or notebook)
           <div className="flex flex-col gap-4 p-4 pt-8">
             <div className="flex gap-3 items-start">
               <div className="w-8 h-8 rounded-full bg-indigo-100 flex items-center justify-center flex-shrink-0 mt-0.5">
                 <BookOpenCheck className="w-4 h-4 text-indigo-600" />
               </div>
               <div className="flex-1 bg-slate-50 border border-slate-200 rounded-2xl px-4 py-3 text-sm text-slate-800 leading-relaxed">
-                {openerMessage}
+                Hey {firstName}! Ready to work on <strong>{topicTitle}</strong>? Here are some ways to get started:
               </div>
+            </div>
+            <div className="flex flex-wrap gap-2 pl-11">
+              {getChipsForTopic(topicTitle).map((chip) => (
+                <button
+                  key={chip}
+                  onClick={() => handleSend(chip)}
+                  className="px-4 py-2 bg-white border border-slate-200 rounded-full text-sm text-slate-700 hover:border-indigo-400 hover:text-indigo-700 hover:bg-indigo-50 transition-all shadow-sm"
+                >
+                  {chip}
+                </button>
+              ))}
             </div>
           </div>
         ) : activeChunkCount === 0 && !sessionId && !tutorContext.selectedClassId ? (
@@ -659,7 +713,7 @@ export default function TutorSession({
           <div className="flex items-center justify-center min-h-[400px]">
             <div className="text-center">
               <p className="text-slate-600 text-sm">
-                What would you like to study today?
+                Hey {firstName}! What would you like to study today?
               </p>
             </div>
           </div>

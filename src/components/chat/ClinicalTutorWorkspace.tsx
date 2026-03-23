@@ -284,19 +284,20 @@ export default function ClinicalTutorWorkspace({
   }, [initialMessages.length, isLoadingHistory]);
 
   // Auto-opening message for new sessions with no history
-  // Skip if topic context is present — the pre-filled prompt will be the first message
+  // Skip if topic context is present — TutorSession handles the greeting for topic sessions
   useEffect(() => {
     if (chatId && isLoadingHistory) return
     if (openerSentRef.current) return
     if (initialMessages.length > 0) return
     if (messages.length > 0) return
-    // Don't show opener when topic is set — the user's pre-filled prompt handles the intro
+    // Don't show opener when topic is set — TutorSession handles the greeting
     if (topicTitle) return
 
     openerSentRef.current = true
 
+    const greetName = activeProfileSummary?.displayName?.split(' ')[0] || 'there'
     setMessages([{ id: crypto.randomUUID(), role: 'assistant', content:
-      "What would you like to study today? You can ask me about anything from your classes, or tell me what you're working on and we'll figure it out together."
+      `Hey ${greetName}! What would you like to study today?`
     }])
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [chatId, isLoadingHistory, initialMessages.length, messages.length])
@@ -498,82 +499,6 @@ export default function ClinicalTutorWorkspace({
     }
   }, [chatId, append, handleSendMessage])
   
-  // Check for prefilled prompt from landing page and auto-send if needed
-  // Use a ref to track if we've already processed the auto-send to prevent duplicates
-  const autoSendProcessedRef = useRef(false)
-  
-  useEffect(() => {
-    if (!chatId || !append) {
-      console.log('[ClinicalTutorWorkspace] Auto-send check skipped:', { chatId: !!chatId, append: !!append })
-      return
-    }
-    
-    // Wait for history to finish loading before checking
-    if (isLoadingHistory) {
-      console.log('[ClinicalTutorWorkspace] Auto-send check skipped - history still loading')
-      return
-    }
-    
-    // Check if there's a prefilled message that should be auto-sent
-    if (typeof window !== 'undefined' && !autoSendProcessedRef.current) {
-      const prefill = localStorage.getItem('forgestudy-tutor-prefill')
-      const shouldAutoSend = localStorage.getItem('forgestudy-tutor-auto-send') === 'true'
-      
-      console.log('[ClinicalTutorWorkspace] Auto-send check:', { 
-        hasPrefill: !!prefill, 
-        shouldAutoSend, 
-        messagesCount: messages.length,
-        alreadyProcessed: autoSendProcessedRef.current 
-      })
-      
-      if (prefill && shouldAutoSend) {
-        // Mark as processed immediately to prevent duplicate sends
-        autoSendProcessedRef.current = true
-        
-        // Clear the flags immediately
-        localStorage.removeItem('forgestudy-tutor-prefill')
-        localStorage.removeItem('forgestudy-tutor-auto-send')
-        
-        // Check if message was already sent (might be in messages from history)
-        const userMessageIndex = messages.findIndex(m => 
-          m.role === 'user' && m.content.trim() === prefill.trim()
-        )
-        const messageAlreadySent = userMessageIndex !== -1
-        
-        // Check if there's already an assistant response after this user message
-        let hasAssistantResponse = false
-        if (messageAlreadySent) {
-          // Check if there's an assistant message after this user message
-          hasAssistantResponse = messages.slice(userMessageIndex + 1).some(m => m.role === 'assistant')
-        }
-        
-        console.log('[ClinicalTutorWorkspace] Auto-send decision:', {
-          messageAlreadySent,
-          hasAssistantResponse,
-          willSend: !messageAlreadySent || (messageAlreadySent && !hasAssistantResponse),
-          prefillPreview: prefill.substring(0, 50)
-        })
-        
-        // Only send if message wasn't already sent OR if it was sent but no assistant response yet
-        if (!messageAlreadySent || (messageAlreadySent && !hasAssistantResponse)) {
-          console.log('[ClinicalTutorWorkspace] Auto-sending prefilled message:', prefill.substring(0, 50))
-          // Auto-send the message after a short delay to ensure chat is ready
-          setTimeout(() => {
-            console.log('[ClinicalTutorWorkspace] Executing auto-send now')
-            handleSendMessage(prefill, chatId)
-          }, 500)
-        } else {
-          console.log('[ClinicalTutorWorkspace] Skipping auto-send - message already processed with response')
-        }
-      }
-    }
-  }, [chatId, append, isLoadingHistory, messages, handleSendMessage])
-  
-  // Reset the ref when chatId changes (new chat session)
-  useEffect(() => {
-    autoSendProcessedRef.current = false
-  }, [chatId])
-  // The user must explicitly press Send to submit the message
 
   // Note: Scrolling is now handled by TutorSession component
   // This ensures proper scrolling within the chat container, not the entire page
@@ -982,6 +907,21 @@ export default function ClinicalTutorWorkspace({
             <div className="tutor-card">
               <p className="text-slate-600">Thinking...</p>
             </div>
+          </div>
+        )}
+
+        {/* Welcome chips — shown when only the greeting message exists (general session) */}
+        {!topicTitle && !isLoading && messages.length === 1 && messages[0]?.role === 'assistant' && !useMessageList && (
+          <div className="flex flex-wrap gap-2 px-4 pb-4">
+            {['Help me understand this concept', 'Quiz me on what we covered', 'Explain this in simpler terms', 'Give me a practice problem'].map((chip) => (
+              <button
+                key={chip}
+                onClick={() => handleSendMessage(chip)}
+                className="px-4 py-2 bg-white border border-slate-200 rounded-full text-sm text-slate-700 hover:border-indigo-400 hover:text-indigo-700 hover:bg-indigo-50 transition-all shadow-sm"
+              >
+                {chip}
+              </button>
+            ))}
           </div>
         )}
       </div>
