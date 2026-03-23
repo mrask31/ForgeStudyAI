@@ -1,14 +1,13 @@
 'use client'
 
 import { useChat } from '@ai-sdk/react'
-import { Send, BookOpenCheck, User, Brain, FileText, Pill, Paperclip, FileIcon, ClipboardCheck, Bookmark, Map, Star, AlertCircle } from 'lucide-react'
+import { Send, BookOpenCheck, User, Brain, FileText, Pill, Paperclip, FileIcon, ClipboardCheck, Map, Star, AlertCircle } from 'lucide-react'
 import { useEffect, useState, useMemo, useCallback, useRef } from 'react'
 import { useSearchParams } from 'next/navigation'
 import ReactMarkdown from 'react-markdown'
 import MessageWithMedicalTerms from '../tutor/MessageWithMedicalTerms'
 import { useDensity } from '@/contexts/DensityContext'
 import { getDensityTokens } from '@/lib/density-tokens'
-import SaveClipModal from '@/components/clips/SaveClipModal'
 import ForgeMapPanel from '@/components/forgemap/ForgeMapPanel'
 import StudyMapPanel from '@/components/forgemap/StudyMapPanel'
 import PracticeLadderModal from '@/components/tutor/PracticeLadderModal'
@@ -123,7 +122,6 @@ export default function ClinicalTutorWorkspace({
   const [isLoadingHistory, setIsLoadingHistory] = useState(true)
   const [chatStatus, setChatStatus] = useState<'active' | 'archived'>('active')
   const [chatSummary, setChatSummary] = useState<string | null>(null)
-  const [saveClipModal, setSaveClipModal] = useState<{ isOpen: boolean; messageId: string; content: string }>({ isOpen: false, messageId: '', content: '' })
   const [forgeMapPanel, setForgeMapPanel] = useState<{ isOpen: boolean; messageContent: string }>({ isOpen: false, messageContent: '' })
   const [confusionMap, setConfusionMap] = useState<{ isOpen: boolean; mapMarkdown: string; clarifyingQuestion?: string | null }>({
     isOpen: false,
@@ -636,9 +634,6 @@ export default function ClinicalTutorWorkspace({
             strictMode={strictMode}
             onSaveToNotebook={(id) => setSavingToNotebook(id)}
             savingToNotebook={savingToNotebook}
-            onSaveClip={(messageId, content) => {
-              setSaveClipModal({ isOpen: true, messageId, content })
-            }}
             onShowMap={(messageId, content) => {
               setForgeMapPanel({ isOpen: true, messageContent: content })
             }}
@@ -748,22 +743,6 @@ export default function ClinicalTutorWorkspace({
                       >
                         <Map className="w-3 h-3" />
                         <span>Concept Map</span>
-                      </button>
-                      <button
-                        onClick={async () => {
-                          // Generate deterministic message_id using Web Crypto API
-                          const encoder = new TextEncoder()
-                          const data = encoder.encode((chatId || '') + m.content)
-                          const hashBuffer = await crypto.subtle.digest('SHA-256', data)
-                          const hashArray = Array.from(new Uint8Array(hashBuffer))
-                          const messageId = hashArray.map(b => b.toString(16).padStart(2, '0')).join('')
-                          setSaveClipModal({ isOpen: true, messageId, content: m.content })
-                        }}
-                        className="flex items-center gap-1 px-2 py-1 text-xs text-slate-500 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-all duration-200"
-                        title="Save Learning Moment"
-                      >
-                        <Bookmark className="w-3 h-3" />
-                        <span>Save</span>
                       </button>
                       {chatId && (
                         <button
@@ -923,38 +902,6 @@ export default function ClinicalTutorWorkspace({
           </div>
         )}
       </div>
-
-      {/* Save Clip Modal */}
-      <SaveClipModal
-        isOpen={saveClipModal.isOpen}
-        onClose={() => setSaveClipModal({ isOpen: false, messageId: '', content: '' })}
-        onSave={async ({ title, folder, tags }) => {
-          const safeMessageId = saveClipModal.messageId && isValidUUID(saveClipModal.messageId)
-            ? saveClipModal.messageId
-            : null
-          const response = await fetch('/api/clips', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            credentials: 'include',
-            body: JSON.stringify({
-              title,
-              content: saveClipModal.content,
-              folder,
-              tags,
-              classId: tutorContext.selectedClassId || null,
-              chatId: chatId || null,
-              messageId: safeMessageId,
-            }),
-          })
-          if (!response.ok) {
-            const error = await response.json()
-            throw new Error(error.error || 'Failed to save clip')
-          }
-          // Close modal on success
-          setSaveClipModal({ isOpen: false, messageId: '', content: '' })
-        }}
-        defaultTitle={saveClipModal.content.substring(0, 50) + (saveClipModal.content.length > 50 ? '...' : '')}
-      />
 
       {/* ForgeMap Panel */}
       <ForgeMapPanel

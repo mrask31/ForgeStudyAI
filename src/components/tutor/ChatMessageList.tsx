@@ -1,6 +1,6 @@
 'use client'
 
-import { FileIcon, ClipboardCheck, Map, Bookmark, Star, AlertCircle, CheckCircle2, FolderPlus } from 'lucide-react'
+import { FileIcon, ClipboardCheck, Map, Star, AlertCircle, FolderPlus } from 'lucide-react'
 import { useTutorContext } from './TutorContext'
 import { getSupabaseBrowser } from '@/lib/supabase/client'
 import { setTopicSummaryAndStudiedAt } from '@/lib/api/notebook'
@@ -29,7 +29,6 @@ interface ChatMessageListProps {
   strictMode?: boolean
   onSaveToNotebook?: (messageId: string) => void
   savingToNotebook?: string | null
-  onSaveClip?: (messageId: string, content: string) => void // New prop for saving clips
   onShowMap?: (messageId: string, content: string) => void // New prop for showing concept map
   onShowConfusionMap?: (messageId: string, content: string) => void
   onShowPracticeLadder?: (messageId: string, content: string) => void
@@ -60,7 +59,6 @@ export default function ChatMessageList({
   strictMode = false,
   onSaveToNotebook,
   savingToNotebook,
-  onSaveClip,
   onShowMap,
   onShowConfusionMap,
   onShowPracticeLadder,
@@ -70,7 +68,7 @@ export default function ChatMessageList({
   const tutorContext = useTutorContext()
   const { summary: activeProfile } = useActiveProfileSummary()
   const [isTogglingHelp, setIsTogglingHelp] = useState<boolean>(false)
-  const [savedClipId, setSavedClipId] = useState<string | null>(null)
+
   const [showMapId, setShowMapId] = useState<string | null>(null)
   const [saveToTopicPayload, setSaveToTopicPayload] = useState<{ messageId: string; content: string } | null>(null)
   const [localSavingToNotebook, setLocalSavingToNotebook] = useState<string | null>(null)
@@ -317,33 +315,6 @@ export default function ChatMessageList({
                     )}
                   </div>
                   <div className="flex items-center gap-2">
-                    <button
-                      onClick={() => {
-                        if (onSaveClip) {
-                          onSaveClip(m.id, m.content)
-                          setSavedClipId(m.id)
-                          setTimeout(() => setSavedClipId(null), 3000)
-                        }
-                      }}
-                      className={`flex items-center gap-1 px-2 py-1 text-xs rounded-lg transition-all duration-200 ${
-                        savedClipId === m.id
-                          ? 'text-emerald-400 bg-emerald-900/40'
-                          : 'text-slate-400 hover:text-indigo-400 hover:bg-indigo-900/30'
-                      }`}
-                      title="Save this explanation to your Learning Library (accessible from sidebar)"
-                    >
-                      {savedClipId === m.id ? (
-                        <>
-                          <CheckCircle2 className="w-3 h-3" />
-                          <span>Saved!</span>
-                        </>
-                      ) : (
-                        <>
-                          <Bookmark className="w-3 h-3" />
-                          <span>Save</span>
-                        </>
-                      )}
-                    </button>
                     {canSaveToTopic && activeProfile && (
                       <button
                         onClick={() => {
