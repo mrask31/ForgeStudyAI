@@ -13,7 +13,7 @@ const nextConfig = {
     async redirects() {
         return [
             {
-                source: "/:path*",
+                source: "/:path((?!api/).*)",
                 has: [{ type: "host", value: "forgestudyai.com" }],
                 destination: "https://www.forgestudyai.com/:path*",
                 permanent: true,

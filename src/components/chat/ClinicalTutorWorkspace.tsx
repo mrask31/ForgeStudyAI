@@ -141,13 +141,10 @@ export default function ClinicalTutorWorkspace({
   const { density } = useDensity()
   const tokens = getDensityTokens(density)
 
-  // Debug: Log attachedFiles prop received by ClinicalTutorWorkspace
+  // One-time mount log
   useEffect(() => {
-    console.log('🔍 ClinicalTutorWorkspace received files:', {
-      count: attachedFiles.length,
-      files: attachedFiles.map(f => ({ id: f.id, name: f.name, document_type: f.document_type })),
-    });
-  }, [attachedFiles]);
+    console.log('[useChat] Mounted with api endpoint:', chatApiUrl, 'chatId:', chatId);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Load chat history
   useEffect(() => {
@@ -233,12 +230,17 @@ export default function ClinicalTutorWorkspace({
     return body;
   }, [chatId, strictMode, filterMode, selectedDocIds, mode, topicTitle, className, selectedClassName, attachedFiles, activeProfileId]);
   
+  // Absolute API URL to prevent relative path resolution issues with redirects
+  const chatApiUrl = typeof window !== 'undefined'
+    ? `${window.location.origin}/api/ai/chat`
+    : '/api/ai/chat';
+
   const { messages, append, isLoading, setMessages } = useChat({
-    api: '/api/ai/chat',
+    api: chatApiUrl,
     initialMessages: initialMessages,
     body: requestBody,
     onError: (err) => {
-      console.error('[ClinicalTutorWorkspace] AI response error:', err.message, err);
+      console.error('[ClinicalTutorWorkspace] AI response error:', err.message, 'API URL:', chatApiUrl, err);
       // Append an inline error message — NEVER clear existing messages
       setMessages(prev => [
         ...prev,
