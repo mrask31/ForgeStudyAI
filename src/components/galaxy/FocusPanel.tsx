@@ -13,6 +13,7 @@ interface FocusPanelProps {
   lastStudied: string | null;
   onClose: () => void;
   onAction: (action: string) => void;
+  isActionLoading?: boolean;
 }
 
 const badgeColors = {
@@ -79,6 +80,7 @@ export function FocusPanel({
   lastStudied,
   onClose,
   onAction,
+  isActionLoading = false,
 }: FocusPanelProps) {
   // Handle Escape key to close panel
   useEffect(() => {
@@ -189,14 +191,15 @@ export function FocusPanel({
                 <button
                   key={action.id}
                   onClick={() => onAction(action.id)}
-                  className="w-full flex items-center gap-3 p-3 md:p-3 min-h-[48px] bg-slate-900/40 hover:bg-slate-800/60 active:bg-slate-800/80 border border-slate-800 hover:border-slate-700 rounded-xl transition-all group"
+                  disabled={isActionLoading}
+                  className="w-full flex items-center gap-3 p-3 md:p-3 min-h-[48px] bg-slate-900/40 hover:bg-slate-800/60 active:bg-slate-800/80 border border-slate-800 hover:border-slate-700 rounded-xl transition-all group disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   <div className="p-2 bg-slate-800/60 rounded-lg group-hover:bg-indigo-900/30 transition-colors">
                     <action.icon className="w-4 h-4 text-slate-400 group-hover:text-indigo-400 transition-colors" />
                   </div>
                   <div className="text-left">
                     <p className="text-sm font-medium text-slate-200">{action.label}</p>
-                    <p className="text-xs text-slate-500">{action.description}</p>
+                    <p className="text-xs text-slate-500">{isActionLoading ? 'Opening tutor...' : action.description}</p>
                   </div>
                 </button>
               ))}
