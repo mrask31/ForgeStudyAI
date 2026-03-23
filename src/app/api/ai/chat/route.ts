@@ -146,23 +146,23 @@ export async function POST(req: NextRequest) {
       content: msg.content,
     }));
 
-    // Inject topic/class context so the AI knows what the student is working on
-    const className = body.className as string | undefined;
-    const selectedClassName = body.selectedClassName as string | undefined;
-    const courseName = selectedClassName || className;
-
-    if (topicTitle || courseName) {
-      const contextParts: string[] = [];
-      if (courseName) contextParts.push(`Course: ${courseName}`);
-      if (topicTitle) contextParts.push(`Topic/Assignment: ${topicTitle}`);
-      chatHistory.unshift({
-        role: 'user',
-        content: `[CONTEXT] ${contextParts.join(' | ')}. Help me study this.`,
-      });
-      chatHistory.unshift({
-        role: 'assistant' as const,
-        content: `Got it — I have your ${topicTitle ? `"${topicTitle}"` : 'course'} context loaded${courseName ? ` from ${courseName}` : ''}. Let's work through it together.`,
-      });
+    // Look up class name from classId for richer context
+    let resolvedClassName: string | undefined;
+    if (classId) {
+      const { data: classRow } = await supabase
+        .from('student_classes')
+        .select('name, code')
+        .eq('id', classId)
+        .single();
+      if (classRow) {
+        resolvedClassName = classRow.code ? `${classRow.code} — ${classRow.name}` : classRow.name;
+      }
+    }
+    // Fall back to client-supplied class name if DB lookup yields nothing
+    if (!resolvedClassName) {
+      const clientClassName = body.className as string | undefined;
+      const clientSelectedClassName = body.selectedClassName as string | undefined;
+      resolvedClassName = clientSelectedClassName || clientClassName;
     }
 
     // Add current user message to history
@@ -230,9 +230,14 @@ export async function POST(req: NextRequest) {
     });
 
     // Build topic context prefix for system prompt
-    const topicContext = topicTitle
-      ? `STUDENT CONTEXT: The student is currently studying: ${topicTitle}. classId: ${classId || 'unknown'}. Use this context in all responses. Do not ask the student what class or topic they are working on.\n\n`
-      : '';
+    let topicContext = '';
+    if (topicTitle || resolvedClassName) {
+      const classLabel = resolvedClassName
+        ? `This is for their ${resolvedClassName} class${classId ? ` (classId: ${classId})` : ''}.`
+        : classId ? `(classId: ${classId})` : '';
+      const topicLine = topicTitle ? `The student is currently studying: ${topicTitle}.` : '';
+      topicContext = `${[topicLine, classLabel].filter(Boolean).join(' ')} Use this context in all responses — do not ask the student what class or topic they are working on.\n\n`;
+    }
 
     // Initialize Claude Service
     const claudeService = new ClaudeService(apiKey);
