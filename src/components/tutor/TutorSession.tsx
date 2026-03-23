@@ -683,18 +683,7 @@ export default function TutorSession({
           <ChatInterface
             sessionId={sessionId}
             onSend={handleSend}
-            initialPrompt={(() => {
-              if (tutorContext.selectedTopic) {
-                const classInfo = tutorContext.selectedClass
-                  ? ` from ${tutorContext.selectedClass.code} — ${tutorContext.selectedClass.name}`
-                  : ''
-                return `I want to study ${tutorContext.selectedTopic.title}${classInfo}. Please explain it step by step at my level and then quiz me with practice questions.`
-              }
-              if (tutorContext.selectedTopicTitle) {
-                return `I want to study ${tutorContext.selectedTopicTitle}. Please explain it step by step at my level and then quiz me with practice questions.`
-              }
-              return undefined
-            })()}
+            initialPrompt={undefined}
             attachedFiles={attachedFiles}
             attachedContext={attachedContext}
             onDetach={onDetachFile}

@@ -57,6 +57,7 @@ export function ConceptGalaxy({ topics, coursePlanets, studentName, profileId, l
   const router = useRouter();
 
   const [expandedCourseId, setExpandedCourseId] = useState<string | null>(null);
+  const [isCreatingSession, setIsCreatingSession] = useState(false);
   const hasPlanets = (coursePlanets?.length ?? 0) > 0;
   const showPlanetView = hasPlanets && !expandedCourseId;
   const expandedPlanet = expandedCourseId ? coursePlanets?.find(p => p.courseId === expandedCourseId) : null;
@@ -320,17 +321,48 @@ export function ConceptGalaxy({ topics, coursePlanets, studentName, profileId, l
         dueDate={focusPanelState.dueDate}
         lastStudied={focusPanelState.lastStudied}
         onClose={handleCloseFocusPanel}
-        onAction={(action: string) => {
-          if (focusPanelState.selectedTopicId && focusPanelState.selectedTopicTitle) {
-            const params = new URLSearchParams({
-              topicId: focusPanelState.selectedTopicId,
-              topicTitle: focusPanelState.selectedTopicTitle,
-              action,
+        isActionLoading={isCreatingSession}
+        onAction={async (action: string) => {
+          if (!focusPanelState.selectedTopicId || !focusPanelState.selectedTopicTitle) return;
+
+          const topicId = focusPanelState.selectedTopicId;
+          const topicTitle = focusPanelState.selectedTopicTitle;
+          const classId = focusPanelState.courseId;
+
+          // Build the opening prompt that the AI will respond to
+          const openingPrompt = `I want to study ${topicTitle}. Please explain it step by step at my level and then quiz me with practice questions.`;
+
+          setIsCreatingSession(true);
+          try {
+            const body: Record<string, unknown> = {
+              intent: 'new_question',
+              topicId,
+              topicTitle,
+            };
+            if (classId) body.classId = classId;
+
+            const res = await fetch('/api/chats/resolve', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              credentials: 'include',
+              body: JSON.stringify(body),
             });
-            if (focusPanelState.courseId) {
-              params.set('classId', focusPanelState.courseId);
-            }
+
+            if (!res.ok) throw new Error('Failed to create session');
+            const { chatId } = await res.json();
+            if (!chatId) throw new Error('No chatId returned');
+
+            // Store message so ClinicalTutorWorkspace auto-sends it on mount
+            localStorage.setItem('forgestudy-tutor-prefill', openingPrompt);
+            localStorage.setItem('forgestudy-tutor-auto-send', 'true');
+
+            const params = new URLSearchParams({ topicId, topicTitle, sessionId: chatId });
+            if (classId) params.set('classId', classId);
             router.push(`/tutor?${params.toString()}`);
+          } catch {
+            toast.error('Could not start session. Please try again.');
+          } finally {
+            setIsCreatingSession(false);
           }
         }}
       />
