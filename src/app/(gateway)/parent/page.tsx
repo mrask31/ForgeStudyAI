@@ -1,5 +1,7 @@
 'use client'
 
+export const dynamic = 'force-dynamic'
+
 import { useEffect, useMemo, useState } from 'react'
 import Link from 'next/link'
 import { Shield, Lock, CreditCard, Users, CheckCircle, XCircle, Plus, Gift, Copy } from 'lucide-react'
