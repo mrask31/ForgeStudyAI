@@ -1,14 +1,9 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { getSupabaseBrowser } from '@/lib/supabase/client'
 import { NotebookTopic } from '@/lib/types'
-import { listNotebookTopics, createNotebookTopic } from '@/lib/api/notebook'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Textarea } from '@/components/ui/textarea'
-import { Badge } from '@/components/ui/badge'
-import { Plus, BookOpen, X } from 'lucide-react'
+import { listNotebookTopics } from '@/lib/api/notebook'
+import { BookOpen } from 'lucide-react'
 
 interface NotebookSidebarProps {
   userId: string
@@ -25,12 +20,6 @@ export default function NotebookSidebar({
 }: NotebookSidebarProps) {
   const [topics, setTopics] = useState<NotebookTopic[]>([])
   const [loading, setLoading] = useState(true)
-  const [showAddForm, setShowAddForm] = useState(false)
-  const [formData, setFormData] = useState({
-    title: '',
-    description: '',
-    category: '',
-  })
 
   useEffect(() => {
     loadTopics()
@@ -43,28 +32,10 @@ export default function NotebookSidebar({
     setLoading(false)
   }
 
-  const handleAddTopic = async (e: React.FormEvent) => {
-    e.preventDefault()
-    if (!formData.title.trim()) return
-
-    const newTopic = await createNotebookTopic(userId, {
-      classId,
-      title: formData.title,
-      description: formData.description || undefined,
-      category: formData.category || undefined,
-    })
-
-    if (newTopic) {
-      setFormData({ title: '', description: '', category: '' })
-      setShowAddForm(false)
-      loadTopics()
-    }
-  }
-
   if (loading) {
     return (
       <div className="text-center py-8 text-[var(--tutor-text-muted)]">
-        Loading topics...
+        Loading...
       </div>
     )
   }
@@ -72,68 +43,21 @@ export default function NotebookSidebar({
   return (
     <div className="h-full flex flex-col bg-white border-r border-[var(--tutor-border-subtle)]">
       <div className="p-4 border-b border-[var(--tutor-border-subtle)]">
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="text-lg font-semibold text-[var(--tutor-text-main)]">
-            Topics
-          </h2>
-          {!showAddForm && (
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setShowAddForm(true)}
-            >
-              <Plus className="w-4 h-4 mr-1" />
-              Add
-            </Button>
-          )}
-        </div>
-
-        {showAddForm && (
-          <form onSubmit={handleAddTopic} className="space-y-3 mb-4">
-            <Input
-              placeholder="Topic title"
-              value={formData.title}
-              onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-              required
-            />
-            <Textarea
-              placeholder="Description (optional)"
-              value={formData.description}
-              onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-              rows={2}
-            />
-            <Input
-              placeholder="Subject category (optional)"
-              value={formData.category}
-              onChange={(e) => setFormData({ ...formData, category: e.target.value })}
-            />
-            <div className="flex gap-2">
-              <Button type="submit" size="sm" className="flex-1">
-                Add
-              </Button>
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                onClick={() => {
-                  setShowAddForm(false)
-                  setFormData({ title: '', description: '', category: '' })
-                }}
-              >
-                <X className="w-4 h-4" />
-              </Button>
-            </div>
-          </form>
-        )}
+        <h2 className="text-lg font-semibold text-[var(--tutor-text-main)]">
+          Saved Sessions
+        </h2>
+        <p className="text-xs text-[var(--tutor-text-muted)] mt-1">
+          Hit &ldquo;Save to Notebook&rdquo; on any Tutor message to save it here.
+        </p>
       </div>
 
       <div className="flex-1 overflow-y-auto p-2">
         {topics.length === 0 ? (
           <div className="text-center py-8 text-[var(--tutor-text-muted)]">
             <BookOpen className="w-8 h-8 mx-auto mb-2 opacity-50" />
-            <p className="text-sm">No topics yet.</p>
+            <p className="text-sm">No saved sessions yet.</p>
             <p className="text-xs mt-1">
-              Add something like "Quadratic Equations" or "Civil War"
+              Open the Tutor and click &ldquo;Save to Notebook&rdquo; on an answer.
             </p>
           </div>
         ) : (
@@ -151,14 +75,9 @@ export default function NotebookSidebar({
                 <div className="font-medium text-sm text-[var(--tutor-text-main)] mb-1">
                   {topic.title}
                 </div>
-                {topic.category && (
-                  <Badge variant="outline" className="text-xs mt-1">
-                    {topic.category}
-                  </Badge>
-                )}
-                {topic.confidence !== undefined && (
-                  <div className="text-xs text-[var(--tutor-text-muted)] mt-1">
-                    Confidence: {topic.confidence}%
+                {topic.lastStudiedAt && (
+                  <div className="text-xs text-[var(--tutor-text-muted)]">
+                    Saved {new Date(topic.lastStudiedAt).toLocaleDateString()}
                   </div>
                 )}
               </button>
@@ -169,4 +88,3 @@ export default function NotebookSidebar({
     </div>
   )
 }
-

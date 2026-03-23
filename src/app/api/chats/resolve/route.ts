@@ -598,6 +598,46 @@ export async function POST(req: Request) {
       })
     }
 
+    if (intent === 'save_to_notebook') {
+      const chatIdToSave = body.chatId as string | undefined
+      const summary = body.summary as string | undefined
+
+      if (!chatIdToSave) {
+        return NextResponse.json({ error: 'chatId is required for save_to_notebook' }, { status: 400 })
+      }
+
+      const { data: existingChat, error: fetchError } = await supabase
+        .from('chats')
+        .select('id, metadata')
+        .eq('id', chatIdToSave)
+        .eq('user_id', user.id)
+        .single()
+
+      if (fetchError || !existingChat) {
+        return NextResponse.json({ error: 'Chat not found' }, { status: 404 })
+      }
+
+      const updatedMetadata = {
+        ...(existingChat.metadata || {}),
+        savedToNotebook: true,
+        notebookSummary: summary || null,
+        notebookSavedAt: new Date().toISOString(),
+      }
+
+      const { error: updateError } = await supabase
+        .from('chats')
+        .update({ metadata: updatedMetadata })
+        .eq('id', chatIdToSave)
+        .eq('user_id', user.id)
+
+      if (updateError) {
+        console.error('[Resolve API] save_to_notebook error:', updateError)
+        return NextResponse.json({ error: 'Failed to save to notebook' }, { status: 500 })
+      }
+
+      return NextResponse.json({ success: true, chatId: chatIdToSave })
+    }
+
     return NextResponse.json({ error: 'Invalid intent' }, { status: 400 })
   } catch (error: any) {
     console.error('[Resolve] Critical error:', error)
@@ -634,6 +674,44 @@ export async function GET(req: Request) {
 
     // 2. Parse query params
     const { searchParams } = new URL(req.url)
+    const savedToNotebookParam = searchParams.get('savedToNotebook')
+
+    // Handle savedToNotebook listing — return chats saved to notebook
+    if (savedToNotebookParam === 'true') {
+      const classIdFilter = searchParams.get('classId')
+
+      let query = supabase
+        .from('chats')
+        .select('id, title, metadata, session_type, created_at, updated_at')
+        .eq('user_id', user.id)
+        .eq('metadata->>savedToNotebook', 'true')
+        .order('updated_at', { ascending: false })
+
+      if (classIdFilter) {
+        query = query.eq('metadata->>classId', classIdFilter)
+      }
+
+      const { data: savedChats, error: listError } = await query
+
+      if (listError) {
+        console.error('[Resolve API] Error fetching saved chats:', listError)
+        return NextResponse.json({ topics: [] })
+      }
+
+      const topics = (savedChats || []).map((chat: any) => ({
+        id: chat.id,
+        userId: user.id,
+        classId: chat.metadata?.classId || undefined,
+        title: chat.title,
+        description: chat.metadata?.notebookSummary || undefined,
+        lastStudiedAt: chat.metadata?.notebookSavedAt || chat.updated_at || undefined,
+        createdAt: chat.created_at,
+        updatedAt: chat.updated_at,
+      }))
+
+      return NextResponse.json({ topics })
+    }
+
     const chatIdParam = searchParams.get('id')
     const mode = searchParams.get('mode') || 'tutor'
     const noteIdsParam = searchParams.get('notes') || searchParams.get('note')

@@ -19,7 +19,7 @@ import ChatMessageList, { type ChatMessage } from '@/components/tutor/ChatMessag
 import { useTutorContext } from '@/components/tutor/TutorContext'
 import { useActiveProfile } from '@/contexts/ActiveProfileContext'
 import { useActiveProfileSummary } from '@/hooks/useActiveProfileSummary'
-import { setTopicSummaryAndStudiedAt } from '@/lib/api/notebook'
+// notebook api no longer needed here
 import { getSupabaseBrowser } from '@/lib/supabase/client'
 import FollowUpPrompts from '@/components/tutor/FollowUpPrompts'
 
@@ -780,33 +780,31 @@ export default function ClinicalTutorWorkspace({
                           <span>{flaggedMessages.has(m.id) ? 'Flagged' : 'Flag'}</span>
                         </button>
                       )}
-                      {tutorContext.selectedTopicId && !hasBinderContext && (
+                      {chatId && !hasBinderContext && (
                         <button
                           onClick={async () => {
-                            if (!tutorContext.selectedTopicId || savingToNotebook === m.id) return
-                            
+                            if (savingToNotebook === m.id) return
+
                             setSavingToNotebook(m.id)
                             try {
-                              // Get user ID
-                              const supabase = getSupabaseBrowser()
-                              const { data: { user } } = await supabase.auth.getUser()
-                              if (!user) {
-                                console.error('[ClinicalTutorWorkspace] User not authenticated')
-                                return
-                              }
-
                               // Extract summary: first 2-3 paragraphs or up to 400 characters
                               const paragraphs = m.content.split('\n\n').filter(p => p.trim())
                               let summary = paragraphs.slice(0, 3).join('\n\n')
                               if (summary.length > 400) {
                                 summary = summary.substring(0, 400) + '...'
                               } else if (summary.length === 0 && m.content.length > 0) {
-                                // Fallback: take first 400 chars
                                 summary = m.content.substring(0, 400) + (m.content.length > 400 ? '...' : '')
                               }
 
-                              await setTopicSummaryAndStudiedAt(user.id, tutorContext.selectedTopicId, summary)
-                              
+                              const response = await fetch('/api/chats/resolve', {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                credentials: 'include',
+                                body: JSON.stringify({ intent: 'save_to_notebook', chatId, summary }),
+                              })
+
+                              if (!response.ok) throw new Error('Failed to save to notebook')
+
                               // Show brief success feedback
                               setTimeout(() => {
                                 setSavingToNotebook(null)
