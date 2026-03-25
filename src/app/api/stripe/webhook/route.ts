@@ -56,10 +56,15 @@ export async function POST(req: Request) {
         signature,
         process.env.STRIPE_WEBHOOK_SECRET
       )
-    } catch (err) {
-      console.error('[Stripe Webhook] Signature verification failed:', err)
+    } catch (err: any) {
+      console.error('[Stripe Webhook] Signature verification failed:', {
+        message: err?.message,
+        type: err?.type,
+        secretPrefix: process.env.STRIPE_WEBHOOK_SECRET?.substring(0, 8) + '...',
+        signaturePrefix: signature?.substring(0, 20) + '...',
+      })
       return NextResponse.json(
-        { error: 'Invalid signature' },
+        { error: 'Signature verification failed. Check STRIPE_WEBHOOK_SECRET env var matches Stripe Dashboard.' },
         { status: 400 }
       )
     }
