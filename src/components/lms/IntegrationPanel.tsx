@@ -144,7 +144,7 @@ export function IntegrationPanel({ studentId, studentName }: IntegrationPanelPro
 
     setIsConnecting(true);
     try {
-      const res = await fetch(`/api/parent/lms/google-auth?studentId=${studentId}`);
+      const res = await fetch(`/api/auth/google-classroom/authorize?studentId=${studentId}`);
       const data = await res.json();
 
       if (!res.ok || !data.url) {

@@ -38,13 +38,14 @@ export async function GET(req: NextRequest) {
       return NextResponse.redirect(`${baseUrl}/parent?google_error=invalid_state`);
     }
 
-    const clientId = process.env.GOOGLE_OAUTH_CLIENT_ID;
-    const clientSecret = process.env.GOOGLE_OAUTH_CLIENT_SECRET;
+    const clientId = process.env['GOOGLE_CLIENT_ID'] || process.env['GOOGLE_OAUTH_CLIENT_ID'];
+    const clientSecret = process.env['GOOGLE_CLIENT_SECRET'] || process.env['GOOGLE_OAUTH_CLIENT_SECRET'];
     if (!clientId || !clientSecret) {
       return NextResponse.redirect(`${baseUrl}/parent?google_error=not_configured`);
     }
 
-    const redirectUri = `${baseUrl}/api/parent/lms/google-callback`;
+    const redirectUri = process.env['GOOGLE_REDIRECT_URI']
+      || `${baseUrl}/api/auth/google-classroom/callback`;
 
     // Exchange authorization code for tokens
     const tokenRes = await fetch(GOOGLE_TOKEN_URL, {
