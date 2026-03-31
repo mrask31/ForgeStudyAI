@@ -9,38 +9,32 @@ import { Lock, Mail, ArrowRight, Loader2, Eye, EyeOff } from 'lucide-react'
 type Status = 'verifying' | 'request' | 'ready' | 'expired' | 'done'
 
 export default function ResetPasswordClient() {
-  const [status, setStatus] = useState<Status>('verifying')
+  const searchParams = useSearchParams()
+  const router = useRouter()
+  const supabase = useMemo(() => getSupabaseBrowser(), [])
   const hasVerified = useRef(false)
+
+  // Determine initial status synchronously from URL — no spinner when no token
+  const tokenHash = searchParams.get('token_hash')
+  const hasToken = !!(tokenHash && searchParams.get('type') === 'recovery')
+  const [status, setStatus] = useState<Status>(hasToken ? 'verifying' : 'request')
 
   const [email, setEmail] = useState('')
   const [sendingEmail, setSendingEmail] = useState(false)
-
   const [password, setPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
   const [loading, setLoading] = useState(false)
   const [showPassword, setShowPassword] = useState(false)
   const [showConfirm, setShowConfirm] = useState(false)
-
   const [message, setMessage] = useState<{ text: string; type: 'error' | 'success' } | null>(null)
-  const router = useRouter()
-  const searchParams = useSearchParams()
-  const supabase = useMemo(() => getSupabaseBrowser(), [])
 
+  // Only verify OTP when token_hash is present
   useEffect(() => {
-    if (hasVerified.current) return
+    if (!hasToken || hasVerified.current) return
     hasVerified.current = true
 
-    const tokenHash = searchParams.get('token_hash')
-    const type = searchParams.get('type')
-
-    if (!tokenHash || type !== 'recovery') {
-      console.log('[Reset Password] No token_hash — showing email form')
-      setStatus('request')
-      return
-    }
-
     console.log('[Reset Password] Verifying OTP token_hash...')
-    supabase.auth.verifyOtp({ token_hash: tokenHash, type: 'recovery' })
+    supabase.auth.verifyOtp({ token_hash: tokenHash!, type: 'recovery' })
       .then(({ error }: { error: any }) => {
         if (error) {
           console.error('[Reset Password] verifyOtp failed:', error.message)
@@ -51,7 +45,7 @@ export default function ResetPasswordClient() {
           setStatus('ready')
         }
       })
-  }, [searchParams, supabase])
+  }, [hasToken, tokenHash, supabase])
 
   const handleSendResetEmail = async (e: React.FormEvent) => {
     e.preventDefault()
