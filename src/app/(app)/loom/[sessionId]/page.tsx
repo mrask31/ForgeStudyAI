@@ -84,7 +84,7 @@ export default function LoomSessionPage() {
         <div className="text-center max-w-md">
           <div className="text-red-400 text-lg mb-4">{error || 'Session not found'}</div>
           <button
-            onClick={() => router.push('/middle')}
+            onClick={() => router.push('/app')}
             className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg transition-colors"
           >
             Return to Galaxy

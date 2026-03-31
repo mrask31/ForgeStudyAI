@@ -114,15 +114,9 @@ function NewProfileContent() {
     loadData()
   }, [searchParams, router])
 
-  const getBandRoute = (bandValue: 'high' | 'middle') => {
-    switch (bandValue) {
-      case 'middle':
-        return '/middle'
-      case 'high':
-        return '/high'
-      default:
-        return '/profiles'
-    }
+  const getBandRoute = (_bandValue: 'high' | 'middle') => {
+    // All profiles route to unified /app Galaxy
+    return '/app'
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
