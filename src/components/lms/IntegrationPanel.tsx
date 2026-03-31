@@ -417,6 +417,9 @@ export function IntegrationPanel({ studentId, studentName }: IntegrationPanelPro
             >
               Connect Google Classroom
             </button>
+            <p className="text-xs text-amber-400/80 mt-2 leading-relaxed">
+              ⚠️ During beta, Google Classroom requires manual activation. After connecting, email support@forgestudyai.com with your Google account email to be added to the beta whitelist.
+            </p>
           </div>
         )}
       </div>

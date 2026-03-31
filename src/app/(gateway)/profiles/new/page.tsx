@@ -423,6 +423,9 @@ function NewProfileContent() {
                     className="w-full px-4 py-2.5 bg-primary hover:bg-primary/90 text-primary-foreground rounded-xl font-semibold transition-all disabled:opacity-50 disabled:cursor-not-allowed">
                     {isConnecting ? 'Connecting...' : 'Connect Google Classroom'}
                   </button>
+                  <p className="text-xs text-amber-500/80 mt-2 leading-relaxed">
+                    ⚠️ During beta, Google Classroom requires manual activation. After connecting, email support@forgestudyai.com with your Google account email to be added to the beta whitelist.
+                  </p>
                 </div>
 
                 {/* Skip */}
