@@ -190,12 +190,8 @@ export default function LoginClient() {
         return
       }
 
-      // No valid session — clear any stale auth tokens that could block new logins
-      if (!hasClearedStaleSession.current) {
-        hasClearedStaleSession.current = true
-        clearSupabaseStorage()
-        clearAuthStorage()
-      }
+      // No auto-clear — stale storage is only cleared via the explicit
+      // "Reset session" button to avoid wiping valid magic link sessions
     }
 
     checkExistingSession()
