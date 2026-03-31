@@ -2,8 +2,10 @@
 
 import { useEffect, useMemo, useState } from 'react'
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 import { getSupabaseBrowser } from '@/lib/supabase/client'
-import { Lock, ArrowRight, Loader2 } from 'lucide-react'
+import type { AuthChangeEvent, Session } from '@supabase/supabase-js'
+import { Lock, ArrowRight, Loader2, Eye, EyeOff } from 'lucide-react'
 
 export default function ResetPasswordClient() {
   const [password, setPassword] = useState('')
@@ -11,15 +13,29 @@ export default function ResetPasswordClient() {
   const [loading, setLoading] = useState(false)
   const [message, setMessage] = useState<{ text: string; type: 'error' | 'success' } | null>(null)
   const [hasSession, setHasSession] = useState<boolean | null>(null)
+  const [showPassword, setShowPassword] = useState(false)
+  const [showConfirm, setShowConfirm] = useState(false)
+  const router = useRouter()
 
   const supabase = useMemo(() => getSupabaseBrowser(), [])
 
   useEffect(() => {
-    const checkSession = async () => {
-      const { data: { session } } = await supabase.auth.getSession()
-      setHasSession(!!session)
-    }
-    checkSession()
+    // Listen for auth state changes — handles recovery token from email link
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event: AuthChangeEvent, session: Session | null) => {
+      if (event === 'PASSWORD_RECOVERY' || event === 'SIGNED_IN') {
+        setHasSession(true)
+      } else if (!session) {
+        supabase.auth.getSession().then((result: { data: { session: Session | null } }) => {
+          setHasSession(!!result.data.session)
+        })
+      }
+    })
+
+    supabase.auth.getSession().then((result: { data: { session: Session | null } }) => {
+      setHasSession(!!result.data.session)
+    })
+
+    return () => subscription.unsubscribe()
   }, [supabase])
 
   const handlePasswordReset = async (e: React.FormEvent) => {
@@ -43,9 +59,10 @@ export default function ResetPasswordClient() {
         setMessage({ text: error.message, type: 'error' })
         return
       }
-      setMessage({ text: 'Password updated! You can now sign in.', type: 'success' })
+      setMessage({ text: 'Password updated! Redirecting to sign in...', type: 'success' })
       setPassword('')
       setConfirmPassword('')
+      setTimeout(() => router.push('/login'), 2000)
     } catch (err) {
       console.error('[Reset Password] Error updating password:', err)
       setMessage({ text: 'Something went wrong. Please try again.', type: 'error' })
@@ -57,7 +74,7 @@ export default function ResetPasswordClient() {
   return (
     <div className="min-h-[calc(100dvh-4rem)] bg-slate-50">
       <div className="grid grid-cols-1 lg:grid-cols-2 min-h-[calc(100dvh-4rem)]">
-        <div className="hidden lg:flex bg-gradient-to-br from-slate-50 to-white border-r border-slate-200 flex flex-col justify-center items-center h-full px-8 text-center">
+        <div className="hidden lg:flex bg-gradient-to-br from-slate-50 to-white border-r border-slate-200 flex-col justify-center items-center h-full px-8 text-center">
           <div className="max-w-md space-y-8">
             <div className="space-y-4">
               <div className="w-16 h-16 bg-gradient-to-br from-teal-600 to-cyan-600 rounded-xl flex items-center justify-center mx-auto shadow-lg">
@@ -90,7 +107,7 @@ export default function ResetPasswordClient() {
 
               {hasSession === false && (
                 <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 text-sm text-amber-800 mb-4">
-                  Your reset link has expired. Please request a new password reset.
+                  Your reset link has expired or is invalid. <Link href="/reset" className="underline font-medium">Request a new one</Link>.
                 </div>
               )}
 
@@ -108,26 +125,32 @@ export default function ResetPasswordClient() {
                 <div className="relative">
                   <Lock className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400" />
                   <input
-                    type="password"
+                    type={showPassword ? 'text' : 'password'}
                     placeholder="New password"
-                    className="w-full pl-12 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-teal-600 focus:border-transparent transition-all"
+                    className="w-full pl-12 pr-12 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-teal-600 focus:border-transparent transition-all"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     required
                     minLength={8}
                   />
+                  <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors">
+                    {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+                  </button>
                 </div>
                 <div className="relative">
                   <Lock className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400" />
                   <input
-                    type="password"
+                    type={showConfirm ? 'text' : 'password'}
                     placeholder="Confirm new password"
-                    className="w-full pl-12 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-teal-600 focus:border-transparent transition-all"
+                    className="w-full pl-12 pr-12 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-teal-600 focus:border-transparent transition-all"
                     value={confirmPassword}
                     onChange={(e) => setConfirmPassword(e.target.value)}
                     required
                     minLength={8}
                   />
+                  <button type="button" onClick={() => setShowConfirm(!showConfirm)} className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors">
+                    {showConfirm ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+                  </button>
                 </div>
 
                 <button

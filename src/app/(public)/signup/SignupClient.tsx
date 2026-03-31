@@ -4,12 +4,14 @@ import { useState, useEffect, useCallback, useMemo } from 'react'
 import { getSupabaseBrowser } from '@/lib/supabase/client'
 import type { AuthChangeEvent, Session } from '@supabase/supabase-js'
 import { useRouter } from 'next/navigation'
-import { Mail, Lock, ArrowRight, Loader2, CheckCircle, MessageSquare, BookOpen, GraduationCap, Shield, Sparkles } from 'lucide-react'
+import { Mail, Lock, ArrowRight, Loader2, CheckCircle, MessageSquare, BookOpen, GraduationCap, Shield, Sparkles, Eye, EyeOff } from 'lucide-react'
 import Link from 'next/link'
 
 export default function SignupClient() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
+  const [confirmPassword, setConfirmPassword] = useState('')
+  const [showPassword, setShowPassword] = useState(false)
   const [acceptedTerms, setAcceptedTerms] = useState(false)
   const [loading, setLoading] = useState(false)
   const [message, setMessage] = useState<{ text: string; type: 'error' | 'success' | 'info' } | null>(null)
@@ -123,12 +125,17 @@ export default function SignupClient() {
 
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault()
-    
+
+    if (password !== confirmPassword) {
+      setMessage({ text: 'Passwords do not match.', type: 'error' })
+      return
+    }
+
     if (!acceptedTerms) {
       setMessage({ text: 'You must accept the Terms of Service and Privacy Policy to create an account.', type: 'error' })
       return
     }
-    
+
     setLoading(true)
     setMessage(null)
     localStorage.setItem('forgestudy-pending-email', email.trim())
@@ -584,17 +591,36 @@ export default function SignupClient() {
                   <div className="relative">
                     <Lock className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-500" />
                     <input
-                      type="password"
+                      type={showPassword ? 'text' : 'password'}
                       placeholder="Create a password"
-                      className="w-full pl-12 pr-4 py-3 bg-slate-950 border border-slate-700 rounded-xl text-sm text-slate-200 placeholder:text-slate-500 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all"
+                      className="w-full pl-12 pr-12 py-3 bg-slate-950 border border-slate-700 rounded-xl text-sm text-slate-200 placeholder:text-slate-500 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all"
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
                       required
                       minLength={8}
                     />
-                    <p className="text-xs text-slate-500 mt-1">
-                      Use at least 8 characters for your password.
-                    </p>
+                    <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-300 transition-colors">
+                      {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+                    </button>
+                  </div>
+                  <div className="relative">
+                    <Lock className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-500" />
+                    <input
+                      type={showPassword ? 'text' : 'password'}
+                      placeholder="Confirm password"
+                      className={`w-full pl-12 pr-12 py-3 bg-slate-950 border rounded-xl text-sm text-slate-200 placeholder:text-slate-500 focus:outline-none focus:ring-1 transition-all ${
+                        confirmPassword && confirmPassword !== password
+                          ? 'border-red-500 focus:border-red-500 focus:ring-red-500'
+                          : 'border-slate-700 focus:border-indigo-500 focus:ring-indigo-500'
+                      }`}
+                      value={confirmPassword}
+                      onChange={(e) => setConfirmPassword(e.target.value)}
+                      required
+                      minLength={8}
+                    />
+                    {confirmPassword && confirmPassword !== password && (
+                      <p className="text-xs text-red-400 mt-1">Passwords don't match</p>
+                    )}
                   </div>
                 </div>
 
@@ -623,7 +649,7 @@ export default function SignupClient() {
 
                 <button
                   type="submit"
-                  disabled={loading || !email || !password || !acceptedTerms || !appUrl}
+                  disabled={loading || !email || !password || !confirmPassword || password !== confirmPassword || !acceptedTerms || !appUrl}
                   className="w-full flex items-center justify-center gap-2 px-6 py-3 sm:py-3.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl text-base font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed border-none min-h-[44px]"
                 >
                   {loading ? (
