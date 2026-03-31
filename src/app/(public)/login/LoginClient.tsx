@@ -190,9 +190,11 @@ export default function LoginClient() {
         return
       }
 
-      if (!hasClearedStaleSession.current && hasSupabaseCookie()) {
+      // No valid session — clear any stale auth tokens that could block new logins
+      if (!hasClearedStaleSession.current) {
         hasClearedStaleSession.current = true
         clearSupabaseStorage()
+        clearAuthStorage()
       }
     }
 
