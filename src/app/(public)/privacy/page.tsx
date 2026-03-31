@@ -140,7 +140,7 @@ export default function PrivacyPage() {
               <li>• Request information about how student data is being used</li>
             </ul>
             <p className="text-slate-600 leading-relaxed mt-4">
-              To exercise these rights, please contact us at <a href="mailto:support@forgestudy.com" className="text-teal-600 hover:text-teal-700 hover:underline">support@forgestudy.com</a>. We will respond to your request within 30 days.
+              To exercise these rights, please contact us at <a href="mailto:support@forgestudyai.com" className="text-teal-600 hover:text-teal-700 hover:underline">support@forgestudyai.com</a>. We will respond to your request within 30 days.
             </p>
           </section>
 
@@ -188,7 +188,7 @@ export default function PrivacyPage() {
             </p>
             <p className="text-slate-600 leading-relaxed mt-2">
               <strong>MJR Intelligence Group LLC</strong><br />
-              Email: <a href="mailto:support@forgestudy.com" className="text-teal-600 hover:text-teal-700 hover:underline">support@forgestudy.com</a>
+              Email: <a href="mailto:support@forgestudyai.com" className="text-teal-600 hover:text-teal-700 hover:underline">support@forgestudyai.com</a>
             </p>
           </section>
         </div>

@@ -301,10 +301,10 @@ export function SettingsDrawer({ isOpen, onClose }: SettingsDrawerProps) {
             <p className="text-sm text-slate-400">
               Need help? Email{' '}
               <a
-                href="mailto:support@forgestudy.com"
+                href="mailto:support@forgestudyai.com"
                 className="text-indigo-400 hover:text-indigo-300 transition-colors"
               >
-                support@forgestudy.com
+                support@forgestudyai.com
               </a>
             </p>
           </div>

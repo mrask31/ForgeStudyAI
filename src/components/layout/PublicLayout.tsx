@@ -75,8 +75,8 @@ export default function PublicLayout({ children }: { children: React.ReactNode }
               <Link href="/privacy" className="hover:text-slate-200 transition-colors">
                 Privacy Policy
               </Link>
-              <a href="mailto:support@forgestudy.com" className="hover:text-slate-200 transition-colors">
-                Contact: support@forgestudy.com
+              <a href="mailto:support@forgestudyai.com" className="hover:text-slate-200 transition-colors">
+                Contact: support@forgestudyai.com
               </a>
             </div>
             <div className="text-slate-500 text-center sm:text-right">

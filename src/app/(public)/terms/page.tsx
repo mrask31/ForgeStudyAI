@@ -189,7 +189,7 @@ export default function TermsPage() {
               <li>• Refuse service to anyone for any reason at any time</li>
             </ul>
             <p className="text-slate-600 leading-relaxed mt-4">
-              You may cancel your account at any time through your account settings or by contacting us at <a href="mailto:support@forgestudy.com" className="text-teal-600 hover:text-teal-700 hover:underline">support@forgestudy.com</a>.
+              You may cancel your account at any time through your account settings or by contacting us at <a href="mailto:support@forgestudyai.com" className="text-teal-600 hover:text-teal-700 hover:underline">support@forgestudyai.com</a>.
             </p>
           </section>
 
@@ -201,7 +201,7 @@ export default function TermsPage() {
             <ul className="space-y-2 text-slate-600 leading-relaxed mb-4 ml-4">
               <li>• <strong>Free Trial:</strong> Your subscription begins with a 7-day free trial. You will not be charged during the trial period, and you can cancel anytime during the trial without being charged.</li>
               <li>• <strong>Automatic Billing:</strong> After the trial period ends, your subscription will automatically renew monthly and you will be charged the subscription fee unless you cancel before the trial ends.</li>
-              <li>• <strong>Cancellation:</strong> You may cancel your subscription at any time through your account settings or by contacting us at <a href="mailto:support@forgestudy.com" className="text-teal-600 hover:text-teal-700 hover:underline">support@forgestudy.com</a>. When you cancel, your subscription will remain active until the end of your current billing period, and you will continue to have access until that time. You will not be charged for subsequent billing periods after cancellation.</li>
+              <li>• <strong>Cancellation:</strong> You may cancel your subscription at any time through your account settings or by contacting us at <a href="mailto:support@forgestudyai.com" className="text-teal-600 hover:text-teal-700 hover:underline">support@forgestudyai.com</a>. When you cancel, your subscription will remain active until the end of your current billing period, and you will continue to have access until that time. You will not be charged for subsequent billing periods after cancellation.</li>
               <li>• <strong>No Refunds:</strong> Subscription fees are non-refundable after the free trial period ends, except as required by law. We do not provide refunds for partial subscription periods or unused portions of your subscription.</li>
               <li>• <strong>Price Changes:</strong> We reserve the right to modify subscription prices at any time. Price changes will be communicated to you at least 30 days in advance via email and will apply to subsequent billing periods. If you do not agree to a price change, you may cancel your subscription before the change takes effect.</li>
               <li>• <strong>Family Plans:</strong> Family plans support up to 4 student profiles. All student profiles are managed under one parent account and share the same subscription.</li>
@@ -229,7 +229,7 @@ export default function TermsPage() {
             </p>
             <p className="text-slate-600 leading-relaxed mt-2">
               <strong>MJR Intelligence Group LLC</strong><br />
-              Email: <a href="mailto:support@forgestudy.com" className="text-teal-600 hover:text-teal-700 hover:underline">support@forgestudy.com</a>
+              Email: <a href="mailto:support@forgestudyai.com" className="text-teal-600 hover:text-teal-700 hover:underline">support@forgestudyai.com</a>
             </p>
           </section>
         </div>

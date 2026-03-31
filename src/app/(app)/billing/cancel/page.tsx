@@ -65,8 +65,8 @@ export default function BillingCancelPage() {
             </p>
             <p className="text-xs text-slate-500">
               Questions? Contact us at{' '}
-              <a href="mailto:support@forgestudy.com" className="text-indigo-600 hover:underline">
-                support@forgestudy.com
+              <a href="mailto:support@forgestudyai.com" className="text-indigo-600 hover:underline">
+                support@forgestudyai.com
               </a>
             </p>
           </div>

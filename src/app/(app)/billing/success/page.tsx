@@ -157,8 +157,8 @@ function BillingSuccessContent() {
           <div className="mt-8 pt-6 border-t border-slate-200">
             <p className="text-xs text-slate-500">
               Need help? Contact us at{' '}
-              <a href="mailto:support@forgestudy.com" className="text-teal-700 hover:underline">
-                support@forgestudy.com
+              <a href="mailto:support@forgestudyai.com" className="text-teal-700 hover:underline">
+                support@forgestudyai.com
               </a>
             </p>
           </div>
