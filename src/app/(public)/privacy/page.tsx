@@ -182,7 +182,14 @@ export default function PrivacyPage() {
           </section>
 
           <section>
-            <h2 className="text-2xl font-semibold text-slate-900 mb-4">12. Contact Us</h2>
+            <h2 className="text-2xl font-semibold text-slate-900 mb-4">12. Children's Privacy (COPPA)</h2>
+            <p className="text-slate-600 leading-relaxed">
+              ForgeStudy AI is designed for students in grades 6–12 and complies with the Children's Online Privacy Protection Act (COPPA). For students under the age of 13, we require verifiable parental consent before the account becomes active. Parents may review, update, or request deletion of their child's data at any time by contacting <a href="mailto:support@forgestudyai.com" className="text-teal-600 hover:text-teal-700 hover:underline">support@forgestudyai.com</a>. We do not collect more information from children than is reasonably necessary to provide our educational service. We do not share children's personal information with third parties for marketing purposes.
+            </p>
+          </section>
+
+          <section>
+            <h2 className="text-2xl font-semibold text-slate-900 mb-4">13. Contact Us</h2>
             <p className="text-slate-600 leading-relaxed">
               If you have any questions about this Privacy Policy, please contact us at:
             </p>

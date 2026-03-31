@@ -119,6 +119,8 @@ export async function createStudentProfile(data: {
   grade_band: 'middle' | 'high'
   grade?: string | null
   interests?: string | null
+  is_minor?: boolean
+  parent_email?: string | null
 }): Promise<StudentProfile> {
   const supabase = createClient()
 
@@ -191,6 +193,9 @@ export async function createStudentProfile(data: {
     }
   }
 
+  const isMinor = data.is_minor ?? false
+  const consentStatus = isMinor ? 'pending' : 'not_required'
+
   const { data: profile, error } = await supabase
     .from('student_profiles')
     .insert({
@@ -199,6 +204,9 @@ export async function createStudentProfile(data: {
       grade_band: data.grade_band,
       grade: data.grade?.trim() || null,
       interests: data.interests?.trim() || null,
+      is_minor: isMinor,
+      consent_status: consentStatus,
+      parent_email: data.parent_email?.trim() || null,
     })
     .select()
     .single()

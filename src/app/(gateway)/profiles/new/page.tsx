@@ -4,6 +4,7 @@ import { useSearchParams, useRouter } from 'next/navigation'
 import { useEffect, useState, Suspense } from 'react'
 import { getSupabaseBrowser } from '@/lib/supabase/client'
 import { createStudentProfile, getStudentProfiles } from '@/app/actions/student-profiles'
+import { sendConsentEmail } from '@/app/actions/consent'
 import { useActiveProfile } from '@/contexts/ActiveProfileContext'
 import { FAMILY_MAX_PROFILES } from '@/lib/constants'
 import { GraduationCap, BookOpen, Link as LinkIcon, ArrowRight } from 'lucide-react'
@@ -32,8 +33,12 @@ function NewProfileContent() {
 
   // Step 2 Canvas state
   const [canvasUrl, setCanvasUrl] = useState('')
+  const [parentEmail, setParentEmail] = useState('')
   const [canvasPAT, setCanvasPAT] = useState('')
   const [isConnecting, setIsConnecting] = useState(false)
+
+  // Grades 6-7 are typically under 13 → COPPA minor
+  const isMinor = grade === '6' || grade === '7'
 
   useEffect(() => {
     const loadData = async () => {
@@ -130,13 +135,27 @@ function NewProfileContent() {
     try {
       if (!band) { setError('Please select a grade level'); setIsSubmitting(false); return }
       if (!displayName.trim()) { setError('Please enter the student\'s name'); setIsSubmitting(false); return }
+      if (isMinor && !parentEmail.trim()) { setError('Parent email is required for students under 13'); setIsSubmitting(false); return }
 
       const newProfile = await createStudentProfile({
         display_name: displayName.trim(),
         grade_band: band,
         grade: grade.trim() || null,
         interests: interests.trim() || null,
+        is_minor: isMinor,
+        parent_email: isMinor ? parentEmail.trim() : null,
       })
+
+      // Send COPPA consent email for minors
+      if (isMinor && parentEmail.trim()) {
+        try {
+          await sendConsentEmail(newProfile.id, parentEmail.trim(), displayName.trim())
+          toast.success('Consent email sent to parent!')
+        } catch (err) {
+          console.error('[New Profile] Failed to send consent email:', err)
+          // Don't block profile creation — consent can be resent
+        }
+      }
 
       setActiveProfileId(newProfile.id)
       setNewProfileId(newProfile.id)
@@ -286,6 +305,25 @@ function NewProfileContent() {
                       <option value="">Select grade (optional)...</option>
                       {gradeOptions.map((g) => <option key={g} value={g}>Grade {g}</option>)}
                     </select>
+                  </div>
+                )}
+
+                {/* Parent Email — required for minors (grade 6-7) */}
+                {isMinor && (
+                  <div>
+                    <label htmlFor="parentEmail" className="block text-sm font-semibold text-foreground mb-2">
+                      Parent/guardian email *
+                    </label>
+                    <p className="text-xs text-muted-foreground mb-2">
+                      Required for students under 13 (COPPA). We'll send a consent email to verify parental approval.
+                    </p>
+                    <input
+                      type="email" id="parentEmail" value={parentEmail}
+                      onChange={(e) => setParentEmail(e.target.value)}
+                      placeholder="parent@email.com" required
+                      className="w-full px-4 py-3 border-2 border-border bg-background rounded-xl focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-all text-foreground placeholder-muted-foreground"
+                      disabled={isSubmitting}
+                    />
                   </div>
                 )}
 
