@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server'
-import { createServerClient, type CookieOptions } from '@supabase/ssr'
+import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
 import { createClient } from '@supabase/supabase-js'
 import { hasSubscriptionAccess } from '@/lib/subscription-access'
@@ -8,6 +8,7 @@ export async function GET(request: Request) {
   const { searchParams, origin } = new URL(request.url)
   const code = searchParams.get('code')
   const plan = searchParams.get('plan')
+  const next = searchParams.get('next')
   
   // Confirm redirectTo / callbackUrl matches production domain
   // Use NEXT_PUBLIC_APP_URL if available, otherwise use request origin
@@ -22,21 +23,24 @@ export async function GET(request: Request) {
     return NextResponse.redirect(`${appUrl}/login?error=auth-code-error`)
   }
 
-  // Exchange code for session
+  // Exchange code for session — set cookies for SSR auth
   const cookieStore = cookies()
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     {
       cookies: {
-        get(name: string) {
-          return cookieStore.get(name)?.value
+        getAll() {
+          return cookieStore.getAll()
         },
-        set(name: string, value: string, options: CookieOptions) {
-          cookieStore.set({ name, value, ...options })
-        },
-        remove(name: string, options: CookieOptions) {
-          cookieStore.delete({ name, ...options })
+        setAll(cookiesToSet) {
+          try {
+            cookiesToSet.forEach(({ name, value, options }) =>
+              cookieStore.set(name, value, options)
+            )
+          } catch {
+            // setAll can fail in server components — safe to ignore
+          }
         },
       },
     }
@@ -120,6 +124,12 @@ export async function GET(request: Request) {
     } catch (error) {
       console.error('[Auth Callback] Error checking Stripe subscription:', error)
     }
+  }
+
+  // If explicit next param is set (e.g. from password reset), honor it
+  if (next) {
+    console.log('[Auth Callback] Redirecting to next param:', next)
+    return NextResponse.redirect(`${appUrl}${next}`)
   }
 
   // Determine redirect based on subscription status and plan parameter
