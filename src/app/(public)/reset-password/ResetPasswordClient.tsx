@@ -14,10 +14,18 @@ export default function ResetPasswordClient() {
   const supabase = useMemo(() => getSupabaseBrowser(), [])
   const hasVerified = useRef(false)
 
-  // Determine initial status synchronously from URL — no spinner when no token
+  // Determine initial status synchronously from URL params
   const tokenHash = searchParams.get('token_hash')
   const hasToken = !!(tokenHash && searchParams.get('type') === 'recovery')
-  const [status, setStatus] = useState<Status>(hasToken ? 'verifying' : 'request')
+  const verified = searchParams.get('verified') === 'true' // Set by /auth/confirm after server-side OTP
+  const urlError = searchParams.get('error')
+
+  const [status, setStatus] = useState<Status>(() => {
+    if (verified) return 'ready' // Server already verified — show password form
+    if (urlError === 'expired_link' || urlError === 'invalid_link') return 'expired'
+    if (hasToken) return 'verifying' // Client-side verification needed
+    return 'request' // No token — show email form
+  })
 
   const [email, setEmail] = useState('')
   const [sendingEmail, setSendingEmail] = useState(false)
@@ -26,14 +34,18 @@ export default function ResetPasswordClient() {
   const [loading, setLoading] = useState(false)
   const [showPassword, setShowPassword] = useState(false)
   const [showConfirm, setShowConfirm] = useState(false)
-  const [message, setMessage] = useState<{ text: string; type: 'error' | 'success' } | null>(null)
+  const [message, setMessage] = useState<{ text: string; type: 'error' | 'success' } | null>(() => {
+    if (urlError === 'expired_link') return { text: 'This reset link has expired or is invalid.', type: 'error' }
+    if (urlError === 'invalid_link') return { text: 'Invalid reset link. Please request a new one.', type: 'error' }
+    return null
+  })
 
-  // Only verify OTP when token_hash is present
+  // Client-side OTP verification — only when token_hash is in URL (direct link, not via /auth/confirm)
   useEffect(() => {
-    if (!hasToken || hasVerified.current) return
+    if (!hasToken || hasVerified.current || verified) return
     hasVerified.current = true
 
-    console.log('[Reset Password] Verifying OTP token_hash...')
+    console.log('[Reset Password] Verifying OTP token_hash client-side...')
     supabase.auth.verifyOtp({ token_hash: tokenHash!, type: 'recovery' })
       .then(({ error }: { error: any }) => {
         if (error) {
@@ -45,7 +57,7 @@ export default function ResetPasswordClient() {
           setStatus('ready')
         }
       })
-  }, [hasToken, tokenHash, supabase])
+  }, [hasToken, tokenHash, supabase, verified])
 
   const handleSendResetEmail = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -55,7 +67,7 @@ export default function ResetPasswordClient() {
     try {
       const baseUrl = process.env['NEXT_PUBLIC_APP_URL'] || 'https://www.forgestudyai.com'
       const { error } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: `${baseUrl}/reset-password`,
+        redirectTo: `${baseUrl}/auth/confirm?next=/reset-password`,
       })
       if (error) {
         setMessage({ text: error.message, type: 'error' })

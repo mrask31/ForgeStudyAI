@@ -1,22 +1,21 @@
 import { createServerClient, type CookieOptions } from '@supabase/ssr'
 import { cookies } from 'next/headers'
 import { NextResponse } from 'next/server'
+import type { NextRequest } from 'next/server'
 
-export async function GET(request: Request) {
-  const { searchParams, origin } = new URL(request.url)
+export async function GET(request: NextRequest) {
+  const { searchParams } = new URL(request.url)
   const tokenHash = searchParams.get('token_hash')
   const type = searchParams.get('type')
+  const next = searchParams.get('next') ?? '/reset-password'
 
-  const appUrl = process.env.NEXT_PUBLIC_APP_URL
-    ? process.env.NEXT_PUBLIC_APP_URL.startsWith('http')
-      ? process.env.NEXT_PUBLIC_APP_URL
-      : `https://${process.env.NEXT_PUBLIC_APP_URL}`
-    : origin
+  const baseUrl = process.env['NEXT_PUBLIC_APP_URL'] || 'https://www.forgestudyai.com'
 
   if (!tokenHash || !type) {
-    return NextResponse.redirect(`${appUrl}/login?error=auth-code-error`)
+    return NextResponse.redirect(`${baseUrl}/reset-password?error=invalid_link`)
   }
 
+  // Exchange the token server-side — sets session cookies
   const cookieStore = cookies()
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -42,9 +41,21 @@ export async function GET(request: Request) {
   })
 
   if (error) {
-    console.error('[Auth Confirm] Error verifying token:', error)
-    return NextResponse.redirect(`${appUrl}/login?error=auth-code-error`)
+    console.error('[Auth Confirm] Error verifying token:', error.message)
+    // For recovery type, redirect to reset page with error
+    if (type === 'recovery') {
+      return NextResponse.redirect(`${baseUrl}/reset-password?error=expired_link`)
+    }
+    return NextResponse.redirect(`${baseUrl}/login?error=auth-code-error`)
   }
 
-  return NextResponse.redirect(`${appUrl}/checkout`)
+  console.log('[Auth Confirm] Token verified, type:', type, 'redirecting to:', next)
+
+  // For recovery: redirect to reset-password (session is now set via cookies)
+  if (type === 'recovery') {
+    return NextResponse.redirect(`${baseUrl}/reset-password?verified=true`)
+  }
+
+  // For other types (signup confirmation, etc): use the next param
+  return NextResponse.redirect(`${baseUrl}${next}`)
 }
