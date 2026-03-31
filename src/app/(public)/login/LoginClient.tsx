@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useMemo, useRef } from 'react'
 import { getSupabaseBrowser } from '@/lib/supabase/client'
+import { clearAuthStorage } from '@/lib/auth-cleanup'
 import { useRouter } from 'next/navigation'
 import { Mail, Lock, ArrowRight, Loader2, MessageSquare, BookOpen, GraduationCap, Shield } from 'lucide-react'
 import Link from 'next/link'
@@ -62,6 +63,7 @@ export default function LoginClient() {
 
   const resetSession = () => {
     clearSupabaseStorage()
+    clearAuthStorage() // Also clear forgestudy-* keys and active_profile_id
     if (typeof window !== 'undefined') {
       window.location.assign('/login')
     }

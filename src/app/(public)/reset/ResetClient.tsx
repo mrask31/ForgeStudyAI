@@ -18,8 +18,9 @@ export default function ResetClient() {
     setMessage(null)
 
     try {
+      const baseUrl = process.env['NEXT_PUBLIC_APP_URL'] || 'https://www.forgestudyai.com'
       const { error } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: `${window.location.origin}/reset-password`,
+        redirectTo: `${baseUrl}/reset-password`,
       })
 
       if (error) {
