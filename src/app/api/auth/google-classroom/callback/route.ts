@@ -17,8 +17,7 @@ export const dynamic = 'force-dynamic';
 const GOOGLE_TOKEN_URL = 'https://oauth2.googleapis.com/token';
 
 export async function GET(req: NextRequest) {
-  const appUrl = process.env.NEXT_PUBLIC_APP_URL || req.nextUrl.origin;
-  const baseUrl = appUrl.startsWith('http') ? appUrl : `https://${appUrl}`;
+  const baseUrl = process.env['NEXT_PUBLIC_APP_URL'] || 'https://www.forgestudyai.com';
 
   try {
     const code = req.nextUrl.searchParams.get('code');

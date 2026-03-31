@@ -37,8 +37,9 @@ export async function GET(req: NextRequest) {
     }
 
     // Use the registered redirect URI from env, or build from app URL
+    const baseUrl = process.env['NEXT_PUBLIC_APP_URL'] || 'https://www.forgestudyai.com';
     const redirectUri = process.env['GOOGLE_REDIRECT_URI']
-      || `${process.env.NEXT_PUBLIC_APP_URL || req.nextUrl.origin}/api/auth/google-classroom/callback`;
+      || `${baseUrl}/api/auth/google-classroom/callback`;
 
     // Encode state with studentId for the callback
     const state = Buffer.from(JSON.stringify({ studentId, userId: user.id })).toString('base64');

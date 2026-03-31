@@ -36,8 +36,7 @@ export async function GET(req: NextRequest) {
     }
 
     // Build base URL for callback
-    const appUrl = process.env.NEXT_PUBLIC_APP_URL || req.nextUrl.origin;
-    const baseUrl = appUrl.startsWith('http') ? appUrl : `https://${appUrl}`;
+    const baseUrl = process.env['NEXT_PUBLIC_APP_URL'] || 'https://www.forgestudyai.com';
     const redirectUri = process.env['GOOGLE_REDIRECT_URI']
       || `${baseUrl}/api/auth/google-classroom/callback`;
 

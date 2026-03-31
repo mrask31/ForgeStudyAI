@@ -18,8 +18,7 @@ export async function GET(req: NextRequest) {
     const stateParam = req.nextUrl.searchParams.get('state');
     const error = req.nextUrl.searchParams.get('error');
 
-    const appUrl = process.env.NEXT_PUBLIC_APP_URL || req.nextUrl.origin;
-    const baseUrl = appUrl.startsWith('http') ? appUrl : `https://${appUrl}`;
+    const baseUrl = process.env['NEXT_PUBLIC_APP_URL'] || 'https://www.forgestudyai.com';
 
     if (error) {
       console.error('[Google Callback] OAuth error:', error);
@@ -93,8 +92,7 @@ export async function GET(req: NextRequest) {
     return NextResponse.redirect(`${baseUrl}/parent?google_connected=true`);
   } catch (error: any) {
     console.error('[Google Callback] Error:', error);
-    const appUrl = process.env.NEXT_PUBLIC_APP_URL || req.nextUrl.origin;
-    const baseUrl = appUrl.startsWith('http') ? appUrl : `https://${appUrl}`;
+    const baseUrl = process.env['NEXT_PUBLIC_APP_URL'] || 'https://www.forgestudyai.com';
     return NextResponse.redirect(`${baseUrl}/parent?google_error=unexpected`);
   }
 }
