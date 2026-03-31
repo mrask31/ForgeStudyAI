@@ -4,59 +4,78 @@ import { useEffect, useMemo, useState } from 'react'
 import Link from 'next/link'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { getSupabaseBrowser } from '@/lib/supabase/client'
-import { Lock, ArrowRight, Loader2, Eye, EyeOff } from 'lucide-react'
+import { Lock, Mail, ArrowRight, Loader2, Eye, EyeOff } from 'lucide-react'
 
 export default function ResetPasswordClient() {
+  // Which view to show: 'request' (enter email) or 'set' (enter new password)
+  const [view, setView] = useState<'loading' | 'request' | 'set'>('loading')
+
+  // Request form state
+  const [email, setEmail] = useState('')
+  const [sendingEmail, setSendingEmail] = useState(false)
+
+  // Set password form state
   const [password, setPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
   const [loading, setLoading] = useState(false)
-  const [verifying, setVerifying] = useState(true)
-  const [message, setMessage] = useState<{ text: string; type: 'error' | 'success' } | null>(null)
-  const [hasSession, setHasSession] = useState(false)
   const [showPassword, setShowPassword] = useState(false)
   const [showConfirm, setShowConfirm] = useState(false)
+
+  const [message, setMessage] = useState<{ text: string; type: 'error' | 'success' } | null>(null)
   const router = useRouter()
   const searchParams = useSearchParams()
-
   const supabase = useMemo(() => getSupabaseBrowser(), [])
 
-  // On mount: exchange token_hash for a session (Supabase PKCE flow)
+  // On mount: check if we have a token_hash (from email link) or show request form
   useEffect(() => {
-    const verifyToken = async () => {
+    const init = async () => {
       const tokenHash = searchParams.get('token_hash')
       const type = searchParams.get('type')
 
       if (tokenHash && type === 'recovery') {
-        // PKCE flow: exchange token_hash for session
         const { error } = await supabase.auth.verifyOtp({
           token_hash: tokenHash,
           type: 'recovery',
         })
-
         if (error) {
           console.error('[Reset Password] verifyOtp failed:', error.message)
-          setHasSession(false)
-          setMessage({ text: 'This reset link has expired or is invalid. Please request a new one.', type: 'error' })
+          setMessage({ text: 'This reset link has expired or is invalid.', type: 'error' })
+          setView('request')
         } else {
-          setHasSession(true)
+          setView('set')
         }
       } else {
-        // No token_hash — check if there's already a session (e.g. from old flow)
-        const { data: { session } } = await supabase.auth.getSession()
-        setHasSession(!!session)
-        if (!session) {
-          setMessage({ text: 'No reset token found. Please request a new password reset link.', type: 'error' })
-        }
+        // No token — show email request form
+        setView('request')
       }
-
-      setVerifying(false)
     }
-
-    verifyToken()
+    init()
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
-  const handlePasswordReset = async (e: React.FormEvent) => {
+  const handleSendResetEmail = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setSendingEmail(true)
+    setMessage(null)
+
+    try {
+      const baseUrl = process.env['NEXT_PUBLIC_APP_URL'] || 'https://www.forgestudyai.com'
+      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: `${baseUrl}/reset-password`,
+      })
+      if (error) {
+        setMessage({ text: error.message, type: 'error' })
+      } else {
+        setMessage({ text: 'Check your email for a password reset link.', type: 'success' })
+      }
+    } catch {
+      setMessage({ text: 'Something went wrong. Please try again.', type: 'error' })
+    } finally {
+      setSendingEmail(false)
+    }
+  }
+
+  const handleSetPassword = async (e: React.FormEvent) => {
     e.preventDefault()
     setMessage(null)
 
@@ -64,7 +83,6 @@ export default function ResetPasswordClient() {
       setMessage({ text: 'Password must be at least 8 characters.', type: 'error' })
       return
     }
-
     if (password !== confirmPassword) {
       setMessage({ text: 'Passwords do not match.', type: 'error' })
       return
@@ -81,30 +99,30 @@ export default function ResetPasswordClient() {
       setPassword('')
       setConfirmPassword('')
       setTimeout(() => router.push('/login'), 2000)
-    } catch (err) {
-      console.error('[Reset Password] Error updating password:', err)
+    } catch {
       setMessage({ text: 'Something went wrong. Please try again.', type: 'error' })
     } finally {
       setLoading(false)
     }
   }
 
+  const icon = view === 'set' ? Lock : Mail
+  const Icon = icon
+
   return (
     <div className="min-h-[calc(100dvh-4rem)] bg-slate-50">
       <div className="grid grid-cols-1 lg:grid-cols-2 min-h-[calc(100dvh-4rem)]">
         <div className="hidden lg:flex bg-gradient-to-br from-slate-50 to-white border-r border-slate-200 flex-col justify-center items-center h-full px-8 text-center">
-          <div className="max-w-md space-y-8">
-            <div className="space-y-4">
-              <div className="w-16 h-16 bg-gradient-to-br from-teal-600 to-cyan-600 rounded-xl flex items-center justify-center mx-auto shadow-lg">
-                <Lock className="w-8 h-8 text-white" />
-              </div>
-              <h2 className="text-2xl font-bold text-slate-900 leading-tight">
-                Set a new password
-              </h2>
-              <p className="text-base text-slate-600 leading-relaxed">
-                Use a strong password you can remember.
-              </p>
+          <div className="max-w-md space-y-4">
+            <div className="w-16 h-16 bg-gradient-to-br from-teal-600 to-cyan-600 rounded-xl flex items-center justify-center mx-auto shadow-lg">
+              <Icon className="w-8 h-8 text-white" />
             </div>
+            <h2 className="text-2xl font-bold text-slate-900">
+              {view === 'set' ? 'Set a new password' : 'Reset your password'}
+            </h2>
+            <p className="text-base text-slate-600">
+              {view === 'set' ? 'Use a strong password you can remember.' : "We'll send you a link to create a new password."}
+            </p>
           </div>
         </div>
 
@@ -113,31 +131,24 @@ export default function ResetPasswordClient() {
             <div className="bg-white border border-slate-200 rounded-2xl p-6 sm:p-8 shadow-lg">
               <div className="text-center mb-6 sm:mb-8">
                 <div className="inline-flex items-center justify-center w-14 h-14 bg-gradient-to-br from-teal-600 to-cyan-600 rounded-xl mb-4 shadow-lg shadow-teal-500/25">
-                  <Lock className="w-7 h-7 text-white" />
+                  <Icon className="w-7 h-7 text-white" />
                 </div>
                 <h1 className="text-2xl sm:text-3xl font-semibold text-slate-900 mb-2">
-                  Create a new password
+                  {view === 'set' ? 'Create a new password' : 'Forgot your password?'}
                 </h1>
                 <p className="text-sm text-slate-600">
-                  Enter a new password for your account.
+                  {view === 'set' ? 'Enter a new password for your account.' : 'Enter your email to receive a reset link.'}
                 </p>
               </div>
 
-              {verifying && (
+              {view === 'loading' && (
                 <div className="flex items-center justify-center gap-2 py-6 text-slate-500">
                   <Loader2 className="h-5 w-5 animate-spin" />
                   <span className="text-sm">Verifying reset link...</span>
                 </div>
               )}
 
-              {!verifying && !hasSession && (
-                <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 text-sm text-amber-800 mb-4">
-                  {message?.text || 'Your reset link has expired or is invalid.'}{' '}
-                  <Link href="/reset" className="underline font-medium">Request a new one</Link>.
-                </div>
-              )}
-
-              {!verifying && hasSession && message && (
+              {message && view !== 'loading' && (
                 <div className={`p-4 text-sm rounded-xl mb-4 ${
                   message.type === 'error'
                     ? 'bg-red-50 text-red-700 border border-red-200'
@@ -147,20 +158,42 @@ export default function ResetPasswordClient() {
                 </div>
               )}
 
-              {!verifying && hasSession && (
-                <form onSubmit={handlePasswordReset} className="space-y-4">
+              {/* Request reset email form */}
+              {view === 'request' && (
+                <form onSubmit={handleSendResetEmail} className="space-y-4">
+                  <div className="relative">
+                    <Mail className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400" />
+                    <input
+                      type="email"
+                      placeholder="Enter your email"
+                      className="w-full pl-12 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-teal-600 focus:border-transparent transition-all"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      required
+                    />
+                  </div>
+                  <button
+                    type="submit"
+                    disabled={sendingEmail || !email}
+                    className="w-full flex items-center justify-center gap-2 px-6 py-3 bg-gradient-to-r from-teal-600 to-cyan-600 text-white rounded-xl text-base font-semibold hover:from-teal-700 hover:to-cyan-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-md"
+                  >
+                    {sendingEmail ? <><Loader2 className="h-5 w-5 animate-spin" /> Sending...</> : <>Send reset link <ArrowRight className="h-5 w-5" /></>}
+                  </button>
+                </form>
+              )}
+
+              {/* Set new password form */}
+              {view === 'set' && (
+                <form onSubmit={handleSetPassword} className="space-y-4">
                   <div className="relative">
                     <Lock className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400" />
                     <input
                       type={showPassword ? 'text' : 'password'}
                       placeholder="New password"
                       className="w-full pl-12 pr-12 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-teal-600 focus:border-transparent transition-all"
-                      value={password}
-                      onChange={(e) => setPassword(e.target.value)}
-                      required
-                      minLength={8}
+                      value={password} onChange={(e) => setPassword(e.target.value)} required minLength={8}
                     />
-                    <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors">
+                    <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600">
                       {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
                     </button>
                   </div>
@@ -170,32 +203,18 @@ export default function ResetPasswordClient() {
                       type={showConfirm ? 'text' : 'password'}
                       placeholder="Confirm new password"
                       className="w-full pl-12 pr-12 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-teal-600 focus:border-transparent transition-all"
-                      value={confirmPassword}
-                      onChange={(e) => setConfirmPassword(e.target.value)}
-                      required
-                      minLength={8}
+                      value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} required minLength={8}
                     />
-                    <button type="button" onClick={() => setShowConfirm(!showConfirm)} className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors">
+                    <button type="button" onClick={() => setShowConfirm(!showConfirm)} className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600">
                       {showConfirm ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
                     </button>
                   </div>
-
                   <button
                     type="submit"
                     disabled={loading}
-                    className="w-full flex items-center justify-center gap-2 px-6 py-3 bg-gradient-to-r from-teal-600 to-cyan-600 text-white rounded-xl text-base font-semibold hover:from-teal-700 hover:to-cyan-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-md shadow-teal-500/30 hover:shadow-lg hover:shadow-teal-500/40"
+                    className="w-full flex items-center justify-center gap-2 px-6 py-3 bg-gradient-to-r from-teal-600 to-cyan-600 text-white rounded-xl text-base font-semibold hover:from-teal-700 hover:to-cyan-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-md"
                   >
-                    {loading ? (
-                      <>
-                        <Loader2 className="h-5 w-5 animate-spin" />
-                        Updating...
-                      </>
-                    ) : (
-                      <>
-                        Update password
-                        <ArrowRight className="h-5 w-5" />
-                      </>
-                    )}
+                    {loading ? <><Loader2 className="h-5 w-5 animate-spin" /> Updating...</> : <>Update password <ArrowRight className="h-5 w-5" /></>}
                   </button>
                 </form>
               )}

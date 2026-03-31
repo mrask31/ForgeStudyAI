@@ -389,7 +389,7 @@ export default function LoginClient() {
 
               {/* Remember & Reset */}
               <div className="flex items-center justify-between">
-                <Link href="/reset" className="text-sm text-indigo-400 hover:text-indigo-300 font-medium">
+                <Link href="/reset-password" className="text-sm text-indigo-400 hover:text-indigo-300 font-medium">
                   Forgot password?
                 </Link>
               </div>
