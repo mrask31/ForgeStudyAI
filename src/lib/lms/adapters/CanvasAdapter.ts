@@ -52,6 +52,8 @@ interface CanvasCourse {
   id: number;
   name: string;
   course_code?: string;
+  workflow_state?: string;
+  end_at?: string | null;
 }
 
 interface CanvasAssignment {
@@ -159,9 +161,9 @@ export class CanvasAdapter {
    */
   async getCourses(): Promise<Course[]> {
     try {
-      const url = `${this.instanceUrl}/api/v1/courses?enrollment_state=active&per_page=100`;
+      const url = `${this.instanceUrl}/api/v1/courses?include[]=term&include[]=total_students&per_page=50`;
       console.log('[Canvas] Fetching courses from:', url);
-      
+
       const response = await fetch(url, {
         method: 'GET',
         headers: {
@@ -176,13 +178,28 @@ export class CanvasAdapter {
       await this.handleErrorResponse(response);
 
       const canvasCourses: CanvasCourse[] = await response.json();
-      
-      console.log('[Canvas] Courses fetch result:', JSON.stringify({
-        count: canvasCourses.length,
-        courses: canvasCourses.map(c => ({ id: c.id, name: c.name }))
-      }));
 
-      return canvasCourses.map((course) => ({
+      console.log(`[Canvas] Total courses returned from API: ${canvasCourses.length}`);
+      canvasCourses.forEach(c => {
+        console.log(`[Canvas] Course: "${c.name}" workflow_state=${c.workflow_state} end_at=${c.end_at ?? 'null'}`);
+      });
+
+      // Filter client-side: exclude courses that are completed AND ended more than 30 days ago
+      const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
+      const filteredCourses = canvasCourses.filter(course => {
+        if (course.workflow_state === 'completed' && course.end_at) {
+          const endDate = new Date(course.end_at);
+          if (endDate < thirtyDaysAgo) {
+            console.log(`[Canvas] Filtering out course "${course.name}" (completed, ended ${course.end_at})`);
+            return false;
+          }
+        }
+        return true;
+      });
+
+      console.log(`[Canvas] After filtering: ${filteredCourses.length} of ${canvasCourses.length} courses kept`);
+
+      return filteredCourses.map((course) => ({
         id: course.id.toString(),
         name: course.name,
         code: course.course_code || null,
@@ -235,7 +252,7 @@ export class CanvasAdapter {
     courseName: string
   ): Promise<Assignment[]> {
     try {
-      const url = `${this.instanceUrl}/api/v1/courses/${courseId}/assignments?per_page=100`;
+      const url = `${this.instanceUrl}/api/v1/courses/${courseId}/assignments?per_page=50&order_by=due_at`;
       console.log(`[Canvas] Fetching assignments for course ${courseId} (${courseName}) from:`, url);
       
       const response = await fetch(url, {
@@ -253,10 +270,7 @@ export class CanvasAdapter {
 
       const canvasAssignments: CanvasAssignment[] = await response.json();
       
-      console.log(`[Canvas] Assignments fetch result for course ${courseId}:`, JSON.stringify({
-        count: canvasAssignments.length,
-        assignments: canvasAssignments.map(a => ({ id: a.id, name: a.name, due_at: a.due_at }))
-      }));
+      console.log(`[Canvas] Assignments for course "${courseName}" (${courseId}): ${canvasAssignments.length} assignments`);
 
       return canvasAssignments.map((assignment) => ({
         lmsAssignmentId: assignment.id.toString(),

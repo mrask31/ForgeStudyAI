@@ -196,36 +196,19 @@ export async function POST(request: Request) {
       studentId = matched.student_id;
     }
 
-    // 5. Run sync and return result
+    // 5. Fire-and-forget sync — return 200 immediately, run sync in background
     const syncService = new SmartSyncService(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
       process.env.SUPABASE_SERVICE_ROLE_KEY!
     );
 
-    try {
-      const results = await syncService.syncOnLogin(studentId);
-      console.log(`[Sync Trigger] Completed sync for student ${studentId}:`, results);
+    // Start sync but don't await — prevents 504 timeout on slow syncs
+    syncService.syncOnLogin(studentId).catch((err: any) => {
+      console.error(`[Sync Trigger] Background sync error for student ${studentId}:`, err);
+    });
 
-      return NextResponse.json(
-        {
-          success: true,
-          message: 'Sync completed successfully',
-          results,
-        },
-        { status: 200 }
-      );
-    } catch (syncError: any) {
-      console.error(`[Sync Trigger] Sync failed for student ${studentId}:`, syncError);
-
-      return NextResponse.json(
-        {
-          success: false,
-          message: 'Sync failed',
-          error: syncError instanceof Error ? syncError.message : String(syncError),
-        },
-        { status: 502 }
-      );
-    }
+    console.log(`[Sync Trigger] Sync started in background for student ${studentId}`);
+    return NextResponse.json({ success: true, message: 'Sync started' }, { status: 200 });
   } catch (error: any) {
     console.error('[Sync Trigger] Unexpected error:', error);
     return NextResponse.json(

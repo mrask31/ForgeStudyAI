@@ -77,11 +77,18 @@ export function SettingsDrawer({ isOpen, onClose }: SettingsDrawerProps) {
       return;
     }
 
+    // Validate UUID format before sending to API
+    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+    if (!uuidRegex.test(activeProfileId)) {
+      console.error('[SyncNow] Invalid UUID format — cannot send to API. Value:', JSON.stringify(activeProfileId));
+      toast.error('Invalid profile ID — please switch profiles and try again');
+      return;
+    }
+
+    console.log('[SyncNow] Sending profileId to API:', activeProfileId);
     setIsSyncing(true);
 
     try {
-      console.log('[SyncNow] Attempting sync for profile:', activeProfileId);
-      
       const response = await fetch('/api/internal/sync/trigger', {
         method: 'POST',
         credentials: 'include',
