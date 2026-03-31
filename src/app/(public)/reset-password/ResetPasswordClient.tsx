@@ -1,20 +1,20 @@
 'use client'
 
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useRef, useMemo, useState } from 'react'
 import Link from 'next/link'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { getSupabaseBrowser } from '@/lib/supabase/client'
 import { Lock, Mail, ArrowRight, Loader2, Eye, EyeOff } from 'lucide-react'
 
-export default function ResetPasswordClient() {
-  // Which view to show: 'request' (enter email) or 'set' (enter new password)
-  const [view, setView] = useState<'loading' | 'request' | 'set'>('loading')
+type Status = 'verifying' | 'request' | 'ready' | 'expired' | 'done'
 
-  // Request form state
+export default function ResetPasswordClient() {
+  const [status, setStatus] = useState<Status>('verifying')
+  const hasVerified = useRef(false)
+
   const [email, setEmail] = useState('')
   const [sendingEmail, setSendingEmail] = useState(false)
 
-  // Set password form state
   const [password, setPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
   const [loading, setLoading] = useState(false)
@@ -26,32 +26,32 @@ export default function ResetPasswordClient() {
   const searchParams = useSearchParams()
   const supabase = useMemo(() => getSupabaseBrowser(), [])
 
-  // On mount: check if we have a token_hash (from email link) or show request form
   useEffect(() => {
-    const init = async () => {
-      const tokenHash = searchParams.get('token_hash')
-      const type = searchParams.get('type')
+    if (hasVerified.current) return
+    hasVerified.current = true
 
-      if (tokenHash && type === 'recovery') {
-        const { error } = await supabase.auth.verifyOtp({
-          token_hash: tokenHash,
-          type: 'recovery',
-        })
+    const tokenHash = searchParams.get('token_hash')
+    const type = searchParams.get('type')
+
+    if (!tokenHash || type !== 'recovery') {
+      console.log('[Reset Password] No token_hash — showing email form')
+      setStatus('request')
+      return
+    }
+
+    console.log('[Reset Password] Verifying OTP token_hash...')
+    supabase.auth.verifyOtp({ token_hash: tokenHash, type: 'recovery' })
+      .then(({ error }: { error: any }) => {
         if (error) {
           console.error('[Reset Password] verifyOtp failed:', error.message)
           setMessage({ text: 'This reset link has expired or is invalid.', type: 'error' })
-          setView('request')
+          setStatus('expired')
         } else {
-          setView('set')
+          console.log('[Reset Password] verifyOtp succeeded — showing password form')
+          setStatus('ready')
         }
-      } else {
-        // No token — show email request form
-        setView('request')
-      }
-    }
-    init()
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
+      })
+  }, [searchParams, supabase])
 
   const handleSendResetEmail = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -96,8 +96,7 @@ export default function ResetPasswordClient() {
         return
       }
       setMessage({ text: 'Password updated! Redirecting to sign in...', type: 'success' })
-      setPassword('')
-      setConfirmPassword('')
+      setStatus('done')
       setTimeout(() => router.push('/login'), 2000)
     } catch {
       setMessage({ text: 'Something went wrong. Please try again.', type: 'error' })
@@ -106,8 +105,9 @@ export default function ResetPasswordClient() {
     }
   }
 
-  const icon = view === 'set' ? Lock : Mail
-  const Icon = icon
+  const showEmailForm = status === 'request' || status === 'expired'
+  const showPasswordForm = status === 'ready' || status === 'done'
+  const Icon = showPasswordForm ? Lock : Mail
 
   return (
     <div className="min-h-[calc(100dvh-4rem)] bg-slate-50">
@@ -118,10 +118,10 @@ export default function ResetPasswordClient() {
               <Icon className="w-8 h-8 text-white" />
             </div>
             <h2 className="text-2xl font-bold text-slate-900">
-              {view === 'set' ? 'Set a new password' : 'Reset your password'}
+              {showPasswordForm ? 'Set a new password' : 'Reset your password'}
             </h2>
             <p className="text-base text-slate-600">
-              {view === 'set' ? 'Use a strong password you can remember.' : "We'll send you a link to create a new password."}
+              {showPasswordForm ? 'Use a strong password you can remember.' : "We'll send you a link to create a new password."}
             </p>
           </div>
         </div>
@@ -134,64 +134,62 @@ export default function ResetPasswordClient() {
                   <Icon className="w-7 h-7 text-white" />
                 </div>
                 <h1 className="text-2xl sm:text-3xl font-semibold text-slate-900 mb-2">
-                  {view === 'set' ? 'Create a new password' : 'Forgot your password?'}
+                  {showPasswordForm ? 'Create a new password' : 'Forgot your password?'}
                 </h1>
                 <p className="text-sm text-slate-600">
-                  {view === 'set' ? 'Enter a new password for your account.' : 'Enter your email to receive a reset link.'}
+                  {showPasswordForm ? 'Enter a new password for your account.' : 'Enter your email to receive a reset link.'}
                 </p>
               </div>
 
-              {view === 'loading' && (
-                <div className="flex items-center justify-center gap-2 py-6 text-slate-500">
+              {/* Verifying spinner */}
+              {status === 'verifying' && (
+                <div className="flex items-center justify-center gap-2 py-8 text-slate-500">
                   <Loader2 className="h-5 w-5 animate-spin" />
                   <span className="text-sm">Verifying reset link...</span>
                 </div>
               )}
 
-              {message && view !== 'loading' && (
+              {/* Messages */}
+              {message && status !== 'verifying' && (
                 <div className={`p-4 text-sm rounded-xl mb-4 ${
                   message.type === 'error'
                     ? 'bg-red-50 text-red-700 border border-red-200'
                     : 'bg-green-50 text-green-700 border border-green-200'
                 }`}>
                   {message.text}
+                  {status === 'expired' && (
+                    <> <Link href="/reset-password" className="underline font-medium">Request a new link</Link>.</>
+                  )}
                 </div>
               )}
 
-              {/* Request reset email form */}
-              {view === 'request' && (
+              {/* Email request form */}
+              {showEmailForm && (
                 <form onSubmit={handleSendResetEmail} className="space-y-4">
                   <div className="relative">
                     <Mail className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400" />
                     <input
-                      type="email"
-                      placeholder="Enter your email"
+                      type="email" placeholder="Enter your email" required
                       className="w-full pl-12 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-teal-600 focus:border-transparent transition-all"
-                      value={email}
-                      onChange={(e) => setEmail(e.target.value)}
-                      required
+                      value={email} onChange={(e) => setEmail(e.target.value)}
                     />
                   </div>
-                  <button
-                    type="submit"
-                    disabled={sendingEmail || !email}
-                    className="w-full flex items-center justify-center gap-2 px-6 py-3 bg-gradient-to-r from-teal-600 to-cyan-600 text-white rounded-xl text-base font-semibold hover:from-teal-700 hover:to-cyan-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-md"
-                  >
+                  <button type="submit" disabled={sendingEmail || !email}
+                    className="w-full flex items-center justify-center gap-2 px-6 py-3 bg-gradient-to-r from-teal-600 to-cyan-600 text-white rounded-xl text-base font-semibold hover:from-teal-700 hover:to-cyan-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-md">
                     {sendingEmail ? <><Loader2 className="h-5 w-5 animate-spin" /> Sending...</> : <>Send reset link <ArrowRight className="h-5 w-5" /></>}
                   </button>
                 </form>
               )}
 
-              {/* Set new password form */}
-              {view === 'set' && (
+              {/* Set password form */}
+              {showPasswordForm && (
                 <form onSubmit={handleSetPassword} className="space-y-4">
                   <div className="relative">
                     <Lock className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400" />
                     <input
-                      type={showPassword ? 'text' : 'password'}
-                      placeholder="New password"
+                      type={showPassword ? 'text' : 'password'} placeholder="New password" required minLength={8}
                       className="w-full pl-12 pr-12 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-teal-600 focus:border-transparent transition-all"
-                      value={password} onChange={(e) => setPassword(e.target.value)} required minLength={8}
+                      value={password} onChange={(e) => setPassword(e.target.value)}
                     />
                     <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600">
                       {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
@@ -200,20 +198,16 @@ export default function ResetPasswordClient() {
                   <div className="relative">
                     <Lock className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400" />
                     <input
-                      type={showConfirm ? 'text' : 'password'}
-                      placeholder="Confirm new password"
+                      type={showConfirm ? 'text' : 'password'} placeholder="Confirm new password" required minLength={8}
                       className="w-full pl-12 pr-12 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-teal-600 focus:border-transparent transition-all"
-                      value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} required minLength={8}
+                      value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)}
                     />
                     <button type="button" onClick={() => setShowConfirm(!showConfirm)} className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600">
                       {showConfirm ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
                     </button>
                   </div>
-                  <button
-                    type="submit"
-                    disabled={loading}
-                    className="w-full flex items-center justify-center gap-2 px-6 py-3 bg-gradient-to-r from-teal-600 to-cyan-600 text-white rounded-xl text-base font-semibold hover:from-teal-700 hover:to-cyan-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-md"
-                  >
+                  <button type="submit" disabled={loading || status === 'done'}
+                    className="w-full flex items-center justify-center gap-2 px-6 py-3 bg-gradient-to-r from-teal-600 to-cyan-600 text-white rounded-xl text-base font-semibold hover:from-teal-700 hover:to-cyan-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-md">
                     {loading ? <><Loader2 className="h-5 w-5 animate-spin" /> Updating...</> : <>Update password <ArrowRight className="h-5 w-5" /></>}
                   </button>
                 </form>
