@@ -199,8 +199,9 @@ export class GoogleClassroomAdapter {
    * Ensure access token is valid, refresh if needed
    */
   private async ensureValidToken(): Promise<void> {
-    // If token expires in less than 5 minutes, refresh it
-    if (this.tokenExpiresAt && this.tokenExpiresAt.getTime() - Date.now() < 300000) {
+    // Refresh if: no expiration set (first call), or token expires within 5 minutes
+    if (!this.tokenExpiresAt || this.tokenExpiresAt.getTime() - Date.now() < 300000) {
+      console.log('[GoogleClassroom] Refreshing access token (expires:', this.tokenExpiresAt?.toISOString() || 'never set', ')');
       await this.refreshAccessToken();
     }
   }

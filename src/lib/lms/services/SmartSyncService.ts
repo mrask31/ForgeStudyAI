@@ -112,9 +112,13 @@ export class SmartSyncService {
         .in('status', ['active', 'blocked']); // Include blocked for retry attempts
 
       if (error || !connections || connections.length === 0) {
-        console.log(`[SmartSync] No active connections found for student ${studentId}`);
+        console.log(`[SmartSync] No active connections found for student ${studentId}`, error?.message);
         return [];
       }
+
+      console.log(`[SmartSync] Found ${connections.length} connection(s) for student ${studentId}:`,
+        connections.map(c => ({ id: c.id, provider: c.provider, status: c.status }))
+      );
 
       // Sync each connection
       const results: SyncResult[] = [];
@@ -258,13 +262,22 @@ export class SmartSyncService {
         const metadata = connection.metadata as {
           clientId: string;
           clientSecret: string;
+          accessToken?: string;
         };
+        console.log('[SmartSync] Creating GoogleClassroomAdapter with:', {
+          hasRefreshToken: !!decryptedToken,
+          hasClientId: !!metadata.clientId,
+          hasClientSecret: !!metadata.clientSecret,
+          tokenExpiresAt: connection.token_expires_at,
+        });
+        // decryptedToken is the refresh token; pass empty string as access token
+        // so ensureValidToken() always refreshes on first call
         const adapter = new GoogleClassroomAdapter(
-          decryptedToken,
-          decryptedToken, // Refresh token (same for now)
+          '', // access token — will be obtained via refresh
+          decryptedToken, // refresh token
           metadata.clientId,
           metadata.clientSecret,
-          connection.token_expires_at ? new Date(connection.token_expires_at) : undefined
+          null as any // force refresh on first API call
         );
         syncResult = await adapter.sync();
       } else {
