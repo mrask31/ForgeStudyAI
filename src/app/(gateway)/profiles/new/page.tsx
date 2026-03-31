@@ -6,11 +6,20 @@ import { getSupabaseBrowser } from '@/lib/supabase/client'
 import { createStudentProfile, getStudentProfiles } from '@/app/actions/student-profiles'
 import { useActiveProfile } from '@/contexts/ActiveProfileContext'
 import { FAMILY_MAX_PROFILES } from '@/lib/constants'
-import { GraduationCap, BookOpen } from 'lucide-react'
+import { GraduationCap, BookOpen, Link as LinkIcon, ArrowRight } from 'lucide-react'
+import { toast } from 'sonner'
 
 function NewProfileContent() {
   const searchParams = useSearchParams()
   const router = useRouter()
+  const { setActiveProfileId } = useActiveProfile()
+
+  // Step state: 'profile' (Step 1) or 'connect' (Step 2)
+  const [step, setStep] = useState<'profile' | 'connect'>('profile')
+  const [newProfileId, setNewProfileId] = useState<string | null>(null)
+  const [newProfileName, setNewProfileName] = useState('')
+
+  // Step 1 form state
   const [band, setBand] = useState<'high' | 'middle' | null>(null)
   const [displayName, setDisplayName] = useState('')
   const [grade, setGrade] = useState('')
@@ -20,7 +29,11 @@ function NewProfileContent() {
   const [user, setUser] = useState<any>(null)
   const [isCheckingAuth, setIsCheckingAuth] = useState(true)
   const [authError, setAuthError] = useState<string | null>(null)
-  const { setActiveProfileId } = useActiveProfile()
+
+  // Step 2 Canvas state
+  const [canvasUrl, setCanvasUrl] = useState('')
+  const [canvasPAT, setCanvasPAT] = useState('')
+  const [isConnecting, setIsConnecting] = useState(false)
 
   useEffect(() => {
     const loadData = async () => {
@@ -49,13 +62,11 @@ function NewProfileContent() {
 
         setUser(session.user)
 
-        // Read band from query params
         const bandParam = searchParams.get('band')
         if (bandParam && ['high', 'middle'].includes(bandParam)) {
           setBand(bandParam as 'high' | 'middle')
         }
 
-        // Check current profile count
         const profiles = await getStudentProfiles()
         const existingProfiles = profiles.length
 
@@ -73,17 +84,13 @@ function NewProfileContent() {
               router.replace('/profiles')
               return
             }
-          } catch (error) {
-            console.error('[New Profile Page] Failed to check plan type:', error)
+          } catch {
             router.replace('/profiles')
             return
           }
 
           const stored = sessionStorage.getItem('parent_pin_unlocked')
-          if (!stored) {
-            router.replace('/parent')
-            return
-          }
+          if (!stored) { router.replace('/parent'); return }
           try {
             const parsed = JSON.parse(stored) as { timestamp: number }
             if (Date.now() - parsed.timestamp > 30 * 60 * 1000) {
@@ -114,28 +121,15 @@ function NewProfileContent() {
     loadData()
   }, [searchParams, router])
 
-  const getBandRoute = (_bandValue: 'high' | 'middle') => {
-    // All profiles route to unified /app Galaxy
-    return '/app'
-  }
-
-  const handleSubmit = async (e: React.FormEvent) => {
+  // Step 1: Create profile
+  const handleCreateProfile = async (e: React.FormEvent) => {
     e.preventDefault()
     setError(null)
     setIsSubmitting(true)
 
     try {
-      if (!band) {
-        setError('Please select a grade level')
-        setIsSubmitting(false)
-        return
-      }
-
-      if (!displayName.trim()) {
-        setError('Please enter the student\'s name')
-        setIsSubmitting(false)
-        return
-      }
+      if (!band) { setError('Please select a grade level'); setIsSubmitting(false); return }
+      if (!displayName.trim()) { setError('Please enter the student\'s name'); setIsSubmitting(false); return }
 
       const newProfile = await createStudentProfile({
         display_name: displayName.trim(),
@@ -144,49 +138,84 @@ function NewProfileContent() {
         interests: interests.trim() || null,
       })
 
-      // After creation, check profile count and redirect
-      const updatedProfiles = await getStudentProfiles()
-      
-      if (updatedProfiles.length === 1) {
-        // First profile created - set as active and go to app
-        setActiveProfileId(newProfile.id)
-        router.push(getBandRoute(newProfile.grade_band))
-      } else {
-        // Multiple profiles - redirect to Parent Dashboard (not profile picker)
-        router.push('/parent')
-      }
+      setActiveProfileId(newProfile.id)
+      setNewProfileId(newProfile.id)
+      setNewProfileName(displayName.trim())
+      setStep('connect')
     } catch (err: any) {
       console.error('[New Profile Page] Error creating profile:', err)
       setError(err.message || 'Failed to create profile. Please try again.')
+    } finally {
       setIsSubmitting(false)
     }
   }
 
-  if (isCheckingAuth) {
+  // Step 2: Connect Canvas
+  const handleCanvasConnect = async () => {
+    if (!canvasUrl.trim() || !canvasPAT.trim() || !newProfileId) return
+    setIsConnecting(true)
+
+    try {
+      const res = await fetch('/api/parent/lms/connect', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({
+          studentId: newProfileId,
+          provider: 'canvas',
+          canvasInstanceUrl: canvasUrl.trim(),
+          canvasPAT: canvasPAT.trim(),
+        }),
+      })
+
+      const data = await res.json()
+      if (!res.ok || !data.success) {
+        throw new Error(data.message || 'Failed to connect Canvas')
+      }
+
+      toast.success('Canvas connected! Syncing assignments...')
+      router.push('/app')
+    } catch (err: any) {
+      console.error('[New Profile] Canvas connect error:', err)
+      toast.error(err.message || 'Failed to connect Canvas')
+    } finally {
+      setIsConnecting(false)
+    }
+  }
+
+  // Step 2: Connect Google Classroom
+  const handleGoogleConnect = async () => {
+    if (!newProfileId) return
+    setIsConnecting(true)
+    try {
+      const res = await fetch(`/api/auth/google-classroom/authorize?studentId=${newProfileId}`, {
+        credentials: 'include',
+      })
+      const data = await res.json()
+      if (!res.ok || !data.url) {
+        throw new Error(data.error || 'Failed to start Google OAuth')
+      }
+      window.location.href = data.url
+    } catch (err: any) {
+      console.error('[New Profile] Google connect error:', err)
+      toast.error(err.message || 'Failed to start Google Classroom connection')
+      setIsConnecting(false)
+    }
+  }
+
+  if (isCheckingAuth || !user) {
     return (
       <div className="h-full bg-slate-50 flex items-center justify-center">
         <div className="text-center">
-          <div className="text-slate-600">Checking authentication...</div>
+          <div className="text-slate-600">{authError || 'Checking authentication...'}</div>
         </div>
       </div>
     )
   }
 
-  if (!user) {
-    return (
-      <div className="h-full bg-slate-50 flex items-center justify-center">
-        <div className="text-center">
-          <div className="text-slate-600">
-            {authError || 'Redirecting to sign in...'}
-          </div>
-        </div>
-      </div>
-    )
-  }
-
-  const gradeOptions = band === 'middle'
-    ? ['6', '7', '8']
-    : ['9', '10', '11', '12']
+  const gradeOptions = band === 'middle' ? ['6', '7', '8'] : ['9', '10', '11', '12']
+  const stepNumber = step === 'profile' ? 3 : 4
+  const stepProgress = step === 'profile' ? 'w-3/5' : 'w-4/5'
 
   return (
     <div className="h-full overflow-y-auto bg-gradient-to-br from-background via-background to-background">
@@ -194,187 +223,180 @@ function NewProfileContent() {
         {/* Progress Indicator */}
         <div className="mb-12">
           <div className="flex items-center justify-between mb-2">
-            <h2 className="text-sm font-semibold text-foreground">Step 3 of 5</h2>
-            <div className="text-xs text-muted-foreground">60%</div>
+            <h2 className="text-sm font-semibold text-foreground">Step {stepNumber} of 5</h2>
+            <div className="text-xs text-muted-foreground">{step === 'profile' ? '60%' : '80%'}</div>
           </div>
           <div className="w-full h-2 bg-secondary rounded-full overflow-hidden">
-            <div className="h-full w-3/5 bg-primary rounded-full transition-all duration-500" />
+            <div className={`h-full ${stepProgress} bg-primary rounded-full transition-all duration-500`} />
           </div>
         </div>
 
         <div className="bg-card/80 backdrop-blur-xl border border-border rounded-2xl p-8 sm:p-10 shadow-xl">
-          <h1 className="text-3xl sm:text-4xl font-bold text-foreground mb-2">
-            Create a student profile
-          </h1>
-          <p className="text-lg text-muted-foreground mb-2">
-            Set up personalized learning support for Grades 6–12
-          </p>
-          <p className="text-sm text-muted-foreground mb-8">
-            ForgeStudy helps students understand their work step-by-step, building confidence and independence.
-          </p>
-
-          <form onSubmit={handleSubmit} className="space-y-6">
-            {/* Display Name */}
-            <div>
-              <label htmlFor="displayName" className="block text-sm font-semibold text-foreground mb-2">
-                Student name / nickname *
-              </label>
-              <input
-                type="text"
-                id="displayName"
-                value={displayName}
-                onChange={(e) => setDisplayName(e.target.value)}
-                placeholder="Enter student name or nickname"
-                required
-                className="w-full px-4 py-3 border-2 border-border bg-background rounded-xl focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-all text-foreground placeholder-muted-foreground"
-                disabled={isSubmitting}
-              />
-              <p className="mt-1.5 text-xs text-muted-foreground">
-                This helps personalize their learning experience
+          {step === 'profile' ? (
+            <>
+              <h1 className="text-3xl sm:text-4xl font-bold text-foreground mb-2">
+                Create a student profile
+              </h1>
+              <p className="text-lg text-muted-foreground mb-2">
+                Set up personalized learning support for Grades 6–12
               </p>
-            </div>
-
-            {/* Grade Band */}
-            <div>
-              <label className="block text-sm font-semibold text-foreground mb-3">
-                Grade level *
-              </label>
-              <p className="text-xs text-muted-foreground mb-3">
-                ForgeStudy adapts its teaching style to match each grade band
+              <p className="text-sm text-muted-foreground mb-8">
+                ForgeStudy helps students understand their work step-by-step, building confidence and independence.
               </p>
-              <div className="grid grid-cols-2 gap-4">
-              {[
-                { value: 'middle', label: 'Middle School', sublabel: 'Grades 6–8', icon: BookOpen },
-                { value: 'high', label: 'High School', sublabel: 'Grades 9–12', icon: GraduationCap },
-              ].map(({ value, label, sublabel, icon: Icon }) => (
-                  <button
-                    key={value}
-                    type="button"
-                    onClick={() => setBand(value as 'high' | 'middle')}
+
+              <form onSubmit={handleCreateProfile} className="space-y-6">
+                {/* Display Name */}
+                <div>
+                  <label htmlFor="displayName" className="block text-sm font-semibold text-foreground mb-2">
+                    Student name / nickname *
+                  </label>
+                  <input
+                    type="text" id="displayName" value={displayName}
+                    onChange={(e) => setDisplayName(e.target.value)}
+                    placeholder="Enter student name or nickname" required
+                    className="w-full px-4 py-3 border-2 border-border bg-background rounded-xl focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-all text-foreground placeholder-muted-foreground"
                     disabled={isSubmitting}
-                    className={`
-                      p-4 rounded-xl border-2 transition-all duration-200
-                      ${band === value
-                        ? 'border-primary bg-primary/10 shadow-lg shadow-primary/20'
-                        : 'border-border bg-background hover:border-primary hover:bg-card/50'
-                      }
-                      ${isSubmitting ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}
-                    `}
-                  >
-                    <Icon className={`w-6 h-6 mx-auto mb-2 ${band === value ? 'text-primary' : 'text-muted-foreground'}`} />
-                    <span className={`text-sm font-semibold block ${band === value ? 'text-primary' : 'text-foreground'}`}>
-                      {label}
-                    </span>
-                    <span className={`text-xs mt-0.5 block ${band === value ? 'text-primary/80' : 'text-muted-foreground'}`}>
-                      {sublabel}
-                    </span>
+                  />
+                </div>
+
+                {/* Grade Band */}
+                <div>
+                  <label className="block text-sm font-semibold text-foreground mb-3">Grade level *</label>
+                  <div className="grid grid-cols-2 gap-4">
+                    {[
+                      { value: 'middle', label: 'Middle School', sublabel: 'Grades 6–8', icon: BookOpen },
+                      { value: 'high', label: 'High School', sublabel: 'Grades 9–12', icon: GraduationCap },
+                    ].map(({ value, label, sublabel, icon: Icon }) => (
+                      <button key={value} type="button" onClick={() => setBand(value as 'high' | 'middle')} disabled={isSubmitting}
+                        className={`p-4 rounded-xl border-2 transition-all duration-200 ${band === value ? 'border-primary bg-primary/10 shadow-lg shadow-primary/20' : 'border-border bg-background hover:border-primary hover:bg-card/50'} ${isSubmitting ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}>
+                        <Icon className={`w-6 h-6 mx-auto mb-2 ${band === value ? 'text-primary' : 'text-muted-foreground'}`} />
+                        <span className={`text-sm font-semibold block ${band === value ? 'text-primary' : 'text-foreground'}`}>{label}</span>
+                        <span className={`text-xs mt-0.5 block ${band === value ? 'text-primary/80' : 'text-muted-foreground'}`}>{sublabel}</span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Grade */}
+                {band && (
+                  <div>
+                    <label htmlFor="grade" className="block text-sm font-semibold text-foreground mb-2">Specific grade (optional)</label>
+                    <select id="grade" value={grade} onChange={(e) => setGrade(e.target.value)} disabled={isSubmitting}
+                      className="w-full px-4 py-3 border-2 border-border bg-background rounded-xl focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-all text-foreground">
+                      <option value="">Select grade (optional)...</option>
+                      {gradeOptions.map((g) => <option key={g} value={g}>Grade {g}</option>)}
+                    </select>
+                  </div>
+                )}
+
+                {/* Interests */}
+                <div>
+                  <label htmlFor="interests" className="block text-sm font-semibold text-foreground mb-2">
+                    What does {displayName || 'your student'} love? (optional)
+                  </label>
+                  <div className="mb-4">
+                    <div className="flex flex-wrap gap-2">
+                      {['Gaming', 'Soccer', 'Music', 'Art', 'Science', 'Reading'].map((tag) => (
+                        <button key={tag} type="button" disabled={isSubmitting}
+                          onClick={() => {
+                            const arr = interests.split(',').map(i => i.trim()).filter(i => i)
+                            if (arr.includes(tag)) setInterests(arr.filter(i => i !== tag).join(', '))
+                            else { arr.push(tag); setInterests(arr.join(', ')) }
+                          }}
+                          className={`px-3 py-1.5 rounded-full text-sm font-medium transition-all ${interests.split(',').map(i => i.trim()).includes(tag) ? 'bg-primary text-primary-foreground' : 'bg-secondary text-secondary-foreground hover:bg-secondary/80'}`}>
+                          {tag}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                  <textarea id="interests" value={interests} onChange={(e) => setInterests(e.target.value)}
+                    placeholder="e.g., soccer, space, art, Minecraft, dinosaurs, anime"
+                    className="w-full min-h-[80px] px-4 py-3 border-2 border-border bg-background rounded-xl focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-all text-foreground placeholder-muted-foreground"
+                    disabled={isSubmitting} />
+                </div>
+
+                {error && (
+                  <div className="bg-red-950/50 border border-red-800 rounded-xl p-4">
+                    <p className="text-sm font-medium text-red-400">{error}</p>
+                  </div>
+                )}
+
+                <div className="flex gap-4 pt-4">
+                  <button type="button" onClick={() => router.push('/parent')} disabled={isSubmitting}
+                    className="flex-1 px-6 py-3 border-2 border-border text-foreground rounded-xl font-semibold hover:bg-secondary/50 transition-colors disabled:opacity-50">
+                    Cancel
                   </button>
-                ))}
+                  <button type="submit" disabled={isSubmitting || !band || !displayName.trim()}
+                    className="flex-1 px-6 py-3 bg-primary hover:bg-primary/90 text-primary-foreground rounded-xl font-bold transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-primary/30 flex items-center justify-center gap-2">
+                    {isSubmitting ? 'Creating profile...' : <>Next <ArrowRight className="w-4 h-4" /></>}
+                  </button>
+                </div>
+              </form>
+            </>
+          ) : (
+            /* Step 2: Connect classroom */
+            <>
+              <div className="flex items-center gap-3 mb-2">
+                <LinkIcon className="w-7 h-7 text-primary" />
+                <h1 className="text-2xl sm:text-3xl font-bold text-foreground">
+                  Connect {newProfileName}'s classroom
+                </h1>
               </div>
-            </div>
-
-            {/* Grade (Optional) */}
-            {band && (
-              <div>
-                <label htmlFor="grade" className="block text-sm font-semibold text-foreground mb-2">
-                  Specific grade (optional)
-                </label>
-                <p className="text-xs text-muted-foreground mb-2">
-                  Helps us personalize explanations and examples
-                </p>
-                <select
-                  id="grade"
-                  value={grade}
-                  onChange={(e) => setGrade(e.target.value)}
-                  className="w-full px-4 py-3 border-2 border-border bg-background rounded-xl focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-all text-foreground"
-                  disabled={isSubmitting}
-                >
-                  <option value="">Select grade (optional)...</option>
-                  {gradeOptions.map((g) => (
-                    <option key={g} value={g}>
-                      Grade {g}
-                    </option>
-                  ))}
-                </select>
-              </div>
-            )}
-
-            {/* Interests - Fun UI with Tag Chips */}
-            <div>
-              <label htmlFor="interests" className="block text-sm font-semibold text-foreground mb-2">
-                What does {displayName || 'your student'} love? (optional)
-              </label>
-              <p className="text-xs text-muted-foreground mb-3">
-                We use this to make tutoring examples more engaging and fun.
+              <p className="text-muted-foreground mb-8">
+                Connect Canvas or Google Classroom so we can sync assignments automatically. You can also skip this and connect later in Settings.
               </p>
-              
-              {/* Quick select chips */}
-              <div className="mb-4">
-                <p className="text-xs text-muted-foreground mb-2">Quick select:</p>
-                <div className="flex flex-wrap gap-2">
-                  {['Gaming', 'Soccer', 'Music', 'Art', 'Science', 'Reading'].map((tag) => (
-                    <button
-                      key={tag}
-                      type="button"
-                      onClick={() => {
-                        const newInterests = interests.split(',').map(i => i.trim()).filter(i => i)
-                        if (newInterests.includes(tag)) {
-                          setInterests(newInterests.filter(i => i !== tag).join(', '))
-                        } else {
-                          newInterests.push(tag)
-                          setInterests(newInterests.join(', '))
-                        }
-                      }}
-                      disabled={isSubmitting}
-                      className={`px-3 py-1.5 rounded-full text-sm font-medium transition-all ${
-                        interests.split(',').map(i => i.trim()).includes(tag)
-                          ? 'bg-primary text-primary-foreground'
-                          : 'bg-secondary text-secondary-foreground hover:bg-secondary/80'
-                      }`}
-                    >
-                      {tag}
-                    </button>
-                  ))}
+
+              <div className="space-y-6">
+                {/* Canvas connect */}
+                <div className="border-2 border-border rounded-xl p-6 space-y-4">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 bg-gradient-to-br from-orange-500 to-red-600 rounded-lg flex items-center justify-center">
+                      <span className="text-white font-bold text-lg">C</span>
+                    </div>
+                    <div>
+                      <h3 className="text-lg font-semibold text-foreground">Canvas LMS</h3>
+                      <p className="text-xs text-muted-foreground">Personal Access Token</p>
+                    </div>
+                  </div>
+                  <input type="url" placeholder="Canvas URL (e.g., https://school.instructure.com)" value={canvasUrl}
+                    onChange={(e) => setCanvasUrl(e.target.value)} disabled={isConnecting}
+                    className="w-full px-4 py-2.5 border-2 border-border bg-background rounded-xl text-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-all" />
+                  <input type="password" placeholder="Personal Access Token" value={canvasPAT}
+                    onChange={(e) => setCanvasPAT(e.target.value)} disabled={isConnecting}
+                    className="w-full px-4 py-2.5 border-2 border-border bg-background rounded-xl text-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-all" />
+                  <button onClick={handleCanvasConnect} disabled={isConnecting || !canvasUrl.trim() || !canvasPAT.trim()}
+                    className="w-full px-4 py-2.5 bg-primary hover:bg-primary/90 text-primary-foreground rounded-xl font-semibold transition-all disabled:opacity-50 disabled:cursor-not-allowed">
+                    {isConnecting ? 'Connecting...' : 'Connect Canvas'}
+                  </button>
+                </div>
+
+                {/* Google Classroom connect */}
+                <div className="border-2 border-border rounded-xl p-6">
+                  <div className="flex items-center gap-3 mb-4">
+                    <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-green-500 rounded-lg flex items-center justify-center">
+                      <span className="text-white font-bold text-lg">G</span>
+                    </div>
+                    <div>
+                      <h3 className="text-lg font-semibold text-foreground">Google Classroom</h3>
+                      <p className="text-xs text-muted-foreground">OAuth 2.0</p>
+                    </div>
+                  </div>
+                  <button onClick={handleGoogleConnect} disabled={isConnecting}
+                    className="w-full px-4 py-2.5 bg-primary hover:bg-primary/90 text-primary-foreground rounded-xl font-semibold transition-all disabled:opacity-50 disabled:cursor-not-allowed">
+                    {isConnecting ? 'Connecting...' : 'Connect Google Classroom'}
+                  </button>
+                </div>
+
+                {/* Skip */}
+                <div className="text-center pt-2">
+                  <button onClick={() => router.push('/app')}
+                    className="text-sm text-muted-foreground hover:text-foreground transition-colors underline underline-offset-4">
+                    Skip for now
+                  </button>
                 </div>
               </div>
-
-              {/* Text input for custom interests */}
-              <textarea
-                id="interests"
-                value={interests}
-                onChange={(e) => setInterests(e.target.value)}
-                placeholder="e.g., soccer, space, art, Minecraft, dinosaurs, anime"
-                className="w-full min-h-[100px] px-4 py-3 border-2 border-border bg-background rounded-xl focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-all text-foreground placeholder-muted-foreground"
-                disabled={isSubmitting}
-              />
-            </div>
-
-            {/* Error Message */}
-            {error && (
-              <div className="bg-red-950/50 border border-red-800 rounded-xl p-4">
-                <p className="text-sm font-medium text-red-400">{error}</p>
-              </div>
-            )}
-
-            {/* Submit Button */}
-            <div className="flex gap-4 pt-4">
-              <button
-                type="button"
-                onClick={() => router.push('/parent')}
-                disabled={isSubmitting}
-                className="flex-1 px-6 py-3 border-2 border-border text-foreground rounded-xl font-semibold hover:bg-secondary/50 transition-colors disabled:opacity-50"
-              >
-                Cancel
-              </button>
-              <button
-                type="submit"
-                disabled={isSubmitting || !band || !displayName.trim()}
-                className="flex-1 px-6 py-3 bg-primary hover:bg-primary/90 text-primary-foreground rounded-xl font-bold focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:ring-offset-background transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-primary/30 hover:shadow-xl hover:shadow-primary/40"
-              >
-                {isSubmitting ? 'Creating profile...' : 'Continue to Next Step'}
-              </button>
-            </div>
-          </form>
+            </>
+          )}
         </div>
       </div>
     </div>
