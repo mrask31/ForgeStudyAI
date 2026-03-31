@@ -167,9 +167,9 @@ export function ConceptGalaxy({ topics, coursePlanets, studentName, profileId, l
             <>
               <LinkIcon className="w-12 h-12 text-indigo-400" />
               <h2 className="text-xl font-semibold text-slate-100 text-center">Your Galaxy is waiting.</h2>
-              <p className="text-sm text-slate-400 text-center">Connect Canvas in Settings to load your assignments, or upload study materials to get started.</p>
+              <p className="text-sm text-slate-400 text-center">Connect Canvas or Google Classroom in Settings to load your assignments, or upload study materials to get started.</p>
               <div className="flex flex-col gap-3 w-full">
-                <button onClick={() => window.dispatchEvent(new CustomEvent('open-settings'))} className="bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl px-6 py-3 w-full font-medium transition-colors flex items-center justify-center gap-2"><Settings className="w-4 h-4" />Connect Canvas in Settings</button>
+                <button onClick={() => window.dispatchEvent(new CustomEvent('open-settings'))} className="bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl px-6 py-3 w-full font-medium transition-colors flex items-center justify-center gap-2"><Settings className="w-4 h-4" />Connect a Classroom in Settings</button>
                 <button onClick={() => router.push('/sources')} className="bg-slate-800 hover:bg-slate-700 border border-slate-600 text-slate-300 rounded-xl px-6 py-3 w-full font-medium transition-all">Upload Materials</button>
                 <button onClick={() => router.push('/tutor')} className="bg-slate-800 hover:bg-slate-700 border border-slate-600 text-slate-300 rounded-xl px-6 py-3 w-full font-medium transition-all">Ask Your Tutor</button>
               </div>
@@ -183,7 +183,7 @@ export function ConceptGalaxy({ topics, coursePlanets, studentName, profileId, l
           ) : (
             <>
               <h2 className="text-xl font-semibold text-slate-100 text-center">No assignments found.</h2>
-              <p className="text-sm text-slate-400 text-center">Check your Canvas connection in Settings, or upload study materials to get started.</p>
+              <p className="text-sm text-slate-400 text-center">Check your classroom connection in Settings, or upload study materials to get started.</p>
             </>
           )}
         </div>

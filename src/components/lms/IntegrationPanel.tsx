@@ -28,6 +28,7 @@ export function IntegrationPanel({ studentId, studentName }: IntegrationPanelPro
   const [isLoading, setIsLoading] = useState(true);
   const [isConnecting, setIsConnecting] = useState(false);
   const [isDisconnecting, setIsDisconnecting] = useState<string | null>(null);
+  const [isSyncing, setIsSyncing] = useState(false);
 
   // Canvas state
   const [canvasInstanceUrl, setCanvasInstanceUrl] = useState('');
@@ -194,6 +195,31 @@ export function IntegrationPanel({ studentId, studentName }: IntegrationPanelPro
     }
   };
 
+  const handleSyncNow = async () => {
+    setIsSyncing(true);
+    try {
+      const response = await fetch('/api/internal/sync/trigger', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ profileId: studentId }),
+      });
+
+      if (!response.ok) {
+        const data = await response.json().catch(() => ({}));
+        throw new Error(data.error || 'Sync failed');
+      }
+
+      toast.success('Sync complete! Assignments updated.');
+      await fetchConnectionStatus();
+    } catch (error: any) {
+      console.error('[IntegrationPanel] Sync error:', error);
+      toast.error(error.message || 'Failed to sync assignments');
+    } finally {
+      setIsSyncing(false);
+    }
+  };
+
   const getConnectionByProvider = (provider: 'canvas' | 'google_classroom') => {
     return connections.find((c) => c.provider === provider);
   };
@@ -260,11 +286,20 @@ export function IntegrationPanel({ studentId, studentName }: IntegrationPanelPro
                 {isDisconnecting === canvasConnection.id ? 'Disconnecting...' : 'Disconnect'}
               </button>
             </div>
-            {canvasConnection.lastSyncAt && (
-              <p className="text-xs text-slate-400">
-                Last synced: {new Date(canvasConnection.lastSyncAt).toLocaleString()}
-              </p>
-            )}
+            <div className="flex items-center justify-between">
+              {canvasConnection.lastSyncAt && (
+                <p className="text-xs text-slate-400">
+                  Last synced: {new Date(canvasConnection.lastSyncAt).toLocaleString()}
+                </p>
+              )}
+              <button
+                onClick={handleSyncNow}
+                disabled={isSyncing}
+                className="text-xs text-indigo-400 hover:text-indigo-300 transition-colors disabled:opacity-50 font-medium"
+              >
+                {isSyncing ? 'Syncing...' : 'Sync Now'}
+              </button>
+            </div>
             {canvasConnection.status === 'blocked' && (
               <p className="text-xs text-yellow-400">
                 Connection blocked due to repeated failures. Manual upload is still available.
@@ -346,11 +381,20 @@ export function IntegrationPanel({ studentId, studentName }: IntegrationPanelPro
                 {isDisconnecting === googleConnection.id ? 'Disconnecting...' : 'Disconnect'}
               </button>
             </div>
-            {googleConnection.lastSyncAt && (
-              <p className="text-xs text-slate-400">
-                Last synced: {new Date(googleConnection.lastSyncAt).toLocaleString()}
-              </p>
-            )}
+            <div className="flex items-center justify-between">
+              {googleConnection.lastSyncAt && (
+                <p className="text-xs text-slate-400">
+                  Last synced: {new Date(googleConnection.lastSyncAt).toLocaleString()}
+                </p>
+              )}
+              <button
+                onClick={handleSyncNow}
+                disabled={isSyncing}
+                className="text-xs text-indigo-400 hover:text-indigo-300 transition-colors disabled:opacity-50 font-medium"
+              >
+                {isSyncing ? 'Syncing...' : 'Sync Now'}
+              </button>
+            </div>
           </div>
         ) : (
           // Connection form
