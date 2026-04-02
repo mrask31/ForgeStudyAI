@@ -112,15 +112,18 @@ export default function ResetPasswordClient() {
     try {
       const { error } = await supabase.auth.updateUser({ password })
       if (error) {
+        console.error('[Reset Password] updateUser error:', error.message)
         setMessage({ text: error.message, type: 'error' })
+        setLoading(false)
         return
       }
       setMessage({ text: 'Password updated! Redirecting to sign in...', type: 'success' })
       setStatus('done')
+      setLoading(false)
       setTimeout(() => router.push('/login'), 2000)
-    } catch {
+    } catch (err: any) {
+      console.error('[Reset Password] updateUser catch:', err)
       setMessage({ text: 'Something went wrong. Please try again.', type: 'error' })
-    } finally {
       setLoading(false)
     }
   }
