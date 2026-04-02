@@ -42,18 +42,21 @@ export async function GET(request: Request) {
   let authError: any = null
 
   if (tokenHash && type) {
-    // OTP flow: magic links and password reset use token_hash
+    if (type === 'recovery') {
+      // Recovery tokens must be verified client-side so the browser receives
+      // and stores the session cookies directly. Server-side verifyOtp sets
+      // cookies on the response, but they get lost through the redirect.
+      console.log('[Auth Callback] Recovery flow — passing token to client')
+      return NextResponse.redirect(
+        new URL(`/reset-password?token_hash=${tokenHash}&type=recovery`, appUrl)
+      )
+    }
+
+    // OTP flow: magic links use token_hash verified server-side
     console.log('[Auth Callback] OTP flow — type:', type)
     const result = await supabase.auth.verifyOtp({ token_hash: tokenHash, type })
     user = result.data?.user ?? null
     authError = result.error
-
-    // For password recovery, redirect to reset-password immediately
-    if (!authError && type === 'recovery') {
-      const dest = next || '/reset-password?verified=true'
-      console.log('[Auth Callback] Recovery OTP verified, redirecting to:', dest)
-      return NextResponse.redirect(`${appUrl}${dest}`)
-    }
   } else if (code) {
     // PKCE flow: OAuth providers use authorization code
     console.log('[Auth Callback] PKCE flow — exchanging code')
