@@ -101,7 +101,6 @@ export default function ResetPasswordClient() {
 
   const handleSetPassword = async (e: React.FormEvent) => {
     e.preventDefault()
-    setMessage(null)
 
     if (password.length < 8) {
       setMessage({ text: 'Password must be at least 8 characters.', type: 'error' })
@@ -116,26 +115,18 @@ export default function ResetPasswordClient() {
     setMessage(null)
 
     try {
-      const { data: { session } } = await supabase.auth.getSession()
-      console.log('[Reset Password] Session at update time:', session?.user?.email ?? 'NO SESSION')
-
       const { error } = await supabase.auth.updateUser({ password })
-
       if (error) {
-        console.error('[Reset Password] updateUser error:', error)
         setMessage({ text: error.message, type: 'error' })
       } else {
-        console.log('[Reset Password] Password updated successfully')
-        setMessage({ text: 'Password updated! Redirecting to sign in...', type: 'success' })
         setStatus('done')
         setTimeout(() => router.push('/login'), 2000)
       }
-    } catch (err: any) {
-      console.error('[Reset Password] handleSetPassword threw:', err)
-      setMessage({ text: err instanceof Error ? err.message : String(err), type: 'error' })
+    } catch (err) {
+      setMessage({ text: err instanceof Error ? err.message : 'Something went wrong.', type: 'error' })
+    } finally {
+      setLoading(false)
     }
-
-    setLoading(false)
   }
 
   const showEmailForm = status === 'request' || status === 'expired'
@@ -212,6 +203,13 @@ export default function ResetPasswordClient() {
                     {sendingEmail ? <><Loader2 className="h-5 w-5 animate-spin" /> Sending...</> : <>Send reset link <ArrowRight className="h-5 w-5" /></>}
                   </button>
                 </form>
+              )}
+
+              {/* Success message */}
+              {status === 'done' && (
+                <p className="text-green-600 text-center font-medium mb-4">
+                  Password updated! Redirecting to sign in...
+                </p>
               )}
 
               {/* Set password form */}
