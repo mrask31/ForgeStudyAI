@@ -33,6 +33,7 @@ export default function ResetPasswordClient() {
   const [loading, setLoading] = useState(false)
   const [showPassword, setShowPassword] = useState(false)
   const [showConfirm, setShowConfirm] = useState(false)
+  const [recoverySession, setRecoverySession] = useState<{ access_token: string; refresh_token: string } | null>(null)
   const [message, setMessage] = useState<{ text: string; type: 'error' | 'success' } | null>(() => {
     if (urlError === 'expired_link') return { text: 'This reset link has expired or is invalid.', type: 'error' }
     if (urlError === 'invalid_link') return { text: 'Invalid reset link. Please request a new one.', type: 'error' }
@@ -55,15 +56,23 @@ export default function ResetPasswordClient() {
     supabase.auth.verifyOtp({
       token_hash: tokenHash!,
       type: 'recovery'
-    }).then(({ error }: { error: any }) => {
+    }).then(({ data, error }: { data: any; error: any }) => {
       clearTimeout(timer)
       if (error) {
         console.error('[Reset Password] verifyOtp error:', error)
         setMessage({ text: 'This reset link has expired or is invalid.', type: 'error' })
         setStatus('expired')
-      } else {
-        console.log('[Reset Password] verifyOtp succeeded — showing password form')
+      } else if (data?.session) {
+        console.log('[Reset Password] verifyOtp succeeded — session stored')
+        setRecoverySession({
+          access_token: data.session.access_token,
+          refresh_token: data.session.refresh_token,
+        })
         setStatus('ready')
+      } else {
+        console.error('[Reset Password] verifyOtp succeeded but no session returned')
+        setMessage({ text: 'Verification failed. Please request a new reset link.', type: 'error' })
+        setStatus('expired')
       }
     }).catch((err: any) => {
       clearTimeout(timer)
@@ -110,10 +119,19 @@ export default function ResetPasswordClient() {
 
     setLoading(true)
 
-    // Re-confirm session exists before updating — verifyOtp may have
-    // created a session that the client instance hasn't picked up yet
+    // Explicitly restore the session from verifyOtp — it may not have
+    // persisted in the Supabase client between the useEffect and form submit
+    if (recoverySession) {
+      console.log('[Reset Password] Restoring recovery session before updateUser')
+      await supabase.auth.setSession({
+        access_token: recoverySession.access_token,
+        refresh_token: recoverySession.refresh_token,
+      })
+    }
+
+    // Confirm session is active
     const { data: { session } } = await supabase.auth.getSession()
-    console.log('[Reset Password] Session before update:', session)
+    console.log('[Reset Password] Session before updateUser:', !!session)
 
     if (!session) {
       setMessage({ text: 'Your reset link has expired. Please request a new one.', type: 'error' })
