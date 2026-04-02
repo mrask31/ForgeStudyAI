@@ -4,6 +4,11 @@ import { NextResponse, type NextRequest } from 'next/server'
 import { hasSubscriptionAccess } from '@/lib/subscription-access'
 
 export async function middleware(request: NextRequest) {
+  // Skip session refresh on reset-password to prevent advisory lock conflicts with verifyOtp/updateUser
+  if (request.nextUrl.pathname.startsWith('/reset-password')) {
+    return NextResponse.next()
+  }
+
   // Wrap entire middleware in try/catch to prevent ANY crash
   try {
     let response = NextResponse.next({
