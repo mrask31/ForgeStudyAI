@@ -119,6 +119,7 @@ export default function ResetPasswordClient() {
       if (error) {
         setMessage({ text: error.message, type: 'error' })
       } else {
+        await supabase.auth.signOut()
         window.location.href = '/login?message=password-updated'
       }
     } catch (err) {
