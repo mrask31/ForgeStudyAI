@@ -110,6 +110,18 @@ export default function ResetPasswordClient() {
 
     setLoading(true)
 
+    // Re-confirm session exists before updating — verifyOtp may have
+    // created a session that the client instance hasn't picked up yet
+    const { data: { session } } = await supabase.auth.getSession()
+    console.log('[Reset Password] Session before update:', session)
+
+    if (!session) {
+      setMessage({ text: 'Your reset link has expired. Please request a new one.', type: 'error' })
+      setLoading(false)
+      setStatus('expired')
+      return
+    }
+
     const { error } = await supabase.auth.updateUser({ password })
 
     if (error) {
