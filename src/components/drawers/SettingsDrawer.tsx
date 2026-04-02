@@ -233,7 +233,7 @@ export function SettingsDrawer({ isOpen, onClose }: SettingsDrawerProps) {
         </div>
 
         {/* Scrollable Content */}
-        <div className="flex-1 overflow-y-auto overscroll-contain p-6 space-y-6">
+        <div className="flex-1 overflow-y-auto overscroll-contain p-6 pb-8 space-y-6">
           {/* Appearance — first for easy access */}
           <div className="bg-gray-50 dark:bg-slate-900/60 backdrop-blur-md border border-gray-200 dark:border-slate-800 rounded-2xl shadow-xl p-6">
             <div className="flex items-center justify-between">
