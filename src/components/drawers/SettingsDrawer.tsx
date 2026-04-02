@@ -1,6 +1,6 @@
 'use client';
 
-import { X, Mail, LogOut, Layout, Shield, Settings, RefreshCw, Link as LinkIcon } from 'lucide-react';
+import { X, Mail, LogOut, Layout, Shield, Settings, RefreshCw, Link as LinkIcon, Sun, Moon } from 'lucide-react';
 import { useEffect, useState, useMemo } from 'react';
 import { getSupabaseBrowser } from '@/lib/supabase/client';
 import { useRouter } from 'next/navigation';
@@ -8,6 +8,7 @@ import { useDensity } from '@/contexts/DensityContext';
 import { getDensityTokens } from '@/lib/density-tokens';
 import { clearAuthStorage } from '@/lib/auth-cleanup';
 import { useActiveProfile } from '@/contexts/ActiveProfileContext';
+import { useTheme } from '@/components/providers/ThemeProvider';
 import { toast } from 'sonner';
 import Link from 'next/link';
 
@@ -20,6 +21,7 @@ export function SettingsDrawer({ isOpen, onClose }: SettingsDrawerProps) {
   const router = useRouter();
   const { activeProfileId } = useActiveProfile();
   const [user, setUser] = useState<any>(null);
+  const { theme, toggleTheme } = useTheme();
   const { density, setDensity } = useDensity();
   const tokens = getDensityTokens(density);
   const [hasCanvasConnection, setHasCanvasConnection] = useState(false);
@@ -194,7 +196,7 @@ export function SettingsDrawer({ isOpen, onClose }: SettingsDrawerProps) {
     <>
       {/* Backdrop */}
       <div
-        className={`fixed inset-0 bg-slate-950/40 backdrop-blur-sm z-40 transition-opacity duration-300 ${
+        className={`fixed inset-0 bg-black/20 dark:bg-slate-950/40 backdrop-blur-sm z-40 transition-opacity duration-300 ${
           isOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'
         }`}
         onClick={onClose}
@@ -207,24 +209,24 @@ export function SettingsDrawer({ isOpen, onClose }: SettingsDrawerProps) {
         aria-modal="true"
         aria-labelledby="settings-drawer-title"
         className={`fixed inset-y-0 right-0 z-50 w-full md:w-[450px] lg:w-[500px]
-                   bg-slate-950/95 backdrop-blur-2xl border-l-0 md:border-l border-slate-800 shadow-2xl
+                   bg-white/95 dark:bg-slate-950/95 backdrop-blur-2xl border-l-0 md:border-l border-gray-200 dark:border-slate-800 shadow-2xl
                    transition-transform duration-300 ease-in-out overflow-y-auto overscroll-contain
                    ${isOpen ? 'translate-x-0' : 'translate-x-full'}`}
       >
         {/* Header */}
-        <div className="border-b border-slate-800 p-4 flex items-center justify-between sticky top-0 bg-slate-950/95 backdrop-blur-2xl z-10">
+        <div className="border-b border-gray-200 dark:border-slate-800 p-4 flex items-center justify-between sticky top-0 bg-white/95 dark:bg-slate-950/95 backdrop-blur-2xl z-10">
           <div className="flex items-center gap-3">
-            <div className="p-2 bg-indigo-600/20 rounded-lg">
-              <Settings className="w-5 h-5 text-indigo-400" />
+            <div className="p-2 bg-indigo-100 dark:bg-indigo-600/20 rounded-lg">
+              <Settings className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
             </div>
-            <h2 id="settings-drawer-title" className="text-lg font-semibold text-slate-200">
+            <h2 id="settings-drawer-title" className="text-lg font-semibold text-gray-900 dark:text-slate-200">
               Settings
             </h2>
           </div>
           <button
             onClick={onClose}
             aria-label="Close settings"
-            className="p-4 -m-4 text-slate-400 hover:text-slate-200 transition-colors"
+            className="p-4 -m-4 text-gray-400 dark:text-slate-400 hover:text-gray-600 dark:hover:text-slate-200 transition-colors"
           >
             <X className="w-5 h-5" />
           </button>
@@ -233,12 +235,12 @@ export function SettingsDrawer({ isOpen, onClose }: SettingsDrawerProps) {
         {/* Content */}
         <div className="p-6 space-y-6">
           {/* Parent Access */}
-          <div className="bg-slate-900/60 backdrop-blur-md border border-slate-800 rounded-2xl shadow-xl p-6">
+          <div className="bg-gray-50 dark:bg-slate-900/60 backdrop-blur-md border border-gray-200 dark:border-slate-800 rounded-2xl shadow-xl p-6">
             <div className="flex items-center gap-3 mb-4">
-              <Shield className="w-5 h-5 text-indigo-400" />
-              <h3 className="text-base font-semibold text-slate-200">Parent Access</h3>
+              <Shield className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
+              <h3 className="text-base font-semibold text-gray-900 dark:text-slate-200">Parent Access</h3>
             </div>
-            <p className="text-sm text-slate-400 mb-4">
+            <p className="text-sm text-gray-500 dark:text-slate-400 mb-4">
               Manage subscriptions and student profiles in a PIN-protected space.
             </p>
             <div className="flex flex-wrap gap-3">
@@ -252,20 +254,56 @@ export function SettingsDrawer({ isOpen, onClose }: SettingsDrawerProps) {
               <Link
                 href="/profiles"
                 onClick={onClose}
-                className="inline-flex items-center justify-center px-4 py-2 rounded-xl border border-slate-700 text-slate-200 font-semibold hover:border-indigo-500/30 hover:bg-indigo-600/10 transition-colors"
+                className="inline-flex items-center justify-center px-4 py-2 rounded-xl border border-gray-300 dark:border-slate-700 text-gray-700 dark:text-slate-200 font-semibold hover:border-indigo-300 dark:hover:border-indigo-500/30 hover:bg-indigo-50 dark:hover:bg-indigo-600/10 transition-colors"
               >
                 Switch Profile
               </Link>
             </div>
           </div>
 
-          {/* Display Density */}
-          <div className="bg-slate-900/60 backdrop-blur-md border border-slate-800 rounded-2xl shadow-xl p-6">
-            <div className="flex items-center gap-3 mb-4">
-              <Layout className="w-5 h-5 text-indigo-400" />
-              <h3 className="text-base font-semibold text-slate-200">Display Density</h3>
+          {/* Appearance */}
+          <div className="bg-gray-50 dark:bg-slate-900/60 backdrop-blur-md border border-gray-200 dark:border-slate-800 rounded-2xl shadow-xl p-6">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                {theme === 'light' ? (
+                  <Sun className="w-5 h-5 text-amber-500" />
+                ) : (
+                  <Moon className="w-5 h-5 text-indigo-400" />
+                )}
+                <div>
+                  <h3 className="text-base font-semibold text-gray-900 dark:text-slate-200">Appearance</h3>
+                  <p className="text-sm text-gray-500 dark:text-slate-400">
+                    {theme === 'light' ? 'Light mode' : 'Dark mode'}
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={toggleTheme}
+                className={`relative inline-flex h-7 w-12 items-center rounded-full transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 ${
+                  theme === 'dark'
+                    ? 'bg-indigo-600'
+                    : 'bg-gray-300 dark:bg-slate-600'
+                }`}
+                role="switch"
+                aria-checked={theme === 'dark'}
+                aria-label="Toggle dark mode"
+              >
+                <span
+                  className={`inline-block h-5 w-5 transform rounded-full bg-white shadow-sm transition-transform duration-200 ${
+                    theme === 'dark' ? 'translate-x-6' : 'translate-x-1'
+                  }`}
+                />
+              </button>
             </div>
-            <p className="text-sm text-slate-400 mb-4">
+          </div>
+
+          {/* Display Density */}
+          <div className="bg-gray-50 dark:bg-slate-900/60 backdrop-blur-md border border-gray-200 dark:border-slate-800 rounded-2xl shadow-xl p-6">
+            <div className="flex items-center gap-3 mb-4">
+              <Layout className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
+              <h3 className="text-base font-semibold text-gray-900 dark:text-slate-200">Display Density</h3>
+            </div>
+            <p className="text-sm text-gray-500 dark:text-slate-400 mb-4">
               Choose how much space and text size you prefer. Comfort is larger and easier to read; Compact fits more on screen.
             </p>
             <div className="flex gap-3">
@@ -274,7 +312,7 @@ export function SettingsDrawer({ isOpen, onClose }: SettingsDrawerProps) {
                 className={`flex-1 px-4 py-3 rounded-xl border-2 transition-all duration-200 ${
                   density === 'comfort'
                     ? 'bg-indigo-600 text-white border-transparent shadow-md shadow-indigo-500/30'
-                    : 'bg-slate-900/60 text-slate-200 border-slate-700 hover:border-indigo-500/30 hover:bg-indigo-600/10'
+                    : 'bg-white dark:bg-slate-900/60 text-gray-700 dark:text-slate-200 border-gray-300 dark:border-slate-700 hover:border-indigo-300 dark:hover:border-indigo-500/30 hover:bg-indigo-50 dark:hover:bg-indigo-600/10'
                 } text-sm font-semibold`}
               >
                 Comfort
@@ -284,7 +322,7 @@ export function SettingsDrawer({ isOpen, onClose }: SettingsDrawerProps) {
                 className={`flex-1 px-4 py-3 rounded-xl border-2 transition-all duration-200 ${
                   density === 'compact'
                     ? 'bg-indigo-600 text-white border-transparent shadow-md shadow-indigo-500/30'
-                    : 'bg-slate-900/60 text-slate-200 border-slate-700 hover:border-indigo-500/30 hover:bg-indigo-600/10'
+                    : 'bg-white dark:bg-slate-900/60 text-gray-700 dark:text-slate-200 border-gray-300 dark:border-slate-700 hover:border-indigo-300 dark:hover:border-indigo-500/30 hover:bg-indigo-50 dark:hover:bg-indigo-600/10'
                 } text-sm font-semibold`}
               >
                 Compact
@@ -293,12 +331,12 @@ export function SettingsDrawer({ isOpen, onClose }: SettingsDrawerProps) {
           </div>
 
           {/* School Integration (optional) */}
-          <div className="bg-slate-900/60 backdrop-blur-md border border-slate-800 rounded-2xl shadow-xl p-6">
+          <div className="bg-gray-50 dark:bg-slate-900/60 backdrop-blur-md border border-gray-200 dark:border-slate-800 rounded-2xl shadow-xl p-6">
             <div className="flex items-center gap-3 mb-3">
-              <LinkIcon className="w-5 h-5 text-indigo-400" />
-              <h3 className="text-base font-semibold text-slate-200">School Integration (optional)</h3>
+              <LinkIcon className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
+              <h3 className="text-base font-semibold text-gray-900 dark:text-slate-200">School Integration (optional)</h3>
             </div>
-            <p className="text-sm text-slate-400 mb-4">
+            <p className="text-sm text-gray-500 dark:text-slate-400 mb-4">
               Connect your school to automatically see your upcoming assignments. This is optional — you can use ForgeStudy AI without it.
             </p>
 
@@ -307,7 +345,7 @@ export function SettingsDrawer({ isOpen, onClose }: SettingsDrawerProps) {
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
                     <div className="w-2 h-2 rounded-full bg-green-500"></div>
-                    <span className="text-sm font-medium text-slate-200">Canvas Connected</span>
+                    <span className="text-sm font-medium text-gray-700 dark:text-slate-200">Canvas Connected</span>
                   </div>
                   <button
                     onClick={handleSyncNow}
@@ -318,33 +356,33 @@ export function SettingsDrawer({ isOpen, onClose }: SettingsDrawerProps) {
                     {isSyncing ? 'Syncing...' : 'Sync Now'}
                   </button>
                 </div>
-                <p className="text-xs text-slate-400 mt-3">
+                <p className="text-xs text-gray-400 dark:text-slate-400 mt-3">
                   Your Canvas assignments are automatically synced.
                 </p>
               </>
             ) : (
               <div className="space-y-3">
                 {/* Canvas connect */}
-                <div className="border border-slate-700 rounded-xl p-4 space-y-3">
+                <div className="border border-gray-200 dark:border-slate-700 rounded-xl p-4 space-y-3">
                   <div className="flex items-center gap-2">
                     <div className="w-8 h-8 bg-gradient-to-br from-orange-500 to-red-600 rounded-lg flex items-center justify-center">
                       <span className="text-white font-bold text-sm">C</span>
                     </div>
-                    <span className="text-sm font-medium text-slate-200">Canvas LMS</span>
+                    <span className="text-sm font-medium text-gray-700 dark:text-slate-200">Canvas LMS</span>
                   </div>
                   <input
                     type="url"
                     placeholder="Canvas URL (e.g., https://school.instructure.com)"
                     value={canvasUrl}
                     onChange={(e) => setCanvasUrl(e.target.value)}
-                    className="w-full px-3 py-2 bg-slate-800/60 border border-slate-700 rounded-lg text-sm text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all"
+                    className="w-full px-3 py-2 bg-gray-50 dark:bg-slate-800/60 border border-gray-200 dark:border-slate-700 rounded-lg text-sm text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all"
                   />
                   <input
                     type="password"
                     placeholder="Personal Access Token"
                     value={canvasPAT}
                     onChange={(e) => setCanvasPAT(e.target.value)}
-                    className="w-full px-3 py-2 bg-slate-800/60 border border-slate-700 rounded-lg text-sm text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all"
+                    className="w-full px-3 py-2 bg-gray-50 dark:bg-slate-800/60 border border-gray-200 dark:border-slate-700 rounded-lg text-sm text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all"
                   />
                   <button
                     onClick={handleCanvasConnect}
@@ -356,12 +394,12 @@ export function SettingsDrawer({ isOpen, onClose }: SettingsDrawerProps) {
                 </div>
 
                 {/* Google Classroom connect */}
-                <div className="border border-slate-700 rounded-xl p-4">
+                <div className="border border-gray-200 dark:border-slate-700 rounded-xl p-4">
                   <div className="flex items-center gap-2 mb-3">
                     <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-green-500 rounded-lg flex items-center justify-center">
                       <span className="text-white font-bold text-sm">G</span>
                     </div>
-                    <span className="text-sm font-medium text-slate-200">Google Classroom</span>
+                    <span className="text-sm font-medium text-gray-700 dark:text-slate-200">Google Classroom</span>
                   </div>
                   <button
                     onClick={handleGoogleConnect}
@@ -376,14 +414,14 @@ export function SettingsDrawer({ isOpen, onClose }: SettingsDrawerProps) {
           </div>
 
           {/* Account */}
-          <div className="bg-slate-900/60 backdrop-blur-md border border-slate-800 rounded-2xl shadow-xl p-6">
-            <h3 className="text-base font-semibold text-slate-200 mb-4">Account</h3>
+          <div className="bg-gray-50 dark:bg-slate-900/60 backdrop-blur-md border border-gray-200 dark:border-slate-800 rounded-2xl shadow-xl p-6">
+            <h3 className="text-base font-semibold text-gray-900 dark:text-slate-200 mb-4">Account</h3>
             <div className="space-y-4">
               <div className="flex items-center gap-3">
-                <Mail className="w-5 h-5 text-indigo-400" />
+                <Mail className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
                 <div>
-                  <p className="text-sm text-slate-400">Email</p>
-                  <p className="text-sm font-medium text-slate-200">
+                  <p className="text-sm text-gray-500 dark:text-slate-400">Email</p>
+                  <p className="text-sm font-medium text-gray-900 dark:text-slate-200">
                     {user?.email || 'Not available'}
                   </p>
                 </div>
@@ -399,20 +437,20 @@ export function SettingsDrawer({ isOpen, onClose }: SettingsDrawerProps) {
           </div>
 
           {/* Privacy & COPPA */}
-          <div className="bg-slate-900/60 backdrop-blur-md border border-slate-800 rounded-2xl shadow-xl p-6">
+          <div className="bg-gray-50 dark:bg-slate-900/60 backdrop-blur-md border border-gray-200 dark:border-slate-800 rounded-2xl shadow-xl p-6">
             <div className="flex items-center gap-3 mb-4">
-              <Shield className="w-5 h-5 text-emerald-400" />
-              <h3 className="text-base font-semibold text-slate-200">Privacy</h3>
+              <Shield className="w-5 h-5 text-emerald-500 dark:text-emerald-400" />
+              <h3 className="text-base font-semibold text-gray-900 dark:text-slate-200">Privacy</h3>
             </div>
-            <p className="text-sm text-slate-300 leading-relaxed">
+            <p className="text-sm text-gray-600 dark:text-slate-300 leading-relaxed">
               ForgeStudy AI is COPPA compliant. We never sell student data, show ads, or share information with third parties. All student conversations are private.
             </p>
           </div>
 
           {/* Support */}
-          <div className="bg-slate-900/60 backdrop-blur-md border border-slate-800 rounded-2xl shadow-xl p-6">
-            <h3 className="text-base font-semibold text-slate-200 mb-4">Support</h3>
-            <p className="text-sm text-slate-400">
+          <div className="bg-gray-50 dark:bg-slate-900/60 backdrop-blur-md border border-gray-200 dark:border-slate-800 rounded-2xl shadow-xl p-6">
+            <h3 className="text-base font-semibold text-gray-900 dark:text-slate-200 mb-4">Support</h3>
+            <p className="text-sm text-gray-500 dark:text-slate-400">
               Need help? Email{' '}
               <a
                 href="mailto:support@forgestudyai.com"

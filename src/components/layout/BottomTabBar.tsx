@@ -15,7 +15,7 @@ export function BottomTabBar() {
   const pathname = usePathname()
 
   return (
-    <nav className="lg:hidden fixed bottom-0 left-0 right-0 z-50 bg-slate-900/95 backdrop-blur-xl border-t border-slate-800 safe-b">
+    <nav className="lg:hidden fixed bottom-0 left-0 right-0 z-50 bg-white/95 dark:bg-slate-900/95 backdrop-blur-xl border-t border-gray-200 dark:border-slate-800 safe-b">
       <div className="flex items-center justify-around px-2 py-1">
         {TABS.map((tab) => {
           if (tab.href === '__settings__') {
@@ -24,7 +24,7 @@ export function BottomTabBar() {
               <button
                 key={tab.label}
                 onClick={() => window.dispatchEvent(new Event('open-settings-drawer'))}
-                className="flex flex-col items-center gap-0.5 px-3 py-2 min-w-[64px] text-slate-500 hover:text-slate-300 transition-colors"
+                className="flex flex-col items-center gap-0.5 px-3 py-2 min-w-[64px] text-gray-400 dark:text-slate-500 hover:text-gray-600 dark:hover:text-slate-300 transition-colors"
               >
                 <Icon className="w-5 h-5" />
                 <span className="text-[10px] font-medium">{tab.label}</span>
@@ -45,14 +45,12 @@ export function BottomTabBar() {
               href={tab.href}
               className={`flex flex-col items-center gap-0.5 px-3 py-2 min-w-[64px] transition-colors ${
                 isActive
-                  ? 'text-indigo-400'
-                  : 'text-slate-500 hover:text-slate-300'
+                  ? 'text-indigo-600 dark:text-indigo-400'
+                  : 'text-gray-400 dark:text-slate-500 hover:text-gray-600 dark:hover:text-slate-300'
               }`}
             >
-              <Icon className={`w-5 h-5 ${isActive ? 'text-indigo-400' : ''}`} />
-              <span className={`text-[10px] font-medium ${isActive ? 'text-indigo-400' : ''}`}>
-                {tab.label}
-              </span>
+              <Icon className="w-5 h-5" />
+              <span className="text-[10px] font-medium">{tab.label}</span>
             </Link>
           )
         })}

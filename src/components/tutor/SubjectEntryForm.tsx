@@ -32,19 +32,19 @@ export function SubjectEntryForm() {
   }
 
   return (
-    <div className="bg-slate-900/60 backdrop-blur-md border border-slate-800 rounded-2xl p-5 md:p-6">
+    <div className="bg-white dark:bg-slate-900/60 backdrop-blur-md border border-gray-200 dark:border-slate-800 rounded-2xl p-5 md:p-6">
       <div className="flex items-center gap-2 mb-4">
-        <BookOpen className="w-5 h-5 text-indigo-400" />
-        <h3 className="text-base font-semibold text-white">What are you studying?</h3>
+        <BookOpen className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
+        <h3 className="text-base font-semibold text-gray-900 dark:text-white">What are you studying?</h3>
       </div>
 
       <div className="space-y-3">
         <select
           value={subject}
           onChange={(e) => setSubject(e.target.value)}
-          className="w-full px-4 py-2.5 bg-slate-800/60 border border-slate-700 rounded-xl text-sm text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all"
+          className="w-full px-4 py-2.5 bg-gray-50 dark:bg-slate-800/60 border border-gray-200 dark:border-slate-700 rounded-xl text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all"
         >
-          <option value="" className="text-slate-400">Choose a subject...</option>
+          <option value="" className="text-gray-400">Choose a subject...</option>
           {SUBJECTS.map((s) => (
             <option key={s} value={s}>{s}</option>
           ))}
@@ -55,7 +55,7 @@ export function SubjectEntryForm() {
           value={topic}
           onChange={(e) => setTopic(e.target.value)}
           placeholder="What specifically are you working on? (optional)"
-          className="w-full px-4 py-2.5 bg-slate-800/60 border border-slate-700 rounded-xl text-sm text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all"
+          className="w-full px-4 py-2.5 bg-gray-50 dark:bg-slate-800/60 border border-gray-200 dark:border-slate-700 rounded-xl text-sm text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all"
           onKeyDown={(e) => {
             if (e.key === 'Enter' && subject) handleStart()
           }}

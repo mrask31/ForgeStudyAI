@@ -112,14 +112,14 @@ export default function Sidebar({ onNavigate }: SidebarProps = {}) {
   const navItems = NAV_ITEMS
 
   return (
-    <aside className="flex w-full h-full flex-col bg-slate-900 text-slate-400">
+    <aside className="flex w-full h-full flex-col bg-white dark:bg-slate-900 text-gray-500 dark:text-slate-400">
       {/* Sidebar Content */}
       <div className="flex h-full flex-col px-6 py-8">
         <div className="mb-10 px-2">
           {/* Logo or Brand with Icon */}
           <div className="flex items-center gap-2.5">
             <div className="w-2 h-2 rounded-full bg-indigo-400"></div>
-            <span className="text-xl font-bold text-white tracking-tight">ForgeStudy Platform</span>
+            <span className="text-xl font-bold text-gray-900 dark:text-white tracking-tight">ForgeStudy Platform</span>
           </div>
         </div>
         
@@ -131,10 +131,10 @@ export default function Sidebar({ onNavigate }: SidebarProps = {}) {
               {[1, 2, 3, 4, 5].map((i) => (
                 <div
                   key={i}
-                  className="flex items-center gap-3 rounded-lg px-4 py-3.5 bg-slate-800/40 animate-pulse"
+                  className="flex items-center gap-3 rounded-lg px-4 py-3.5 bg-gray-100 dark:bg-slate-800/40 animate-pulse"
                 >
-                  <div className="h-5 w-5 rounded bg-slate-700/50"></div>
-                  <div className="h-4 w-32 rounded bg-slate-700/50"></div>
+                  <div className="h-5 w-5 rounded bg-gray-200 dark:bg-slate-700/50"></div>
+                  <div className="h-4 w-32 rounded bg-gray-200 dark:bg-slate-700/50"></div>
                 </div>
               ))}
             </>
@@ -172,8 +172,8 @@ export default function Sidebar({ onNavigate }: SidebarProps = {}) {
                   className={`
                     group flex items-center gap-3 rounded-lg px-4 py-3.5 text-sm font-medium transition-all duration-200
                     ${isActive 
-                      ? "bg-indigo-600 text-white shadow-md" 
-                      : "text-slate-400 hover:bg-slate-800 hover:text-indigo-400"}
+                      ? "bg-indigo-600 text-white shadow-md"
+                      : "text-gray-500 dark:text-slate-400 hover:bg-gray-100 dark:hover:bg-slate-800 hover:text-indigo-600 dark:hover:text-indigo-400"}
                   `}
                 >
                   <Icon className="h-5 w-5" />
@@ -185,14 +185,14 @@ export default function Sidebar({ onNavigate }: SidebarProps = {}) {
         </nav>
         
         {/* History Button - Moved from TutorHeader */}
-        <div className="mt-4 pt-4 border-t border-slate-800 space-y-2">
+        <div className="mt-4 pt-4 border-t border-gray-200 dark:border-slate-800 space-y-2">
           <HistoryButton onNavigate={onNavigate} />
           <button
             onClick={() => {
               window.dispatchEvent(new Event('open-settings-drawer'));
               onNavigate?.();
             }}
-            className="w-full group flex items-center gap-3 rounded-lg px-4 py-3 text-sm font-medium transition-all duration-200 text-slate-400 hover:bg-slate-800 hover:text-indigo-400"
+            className="w-full group flex items-center gap-3 rounded-lg px-4 py-3 text-sm font-medium transition-all duration-200 text-gray-500 dark:text-slate-400 hover:bg-gray-100 dark:hover:bg-slate-800 hover:text-indigo-600 dark:hover:text-indigo-400"
           >
             <Settings className="h-5 w-5" />
             Settings
@@ -200,7 +200,7 @@ export default function Sidebar({ onNavigate }: SidebarProps = {}) {
           <Link
             href="/parent"
             onClick={onNavigate}
-            className="group flex items-center gap-3 rounded-lg px-4 py-3 text-sm font-medium transition-all duration-200 text-slate-400 hover:bg-slate-800 hover:text-indigo-400"
+            className="group flex items-center gap-3 rounded-lg px-4 py-3 text-sm font-medium transition-all duration-200 text-gray-500 dark:text-slate-400 hover:bg-gray-100 dark:hover:bg-slate-800 hover:text-indigo-600 dark:hover:text-indigo-400"
           >
             <Shield className="h-5 w-5" />
             Parent Dashboard
@@ -222,21 +222,21 @@ export default function Sidebar({ onNavigate }: SidebarProps = {}) {
         )}
 
         {/* User Profile / Footer */}
-        <div className="mt-auto pt-6 border-t border-slate-800">
+        <div className="mt-auto pt-6 border-t border-gray-200 dark:border-slate-800">
           {isLoading ? (
             // Skeleton for profile section
             <div className="flex items-center gap-3 px-2 py-2 rounded-lg">
-              <div className="w-10 h-10 rounded-full bg-slate-800/40 animate-pulse"></div>
+              <div className="w-10 h-10 rounded-full bg-gray-100 dark:bg-slate-800/40 animate-pulse"></div>
               <div className="flex flex-col gap-2 min-w-0 flex-1">
-                <div className="h-4 w-24 rounded bg-slate-800/40 animate-pulse"></div>
-                <div className="h-3 w-20 rounded bg-slate-800/40 animate-pulse"></div>
+                <div className="h-4 w-24 rounded bg-gray-100 dark:bg-slate-800/40 animate-pulse"></div>
+                <div className="h-3 w-20 rounded bg-gray-100 dark:bg-slate-800/40 animate-pulse"></div>
               </div>
             </div>
           ) : (
             <Link
               href="/profiles"
               onClick={onNavigate}
-              className="flex items-center gap-3 px-2 py-2 rounded-lg hover:bg-slate-800 transition-colors"
+              className="flex items-center gap-3 px-2 py-2 rounded-lg hover:bg-gray-100 dark:hover:bg-slate-800 transition-colors"
             >
               <div className="w-10 h-10 rounded-full bg-indigo-600 border border-indigo-500/50 flex items-center justify-center shadow-sm">
                 <UserIcon className="w-5 h-5 text-white" />
@@ -244,7 +244,7 @@ export default function Sidebar({ onNavigate }: SidebarProps = {}) {
               <div className="flex flex-col min-w-0">
                 {studentName ? (
                   <>
-                    <span className="text-sm font-bold text-white truncate">{studentName}</span>
+                    <span className="text-sm font-bold text-gray-900 dark:text-white truncate">{studentName}</span>
                     {gradeBand ? (
                       <span className="text-xs text-slate-400 truncate">{gradeBandLabel(gradeBand)}</span>
                     ) : (
@@ -253,7 +253,7 @@ export default function Sidebar({ onNavigate }: SidebarProps = {}) {
                   </>
                 ) : (
                   <>
-                    <span className="text-sm font-medium text-white">Student Account</span>
+                    <span className="text-sm font-medium text-gray-900 dark:text-white">Student Account</span>
                     <span className="text-xs text-slate-400">Choose a profile</span>
                   </>
                 )}

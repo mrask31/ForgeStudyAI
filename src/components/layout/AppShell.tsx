@@ -17,22 +17,19 @@ export function AppShell({ children, variant = 'app' }: AppShellProps) {
   const [mobileNavOpen, setMobileNavOpen] = useState(false)
 
   if (variant === 'public') {
-    // Public pages (landing, login, signup, checkout) use simpler layout
     return (
-      <div className="min-h-screen-dynamic bg-slate-50 flex flex-col">
-        {/* Content will be wrapped by PublicLayout */}
+      <div className="min-h-screen-dynamic bg-white dark:bg-slate-50 flex flex-col">
         {children}
       </div>
     )
   }
 
-  // App pages (tutor, dashboard, etc.) use full app shell with sidebar
   return (
     <UserProvider>
       <DensityProvider>
-        <div className="h-screen-dynamic bg-slate-950 flex flex-col lg:flex-row overflow-hidden">
-          {/* Mobile Header Bar - Sticky, only on mobile */}
-          <header className="lg:hidden sticky top-0 z-50 bg-slate-900 border-b border-slate-800 flex-shrink-0 safe-t">
+        <div className="h-screen-dynamic bg-[#F9FAFB] dark:bg-[#08080F] flex flex-col lg:flex-row overflow-hidden">
+          {/* Mobile Header Bar */}
+          <header className="lg:hidden sticky top-0 z-50 bg-white dark:bg-slate-900 border-b border-gray-200 dark:border-slate-800 flex-shrink-0 safe-t">
             <div className="flex items-center justify-between px-4 py-3">
               <button
                 onClick={() => setMobileNavOpen(true)}
@@ -43,7 +40,7 @@ export function AppShell({ children, variant = 'app' }: AppShellProps) {
               </button>
               <div className="flex items-center gap-2.5">
                 <div className="w-2 h-2 rounded-full bg-indigo-400"></div>
-                <span className="text-lg font-bold text-white tracking-tight">
+                <span className="text-lg font-bold text-gray-900 dark:text-white tracking-tight">
                   ForgeStudy Platform
                 </span>
               </div>
@@ -51,24 +48,20 @@ export function AppShell({ children, variant = 'app' }: AppShellProps) {
             </div>
           </header>
 
-          {/* Desktop Sidebar - Hidden on mobile, visible on lg+ - Fixed */}
-          <aside className="hidden lg:flex lg:w-64 xl:w-72 flex-shrink-0 bg-slate-900 border-r border-slate-800 h-screen-dynamic overflow-y-auto">
+          {/* Desktop Sidebar */}
+          <aside className="hidden lg:flex lg:w-64 xl:w-72 flex-shrink-0 bg-white dark:bg-slate-900 border-r border-gray-200 dark:border-slate-800 h-screen-dynamic overflow-y-auto">
             <Sidebar />
           </aside>
-          
-          {/* Main Content Area - Scrollable */}
-          <main className="flex-1 min-w-0 h-screen-dynamic overflow-y-auto bg-slate-950 flex flex-col">
+
+          {/* Main Content Area */}
+          <main className="flex-1 min-w-0 h-screen-dynamic overflow-y-auto bg-[#F9FAFB] dark:bg-[#08080F] flex flex-col">
             {children}
           </main>
 
-          {/* Mobile Navigation Drawer */}
           <MobileNav open={mobileNavOpen} onClose={() => setMobileNavOpen(false)} />
-
-          {/* Bottom Tab Bar - Mobile only */}
           <BottomTabBar />
         </div>
       </DensityProvider>
     </UserProvider>
   )
 }
-

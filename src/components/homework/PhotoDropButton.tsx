@@ -88,7 +88,7 @@ export function PhotoDropButton() {
       <button
         onClick={() => fileInputRef.current?.click()}
         disabled={isProcessing}
-        className="inline-flex items-center gap-2 px-4 md:px-6 py-2 md:py-3 bg-slate-900/40 backdrop-blur-md border border-slate-700/50 rounded-xl shadow-2xl text-white text-sm md:text-base font-semibold hover:bg-slate-800/60 transition-all disabled:opacity-60 disabled:cursor-wait"
+        className="inline-flex items-center gap-2 px-4 md:px-6 py-2 md:py-3 bg-indigo-50 dark:bg-slate-900/40 backdrop-blur-md border border-indigo-200 dark:border-slate-700/50 rounded-xl shadow-lg dark:shadow-2xl text-indigo-700 dark:text-white text-sm md:text-base font-semibold hover:bg-indigo-100 dark:hover:bg-slate-800/60 transition-all disabled:opacity-60 disabled:cursor-wait"
         title="Photograph or upload homework"
       >
         {isProcessing ? (
