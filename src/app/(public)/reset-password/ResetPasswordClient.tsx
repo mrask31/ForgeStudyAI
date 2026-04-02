@@ -109,23 +109,26 @@ export default function ResetPasswordClient() {
     }
 
     setLoading(true)
-    try {
-      const { error } = await supabase.auth.updateUser({ password })
-      if (error) {
-        console.error('[Reset Password] updateUser error:', error.message)
-        setMessage({ text: error.message, type: 'error' })
-        setLoading(false)
-        return
+
+    const { error } = await supabase.auth.updateUser({ password })
+
+    if (error) {
+      console.error('[Reset Password] updateUser error:', error)
+      if (error.message?.includes('same password') || (error as any).status === 422) {
+        setMessage({ text: 'New password must be different from your current password.', type: 'error' })
+      } else {
+        setMessage({ text: error.message || 'Something went wrong. Please try again.', type: 'error' })
       }
-      setMessage({ text: 'Password updated! Redirecting to sign in...', type: 'success' })
-      setStatus('done')
       setLoading(false)
-      setTimeout(() => router.push('/login'), 2000)
-    } catch (err: any) {
-      console.error('[Reset Password] updateUser catch:', err)
-      setMessage({ text: 'Something went wrong. Please try again.', type: 'error' })
-      setLoading(false)
+      return
     }
+
+    // Success
+    console.log('[Reset Password] Password updated successfully')
+    setLoading(false)
+    setStatus('done')
+    setMessage({ text: 'Password updated! Redirecting to sign in...', type: 'success' })
+    setTimeout(() => router.push('/login'), 2000)
   }
 
   const showEmailForm = status === 'request' || status === 'expired'
@@ -229,10 +232,16 @@ export default function ResetPasswordClient() {
                       {showConfirm ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
                     </button>
                   </div>
-                  <button type="submit" disabled={loading || status === 'done'}
-                    className="w-full flex items-center justify-center gap-2 px-6 py-3 bg-gradient-to-r from-teal-600 to-cyan-600 text-white rounded-xl text-base font-semibold hover:from-teal-700 hover:to-cyan-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-md">
-                    {loading ? <><Loader2 className="h-5 w-5 animate-spin" /> Updating...</> : <>Update password <ArrowRight className="h-5 w-5" /></>}
-                  </button>
+                  {status === 'done' ? (
+                    <div className="w-full flex items-center justify-center gap-2 px-6 py-3 bg-green-50 text-green-700 border border-green-200 rounded-xl text-base font-semibold">
+                      ✓ Password updated! Redirecting to sign in...
+                    </div>
+                  ) : (
+                    <button type="submit" disabled={loading}
+                      className="w-full flex items-center justify-center gap-2 px-6 py-3 bg-gradient-to-r from-teal-600 to-cyan-600 text-white rounded-xl text-base font-semibold hover:from-teal-700 hover:to-cyan-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-md">
+                      {loading ? <><Loader2 className="h-5 w-5 animate-spin" /> Updating...</> : <>Update password <ArrowRight className="h-5 w-5" /></>}
+                    </button>
+                  )}
                 </form>
               )}
 
