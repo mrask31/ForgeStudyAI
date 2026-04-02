@@ -45,6 +45,14 @@ export default function ResetPasswordClient() {
       return
     }
 
+    // Clear any existing session to prevent background token refresh
+    // from conflicting with verifyOtp advisory lock
+    Object.keys(localStorage).forEach(key => {
+      if (key.startsWith('sb-') || key.toLowerCase().includes('supabase')) {
+        localStorage.removeItem(key)
+      }
+    })
+
     const timer = setTimeout(() => {
       // Safety net — if verifyOtp takes more than 10 seconds, show error
       console.error('[Reset Password] verifyOtp timed out after 10s')
