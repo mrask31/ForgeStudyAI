@@ -27,9 +27,9 @@ export function AppShell({ children, variant = 'app' }: AppShellProps) {
   return (
     <UserProvider>
       <DensityProvider>
-        <div className="h-screen-dynamic bg-[#F9FAFB] dark:bg-[#08080F] flex flex-col lg:flex-row overflow-hidden">
+        <div className="h-screen-dynamic bg-[#08080F] flex flex-col lg:flex-row overflow-hidden">
           {/* Mobile Header Bar */}
-          <header className="lg:hidden sticky top-0 z-50 bg-white dark:bg-slate-900 border-b border-gray-200 dark:border-slate-800 flex-shrink-0 safe-t">
+          <header className="lg:hidden sticky top-0 z-50 bg-slate-900 border-b border-slate-800 flex-shrink-0 safe-t">
             <div className="flex items-center justify-between px-4 py-3">
               <button
                 onClick={() => setMobileNavOpen(true)}
@@ -40,7 +40,7 @@ export function AppShell({ children, variant = 'app' }: AppShellProps) {
               </button>
               <div className="flex items-center gap-2.5">
                 <div className="w-2 h-2 rounded-full bg-indigo-400"></div>
-                <span className="text-lg font-bold text-gray-900 dark:text-white tracking-tight">
+                <span className="text-lg font-bold text-white tracking-tight">
                   ForgeStudy Platform
                 </span>
               </div>
@@ -49,12 +49,12 @@ export function AppShell({ children, variant = 'app' }: AppShellProps) {
           </header>
 
           {/* Desktop Sidebar */}
-          <aside className="hidden lg:flex lg:w-64 xl:w-72 flex-shrink-0 bg-white dark:bg-slate-900 border-r border-gray-200 dark:border-slate-800 h-screen-dynamic overflow-y-auto">
+          <aside className="hidden lg:flex lg:w-64 xl:w-72 flex-shrink-0 bg-slate-900 border-r border-slate-800 h-screen-dynamic overflow-y-auto">
             <Sidebar />
           </aside>
 
           {/* Main Content Area */}
-          <main className="flex-1 min-w-0 h-screen-dynamic overflow-y-auto bg-[#F9FAFB] dark:bg-[#08080F] flex flex-col">
+          <main className="flex-1 min-w-0 h-screen-dynamic overflow-y-auto bg-[#08080F] flex flex-col">
             {children}
           </main>
 
