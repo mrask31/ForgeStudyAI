@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useRef, useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import Link from 'next/link'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { getSupabaseBrowser } from '@/lib/supabase/client'
@@ -12,7 +12,6 @@ export default function ResetPasswordClient() {
   const searchParams = useSearchParams()
   const router = useRouter()
   const supabase = useMemo(() => getSupabaseBrowser(), [])
-  const hasVerified = useRef(false)
 
   // Determine initial status synchronously from URL params
   const tokenHash = searchParams.get('token_hash')
@@ -40,24 +39,39 @@ export default function ResetPasswordClient() {
     return null
   })
 
-  // Client-side OTP verification — only when token_hash is in URL (direct link, not via /auth/confirm)
+  // Client-side OTP verification — only when token_hash is in URL
   useEffect(() => {
-    if (!hasToken || hasVerified.current || verified) return
-    hasVerified.current = true
+    if (!hasToken || verified) {
+      return
+    }
 
-    console.log('[Reset Password] Verifying OTP token_hash client-side...')
-    supabase.auth.verifyOtp({ token_hash: tokenHash!, type: 'recovery' })
-      .then(({ error }: { error: any }) => {
-        if (error) {
-          console.error('[Reset Password] verifyOtp failed:', error.message)
-          setMessage({ text: 'This reset link has expired or is invalid.', type: 'error' })
-          setStatus('expired')
-        } else {
-          console.log('[Reset Password] verifyOtp succeeded — showing password form')
-          setStatus('ready')
-        }
-      })
-  }, [hasToken, tokenHash, supabase, verified])
+    const timer = setTimeout(() => {
+      // Safety net — if verifyOtp takes more than 10 seconds, show error
+      console.error('[Reset Password] verifyOtp timed out after 10s')
+      setStatus('expired')
+      setMessage({ text: 'Verification timed out. Please request a new reset link.', type: 'error' })
+    }, 10000)
+
+    supabase.auth.verifyOtp({
+      token_hash: tokenHash!,
+      type: 'recovery'
+    }).then(({ error }: { error: any }) => {
+      clearTimeout(timer)
+      if (error) {
+        console.error('[Reset Password] verifyOtp error:', error)
+        setMessage({ text: 'This reset link has expired or is invalid.', type: 'error' })
+        setStatus('expired')
+      } else {
+        console.log('[Reset Password] verifyOtp succeeded — showing password form')
+        setStatus('ready')
+      }
+    }).catch((err: any) => {
+      clearTimeout(timer)
+      console.error('[Reset Password] verifyOtp catch:', err)
+      setMessage({ text: 'Something went wrong verifying your link. Please request a new one.', type: 'error' })
+      setStatus('expired')
+    })
+  }, [])
 
   const handleSendResetEmail = async (e: React.FormEvent) => {
     e.preventDefault()
