@@ -113,6 +113,7 @@ export default function ResetPasswordClient() {
     }
 
     setLoading(true)
+    setMessage(null)
 
     try {
       const { data: { session } } = await supabase.auth.getSession()
@@ -125,16 +126,16 @@ export default function ResetPasswordClient() {
         setMessage({ text: error.message, type: 'error' })
       } else {
         console.log('[Reset Password] Password updated successfully')
-        setStatus('done')
         setMessage({ text: 'Password updated! Redirecting to sign in...', type: 'success' })
+        setStatus('done')
         setTimeout(() => router.push('/login'), 2000)
       }
     } catch (err: any) {
       console.error('[Reset Password] handleSetPassword threw:', err)
       setMessage({ text: err instanceof Error ? err.message : String(err), type: 'error' })
-    } finally {
-      setLoading(false)
     }
+
+    setLoading(false)
   }
 
   const showEmailForm = status === 'request' || status === 'expired'
