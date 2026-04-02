@@ -15,6 +15,7 @@ export default function LoginClient() {
   const [redirect, setRedirect] = useState('/post-login')
   const [showVerificationSuccess, setShowVerificationSuccess] = useState(false)
   const [showPassword, setShowPassword] = useState(false)
+  const [showPasswordUpdated, setShowPasswordUpdated] = useState(false)
   
   const router = useRouter()
 
@@ -98,9 +99,11 @@ export default function LoginClient() {
   useEffect(() => {
     if (typeof window !== 'undefined') {
       const params = new URLSearchParams(window.location.search)
+      if (params.get('message') === 'password-updated') {
+        setShowPasswordUpdated(true)
+      }
+
       const redirectParam = params.get('redirect')
-      // For backward compatibility, respect redirect param if provided
-      // Otherwise default to profiles
       if (redirectParam) {
         setRedirect(redirectParam)
       } else {
@@ -274,6 +277,15 @@ export default function LoginClient() {
                     Reset session
                   </button>
                 )}
+              </div>
+            )}
+
+            {/* Password reset success banner */}
+            {showPasswordUpdated && (
+              <div className="bg-emerald-900/20 border border-emerald-700/50 rounded-xl p-4 text-center mb-6">
+                <p className="text-sm font-medium text-emerald-400">
+                  Password updated successfully. Please sign in.
+                </p>
               </div>
             )}
 

@@ -119,8 +119,7 @@ export default function ResetPasswordClient() {
       if (error) {
         setMessage({ text: error.message, type: 'error' })
       } else {
-        setStatus('done')
-        setTimeout(() => router.push('/login'), 2000)
+        window.location.href = '/login?message=password-updated'
       }
     } catch (err) {
       setMessage({ text: err instanceof Error ? err.message : 'Something went wrong.', type: 'error' })
