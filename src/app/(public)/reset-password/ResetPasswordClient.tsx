@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from 'react'
 import Link from 'next/link'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { getSupabaseBrowser } from '@/lib/supabase/client'
+import { resetPassword } from './actions'
 import { Lock, Mail, ArrowRight, Loader2, Eye, EyeOff } from 'lucide-react'
 
 type Status = 'verifying' | 'request' | 'ready' | 'expired' | 'done'
@@ -115,9 +116,16 @@ export default function ResetPasswordClient() {
     setMessage(null)
 
     try {
-      const { error } = await supabase.auth.updateUser({ password })
-      if (error) {
-        setMessage({ text: error.message, type: 'error' })
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) {
+        setMessage({ text: 'Session expired. Please request a new reset link.', type: 'error' })
+        return
+      }
+
+      const result = await resetPassword(user.id, password)
+
+      if (result.error) {
+        setMessage({ text: result.error, type: 'error' })
       } else {
         setStatus('done')
       }
