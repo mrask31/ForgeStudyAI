@@ -22,6 +22,16 @@ interface RecentSession {
   title: string | null
   session_type: string | null
   updated_at: string
+  metadata?: {
+    topicTitle?: string
+    classId?: string
+    class_id?: string
+    className?: string
+    selectedClassName?: string
+    entryMode?: string
+    tool?: string
+    [key: string]: any
+  }
 }
 
 export default function HomePage() {
@@ -140,6 +150,42 @@ export default function HomePage() {
     if (diffHours < 24) return `${diffHours}h ago`
     if (diffDays < 7) return `${diffDays}d ago`
     return new Date(dateString).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+  }
+
+  const formatSessionTitle = (session: RecentSession) => {
+    // Use chat title if it exists and isn't a raw AI response
+    // Raw AI responses tend to be long or start with common AI patterns
+    if (session.title) {
+      const title = session.title.trim()
+      const looksLikeAIResponse =
+        title.length > 60 ||
+        title.startsWith("Here's") ||
+        title.startsWith('Sure') ||
+        title.startsWith('Let me') ||
+        title.startsWith('I can') ||
+        title.startsWith('Great')
+      if (!looksLikeAIResponse) {
+        return title
+      }
+    }
+
+    const dateStr = new Date(session.updated_at).toLocaleDateString('en-US', {
+      month: 'short',
+      day: 'numeric',
+    })
+
+    // Derive subject from metadata
+    const subject =
+      session.metadata?.topicTitle ||
+      session.metadata?.className ||
+      session.metadata?.selectedClassName ||
+      null
+
+    if (subject) {
+      return `${subject} — ${dateStr}`
+    }
+
+    return `Study Session — ${dateStr}`
   }
 
   const formatDueLabel = (dueAt: string | null) => {
@@ -281,7 +327,7 @@ export default function HomePage() {
           <div className="grid grid-cols-2 gap-3">
             <div className="flex flex-col items-center gap-2 p-4 bg-slate-900/60 border border-slate-800 rounded-xl">
               <PhotoDropButton />
-              <span className="text-xs text-slate-400">Snap homework</span>
+              <span className="text-xs text-slate-400">Snap Homework</span>
             </div>
             <Link
               href="/sources"
@@ -318,7 +364,7 @@ export default function HomePage() {
                     <Clock className="w-4 h-4 text-slate-500 flex-shrink-0" />
                     <div className="min-w-0 flex-1">
                       <p className="text-sm font-medium text-white truncate">
-                        {session.title || 'Untitled session'}
+                        {formatSessionTitle(session)}
                       </p>
                       <p className="text-xs text-slate-500">{formatTimeAgo(session.updated_at)}</p>
                     </div>
@@ -413,7 +459,7 @@ export default function HomePage() {
                   <Clock className="w-4 h-4 text-slate-500 flex-shrink-0" />
                   <div className="min-w-0 flex-1">
                     <p className="text-sm font-medium text-white truncate">
-                      {session.title || 'Untitled session'}
+                      {formatSessionTitle(session)}
                     </p>
                     <p className="text-xs text-slate-500">{formatTimeAgo(session.updated_at)}</p>
                   </div>
