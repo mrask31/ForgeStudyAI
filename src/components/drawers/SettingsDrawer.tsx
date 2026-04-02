@@ -25,6 +25,9 @@ export function SettingsDrawer({ isOpen, onClose }: SettingsDrawerProps) {
   const [hasCanvasConnection, setHasCanvasConnection] = useState(false);
   const [isCheckingConnection, setIsCheckingConnection] = useState(false);
   const [isSyncing, setIsSyncing] = useState(false);
+  const [canvasUrl, setCanvasUrl] = useState('');
+  const [canvasPAT, setCanvasPAT] = useState('');
+  const [isConnectingLMS, setIsConnectingLMS] = useState(false);
 
   // Singleton Supabase client - only create once per component instance
   const supabase = useMemo(
@@ -117,6 +120,54 @@ export function SettingsDrawer({ isOpen, onClose }: SettingsDrawerProps) {
       console.error('[SyncNow] Sync error:', error);
       toast.error(error.message || 'Failed to trigger sync');
       setIsSyncing(false);
+    }
+  };
+
+  const handleCanvasConnect = async () => {
+    if (!canvasUrl.trim() || !canvasPAT.trim() || !activeProfileId) return;
+    setIsConnectingLMS(true);
+    try {
+      const res = await fetch('/api/parent/lms/connect', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({
+          studentId: activeProfileId,
+          provider: 'canvas',
+          canvasInstanceUrl: canvasUrl.trim(),
+          canvasPAT: canvasPAT.trim(),
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok || !data.success) {
+        throw new Error(data.message || 'Failed to connect Canvas');
+      }
+      toast.success('Canvas connected! Syncing assignments...');
+      setHasCanvasConnection(true);
+      setCanvasUrl('');
+      setCanvasPAT('');
+    } catch (err: any) {
+      toast.error(err.message || 'Failed to connect Canvas');
+    } finally {
+      setIsConnectingLMS(false);
+    }
+  };
+
+  const handleGoogleConnect = async () => {
+    if (!activeProfileId) return;
+    setIsConnectingLMS(true);
+    try {
+      const res = await fetch(`/api/auth/google-classroom/authorize?studentId=${activeProfileId}`, {
+        credentials: 'include',
+      });
+      const data = await res.json();
+      if (!res.ok || !data.url) {
+        throw new Error(data.error || 'Failed to start Google OAuth');
+      }
+      window.location.href = data.url;
+    } catch (err: any) {
+      toast.error(err.message || 'Failed to start Google Classroom connection');
+      setIsConnectingLMS(false);
     }
   };
 
@@ -241,32 +292,88 @@ export function SettingsDrawer({ isOpen, onClose }: SettingsDrawerProps) {
             </div>
           </div>
 
-          {/* School Integrations - Only show if Canvas is connected */}
-          {hasCanvasConnection && (
-            <div className="bg-slate-900/60 backdrop-blur-md border border-slate-800 rounded-2xl shadow-xl p-6">
-              <div className="flex items-center gap-3 mb-4">
-                <LinkIcon className="w-5 h-5 text-indigo-400" />
-                <h3 className="text-base font-semibold text-slate-200">School Integrations</h3>
-              </div>
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <div className="w-2 h-2 rounded-full bg-green-500"></div>
-                  <span className="text-sm font-medium text-slate-200">Canvas Connected</span>
-                </div>
-                <button
-                  onClick={handleSyncNow}
-                  disabled={isSyncing}
-                  className="flex items-center gap-2 px-4 py-2 text-sm border border-indigo-500 text-indigo-400 hover:bg-indigo-500/10 rounded-xl transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  <RefreshCw className={`w-4 h-4 ${isSyncing ? 'animate-spin' : ''}`} />
-                  {isSyncing ? 'Syncing...' : 'Sync Now'}
-                </button>
-              </div>
-              <p className="text-xs text-slate-400 mt-3">
-                Your Canvas assignments are automatically synced to your Galaxy.
-              </p>
+          {/* School Integration (optional) */}
+          <div className="bg-slate-900/60 backdrop-blur-md border border-slate-800 rounded-2xl shadow-xl p-6">
+            <div className="flex items-center gap-3 mb-3">
+              <LinkIcon className="w-5 h-5 text-indigo-400" />
+              <h3 className="text-base font-semibold text-slate-200">School Integration (optional)</h3>
             </div>
-          )}
+            <p className="text-sm text-slate-400 mb-4">
+              Connect your school to automatically see your upcoming assignments. This is optional — you can use ForgeStudy AI without it.
+            </p>
+
+            {hasCanvasConnection ? (
+              <>
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <div className="w-2 h-2 rounded-full bg-green-500"></div>
+                    <span className="text-sm font-medium text-slate-200">Canvas Connected</span>
+                  </div>
+                  <button
+                    onClick={handleSyncNow}
+                    disabled={isSyncing}
+                    className="flex items-center gap-2 px-4 py-2 text-sm border border-indigo-500 text-indigo-400 hover:bg-indigo-500/10 rounded-xl transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    <RefreshCw className={`w-4 h-4 ${isSyncing ? 'animate-spin' : ''}`} />
+                    {isSyncing ? 'Syncing...' : 'Sync Now'}
+                  </button>
+                </div>
+                <p className="text-xs text-slate-400 mt-3">
+                  Your Canvas assignments are automatically synced.
+                </p>
+              </>
+            ) : (
+              <div className="space-y-3">
+                {/* Canvas connect */}
+                <div className="border border-slate-700 rounded-xl p-4 space-y-3">
+                  <div className="flex items-center gap-2">
+                    <div className="w-8 h-8 bg-gradient-to-br from-orange-500 to-red-600 rounded-lg flex items-center justify-center">
+                      <span className="text-white font-bold text-sm">C</span>
+                    </div>
+                    <span className="text-sm font-medium text-slate-200">Canvas LMS</span>
+                  </div>
+                  <input
+                    type="url"
+                    placeholder="Canvas URL (e.g., https://school.instructure.com)"
+                    value={canvasUrl}
+                    onChange={(e) => setCanvasUrl(e.target.value)}
+                    className="w-full px-3 py-2 bg-slate-800/60 border border-slate-700 rounded-lg text-sm text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all"
+                  />
+                  <input
+                    type="password"
+                    placeholder="Personal Access Token"
+                    value={canvasPAT}
+                    onChange={(e) => setCanvasPAT(e.target.value)}
+                    className="w-full px-3 py-2 bg-slate-800/60 border border-slate-700 rounded-lg text-sm text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all"
+                  />
+                  <button
+                    onClick={handleCanvasConnect}
+                    disabled={isConnectingLMS || !canvasUrl.trim() || !canvasPAT.trim()}
+                    className="w-full px-3 py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg text-sm font-semibold transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {isConnectingLMS ? 'Connecting...' : 'Connect Canvas'}
+                  </button>
+                </div>
+
+                {/* Google Classroom connect */}
+                <div className="border border-slate-700 rounded-xl p-4">
+                  <div className="flex items-center gap-2 mb-3">
+                    <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-green-500 rounded-lg flex items-center justify-center">
+                      <span className="text-white font-bold text-sm">G</span>
+                    </div>
+                    <span className="text-sm font-medium text-slate-200">Google Classroom</span>
+                  </div>
+                  <button
+                    onClick={handleGoogleConnect}
+                    disabled={isConnectingLMS}
+                    className="w-full px-3 py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg text-sm font-semibold transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {isConnectingLMS ? 'Connecting...' : 'Connect Google Classroom'}
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
 
           {/* Account */}
           <div className="bg-slate-900/60 backdrop-blur-md border border-slate-800 rounded-2xl shadow-xl p-6">

@@ -9,8 +9,9 @@ import HistoryButton from './HistoryButton'
 import { useActiveProfile } from '@/contexts/ActiveProfileContext'
 
 const NAV_ITEMS = [
-  { label: '🌌 My Galaxy', href: '/app', icon: Sparkles, type: 'route' as const },
-  { label: 'Tutor Workspace', href: '/tutor', icon: MessageSquare, type: 'route' as const },
+  { label: 'Home', href: '/app', icon: Sparkles, type: 'route' as const },
+  { label: 'Tutor', href: '/tutor', icon: MessageSquare, type: 'route' as const },
+  { label: 'Progress', href: '/progress', icon: Activity, type: 'route' as const },
   { label: 'Saved Sessions', href: '/saved', icon: Bookmark, type: 'route' as const },
   { label: 'Courses', href: '/courses', icon: Folder, type: 'route' as const },
   { label: 'Sources', href: '/sources', icon: FileText, type: 'route' as const },
@@ -159,7 +160,8 @@ export default function Sidebar({ onNavigate }: SidebarProps = {}) {
                   pathname.startsWith(item.href + '/') ||
                   (item.href === '/app' && pathname.startsWith('/app')) ||
                   (item.href === '/courses' && pathname.startsWith('/courses')) ||
-                  (item.href === '/dictionary' && pathname.startsWith('/dictionary'))
+                  (item.href === '/dictionary' && pathname.startsWith('/dictionary')) ||
+                  (item.href === '/progress' && pathname.startsWith('/progress'))
               const Icon = item.icon
 
               return (

@@ -5,6 +5,7 @@ import { DensityProvider } from '@/contexts/DensityContext'
 import { UserProvider } from '@/contexts/UserContext'
 import Sidebar from '@/components/layout/Sidebar'
 import MobileNav from '@/components/layout/MobileNav'
+import { BottomTabBar } from '@/components/layout/BottomTabBar'
 import { Menu } from 'lucide-react'
 
 interface AppShellProps {
@@ -62,6 +63,9 @@ export function AppShell({ children, variant = 'app' }: AppShellProps) {
 
           {/* Mobile Navigation Drawer */}
           <MobileNav open={mobileNavOpen} onClose={() => setMobileNavOpen(false)} />
+
+          {/* Bottom Tab Bar - Mobile only */}
+          <BottomTabBar />
         </div>
       </DensityProvider>
     </UserProvider>

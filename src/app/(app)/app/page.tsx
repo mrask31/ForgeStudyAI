@@ -1,311 +1,441 @@
 'use client'
 
-import { Sparkles, Share2 } from 'lucide-react'
-import { toast } from 'sonner'
 import { useActiveProfile } from '@/contexts/ActiveProfileContext'
-import { ConceptGalaxy } from '@/components/galaxy/ConceptGalaxy'
-import { GalaxyLegend } from '@/components/galaxy/GalaxyLegend'
-import { SmartCTA } from '@/components/galaxy/SmartCTA'
-import { DecontaminationBanner } from '@/components/galaxy/DecontaminationBanner'
-import { useEffect, useState, useCallback } from 'react'
-import { getStudyTopicsWithMastery, getQuarantinedTopicsCount, getTopicsGroupedByCourse, type CoursePlanet } from '@/app/actions/study-topics'
-import { calculateSmartCTA, type SmartCTAResult } from '@/lib/smart-cta'
 import { useUser } from '@/contexts/UserContext'
-import Link from 'next/link'
-import { PhotoDropButton } from '@/components/homework/PhotoDropButton'
-import { GalaxySkeleton } from '@/components/galaxy/GalaxySkeleton'
-import { HelperChips } from '@/components/galaxy/HelperChips'
 import { useActiveProfileSummary } from '@/hooks/useActiveProfileSummary'
+import { useEffect, useState } from 'react'
+import { useRouter } from 'next/navigation'
+import Link from 'next/link'
+import { FileText, MessageSquare, Loader2, Clock, ChevronRight } from 'lucide-react'
+import { PhotoDropButton } from '@/components/homework/PhotoDropButton'
+import { SubjectEntryForm } from '@/components/tutor/SubjectEntryForm'
 
-// Module-level cache survives component unmount/remount during client-side navigation
-const galaxyCache: {
-  profileId: string | null
-  topics: any[]
-  smartCTA: SmartCTAResult | null
-  quarantinedCount: number
-  coursePlanets: CoursePlanet[]
-} = { profileId: null, topics: [], smartCTA: null, quarantinedCount: 0, coursePlanets: [] }
+interface DueSoonAssignment {
+  id: string
+  title: string
+  course_name: string | null
+  due_at: string | null
+}
 
-export default function GalaxyPage() {
+interface RecentSession {
+  id: string
+  title: string | null
+  session_type: string | null
+  updated_at: string
+}
+
+export default function HomePage() {
   const { activeProfileId } = useActiveProfile()
   const { user } = useUser()
   const profileSummary = useActiveProfileSummary()
-  const [topics, setTopics] = useState<any[]>(() =>
-    galaxyCache.profileId === activeProfileId ? galaxyCache.topics : []
-  )
-  const [loading, setLoading] = useState(() =>
-    galaxyCache.profileId === activeProfileId && (galaxyCache.topics.length > 0 || galaxyCache.coursePlanets.length > 0) ? false : true
-  )
-  const [smartCTA, setSmartCTA] = useState<SmartCTAResult | null>(() =>
-    galaxyCache.profileId === activeProfileId ? galaxyCache.smartCTA : null
-  )
-  const [quarantinedCount, setQuarantinedCount] = useState(() =>
-    galaxyCache.profileId === activeProfileId ? galaxyCache.quarantinedCount : 0
-  )
-  const [lmsStatus, setLmsStatus] = useState<'no_connection' | 'connected' | null>(null)
-  const [hasDueSoonItems, setHasDueSoonItems] = useState(false)
-  const [totalTopicCount, setTotalTopicCount] = useState(0) // Includes quarantined — to detect if sync already ran
+  const router = useRouter()
+
+  const [lmsConnected, setLmsConnected] = useState<boolean | null>(null)
+  const [dueSoonItems, setDueSoonItems] = useState<DueSoonAssignment[]>([])
+  const [recentSessions, setRecentSessions] = useState<RecentSession[]>([])
   const [streakDays, setStreakDays] = useState(0)
-  const [coursePlanets, setCoursePlanets] = useState<CoursePlanet[]>(() =>
-    galaxyCache.profileId === activeProfileId ? galaxyCache.coursePlanets : []
-  )
-  const [isGalaxyDrillDown, setIsGalaxyDrillDown] = useState(false)
+  const [loading, setLoading] = useState(true)
 
+  const studentName = profileSummary.summary?.displayName?.split(' ')[0] || 'there'
+
+  // Check LMS status, load streak, load recent sessions
   useEffect(() => {
-    async function loadData() {
-      if (!activeProfileId || !user) {
-        // Don't clear loading if we're just waiting for context to initialize
-        if (!activeProfileId && !user) return
-        setLoading(false)
-        return
-      }
+    if (!activeProfileId || !user) {
+      setLoading(false)
+      return
+    }
 
-      // Show skeleton while fetching (unless cache already has data for this profile)
-      if (galaxyCache.profileId !== activeProfileId || (galaxyCache.topics.length === 0 && galaxyCache.coursePlanets.length === 0)) {
-        setLoading(true)
-      }
+    let cancelled = false
 
+    async function loadHomeData() {
+      setLoading(true)
       try {
-        const [topicsData, ctaData, quarantinedData, planetsData] = await Promise.all([
-          getStudyTopicsWithMastery(activeProfileId),
-          calculateSmartCTA(user.id, activeProfileId),
-          getQuarantinedTopicsCount(activeProfileId),
-          getTopicsGroupedByCourse(activeProfileId),
+        const [lmsRes, streakRes, chatsRes] = await Promise.all([
+          fetch(`/api/parent/lms/status/${activeProfileId}`).catch(() => null),
+          fetch(`/api/streak?profileId=${activeProfileId}`).catch(() => null),
+          fetch('/api/chats/list?includeArchived=false', { credentials: 'include' }).catch(() => null),
         ])
-        console.log('[Galaxy] Loaded', topicsData.length, 'topics,', quarantinedData, 'quarantined,', planetsData.length, 'courses for profile', activeProfileId)
-        setTopics(topicsData)
-        setSmartCTA(ctaData)
-        setQuarantinedCount(quarantinedData)
-        setCoursePlanets(planetsData)
-        // Total = visible + quarantined. If > 0, sync already ran — don't show "Syncing..."
-        setTotalTopicCount(topicsData.length + quarantinedData)
-        // Persist to module-level cache for instant render on remount
-        galaxyCache.profileId = activeProfileId
-        galaxyCache.topics = topicsData
-        galaxyCache.smartCTA = ctaData
-        galaxyCache.quarantinedCount = quarantinedData
-        galaxyCache.coursePlanets = planetsData
+
+        if (cancelled) return
+
+        // LMS status
+        if (lmsRes?.ok) {
+          const lmsData = await lmsRes.json()
+          const hasActiveConnection = lmsData.connections?.some(
+            (c: any) => (c.provider === 'canvas' || c.provider === 'google_classroom') && c.status === 'active'
+          )
+          setLmsConnected(!!hasActiveConnection)
+        } else {
+          setLmsConnected(false)
+        }
+
+        // Streak
+        if (streakRes?.ok) {
+          const streakData = await streakRes.json()
+          setStreakDays(streakData.current_streak_days || 0)
+        }
+
+        // Recent sessions
+        if (chatsRes?.ok) {
+          const chatsData = await chatsRes.json()
+          setRecentSessions((chatsData.chats || []).slice(0, 5))
+        }
       } catch (error) {
-        console.error('[Galaxy] Error loading data:', error)
+        console.error('[Home] Error loading data:', error)
+        setLmsConnected(false)
       } finally {
-        setLoading(false)
+        if (!cancelled) setLoading(false)
       }
     }
 
-    loadData()
+    loadHomeData()
+    return () => { cancelled = true }
   }, [activeProfileId, user])
 
-  // Fetch streak data
+  // Load due-soon assignments when LMS is connected
   useEffect(() => {
-    async function loadStreak() {
-      if (!activeProfileId) return
+    if (!activeProfileId || !lmsConnected) return
+
+    async function loadAssignments() {
       try {
-        const res = await fetch(`/api/streak?profileId=${activeProfileId}`)
+        const res = await fetch(`/api/assignments/due-soon?profileId=${activeProfileId}`)
         if (res.ok) {
           const data = await res.json()
-          setStreakDays(data.current_streak_days || 0)
+          setDueSoonItems(data.assignments || [])
         }
       } catch {
         // Non-critical
       }
     }
-    loadStreak()
-  }, [activeProfileId])
 
-  // Check LMS connection status for empty state guidance
+    loadAssignments()
+  }, [activeProfileId, lmsConnected])
+
+  // Auto-sync LMS on home page load (once per session)
   useEffect(() => {
-    async function checkLMS() {
-      if (!activeProfileId) return
-      try {
-        const res = await fetch(`/api/parent/lms/status/${activeProfileId}`)
-        if (res.ok) {
-          const data = await res.json()
-          const canvas = data.connections?.find(
-            (c: any) => c.provider === 'canvas' && c.status === 'active'
-          )
-          setLmsStatus(canvas ? 'connected' : 'no_connection')
-        } else {
-          setLmsStatus('no_connection')
-        }
-      } catch {
-        setLmsStatus('no_connection')
-      }
-    }
-    checkLMS()
-  }, [activeProfileId])
+    if (!activeProfileId || !user) return
 
-  // Auto-sync LMS on Galaxy page load (once per session)
-  useEffect(() => {
-    async function triggerAutoSync() {
-      if (!activeProfileId || !user) return
+    const syncKey = `lms_sync_triggered_${activeProfileId}`
+    if (sessionStorage.getItem(syncKey)) return
+    sessionStorage.setItem(syncKey, 'true')
 
-      // Check if already synced this session
-      const syncKey = `lms_sync_triggered_${activeProfileId}`
-      if (sessionStorage.getItem(syncKey)) {
-        return
-      }
-
-      // Mark as synced BEFORE firing to prevent duplicate triggers
-      sessionStorage.setItem(syncKey, 'true')
-
-      try {
-        // Trigger sync in background — only update topics if sync returns NEW data
-        fetch('/api/internal/sync/trigger', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          credentials: 'include',
-          body: JSON.stringify({ profileId: activeProfileId }),
-        }).then(async () => {
-          if (!activeProfileId) return
-          const [topicsData, quarantinedData] = await Promise.all([
-            getStudyTopicsWithMastery(activeProfileId),
-            getQuarantinedTopicsCount(activeProfileId)
-          ])
-          // Only update state if we got data — never clobber existing topics with empty
-          if (topicsData.length > 0 || quarantinedData > 0) {
-            setTopics(topicsData)
-            setQuarantinedCount(quarantinedData)
-            setTotalTopicCount(topicsData.length + quarantinedData)
-            galaxyCache.topics = topicsData
-            galaxyCache.quarantinedCount = quarantinedData
-          }
-        }).catch((err) => {
-          console.debug('[Galaxy] Auto-sync failed (non-critical):', err)
-        })
-      } catch (err) {
-        console.debug('[Galaxy] Auto-sync error (non-critical):', err)
-      }
-    }
-
-    triggerAutoSync()
+    fetch('/api/internal/sync/trigger', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      body: JSON.stringify({ profileId: activeProfileId }),
+    }).catch(() => {
+      // Non-critical
+    })
   }, [activeProfileId, user])
 
-  return (
-    <div className="relative w-full h-screen bg-slate-950 overflow-hidden flex flex-col">
-      {/* Decontamination Banner - Floating at top */}
-      {quarantinedCount > 0 && (
-        <div className="absolute top-4 md:top-6 left-1/2 -translate-x-1/2 z-50 px-4 w-full max-w-md">
-          <DecontaminationBanner quarantinedCount={quarantinedCount} />
-        </div>
-      )}
-      
-      {/* Streak Badge - Top left on mobile, inside HUD on desktop */}
-      {streakDays > 0 && (
-        <div className="md:hidden absolute top-4 left-3 z-40">
-          <div className="bg-slate-900/60 backdrop-blur-md border border-amber-500/30 rounded-xl px-3 py-1.5 shadow-lg">
-            <span className="text-amber-400 text-sm font-bold">🔥 {streakDays} day streak</span>
-          </div>
-        </div>
-      )}
+  const formatTimeAgo = (dateString: string) => {
+    const diffMs = Date.now() - new Date(dateString).getTime()
+    const diffMins = Math.floor(diffMs / 60000)
+    const diffHours = Math.floor(diffMs / 3600000)
+    const diffDays = Math.floor(diffMs / 86400000)
 
-      {/* Top Left HUD - Title & Legend (Hidden on mobile and during drill-down to avoid overlap with back button) */}
-      <div className={`hidden md:block absolute top-4 left-4 z-50 pointer-events-auto bg-slate-900/80 backdrop-blur-md border border-slate-700/50 rounded-xl shadow-2xl p-4 max-w-[240px] ${isGalaxyDrillDown ? 'md:hidden' : ''}`}>
-        <div className="flex items-center gap-2 mb-2">
-          <Sparkles className="w-5 h-5 text-indigo-400" />
-          <h1 className="text-lg font-bold text-white">
-            Your Galaxy
-          </h1>
-          {streakDays > 0 && (
-            <span className="ml-auto text-amber-400 text-xs font-bold whitespace-nowrap">🔥 {streakDays}d</span>
+    if (diffMins < 1) return 'Just now'
+    if (diffMins < 60) return `${diffMins}m ago`
+    if (diffHours < 24) return `${diffHours}h ago`
+    if (diffDays < 7) return `${diffDays}d ago`
+    return new Date(dateString).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+  }
+
+  const formatDueLabel = (dueAt: string | null) => {
+    if (!dueAt) return ''
+    const due = new Date(dueAt)
+    const now = new Date()
+    const diffMs = due.getTime() - now.getTime()
+    const diffDays = Math.ceil(diffMs / 86400000)
+
+    if (diffDays < 0) return 'Overdue'
+    if (diffDays === 0) return 'Due today'
+    if (diffDays === 1) return 'Tomorrow'
+    return `${diffDays}d left`
+  }
+
+  const getDueLabelColor = (dueAt: string | null) => {
+    if (!dueAt) return 'text-slate-400'
+    const diffMs = new Date(dueAt).getTime() - Date.now()
+    const diffDays = Math.ceil(diffMs / 86400000)
+
+    if (diffDays < 0) return 'text-red-400'
+    if (diffDays <= 1) return 'text-amber-400'
+    return 'text-slate-400'
+  }
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-full bg-slate-950">
+        <Loader2 className="w-8 h-8 text-indigo-400 animate-spin" />
+      </div>
+    )
+  }
+
+  // ====================================
+  // LMS Connected: Assignment-based home
+  // ====================================
+  if (lmsConnected) {
+    const heroAssignment = dueSoonItems[0]
+    const upcomingAssignments = dueSoonItems.slice(1, 4)
+
+    return (
+      <div className="flex-1 overflow-y-auto bg-slate-950 pb-20 lg:pb-4">
+        <div className="max-w-2xl mx-auto px-4 py-6 md:py-10 space-y-6">
+          {/* Header */}
+          <div className="flex items-center justify-between">
+            <div>
+              <h1 className="text-2xl md:text-3xl font-bold text-white">
+                Hey {studentName} 👋
+              </h1>
+              <p className="text-slate-400 text-sm mt-1">Ready to study?</p>
+            </div>
+            {streakDays > 0 && (
+              <div className="bg-slate-900/60 backdrop-blur-md border border-amber-500/30 rounded-xl px-3 py-1.5">
+                <span className="text-amber-400 text-sm font-bold">🔥 {streakDays}-day streak</span>
+              </div>
+            )}
+          </div>
+
+          {/* Hero Assignment Card */}
+          {heroAssignment ? (
+            <div className="bg-gradient-to-br from-indigo-600/20 to-purple-600/20 border border-indigo-500/30 rounded-2xl p-5 md:p-6">
+              <div className="flex items-center gap-2 mb-1">
+                <span className={`text-xs font-semibold ${getDueLabelColor(heroAssignment.due_at)}`}>
+                  {formatDueLabel(heroAssignment.due_at)}
+                </span>
+                {heroAssignment.course_name && (
+                  <span className="text-xs text-slate-400">
+                    · {heroAssignment.course_name}
+                  </span>
+                )}
+              </div>
+              <h2 className="text-lg md:text-xl font-bold text-white mb-4">
+                {heroAssignment.title}
+              </h2>
+              <button
+                onClick={() => {
+                  localStorage.setItem(
+                    'forgestudy-tutor-prefill',
+                    `Help me study for this assignment: ${heroAssignment.title}`
+                  )
+                  localStorage.setItem('forgestudy-tutor-auto-send', 'true')
+                  router.push('/tutor?intent=new_question')
+                }}
+                className="w-full md:w-auto flex items-center justify-center gap-2 px-6 py-3 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl font-bold text-base transition-colors"
+              >
+                ▶ Start Studying
+              </button>
+            </div>
+          ) : (
+            <div className="bg-slate-900/60 border border-slate-800 rounded-2xl p-5 md:p-6 text-center">
+              <p className="text-slate-400 text-sm">No upcoming assignments. Nice work!</p>
+              <Link
+                href="/tutor"
+                className="inline-flex items-center gap-2 mt-3 px-5 py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl font-semibold text-sm transition-colors"
+              >
+                <MessageSquare className="w-4 h-4" />
+                Ask your tutor anything
+              </Link>
+            </div>
+          )}
+
+          {/* Upcoming Assignments */}
+          {upcomingAssignments.length > 0 && (
+            <div>
+              <h3 className="text-sm font-semibold text-slate-400 uppercase tracking-wider mb-3">Coming Up</h3>
+              <div className="space-y-2">
+                {upcomingAssignments.map((a) => (
+                  <button
+                    key={a.id}
+                    onClick={() => {
+                      localStorage.setItem(
+                        'forgestudy-tutor-prefill',
+                        `Help me study for: ${a.title}`
+                      )
+                      localStorage.setItem('forgestudy-tutor-auto-send', 'true')
+                      router.push('/tutor?intent=new_question')
+                    }}
+                    className="w-full flex items-center justify-between p-3 bg-slate-900/60 border border-slate-800 rounded-xl hover:border-indigo-500/30 hover:bg-indigo-600/5 transition-all text-left"
+                  >
+                    <div className="min-w-0">
+                      <p className="text-sm font-medium text-white truncate">{a.title}</p>
+                      {a.course_name && (
+                        <p className="text-xs text-slate-500 truncate">{a.course_name}</p>
+                      )}
+                    </div>
+                    <div className="flex items-center gap-2 flex-shrink-0 ml-3">
+                      <span className={`text-xs font-medium ${getDueLabelColor(a.due_at)}`}>
+                        {formatDueLabel(a.due_at)}
+                      </span>
+                      <span className="text-xs text-indigo-400 font-semibold">Study</span>
+                    </div>
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Quick Actions */}
+          <div className="grid grid-cols-2 gap-3">
+            <div className="flex flex-col items-center gap-2 p-4 bg-slate-900/60 border border-slate-800 rounded-xl">
+              <PhotoDropButton />
+              <span className="text-xs text-slate-400">Snap homework</span>
+            </div>
+            <Link
+              href="/sources"
+              className="flex flex-col items-center gap-2 p-4 bg-slate-900/60 border border-slate-800 rounded-xl hover:border-indigo-500/30 hover:bg-indigo-600/5 transition-all"
+            >
+              <FileText className="w-6 h-6 text-indigo-400" />
+              <span className="text-sm font-medium text-white">Upload Materials</span>
+            </Link>
+          </div>
+
+          {/* My Progress link */}
+          <Link
+            href="/progress"
+            className="flex items-center justify-between p-4 bg-slate-900/60 border border-slate-800 rounded-xl hover:border-indigo-500/30 transition-all"
+          >
+            <div>
+              <h3 className="text-sm font-semibold text-white">My Progress</h3>
+              <p className="text-xs text-slate-400 mt-0.5">Explore your Learning Galaxy</p>
+            </div>
+            <ChevronRight className="w-5 h-5 text-slate-500" />
+          </Link>
+
+          {/* Recent Sessions */}
+          {recentSessions.length > 0 && (
+            <div>
+              <h3 className="text-sm font-semibold text-slate-400 uppercase tracking-wider mb-3">Recent Sessions</h3>
+              <div className="space-y-2">
+                {recentSessions.map((session) => (
+                  <button
+                    key={session.id}
+                    onClick={() => router.push(`/tutor?sessionId=${session.id}`)}
+                    className="w-full flex items-center gap-3 p-3 bg-slate-900/60 border border-slate-800 rounded-xl hover:border-indigo-500/30 hover:bg-indigo-600/5 transition-all text-left"
+                  >
+                    <Clock className="w-4 h-4 text-slate-500 flex-shrink-0" />
+                    <div className="min-w-0 flex-1">
+                      <p className="text-sm font-medium text-white truncate">
+                        {session.title || 'Untitled session'}
+                      </p>
+                      <p className="text-xs text-slate-500">{formatTimeAgo(session.updated_at)}</p>
+                    </div>
+                  </button>
+                ))}
+              </div>
+            </div>
           )}
         </div>
-        <GalaxyLegend />
-        {activeProfileId && (
-          <button
-            onClick={() => {
-              const url = `${window.location.origin}/share/${activeProfileId}`;
-              navigator.clipboard.writeText(url).then(() => {
-                toast.success('Share link copied to clipboard!');
-              }).catch(() => {
-                toast.error('Failed to copy link');
-              });
-            }}
-            className="mt-3 inline-flex items-center gap-2 px-4 py-2 bg-indigo-600/20 hover:bg-indigo-600/30 border border-indigo-500/30 rounded-lg text-sm font-medium text-indigo-300 transition-colors"
-          >
-            <Share2 className="w-4 h-4" />
-            Share Progress
-          </button>
-        )}
       </div>
-      
-      {/* Helper Chips (desktop) - floating over canvas */}
-      {!loading && topics.length > 0 && !isGalaxyDrillDown && (
-        <div className="hidden md:block absolute bottom-24 left-1/2 -translate-x-1/2 z-30">
-          <HelperChips topics={topics} profileId={activeProfileId} />
-        </div>
-      )}
+    )
+  }
 
-      {/* Top Right HUD - Upload + Photo Drop */}
-      <div className="absolute top-4 md:top-6 right-2 md:right-6 z-40 pointer-events-auto flex items-center gap-1.5 md:gap-2">
-        <PhotoDropButton />
+  // ====================================
+  // No LMS: Photo Drop + Manual home
+  // ====================================
+  return (
+    <div className="flex-1 overflow-y-auto bg-slate-950 pb-20 lg:pb-4">
+      <div className="max-w-2xl mx-auto px-4 py-6 md:py-10 space-y-6">
+        {/* Header */}
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-2xl md:text-3xl font-bold text-white">
+              Hey {studentName} 👋
+            </h1>
+            <p className="text-slate-400 text-sm mt-1">What are you working on today?</p>
+          </div>
+          {streakDays > 0 && (
+            <div className="bg-slate-900/60 backdrop-blur-md border border-amber-500/30 rounded-xl px-3 py-1.5">
+              <span className="text-amber-400 text-sm font-bold">🔥 {streakDays}-day streak</span>
+            </div>
+          )}
+        </div>
+
+        {/* Hero: Photo Drop */}
+        <div className="flex items-center gap-4 p-5 md:p-6 bg-gradient-to-br from-indigo-600/20 to-purple-600/20 border border-indigo-500/30 rounded-2xl">
+          <div className="flex-shrink-0">
+            <PhotoDropButton />
+          </div>
+          <div className="text-left">
+            <h2 className="text-lg font-bold text-white">Take a Photo of Homework</h2>
+            <p className="text-sm text-slate-400 mt-0.5">
+              Snap a photo and get help in seconds
+            </p>
+          </div>
+        </div>
+
+        {/* Secondary Actions */}
+        <div className="grid grid-cols-2 gap-3">
+          <Link
+            href="/sources"
+            className="flex flex-col items-center gap-2 p-4 bg-slate-900/60 border border-slate-800 rounded-xl hover:border-indigo-500/30 hover:bg-indigo-600/5 transition-all"
+          >
+            <FileText className="w-6 h-6 text-indigo-400" />
+            <span className="text-sm font-medium text-white">Upload Materials</span>
+          </Link>
+          <Link
+            href="/tutor"
+            className="flex flex-col items-center gap-2 p-4 bg-slate-900/60 border border-slate-800 rounded-xl hover:border-indigo-500/30 hover:bg-indigo-600/5 transition-all"
+          >
+            <MessageSquare className="w-6 h-6 text-indigo-400" />
+            <span className="text-sm font-medium text-white">Ask Anything</span>
+          </Link>
+        </div>
+
+        {/* Subject Entry Form */}
+        <SubjectEntryForm />
+
+        {/* My Progress link */}
         <Link
-          href="/sources"
-          className="inline-flex items-center gap-1.5 md:gap-2 px-3 md:px-6 py-2 md:py-3 min-h-[44px] bg-slate-900/40 backdrop-blur-md border border-slate-700/50 rounded-xl shadow-2xl text-white text-xs md:text-base font-semibold hover:bg-slate-800/60 transition-all"
+          href="/progress"
+          className="flex items-center justify-between p-4 bg-slate-900/60 border border-slate-800 rounded-xl hover:border-indigo-500/30 transition-all"
         >
-          <Sparkles className="w-4 h-4 md:w-5 md:h-5 flex-shrink-0" />
-          <span className="hidden sm:inline">Upload Materials</span>
-          <span className="sm:hidden">Upload</span>
+          <div>
+            <h3 className="text-sm font-semibold text-white">My Progress</h3>
+            <p className="text-xs text-slate-400 mt-0.5">Explore your Learning Galaxy</p>
+          </div>
+          <ChevronRight className="w-5 h-5 text-slate-500" />
         </Link>
-      </div>
-      
-      {/* Galaxy Canvas — fixed 60vh on mobile so chips can sit below; full height on desktop */}
-      <div className="w-full h-[60vh] flex-shrink-0 md:flex-1 md:h-full relative">
-        {!activeProfileId ? (
-          <div className="flex items-center justify-center h-full px-4">
-            <div className="bg-slate-900/60 backdrop-blur-md border border-slate-700/50 rounded-xl shadow-2xl p-6 md:p-8 max-w-md text-center">
-              <p className="text-amber-300 text-sm">
-                Choose a student profile to see your learning galaxy.
-              </p>
+
+        {/* Recent Sessions */}
+        {recentSessions.length > 0 && (
+          <div>
+            <h3 className="text-sm font-semibold text-slate-400 uppercase tracking-wider mb-3">Recent Sessions</h3>
+            <div className="space-y-2">
+              {recentSessions.map((session) => (
+                <button
+                  key={session.id}
+                  onClick={() => router.push(`/tutor?sessionId=${session.id}`)}
+                  className="w-full flex items-center gap-3 p-3 bg-slate-900/60 border border-slate-800 rounded-xl hover:border-indigo-500/30 hover:bg-indigo-600/5 transition-all text-left"
+                >
+                  <Clock className="w-4 h-4 text-slate-500 flex-shrink-0" />
+                  <div className="min-w-0 flex-1">
+                    <p className="text-sm font-medium text-white truncate">
+                      {session.title || 'Untitled session'}
+                    </p>
+                    <p className="text-xs text-slate-500">{formatTimeAgo(session.updated_at)}</p>
+                  </div>
+                </button>
+              ))}
             </div>
           </div>
-        ) : loading ? (
-          <GalaxySkeleton />
-        ) : (
-          <ConceptGalaxy
-            topics={topics}
-            coursePlanets={coursePlanets}
-            studentName={profileSummary.summary?.displayName?.split(' ')[0] || undefined}
-            profileId={activeProfileId || undefined}
-            lmsStatus={lmsStatus}
-            totalTopicCount={totalTopicCount}
-            onDueSoonChange={setHasDueSoonItems}
-            onDrillDownChange={setIsGalaxyDrillDown}
-            onTopicsRefresh={async () => {
-              // Refresh topics after lazy eval or snap-back
-              if (activeProfileId && user) {
-                const topicsData = await getStudyTopicsWithMastery(activeProfileId);
-                setTopics(topicsData);
-                galaxyCache.topics = topicsData;
-              }
-            }}
-          />
         )}
+
+        {/* Connect school prompt */}
+        <div className="bg-slate-900/40 border border-slate-800/50 rounded-xl p-4">
+          <p className="text-xs text-slate-500 mb-2">
+            Want to see your upcoming assignments automatically?
+          </p>
+          <button
+            onClick={() => window.dispatchEvent(new Event('open-settings-drawer'))}
+            className="text-xs text-indigo-400 hover:text-indigo-300 font-medium transition-colors"
+          >
+            Connect your school in Settings →
+          </button>
+        </div>
       </div>
-
-      {/* Helper Chips (mobile) — rendered below canvas in normal document flow */}
-      {!loading && topics.length > 0 && !isGalaxyDrillDown && (
-        <div className="md:hidden flex-shrink-0 flex flex-wrap justify-center gap-2 px-4 py-3 bg-slate-950">
-          <HelperChips topics={topics} profileId={activeProfileId} />
-        </div>
-      )}
-
-      {/* Bottom Center HUD - Smart CTA (only when no due-soon items to avoid overlap) */}
-      {smartCTA && !hasDueSoonItems && (
-        <div className="fixed md:absolute bottom-0 md:bottom-8 left-0 md:left-1/2 md:-translate-x-1/2 w-full md:w-auto z-40">
-          <div className="bg-slate-900/90 md:bg-slate-900/40 backdrop-blur-md border-t md:border border-slate-700/50 rounded-t-xl md:rounded-xl shadow-2xl p-4 md:p-6">
-            <SmartCTA 
-              label={smartCTA.label}
-              action={smartCTA.action}
-              reason={smartCTA.reason}
-              topicId={smartCTA.topicId}
-              orbitState={smartCTA.orbitState}
-              vaultTopicIds={smartCTA.vaultTopicIds}
-            />
-          </div>
-        </div>
-      )}
-
-      {/* Settings Drawer is now mounted globally in layout */}
     </div>
   )
 }

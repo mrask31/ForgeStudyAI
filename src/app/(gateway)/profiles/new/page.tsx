@@ -372,69 +372,72 @@ function NewProfileContent() {
               </form>
             </>
           ) : (
-            /* Step 2: Connect classroom */
+            /* Step 2: How do you want to study? */
             <>
-              <div className="flex items-center gap-3 mb-2">
-                <LinkIcon className="w-7 h-7 text-primary" />
-                <h1 className="text-2xl sm:text-3xl font-bold text-foreground">
-                  Connect {newProfileName}'s classroom
-                </h1>
-              </div>
+              <h1 className="text-2xl sm:text-3xl font-bold text-foreground mb-2">
+                How do you want to study today?
+              </h1>
               <p className="text-muted-foreground mb-8">
-                Connect Canvas or Google Classroom so we can sync assignments automatically. You can also skip this and connect later in Settings.
+                Choose any option to get started. You can always change later.
               </p>
 
-              <div className="space-y-6">
-                {/* Canvas connect */}
-                <div className="border-2 border-border rounded-xl p-6 space-y-4">
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 bg-gradient-to-br from-orange-500 to-red-600 rounded-lg flex items-center justify-center">
-                      <span className="text-white font-bold text-lg">C</span>
-                    </div>
-                    <div>
-                      <h3 className="text-lg font-semibold text-foreground">Canvas LMS</h3>
-                      <p className="text-xs text-muted-foreground">Personal Access Token</p>
-                    </div>
+              <div className="grid grid-cols-2 gap-4">
+                {/* Photo Drop */}
+                <button
+                  onClick={() => router.push('/app')}
+                  className="flex flex-col items-center gap-3 p-6 border-2 border-border rounded-xl bg-background hover:border-primary hover:bg-primary/5 transition-all text-center"
+                >
+                  <span className="text-3xl">📸</span>
+                  <div>
+                    <h3 className="text-base font-semibold text-foreground">Photo Drop</h3>
+                    <p className="text-xs text-muted-foreground mt-1">Take a photo of any homework</p>
                   </div>
-                  <input type="url" placeholder="Canvas URL (e.g., https://school.instructure.com)" value={canvasUrl}
-                    onChange={(e) => setCanvasUrl(e.target.value)} disabled={isConnecting}
-                    className="w-full px-4 py-2.5 border-2 border-border bg-background rounded-xl text-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-all" />
-                  <input type="password" placeholder="Personal Access Token" value={canvasPAT}
-                    onChange={(e) => setCanvasPAT(e.target.value)} disabled={isConnecting}
-                    className="w-full px-4 py-2.5 border-2 border-border bg-background rounded-xl text-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-all" />
-                  <button onClick={handleCanvasConnect} disabled={isConnecting || !canvasUrl.trim() || !canvasPAT.trim()}
-                    className="w-full px-4 py-2.5 bg-primary hover:bg-primary/90 text-primary-foreground rounded-xl font-semibold transition-all disabled:opacity-50 disabled:cursor-not-allowed">
-                    {isConnecting ? 'Connecting...' : 'Connect Canvas'}
-                  </button>
-                </div>
+                </button>
 
-                {/* Google Classroom connect */}
-                <div className="border-2 border-border rounded-xl p-6">
-                  <div className="flex items-center gap-3 mb-4">
-                    <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-green-500 rounded-lg flex items-center justify-center">
-                      <span className="text-white font-bold text-lg">G</span>
-                    </div>
-                    <div>
-                      <h3 className="text-lg font-semibold text-foreground">Google Classroom</h3>
-                      <p className="text-xs text-muted-foreground">OAuth 2.0</p>
-                    </div>
+                {/* Upload Materials */}
+                <button
+                  onClick={() => router.push('/sources')}
+                  className="flex flex-col items-center gap-3 p-6 border-2 border-border rounded-xl bg-background hover:border-primary hover:bg-primary/5 transition-all text-center"
+                >
+                  <span className="text-3xl">📄</span>
+                  <div>
+                    <h3 className="text-base font-semibold text-foreground">Upload Materials</h3>
+                    <p className="text-xs text-muted-foreground mt-1">Upload a PDF, doc, or paste notes</p>
                   </div>
-                  <button onClick={handleGoogleConnect} disabled={isConnecting}
-                    className="w-full px-4 py-2.5 bg-primary hover:bg-primary/90 text-primary-foreground rounded-xl font-semibold transition-all disabled:opacity-50 disabled:cursor-not-allowed">
-                    {isConnecting ? 'Connecting...' : 'Connect Google Classroom'}
-                  </button>
-                  <p className="text-xs text-amber-500/80 mt-2 leading-relaxed">
-                    ⚠️ During beta, Google Classroom requires manual activation. After connecting, email support@forgestudyai.com with your Google account email to be added to the beta whitelist.
-                  </p>
-                </div>
+                </button>
 
-                {/* Skip */}
-                <div className="text-center pt-2">
-                  <button onClick={() => router.push('/app')}
-                    className="text-sm text-muted-foreground hover:text-foreground transition-colors underline underline-offset-4">
-                    Skip for now
-                  </button>
-                </div>
+                {/* Ask your tutor */}
+                <button
+                  onClick={() => router.push('/tutor')}
+                  className="flex flex-col items-center gap-3 p-6 border-2 border-border rounded-xl bg-background hover:border-primary hover:bg-primary/5 transition-all text-center"
+                >
+                  <span className="text-3xl">💬</span>
+                  <div>
+                    <h3 className="text-base font-semibold text-foreground">Ask your tutor</h3>
+                    <p className="text-xs text-muted-foreground mt-1">Start a conversation about any subject</p>
+                  </div>
+                </button>
+
+                {/* Connect your school */}
+                <button
+                  onClick={() => {
+                    // Navigate to app, then open settings
+                    router.push('/app')
+                    setTimeout(() => {
+                      window.dispatchEvent(new Event('open-settings-drawer'))
+                    }, 500)
+                  }}
+                  className="flex flex-col items-center gap-3 p-6 border-2 border-border rounded-xl bg-background hover:border-primary hover:bg-primary/5 transition-all text-center"
+                >
+                  <span className="text-3xl">⚙️</span>
+                  <div>
+                    <h3 className="text-base font-semibold text-foreground">Connect your school</h3>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      Auto-sync assignments<br />
+                      <span className="text-muted-foreground/60">Canvas or Google Classroom (optional)</span>
+                    </p>
+                  </div>
+                </button>
               </div>
             </>
           )}
