@@ -33,7 +33,6 @@ export default function ResetPasswordClient() {
   const [loading, setLoading] = useState(false)
   const [showPassword, setShowPassword] = useState(false)
   const [showConfirm, setShowConfirm] = useState(false)
-  const [recoverySession, setRecoverySession] = useState<{ access_token: string; refresh_token: string } | null>(null)
   const [message, setMessage] = useState<{ text: string; type: 'error' | 'success' } | null>(() => {
     if (urlError === 'expired_link') return { text: 'This reset link has expired or is invalid.', type: 'error' }
     if (urlError === 'invalid_link') return { text: 'Invalid reset link. Please request a new one.', type: 'error' }
@@ -63,11 +62,7 @@ export default function ResetPasswordClient() {
         setMessage({ text: 'This reset link has expired or is invalid.', type: 'error' })
         setStatus('expired')
       } else if (data?.session) {
-        console.log('[Reset Password] verifyOtp succeeded — session stored')
-        setRecoverySession({
-          access_token: data.session.access_token,
-          refresh_token: data.session.refresh_token,
-        })
+        console.log('[Reset Password] verifyOtp succeeded — session active')
         setStatus('ready')
       } else {
         console.error('[Reset Password] verifyOtp succeeded but no session returned')
@@ -119,46 +114,28 @@ export default function ResetPasswordClient() {
 
     setLoading(true)
 
-    // Explicitly restore the session from verifyOtp — it may not have
-    // persisted in the Supabase client between the useEffect and form submit
-    if (recoverySession) {
-      console.log('[Reset Password] Restoring recovery session before updateUser')
-      await supabase.auth.setSession({
-        access_token: recoverySession.access_token,
-        refresh_token: recoverySession.refresh_token,
-      })
-    }
+    try {
+      const { error } = await supabase.auth.updateUser({ password })
 
-    // Confirm session is active
-    const { data: { session } } = await supabase.auth.getSession()
-    console.log('[Reset Password] Session before updateUser:', !!session)
-
-    if (!session) {
-      setMessage({ text: 'Your reset link has expired. Please request a new one.', type: 'error' })
-      setLoading(false)
-      setStatus('expired')
-      return
-    }
-
-    const { error } = await supabase.auth.updateUser({ password })
-
-    if (error) {
-      console.error('[Reset Password] updateUser error:', error)
-      if (error.message?.includes('same password') || (error as any).status === 422) {
-        setMessage({ text: 'New password must be different from your current password.', type: 'error' })
+      if (error) {
+        console.error('[Reset Password] updateUser error:', error)
+        if (error.message?.includes('same password') || (error as any).status === 422) {
+          setMessage({ text: 'New password must be different from your current password.', type: 'error' })
+        } else {
+          setMessage({ text: error.message || 'Something went wrong. Please try again.', type: 'error' })
+        }
       } else {
-        setMessage({ text: error.message || 'Something went wrong. Please try again.', type: 'error' })
+        console.log('[Reset Password] Password updated successfully')
+        setStatus('done')
+        setMessage({ text: 'Password updated! Redirecting to sign in...', type: 'success' })
+        setTimeout(() => router.push('/login'), 2000)
       }
+    } catch (err: any) {
+      console.error('[Reset Password] updateUser catch:', err)
+      setMessage({ text: 'Something went wrong. Please try again.', type: 'error' })
+    } finally {
       setLoading(false)
-      return
     }
-
-    // Success
-    console.log('[Reset Password] Password updated successfully')
-    setLoading(false)
-    setStatus('done')
-    setMessage({ text: 'Password updated! Redirecting to sign in...', type: 'success' })
-    setTimeout(() => router.push('/login'), 2000)
   }
 
   const showEmailForm = status === 'request' || status === 'expired'
