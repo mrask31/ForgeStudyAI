@@ -115,15 +115,14 @@ export default function ResetPasswordClient() {
     setLoading(true)
 
     try {
+      const { data: { session } } = await supabase.auth.getSession()
+      console.log('[Reset Password] Session at update time:', session?.user?.email ?? 'NO SESSION')
+
       const { error } = await supabase.auth.updateUser({ password })
 
       if (error) {
         console.error('[Reset Password] updateUser error:', error)
-        if (error.message?.includes('same password') || (error as any).status === 422) {
-          setMessage({ text: 'New password must be different from your current password.', type: 'error' })
-        } else {
-          setMessage({ text: error.message || 'Something went wrong. Please try again.', type: 'error' })
-        }
+        setMessage({ text: error.message, type: 'error' })
       } else {
         console.log('[Reset Password] Password updated successfully')
         setStatus('done')
@@ -131,8 +130,8 @@ export default function ResetPasswordClient() {
         setTimeout(() => router.push('/login'), 2000)
       }
     } catch (err: any) {
-      console.error('[Reset Password] updateUser catch:', err)
-      setMessage({ text: 'Something went wrong. Please try again.', type: 'error' })
+      console.error('[Reset Password] handleSetPassword threw:', err)
+      setMessage({ text: err instanceof Error ? err.message : String(err), type: 'error' })
     } finally {
       setLoading(false)
     }
