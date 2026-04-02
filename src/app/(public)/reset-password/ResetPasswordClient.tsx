@@ -119,8 +119,7 @@ export default function ResetPasswordClient() {
       if (error) {
         setMessage({ text: error.message, type: 'error' })
       } else {
-        supabase.auth.signOut() // fire and forget
-        window.location.href = '/login?message=password-updated'
+        setStatus('done')
       }
     } catch (err) {
       setMessage({ text: err instanceof Error ? err.message : 'Something went wrong.', type: 'error' })
@@ -130,7 +129,7 @@ export default function ResetPasswordClient() {
   }
 
   const showEmailForm = status === 'request' || status === 'expired'
-  const showPasswordForm = status === 'ready' || status === 'done'
+  const showPasswordForm = status === 'ready'
   const Icon = showPasswordForm ? Lock : Mail
 
   return (
@@ -207,9 +206,15 @@ export default function ResetPasswordClient() {
 
               {/* Success message */}
               {status === 'done' && (
-                <p className="text-green-600 text-center font-medium mb-4">
-                  Password updated! Redirecting to sign in...
-                </p>
+                <div className="text-center space-y-4">
+                  <p className="text-green-600 font-semibold text-lg">✓ Password updated successfully!</p>
+                  <a
+                    href="/login"
+                    className="block w-full bg-teal-600 text-white py-3 rounded-lg font-medium text-center"
+                  >
+                    Sign in with your new password →
+                  </a>
+                </div>
               )}
 
               {/* Set password form */}
@@ -237,16 +242,10 @@ export default function ResetPasswordClient() {
                       {showConfirm ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
                     </button>
                   </div>
-                  {status === 'done' ? (
-                    <div className="w-full flex items-center justify-center gap-2 px-6 py-3 bg-green-50 text-green-700 border border-green-200 rounded-xl text-base font-semibold">
-                      ✓ Password updated! Redirecting to sign in...
-                    </div>
-                  ) : (
-                    <button type="submit" disabled={loading}
-                      className="w-full flex items-center justify-center gap-2 px-6 py-3 bg-gradient-to-r from-teal-600 to-cyan-600 text-white rounded-xl text-base font-semibold hover:from-teal-700 hover:to-cyan-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-md">
-                      {loading ? <><Loader2 className="h-5 w-5 animate-spin" /> Updating...</> : <>Update password <ArrowRight className="h-5 w-5" /></>}
-                    </button>
-                  )}
+                  <button type="submit" disabled={loading}
+                    className="w-full flex items-center justify-center gap-2 px-6 py-3 bg-gradient-to-r from-teal-600 to-cyan-600 text-white rounded-xl text-base font-semibold hover:from-teal-700 hover:to-cyan-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-md">
+                    {loading ? <><Loader2 className="h-5 w-5 animate-spin" /> Updating...</> : <>Update password <ArrowRight className="h-5 w-5" /></>}
+                  </button>
                 </form>
               )}
 
