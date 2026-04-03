@@ -115,14 +115,13 @@ export default function ResetPasswordClient() {
     try {
       const { error } = await supabase.auth.updateUser({ password: newPassword })
       if (error) {
-        alert('Update error: ' + error.message)
+        setError(error.message)
         setIsLoading(false)
       } else {
-        alert('Success! Password updated.')
         window.location.href = '/password-updated'
       }
     } catch(e: any) {
-      alert('Exception: ' + (e?.message || String(e)))
+      setError(e?.message || 'Something went wrong.')
       setIsLoading(false)
     }
   }
