@@ -1,46 +1,100 @@
 'use client'
 
 import { useSearchParams, useRouter } from 'next/navigation'
-import { useEffect, useState, Suspense } from 'react'
+import { useEffect, useState, Suspense, useRef } from 'react'
+import * as pdfjsLib from 'pdfjs-dist'
 import { getSupabaseBrowser } from '@/lib/supabase/client'
 import { createStudentProfile, getStudentProfiles } from '@/app/actions/student-profiles'
 import { sendConsentEmail } from '@/app/actions/consent'
+import { createSubjectsForProfile } from '@/app/actions/study-topics'
 import { useActiveProfile } from '@/contexts/ActiveProfileContext'
 import { FAMILY_MAX_PROFILES } from '@/lib/constants'
-import { GraduationCap, BookOpen, Link as LinkIcon, ArrowRight } from 'lucide-react'
+import { GraduationCap, BookOpen, ArrowRight, Upload } from 'lucide-react'
 import { toast } from 'sonner'
+
+pdfjsLib.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/pdf.worker.min.js`
+
+const MAX_FILE_BYTES = 20 * 1024 * 1024
+const ACCEPTED_TYPES = new Set(['application/pdf', 'image/jpeg', 'image/png', 'text/plain'])
+const ACCEPTED_EXTENSIONS = ['.pdf', '.jpg', '.jpeg', '.png', '.txt']
+
+type VaultStatus = 'processing' | 'ready' | 'error'
+type Step = 'profile' | 'subjects' | 'interests' | 'vault' | 'done'
+
+async function extractPdfText(buffer: ArrayBuffer): Promise<string> {
+  const data = new Uint8Array(buffer)
+  const pdf = await pdfjsLib.getDocument({ data }).promise
+  let fullText = ''
+  for (let i = 1; i <= pdf.numPages; i++) {
+    const page = await pdf.getPage(i)
+    const content = await page.getTextContent()
+    const pageText = content.items
+      .map((item: any) => ('str' in item ? item.str : ''))
+      .join(' ')
+    fullText += `${pageText}\n`
+  }
+  return fullText.trim()
+}
+
+async function extractImageText(buffer: ArrayBuffer, mimeType: string): Promise<string> {
+  const base64Image = Buffer.from(buffer).toString('base64')
+  const res = await fetch('/api/ai/extract-image-text', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ base64Image, mimeType }),
+  })
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}))
+    throw new Error(err.error || 'Image text extraction failed')
+  }
+  const { text } = await res.json()
+  return text || ''
+}
+
+async function extractText(file: File): Promise<string> {
+  const buffer = await file.arrayBuffer()
+  if (file.type === 'application/pdf') return extractPdfText(buffer)
+  if (file.type === 'text/plain') return new TextDecoder().decode(buffer)
+  if (file.type === 'image/jpeg' || file.type === 'image/png') return extractImageText(buffer, file.type)
+  throw new Error(`Unsupported file type: ${file.type}`)
+}
 
 function NewProfileContent() {
   const searchParams = useSearchParams()
   const router = useRouter()
   const { setActiveProfileId } = useActiveProfile()
+  const fileInputRef = useRef<HTMLInputElement>(null)
 
-  // Step state: 'profile' → 'interests' → 'connect'
-  const [step, setStep] = useState<'profile' | 'interests' | 'connect'>('profile')
+  const [step, setStep] = useState<Step>('profile')
   const [newProfileId, setNewProfileId] = useState<string | null>(null)
   const [newProfileName, setNewProfileName] = useState('')
 
-  // Step 1 form state
+  // Step 1: Name & Grade
   const [band, setBand] = useState<'high' | 'middle' | null>(null)
   const [displayName, setDisplayName] = useState('')
   const [grade, setGrade] = useState('')
-  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [parentEmail, setParentEmail] = useState('')
 
-  // Step 2 interests state
-  const [tags, setTags] = useState<string[]>([])
-  const [tagInput, setTagInput] = useState('')
+  // Step 2: Subjects
+  const [subjects, setSubjects] = useState<string[]>([])
+  const [subjectInput, setSubjectInput] = useState('')
+
+  // Step 3: Interests
+  const [interestTags, setInterestTags] = useState<string[]>([])
+  const [interestInput, setInterestInput] = useState('')
+
+  // Step 4: Vault upload
+  const [vaultDoc, setVaultDoc] = useState<{ name: string; status: VaultStatus; errorMsg?: string } | null>(null)
+  const [isDragging, setIsDragging] = useState(false)
+  const [vaultError, setVaultError] = useState<string | null>(null)
+
+  // Shared
+  const [isSubmitting, setIsSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [user, setUser] = useState<any>(null)
   const [isCheckingAuth, setIsCheckingAuth] = useState(true)
   const [authError, setAuthError] = useState<string | null>(null)
 
-  // Step 2 Canvas state
-  const [canvasUrl, setCanvasUrl] = useState('')
-  const [parentEmail, setParentEmail] = useState('')
-  const [canvasPAT, setCanvasPAT] = useState('')
-  const [isConnecting, setIsConnecting] = useState(false)
-
-  // Grades 6-7 are typically under 13 → COPPA minor
   const isMinor = grade === '6' || grade === '7'
 
   useEffect(() => {
@@ -117,8 +171,8 @@ function NewProfileContent() {
             return
           }
         }
-      } catch (error) {
-        console.error('[New Profile Page] Error checking auth:', error)
+      } catch (err) {
+        console.error('[New Profile Page] Error checking auth:', err)
         setAuthError('We could not confirm your session. Please sign in again.')
         window.location.assign('/login?redirect=/profiles/new')
       } finally {
@@ -129,18 +183,42 @@ function NewProfileContent() {
     loadData()
   }, [searchParams, router])
 
-  // Step 1: Validate and advance to interests step
+  // Step 1 → Step 2
   const handleProfileNext = (e: React.FormEvent) => {
     e.preventDefault()
     setError(null)
     if (!band) { setError('Please select a grade level'); return }
     if (!displayName.trim()) { setError('Please enter the student\'s name'); return }
     if (isMinor && !parentEmail.trim()) { setError('Parent email is required for students under 13'); return }
+    setStep('subjects')
+  }
+
+  // Step 2 → Step 3
+  const handleSubjectsNext = () => {
+    if (subjects.length === 0) return
     setStep('interests')
   }
 
-  // Step 2: Create profile then advance to connect step
-  const handleCreateProfile = async (interestTags: string[]) => {
+  // Helper: add subject chip
+  const addSubject = () => {
+    const trimmed = subjectInput.replace(/,/g, '').trim()
+    if (trimmed && subjects.length < 8 && !subjects.includes(trimmed)) {
+      setSubjects([...subjects, trimmed])
+    }
+    setSubjectInput('')
+  }
+
+  // Helper: add interest chip
+  const addInterest = () => {
+    const trimmed = interestInput.replace(/,/g, '').trim()
+    if (trimmed && interestTags.length < 5 && !interestTags.includes(trimmed)) {
+      setInterestTags([...interestTags, trimmed])
+    }
+    setInterestInput('')
+  }
+
+  // Step 3 → Step 4: create profile + insert subjects
+  const handleCreateProfile = async (tags: string[]) => {
     setError(null)
     setIsSubmitting(true)
 
@@ -149,12 +227,11 @@ function NewProfileContent() {
         display_name: displayName.trim(),
         grade_band: band!,
         grade: grade.trim() || null,
-        interests: interestTags.length > 0 ? interestTags.join(', ') : null,
+        interests: tags.length > 0 ? tags.join(', ') : null,
         is_minor: isMinor,
         parent_email: isMinor ? parentEmail.trim() : null,
       })
 
-      // Send COPPA consent email for minors
       if (isMinor && parentEmail.trim()) {
         try {
           await sendConsentEmail(newProfile.id, parentEmail.trim(), displayName.trim())
@@ -164,10 +241,19 @@ function NewProfileContent() {
         }
       }
 
+      // Insert subjects into study_topics (non-fatal)
+      if (subjects.length > 0) {
+        try {
+          await createSubjectsForProfile(newProfile.id, subjects, band!)
+        } catch (err) {
+          console.error('[New Profile] Failed to insert subjects:', err)
+        }
+      }
+
       setActiveProfileId(newProfile.id)
       setNewProfileId(newProfile.id)
       setNewProfileName(displayName.trim())
-      setStep('connect')
+      setStep('vault')
     } catch (err: any) {
       console.error('[New Profile Page] Error creating profile:', err)
       setError(err.message || 'Failed to create profile. Please try again.')
@@ -176,57 +262,57 @@ function NewProfileContent() {
     }
   }
 
-  // Step 2: Connect Canvas
-  const handleCanvasConnect = async () => {
-    if (!canvasUrl.trim() || !canvasPAT.trim() || !newProfileId) return
-    setIsConnecting(true)
+  // Vault file processing
+  const processVaultFile = async (file: File) => {
+    setVaultError(null)
+
+    if (file.size > MAX_FILE_BYTES) {
+      setVaultError('File is too large. Maximum size is 20 MB.')
+      return
+    }
+    if (!ACCEPTED_TYPES.has(file.type)) {
+      setVaultError('Unsupported file type. Please upload a PDF, JPG, PNG, or TXT file.')
+      return
+    }
+
+    setVaultDoc({ name: file.name, status: 'processing' })
 
     try {
-      const res = await fetch('/api/parent/lms/connect', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
-        body: JSON.stringify({
-          studentId: newProfileId,
-          provider: 'canvas',
-          canvasInstanceUrl: canvasUrl.trim(),
-          canvasPAT: canvasPAT.trim(),
-        }),
-      })
-
-      const data = await res.json()
-      if (!res.ok || !data.success) {
-        throw new Error(data.message || 'Failed to connect Canvas')
+      const text = await extractText(file)
+      if (!text || text.trim().length < 10) {
+        throw new Error('No readable text found in this file.')
       }
 
-      toast.success('Canvas connected! Syncing assignments...')
-      router.push('/app')
+      const res = await fetch('/api/process', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ text, filename: file.name, document_type: 'note', source: 'vault' }),
+      })
+
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}))
+        throw new Error(err.error || 'Failed to process document')
+      }
+
+      setVaultDoc({ name: file.name, status: 'ready' })
     } catch (err: any) {
-      console.error('[New Profile] Canvas connect error:', err)
-      toast.error(err.message || 'Failed to connect Canvas')
-    } finally {
-      setIsConnecting(false)
+      console.error('[Onboarding Vault] Processing error:', err)
+      setVaultDoc({ name: file.name, status: 'error', errorMsg: err.message })
+      setVaultError(err.message || 'Failed to process file.')
     }
   }
 
-  // Step 2: Connect Google Classroom
-  const handleGoogleConnect = async () => {
-    if (!newProfileId) return
-    setIsConnecting(true)
-    try {
-      const res = await fetch(`/api/auth/google-classroom/authorize?studentId=${newProfileId}`, {
-        credentials: 'include',
-      })
-      const data = await res.json()
-      if (!res.ok || !data.url) {
-        throw new Error(data.error || 'Failed to start Google OAuth')
-      }
-      window.location.href = data.url
-    } catch (err: any) {
-      console.error('[New Profile] Google connect error:', err)
-      toast.error(err.message || 'Failed to start Google Classroom connection')
-      setIsConnecting(false)
-    }
+  const handleFileInput = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (file) processVaultFile(file)
+    e.target.value = ''
+  }
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault()
+    setIsDragging(false)
+    const file = e.dataTransfer.files?.[0]
+    if (file) processVaultFile(file)
   }
 
   if (isCheckingAuth || !user) {
@@ -240,27 +326,32 @@ function NewProfileContent() {
   }
 
   const gradeOptions = band === 'middle' ? ['6', '7', '8'] : ['9', '10', '11', '12']
-  const stepNumber = step === 'profile' ? 3 : step === 'interests' ? 4 : 5
-  const stepProgress = step === 'profile' ? 'w-3/5' : step === 'interests' ? 'w-4/5' : 'w-full'
+  const stepNumbers: Record<Step, number> = { profile: 1, subjects: 2, interests: 3, vault: 4, done: 5 }
+  const stepProgress: Record<Step, string> = { profile: 'w-1/5', subjects: 'w-2/5', interests: 'w-3/5', vault: 'w-4/5', done: 'w-full' }
+  const stepPercent: Record<Step, string> = { profile: '20%', subjects: '40%', interests: '60%', vault: '80%', done: '100%' }
+  const isUploading = vaultDoc?.status === 'processing'
 
   return (
     <div className="h-full overflow-y-auto bg-gradient-to-br from-background via-background to-background">
       <div className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 py-16 sm:py-24">
-        {/* Progress Indicator */}
-        <div className="mb-12">
-          <div className="flex items-center justify-between mb-2">
-            <h2 className="text-sm font-semibold text-foreground">Step {stepNumber} of 5</h2>
-            <div className="text-xs text-muted-foreground">
-              {step === 'profile' ? '60%' : step === 'interests' ? '80%' : '100%'}
+
+        {/* Progress indicator — hidden on done */}
+        {step !== 'done' && (
+          <div className="mb-12">
+            <div className="flex items-center justify-between mb-2">
+              <h2 className="text-sm font-semibold text-foreground">Step {stepNumbers[step]} of 5</h2>
+              <div className="text-xs text-muted-foreground">{stepPercent[step]}</div>
+            </div>
+            <div className="w-full h-2 bg-secondary rounded-full overflow-hidden">
+              <div className={`h-full ${stepProgress[step]} bg-primary rounded-full transition-all duration-500`} />
             </div>
           </div>
-          <div className="w-full h-2 bg-secondary rounded-full overflow-hidden">
-            <div className={`h-full ${stepProgress} bg-primary rounded-full transition-all duration-500`} />
-          </div>
-        </div>
+        )}
 
         <div className="bg-card/80 backdrop-blur-xl border border-border rounded-2xl p-8 sm:p-10 shadow-xl">
-          {step === 'profile' ? (
+
+          {/* ── Step 1: Name & Grade ── */}
+          {step === 'profile' && (
             <>
               <h1 className="text-3xl sm:text-4xl font-bold text-foreground mb-2">
                 Create a student profile
@@ -273,7 +364,6 @@ function NewProfileContent() {
               </p>
 
               <form onSubmit={handleProfileNext} className="space-y-6">
-                {/* Display Name */}
                 <div>
                   <label htmlFor="displayName" className="block text-sm font-semibold text-foreground mb-2">
                     Student name / nickname *
@@ -287,7 +377,6 @@ function NewProfileContent() {
                   />
                 </div>
 
-                {/* Grade Band */}
                 <div>
                   <label className="block text-sm font-semibold text-foreground mb-3">Grade level *</label>
                   <div className="grid grid-cols-2 gap-4">
@@ -305,7 +394,6 @@ function NewProfileContent() {
                   </div>
                 </div>
 
-                {/* Grade */}
                 {band && (
                   <div>
                     <label htmlFor="grade" className="block text-sm font-semibold text-foreground mb-2">Specific grade (optional)</label>
@@ -317,7 +405,6 @@ function NewProfileContent() {
                   </div>
                 )}
 
-                {/* Parent Email — required for minors (grade 6-7) */}
                 {isMinor && (
                   <div>
                     <label htmlFor="parentEmail" className="block text-sm font-semibold text-foreground mb-2">
@@ -347,15 +434,78 @@ function NewProfileContent() {
                     className="flex-1 px-6 py-3 border-2 border-border text-foreground rounded-xl font-semibold hover:bg-secondary/50 transition-colors disabled:opacity-50">
                     Cancel
                   </button>
-                  <button type="submit" disabled={!band || !displayName.trim()}
+                  <button type="submit" disabled={!band || !displayName.trim() || (isMinor && !parentEmail.trim())}
                     className="flex-1 px-6 py-3 bg-primary hover:bg-primary/90 text-primary-foreground rounded-xl font-bold transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-primary/30 flex items-center justify-center gap-2">
                     Next <ArrowRight className="w-4 h-4" />
                   </button>
                 </div>
               </form>
             </>
-          ) : step === 'interests' ? (
-            /* Step 2: What are you into? */
+          )}
+
+          {/* ── Step 2: Subjects ── */}
+          {step === 'subjects' && (
+            <>
+              <h1 className="text-3xl sm:text-4xl font-bold text-foreground mb-2">
+                What subjects are you studying?
+              </h1>
+              <p className="text-base text-muted-foreground mb-8">
+                These become your courses in the Galaxy
+              </p>
+
+              {subjects.length > 0 && (
+                <div className="flex flex-wrap gap-2 mb-4">
+                  {subjects.map((subject) => (
+                    <span key={subject}
+                      className="flex items-center gap-1 px-3 py-1.5 bg-primary/20 border border-primary/40 rounded-full text-sm text-primary">
+                      {subject}
+                      <button type="button"
+                        onClick={() => setSubjects(subjects.filter((s) => s !== subject))}
+                        className="ml-1 text-primary/70 hover:text-primary transition-colors leading-none"
+                        aria-label={`Remove ${subject}`}>
+                        ×
+                      </button>
+                    </span>
+                  ))}
+                </div>
+              )}
+
+              {subjects.length < 8 && (
+                <input
+                  type="text"
+                  value={subjectInput}
+                  onChange={(e) => setSubjectInput(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' || e.key === ',') {
+                      e.preventDefault()
+                      addSubject()
+                    }
+                  }}
+                  placeholder={subjects.length === 0 ? 'e.g. Math, Biology, AP History, English' : 'Add another subject...'}
+                  autoFocus
+                  className="w-full px-4 py-3 border-2 border-border bg-background rounded-xl focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-all text-foreground placeholder-muted-foreground"
+                />
+              )}
+              <p className="text-xs text-muted-foreground mt-2 mb-8">
+                Press Enter or comma to add &bull; {8 - subjects.length} of 8 remaining
+              </p>
+
+              <div className="flex gap-4">
+                <button type="button" onClick={() => setStep('profile')}
+                  className="flex-1 px-6 py-3 border-2 border-border text-foreground rounded-xl font-semibold hover:bg-secondary/50 transition-colors">
+                  Back
+                </button>
+                <button type="button" onClick={handleSubjectsNext}
+                  disabled={subjects.length === 0}
+                  className="flex-1 px-6 py-3 bg-primary hover:bg-primary/90 text-primary-foreground rounded-xl font-bold transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-primary/30 flex items-center justify-center gap-2">
+                  Continue <ArrowRight className="w-4 h-4" />
+                </button>
+              </div>
+            </>
+          )}
+
+          {/* ── Step 3: Interests ── */}
+          {step === 'interests' && (
             <>
               <h1 className="text-3xl sm:text-4xl font-bold text-foreground mb-2">
                 What are you into?
@@ -364,21 +514,17 @@ function NewProfileContent() {
                 Helps your tutor explain things in ways that click for {displayName || 'you'}
               </p>
 
-              {tags.length > 0 && (
+              {interestTags.length > 0 && (
                 <div className="flex flex-wrap gap-2 mb-4">
-                  {tags.map((tag) => (
-                    <span
-                      key={tag}
-                      className="flex items-center gap-1 px-3 py-1.5 bg-primary/20 border border-primary/40 rounded-full text-sm text-primary"
-                    >
+                  {interestTags.map((tag) => (
+                    <span key={tag}
+                      className="flex items-center gap-1 px-3 py-1.5 bg-primary/20 border border-primary/40 rounded-full text-sm text-primary">
                       {tag}
-                      <button
-                        type="button"
-                        onClick={() => setTags(tags.filter((t) => t !== tag))}
+                      <button type="button"
+                        onClick={() => setInterestTags(interestTags.filter((t) => t !== tag))}
                         disabled={isSubmitting}
                         className="ml-1 text-primary/70 hover:text-primary transition-colors leading-none"
-                        aria-label={`Remove ${tag}`}
-                      >
+                        aria-label={`Remove ${tag}`}>
                         ×
                       </button>
                     </span>
@@ -386,29 +532,25 @@ function NewProfileContent() {
                 </div>
               )}
 
-              {tags.length < 5 && (
+              {interestTags.length < 5 && (
                 <input
                   type="text"
-                  value={tagInput}
-                  onChange={(e) => setTagInput(e.target.value)}
+                  value={interestInput}
+                  onChange={(e) => setInterestInput(e.target.value)}
                   onKeyDown={(e) => {
                     if (e.key === 'Enter' || e.key === ',') {
                       e.preventDefault()
-                      const trimmed = tagInput.replace(/,/g, '').trim()
-                      if (trimmed && tags.length < 5 && !tags.includes(trimmed)) {
-                        setTags([...tags, trimmed])
-                      }
-                      setTagInput('')
+                      addInterest()
                     }
                   }}
-                  placeholder={tags.length === 0 ? 'e.g. soccer, Minecraft, music, drawing, cooking' : 'Add another...'}
+                  placeholder={interestTags.length === 0 ? 'e.g. soccer, Minecraft, music, drawing, cooking' : 'Add another...'}
                   autoFocus
                   className="w-full px-4 py-3 border-2 border-border bg-background rounded-xl focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-all text-foreground placeholder-muted-foreground"
                   disabled={isSubmitting}
                 />
               )}
               <p className="text-xs text-muted-foreground mt-2 mb-8">
-                Press Enter or comma to add &bull; {5 - tags.length} of 5 remaining
+                Press Enter or comma to add &bull; {5 - interestTags.length} of 5 remaining
               </p>
 
               {error && (
@@ -418,94 +560,131 @@ function NewProfileContent() {
               )}
 
               <div className="flex gap-4">
-                <button
-                  type="button"
+                <button type="button"
                   onClick={() => handleCreateProfile([])}
                   disabled={isSubmitting}
-                  className="flex-1 px-6 py-3 border-2 border-border text-foreground rounded-xl font-semibold hover:bg-secondary/50 transition-colors disabled:opacity-50"
-                >
+                  className="flex-1 px-6 py-3 border-2 border-border text-foreground rounded-xl font-semibold hover:bg-secondary/50 transition-colors disabled:opacity-50">
                   Skip
                 </button>
-                <button
-                  type="button"
-                  onClick={() => handleCreateProfile(tags)}
+                <button type="button"
+                  onClick={() => handleCreateProfile(interestTags)}
                   disabled={isSubmitting}
-                  className="flex-1 px-6 py-3 bg-primary hover:bg-primary/90 text-primary-foreground rounded-xl font-bold transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-primary/30 flex items-center justify-center gap-2"
-                >
+                  className="flex-1 px-6 py-3 bg-primary hover:bg-primary/90 text-primary-foreground rounded-xl font-bold transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-primary/30 flex items-center justify-center gap-2">
                   {isSubmitting ? 'Creating profile...' : <>Continue <ArrowRight className="w-4 h-4" /></>}
                 </button>
               </div>
             </>
-          ) : (
-            /* Step 3: How do you want to study? */
+          )}
+
+          {/* ── Step 4: Study Vault Upload ── */}
+          {step === 'vault' && (
             <>
-              <h1 className="text-2xl sm:text-3xl font-bold text-foreground mb-2">
-                How do you want to study today?
+              <h1 className="text-3xl sm:text-4xl font-bold text-foreground mb-2">
+                Upload your notes or textbook pages
               </h1>
-              <p className="text-muted-foreground mb-8">
-                Choose any option to get started. You can always change later.
+              <p className="text-base text-muted-foreground mb-8">
+                Your tutor will use them to help you study. You can always add more later.
               </p>
 
-              <div className="grid grid-cols-2 gap-4">
-                {/* Photo Drop */}
-                <button
-                  onClick={() => router.push('/app')}
-                  className="flex flex-col items-center gap-3 p-6 border-2 border-border rounded-xl bg-background hover:border-primary hover:bg-primary/5 transition-all text-center"
-                >
-                  <span className="text-3xl">📸</span>
-                  <div>
-                    <h3 className="text-base font-semibold text-foreground">Photo Drop</h3>
-                    <p className="text-xs text-muted-foreground mt-1">Take a photo of any homework</p>
-                  </div>
-                </button>
-
-                {/* Upload Materials */}
-                <button
-                  onClick={() => router.push('/sources')}
-                  className="flex flex-col items-center gap-3 p-6 border-2 border-border rounded-xl bg-background hover:border-primary hover:bg-primary/5 transition-all text-center"
-                >
-                  <span className="text-3xl">📄</span>
-                  <div>
-                    <h3 className="text-base font-semibold text-foreground">Upload Materials</h3>
-                    <p className="text-xs text-muted-foreground mt-1">Upload a PDF, doc, or paste notes</p>
-                  </div>
-                </button>
-
-                {/* Ask your tutor */}
-                <button
-                  onClick={() => router.push('/tutor')}
-                  className="flex flex-col items-center gap-3 p-6 border-2 border-border rounded-xl bg-background hover:border-primary hover:bg-primary/5 transition-all text-center"
-                >
-                  <span className="text-3xl">💬</span>
-                  <div>
-                    <h3 className="text-base font-semibold text-foreground">Ask your tutor</h3>
-                    <p className="text-xs text-muted-foreground mt-1">Start a conversation about any subject</p>
-                  </div>
-                </button>
-
-                {/* Connect your school */}
-                <button
-                  onClick={() => {
-                    // Navigate to app, then open settings
-                    router.push('/app')
-                    setTimeout(() => {
-                      window.dispatchEvent(new Event('open-settings-drawer'))
-                    }, 500)
-                  }}
-                  className="flex flex-col items-center gap-3 p-6 border-2 border-border rounded-xl bg-background hover:border-primary hover:bg-primary/5 transition-all text-center"
-                >
-                  <span className="text-3xl">⚙️</span>
-                  <div>
-                    <h3 className="text-base font-semibold text-foreground">Connect your school</h3>
-                    <p className="text-xs text-muted-foreground mt-1">
-                      Auto-sync assignments<br />
-                      <span className="text-muted-foreground/60">Canvas or Google Classroom (optional)</span>
+              <div
+                onDragOver={(e) => { e.preventDefault(); setIsDragging(true) }}
+                onDragLeave={() => setIsDragging(false)}
+                onDrop={handleDrop}
+                onClick={() => !isUploading && fileInputRef.current?.click()}
+                className={`relative w-full h-48 flex flex-col items-center justify-center rounded-2xl border-2 border-dashed transition-all duration-300 cursor-pointer select-none ${
+                  isDragging
+                    ? 'border-primary bg-primary/10 scale-[1.01]'
+                    : isUploading
+                      ? 'border-primary/50 bg-primary/5 cursor-not-allowed'
+                      : 'border-border bg-background/50 hover:border-primary/60 hover:bg-primary/5'
+                }`}
+              >
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  className="hidden"
+                  accept={ACCEPTED_EXTENSIONS.join(',')}
+                  onChange={handleFileInput}
+                  disabled={isUploading}
+                />
+                {isUploading ? (
+                  <>
+                    <div className="w-10 h-10 border-2 border-primary border-t-transparent rounded-full animate-spin mb-3" />
+                    <p className="text-foreground font-medium">Processing your document...</p>
+                    <p className="text-muted-foreground text-sm mt-1">Extracting and indexing content</p>
+                  </>
+                ) : (
+                  <>
+                    <Upload className="w-10 h-10 text-muted-foreground mb-3" />
+                    <p className="text-foreground font-medium">
+                      {isDragging ? 'Drop it here' : 'Drag & drop or tap to upload'}
                     </p>
+                    <p className="text-muted-foreground text-sm mt-1">PDF, JPG, PNG, TXT — up to 20 MB</p>
+                  </>
+                )}
+              </div>
+
+              {vaultDoc && !isUploading && (
+                <div className={`mt-4 flex items-center gap-3 px-4 py-3 rounded-xl border ${
+                  vaultDoc.status === 'ready'
+                    ? 'bg-emerald-500/10 border-emerald-500/20'
+                    : 'bg-red-500/10 border-red-500/20'
+                }`}>
+                  <span className="text-lg">{vaultDoc.status === 'ready' ? '✅' : '❌'}</span>
+                  <div className="min-w-0">
+                    <p className={`text-sm font-medium truncate ${vaultDoc.status === 'ready' ? 'text-emerald-400' : 'text-red-400'}`}>
+                      {vaultDoc.name}
+                    </p>
+                    {vaultDoc.status === 'error' && vaultDoc.errorMsg && (
+                      <p className="text-xs text-red-400/80 mt-0.5">{vaultDoc.errorMsg}</p>
+                    )}
                   </div>
+                </div>
+              )}
+
+              {vaultError && !vaultDoc && (
+                <div className="mt-4 px-4 py-3 rounded-xl bg-red-500/10 border border-red-500/20 text-red-400 text-sm">
+                  {vaultError}
+                </div>
+              )}
+
+              <div className="flex gap-4 mt-8">
+                <button type="button"
+                  onClick={() => setStep('done')}
+                  disabled={isUploading}
+                  className="flex-1 px-6 py-3 border-2 border-border text-foreground rounded-xl font-semibold hover:bg-secondary/50 transition-colors disabled:opacity-50">
+                  Skip
+                </button>
+                <button type="button"
+                  onClick={() => setStep('done')}
+                  disabled={isUploading}
+                  className="flex-1 px-6 py-3 bg-primary hover:bg-primary/90 text-primary-foreground rounded-xl font-bold transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-primary/30 flex items-center justify-center gap-2">
+                  Continue <ArrowRight className="w-4 h-4" />
                 </button>
               </div>
             </>
           )}
+
+          {/* ── Step 5: You're all set! ── */}
+          {step === 'done' && (
+            <div className="text-center py-4">
+              <div className="text-6xl mb-6">🚀</div>
+              <h1 className="text-3xl sm:text-4xl font-bold text-foreground mb-4">
+                {newProfileName ? `${newProfileName}, you're all set!` : "You're all set!"}
+              </h1>
+              <p className="text-base text-muted-foreground mb-10">
+                Your Galaxy is ready. Start a session with your tutor and let the learning begin.
+              </p>
+              <button
+                type="button"
+                onClick={() => router.push('/app')}
+                className="px-8 py-4 bg-primary hover:bg-primary/90 text-primary-foreground rounded-xl font-bold transition-all shadow-lg shadow-primary/30 inline-flex items-center gap-2 text-lg"
+              >
+                Start studying <ArrowRight className="w-5 h-5" />
+              </button>
+            </div>
+          )}
+
         </div>
       </div>
     </div>

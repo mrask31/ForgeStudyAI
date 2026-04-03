@@ -171,6 +171,51 @@ export async function getTopicsGroupedByCourse(profileId: string): Promise<Cours
 }
 
 /**
+ * Create study topics from onboarding subject list.
+ * Each subject (e.g. "Math", "Biology") becomes a row in study_topics.
+ */
+export async function createSubjectsForProfile(
+  profileId: string,
+  subjects: string[],
+  gradeBand: 'middle' | 'high'
+): Promise<void> {
+  if (!subjects || subjects.length === 0) return;
+
+  // Verify ownership via anon client
+  const supabase = createClient();
+  const { data: profile, error: profileError } = await supabase
+    .from('student_profiles')
+    .select('id')
+    .eq('id', profileId)
+    .single();
+
+  if (profileError || !profile) {
+    console.error('[createSubjectsForProfile] Profile not found or access denied:', profileId);
+    return;
+  }
+
+  const admin = createServiceClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!
+  );
+
+  const rows = subjects.map((title) => ({
+    profile_id: profileId,
+    title: title.trim(),
+    grade_band: gradeBand,
+    orbit_state: 1,
+  }));
+
+  const { error } = await admin.from('study_topics').insert(rows);
+
+  if (error) {
+    console.error('[createSubjectsForProfile] Insert error:', error);
+  } else {
+    console.log('[createSubjectsForProfile] Inserted', rows.length, 'subjects for profile', profileId);
+  }
+}
+
+/**
  * Update orbit_state for a topic (Airlock Release)
  *
  * Transitions quarantined topics from orbit_state = 0 to orbit_state = 1.
