@@ -36,6 +36,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((event: AuthChangeEvent, session: Session | null) => {
+      if (event === 'USER_UPDATED') return // ignore — handled by reset-password page
       setUser(session?.user ?? null);
 
       // On sign-out or token refresh failure, clear all stale storage

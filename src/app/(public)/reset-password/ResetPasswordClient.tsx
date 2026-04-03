@@ -116,7 +116,9 @@ export default function ResetPasswordClient() {
       setError(error.message)
       setIsLoading(false)
     } else {
-      window.location.href = '/password-updated'
+      setTimeout(() => {
+        window.location.href = '/password-updated'
+      }, 100)
     }
   }
 
