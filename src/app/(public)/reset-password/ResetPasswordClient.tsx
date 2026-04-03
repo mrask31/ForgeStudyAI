@@ -46,14 +46,6 @@ export default function ResetPasswordClient() {
       return
     }
 
-    // Clear any existing session to prevent background token refresh
-    // from conflicting with verifyOtp advisory lock
-    Object.keys(localStorage).forEach(key => {
-      if (key.startsWith('sb-') || key.toLowerCase().includes('supabase')) {
-        localStorage.removeItem(key)
-      }
-    })
-
     const timer = setTimeout(() => {
       // Safety net — if verifyOtp takes more than 10 seconds, show error
       console.error('[Reset Password] verifyOtp timed out after 10s')
@@ -110,15 +102,18 @@ export default function ResetPasswordClient() {
 
   const handleSetPassword = async () => {
     setIsLoading(true)
-
-    const { error } = await supabase.auth.updateUser({ password: newPassword })
-    if (error) {
-      setError(error.message)
+    try {
+      const { error } = await supabase.auth.updateUser({ password: newPassword })
+      if (error) {
+        alert('Error: ' + error.message)
+        setIsLoading(false)
+      } else {
+        sessionStorage.setItem('password_just_updated', '1')
+        window.location.href = '/login'
+      }
+    } catch(e: any) {
+      alert('Caught: ' + e.message)
       setIsLoading(false)
-    } else {
-      setTimeout(() => {
-        window.location.href = '/password-updated'
-      }, 100)
     }
   }
 

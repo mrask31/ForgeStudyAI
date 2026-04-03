@@ -16,7 +16,8 @@ export default function LoginClient() {
   const [showVerificationSuccess, setShowVerificationSuccess] = useState(false)
   const [showPassword, setShowPassword] = useState(false)
   const [showPasswordUpdated, setShowPasswordUpdated] = useState(false)
-  
+  const [successMessage, setSuccessMessage] = useState<string | null>(null)
+
   const router = useRouter()
 
   const supabase = useMemo(() => getSupabaseBrowser(), [])
@@ -62,6 +63,13 @@ export default function LoginClient() {
       window.location.assign('/login')
     }
   }
+
+  useEffect(() => {
+    if (sessionStorage.getItem('password_just_updated')) {
+      sessionStorage.removeItem('password_just_updated')
+      setSuccessMessage('Password updated successfully. Please sign in.')
+    }
+  }, [])
 
   useEffect(() => {
     const handlePageShow = (event: PageTransitionEvent) => {
@@ -277,6 +285,13 @@ export default function LoginClient() {
                     Reset session
                   </button>
                 )}
+              </div>
+            )}
+
+            {/* Password reset success banner (sessionStorage) */}
+            {successMessage && (
+              <div style={{background:'#ecfdf5',border:'1px solid #6ee7b7',borderRadius:'0.5rem',padding:'0.75rem 1rem',marginBottom:'1rem',color:'#065f46',fontSize:'0.875rem',textAlign:'center'}}>
+                {successMessage}
               </div>
             )}
 
