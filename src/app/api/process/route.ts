@@ -22,7 +22,7 @@ export async function POST(req: Request) {
     // 1. Get Text & Metadata
     // Note: File type validation and text extraction happen in the frontend
     // This endpoint accepts pre-extracted text from PDF or DOCX files
-    let { text, filename, document_type, class_id } = await req.json();
+    let { text, filename, document_type, class_id, source } = await req.json();
     
     // Auto-tagging: If document_type not provided, infer from filename
     if (!document_type && filename) {
@@ -102,9 +102,10 @@ export async function POST(req: Request) {
             const embedding = embeddingResponse.data[0].embedding;
 
             // Insert with explicit user_id - CRITICAL for RLS and filtering
-            const metadata: any = { 
+            const metadata: any = {
                 filename: filename,
-                is_active: true  // Default to active (included in AI context)
+                is_active: true,  // Default to active (included in AI context)
+                ...(source ? { source } : {})
             }
             
             // Add class_id to metadata if provided

@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { usePathname, useSearchParams } from 'next/navigation'
-import { MessageSquare, FileText, Settings, Activity, BookOpen, Shield, Sparkles, Folder, Bookmark } from 'lucide-react'
+import { MessageSquare, FileText, Settings, Activity, BookOpen, Shield, Sparkles, Folder, Bookmark, Upload } from 'lucide-react'
 import { getSupabaseBrowser } from '@/lib/supabase/client'
 import HistoryButton from './HistoryButton'
 import { useActiveProfile } from '@/contexts/ActiveProfileContext'
@@ -14,6 +14,7 @@ const NAV_ITEMS = [
   { label: 'Progress', href: '/progress', icon: Activity, type: 'route' as const },
   { label: 'Saved Sessions', href: '/saved', icon: Bookmark, type: 'route' as const },
   { label: 'Courses', href: '/courses', icon: Folder, type: 'route' as const },
+  { label: 'Study Vault', href: '/vault', icon: Upload, type: 'route' as const },
   { label: 'Sources', href: '/sources', icon: FileText, type: 'route' as const },
   { label: 'Vocabulary Bank', href: '/dictionary', icon: BookOpen, type: 'route' as const },
 ] as const
