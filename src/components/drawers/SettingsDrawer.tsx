@@ -1,13 +1,12 @@
 'use client';
 
-import { X, Mail, LogOut, Layout, Shield, Settings, RefreshCw, Link as LinkIcon, Sun, Moon } from 'lucide-react';
+import { X, Mail, LogOut, Layout, Shield, Settings, Sun, Moon } from 'lucide-react';
 import { useEffect, useState, useMemo } from 'react';
 import { getSupabaseBrowser } from '@/lib/supabase/client';
 import { useRouter } from 'next/navigation';
 import { useDensity } from '@/contexts/DensityContext';
 import { getDensityTokens } from '@/lib/density-tokens';
 import { clearAuthStorage } from '@/lib/auth-cleanup';
-import { useActiveProfile } from '@/contexts/ActiveProfileContext';
 import { useTheme } from '@/components/providers/ThemeProvider';
 import { toast } from 'sonner';
 import Link from 'next/link';
@@ -19,17 +18,10 @@ interface SettingsDrawerProps {
 
 export function SettingsDrawer({ isOpen, onClose }: SettingsDrawerProps) {
   const router = useRouter();
-  const { activeProfileId } = useActiveProfile();
   const [user, setUser] = useState<any>(null);
   const { theme, toggleTheme } = useTheme();
   const { density, setDensity } = useDensity();
   const tokens = getDensityTokens(density);
-  const [hasCanvasConnection, setHasCanvasConnection] = useState(false);
-  const [isCheckingConnection, setIsCheckingConnection] = useState(false);
-  const [isSyncing, setIsSyncing] = useState(false);
-  const [canvasUrl, setCanvasUrl] = useState('');
-  const [canvasPAT, setCanvasPAT] = useState('');
-  const [isConnectingLMS, setIsConnectingLMS] = useState(false);
 
   // Singleton Supabase client - only create once per component instance
   const supabase = useMemo(
@@ -45,133 +37,8 @@ export function SettingsDrawer({ isOpen, onClose }: SettingsDrawerProps) {
     
     if (isOpen) {
       loadProfile();
-      checkLMSConnection();
     }
-  }, [isOpen, supabase, activeProfileId]);
-
-  const checkLMSConnection = async () => {
-    if (!activeProfileId) {
-      setHasCanvasConnection(false);
-      return;
-    }
-
-    setIsCheckingConnection(true);
-    try {
-      const response = await fetch(`/api/parent/lms/status/${activeProfileId}`);
-      if (response.ok) {
-        const data = await response.json();
-        const canvasConnection = data.connections?.find(
-          (c: any) => c.provider === 'canvas' && c.status === 'active'
-        );
-        setHasCanvasConnection(!!canvasConnection);
-      }
-    } catch (error) {
-      console.error('[SettingsDrawer] Error checking LMS connection:', error);
-    } finally {
-      setIsCheckingConnection(false);
-    }
-  };
-
-  const handleSyncNow = async () => {
-    console.log('[SyncNow] Button clicked');
-    console.log('[SyncNow] Active profile ID:', activeProfileId);
-
-    if (!activeProfileId) {
-      console.error('[SyncNow] No active profile ID available');
-      toast.error('No profile selected');
-      return;
-    }
-
-    // Validate UUID format before sending to API
-    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-    if (!uuidRegex.test(activeProfileId)) {
-      console.error('[SyncNow] Invalid UUID format — cannot send to API. Value:', JSON.stringify(activeProfileId));
-      toast.error('Invalid profile ID — please switch profiles and try again');
-      return;
-    }
-
-    console.log('[SyncNow] Sending profileId to API:', activeProfileId);
-    setIsSyncing(true);
-
-    try {
-      const response = await fetch('/api/internal/sync/trigger', {
-        method: 'POST',
-        credentials: 'include',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ profileId: activeProfileId }),
-      });
-
-      console.log('[SyncNow] Response status:', response.status);
-      
-      const data = await response.json();
-      console.log('[SyncNow] Response data:', JSON.stringify(data));
-
-      if (!response.ok) {
-        throw new Error(data.error || 'Sync failed');
-      }
-
-      toast.success('Synced! Galaxy updating...');
-      
-      // Reset button after 3 seconds
-      setTimeout(() => {
-        setIsSyncing(false);
-      }, 3000);
-    } catch (error: any) {
-      console.error('[SyncNow] Sync error:', error);
-      toast.error(error.message || 'Failed to trigger sync');
-      setIsSyncing(false);
-    }
-  };
-
-  const handleCanvasConnect = async () => {
-    if (!canvasUrl.trim() || !canvasPAT.trim() || !activeProfileId) return;
-    setIsConnectingLMS(true);
-    try {
-      const res = await fetch('/api/parent/lms/connect', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
-        body: JSON.stringify({
-          studentId: activeProfileId,
-          provider: 'canvas',
-          canvasInstanceUrl: canvasUrl.trim(),
-          canvasPAT: canvasPAT.trim(),
-        }),
-      });
-      const data = await res.json();
-      if (!res.ok || !data.success) {
-        throw new Error(data.message || 'Failed to connect Canvas');
-      }
-      toast.success('Canvas connected! Syncing assignments...');
-      setHasCanvasConnection(true);
-      setCanvasUrl('');
-      setCanvasPAT('');
-    } catch (err: any) {
-      toast.error(err.message || 'Failed to connect Canvas');
-    } finally {
-      setIsConnectingLMS(false);
-    }
-  };
-
-  const handleGoogleConnect = async () => {
-    if (!activeProfileId) return;
-    setIsConnectingLMS(true);
-    try {
-      const res = await fetch(`/api/auth/google-classroom/authorize?studentId=${activeProfileId}`, {
-        credentials: 'include',
-      });
-      const data = await res.json();
-      if (!res.ok || !data.url) {
-        throw new Error(data.error || 'Failed to start Google OAuth');
-      }
-      window.location.href = data.url;
-    } catch (err: any) {
-      toast.error(err.message || 'Failed to start Google Classroom connection');
-      setIsConnectingLMS(false);
-    }
-  };
+  }, [isOpen, supabase]);
 
   const handleLogout = async () => {
     await supabase.auth.signOut();
@@ -328,89 +195,6 @@ export function SettingsDrawer({ isOpen, onClose }: SettingsDrawerProps) {
                 Compact
               </button>
             </div>
-          </div>
-
-          {/* School Integration (optional) */}
-          <div className="bg-gray-50 dark:bg-slate-900/60 backdrop-blur-md border border-gray-200 dark:border-slate-800 rounded-2xl shadow-xl p-6">
-            <div className="flex items-center gap-3 mb-3">
-              <LinkIcon className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
-              <h3 className="text-base font-semibold text-gray-900 dark:text-slate-200">School Integration (optional)</h3>
-            </div>
-            <p className="text-sm text-gray-500 dark:text-slate-400 mb-4">
-              Connect your school to automatically see your upcoming assignments. This is optional — you can use ForgeStudy AI without it.
-            </p>
-
-            {hasCanvasConnection ? (
-              <>
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <div className="w-2 h-2 rounded-full bg-green-500"></div>
-                    <span className="text-sm font-medium text-gray-700 dark:text-slate-200">Canvas Connected</span>
-                  </div>
-                  <button
-                    onClick={handleSyncNow}
-                    disabled={isSyncing}
-                    className="flex items-center gap-2 px-4 py-2 text-sm border border-indigo-500 text-indigo-400 hover:bg-indigo-500/10 rounded-xl transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    <RefreshCw className={`w-4 h-4 ${isSyncing ? 'animate-spin' : ''}`} />
-                    {isSyncing ? 'Syncing...' : 'Sync Now'}
-                  </button>
-                </div>
-                <p className="text-xs text-gray-400 dark:text-slate-400 mt-3">
-                  Your Canvas assignments are automatically synced.
-                </p>
-              </>
-            ) : (
-              <div className="space-y-3">
-                {/* Canvas connect */}
-                <div className="border border-gray-200 dark:border-slate-700 rounded-xl p-4 space-y-3">
-                  <div className="flex items-center gap-2">
-                    <div className="w-8 h-8 bg-gradient-to-br from-orange-500 to-red-600 rounded-lg flex items-center justify-center">
-                      <span className="text-white font-bold text-sm">C</span>
-                    </div>
-                    <span className="text-sm font-medium text-gray-700 dark:text-slate-200">Canvas LMS</span>
-                  </div>
-                  <input
-                    type="url"
-                    placeholder="Canvas URL (e.g., https://school.instructure.com)"
-                    value={canvasUrl}
-                    onChange={(e) => setCanvasUrl(e.target.value)}
-                    className="w-full px-3 py-2 bg-gray-50 dark:bg-slate-800/60 border border-gray-200 dark:border-slate-700 rounded-lg text-sm text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all"
-                  />
-                  <input
-                    type="password"
-                    placeholder="Personal Access Token"
-                    value={canvasPAT}
-                    onChange={(e) => setCanvasPAT(e.target.value)}
-                    className="w-full px-3 py-2 bg-gray-50 dark:bg-slate-800/60 border border-gray-200 dark:border-slate-700 rounded-lg text-sm text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all"
-                  />
-                  <button
-                    onClick={handleCanvasConnect}
-                    disabled={isConnectingLMS || !canvasUrl.trim() || !canvasPAT.trim()}
-                    className="w-full px-3 py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg text-sm font-semibold transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    {isConnectingLMS ? 'Connecting...' : 'Connect Canvas'}
-                  </button>
-                </div>
-
-                {/* Google Classroom connect */}
-                <div className="border border-gray-200 dark:border-slate-700 rounded-xl p-4">
-                  <div className="flex items-center gap-2 mb-3">
-                    <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-green-500 rounded-lg flex items-center justify-center">
-                      <span className="text-white font-bold text-sm">G</span>
-                    </div>
-                    <span className="text-sm font-medium text-gray-700 dark:text-slate-200">Google Classroom</span>
-                  </div>
-                  <button
-                    onClick={handleGoogleConnect}
-                    disabled={isConnectingLMS}
-                    className="w-full px-3 py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg text-sm font-semibold transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    {isConnectingLMS ? 'Connecting...' : 'Connect Google Classroom'}
-                  </button>
-                </div>
-              </div>
-            )}
           </div>
 
           {/* Account */}

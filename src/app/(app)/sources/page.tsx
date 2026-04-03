@@ -9,8 +9,6 @@ import {
   listLearningSourceItems,
   type LearningSourceType,
 } from '@/app/actions/learning-sources'
-import { DualIntakeAirlock } from '@/components/lms/DualIntakeAirlock'
-
 const BUCKET_ID = 'learning-sources'
 const MAX_UPLOAD_BYTES = 50 * 1024 * 1024 // 50MB
 const ALLOWED_FILE_TYPES = new Set([
@@ -39,28 +37,7 @@ export default function AirlockPage() {
 
   useEffect(() => {
     loadRecentUploads()
-    triggerSyncOnLogin()
   }, [activeProfileId])
-
-  // Silent sync trigger on page load (student login)
-  const triggerSyncOnLogin = async () => {
-    if (!activeProfileId) return
-
-    try {
-      // Fire and forget - don't wait for response
-      fetch('/api/internal/sync/trigger', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ studentId: activeProfileId, trigger: 'login' }),
-      }).catch((err) => {
-        // Silent failure - sync is best-effort
-        console.debug('[Airlock] Sync trigger failed (non-critical):', err)
-      })
-    } catch (err) {
-      // Silent failure
-      console.debug('[Airlock] Sync trigger error (non-critical):', err)
-    }
-  }
 
   const loadRecentUploads = async () => {
     try {
@@ -181,19 +158,73 @@ export default function AirlockPage() {
           </p>
         </div>
 
-        {/* Dual-Intake Airlock Component */}
-        <DualIntakeAirlock
-          studentId={activeProfileId || ''}
-          onFileUpload={handleFileUpload}
-          recentUploads={recentUploads.map((item) => ({
-            id: item.id,
-            filename: item.original_filename || item.metadata?.label || 'Untitled',
-            uploadedAt: item.created_at,
-            isMerged: false, // TODO: Add merge detection when deduplication is implemented
-            syncedAssignmentTitle: undefined,
-          }))}
-          isUploading={isUploading}
-        />
+        {/* Upload Dropzone */}
+        <label
+          className={`group w-full h-72 flex flex-col items-center justify-center rounded-3xl border-2 border-dashed transition-all duration-300 cursor-pointer ${
+            isUploading
+              ? 'border-indigo-500 bg-indigo-500/10'
+              : 'border-slate-700 bg-slate-900/40 backdrop-blur-md hover:border-indigo-500 hover:bg-indigo-500/10'
+          }`}
+        >
+          {isUploading ? (
+            <>
+              <div className="w-16 h-16 text-indigo-400 mb-6 flex items-center justify-center">
+                <svg className="animate-spin w-10 h-10" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+              </div>
+              <p className="text-slate-200 text-xl font-medium mb-2">AI is reading your document...</p>
+              <p className="text-slate-400 text-sm">Extracting text, formulas, and diagrams</p>
+            </>
+          ) : (
+            <>
+              <svg className="w-16 h-16 text-slate-500 mb-6 group-hover:text-indigo-400 transition-colors" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5" />
+              </svg>
+              <p className="text-slate-200 text-xl font-medium mb-3">Drag & drop your files here</p>
+              <p className="text-slate-500 text-sm">Supports PDF, DOCX, Images, and TXT up to 50MB</p>
+            </>
+          )}
+          <input
+            type="file"
+            className="hidden"
+            accept=".pdf,.doc,.docx,.txt,image/*"
+            onChange={async (e) => {
+              const files = e.target.files
+              if (files && files.length > 0) await handleFileUpload(files[0])
+            }}
+            disabled={isUploading}
+          />
+        </label>
+
+        {/* Recent Uploads */}
+        {recentUploads.length > 0 && (
+          <div className="mt-8">
+            <h2 className="text-xl font-semibold text-slate-100 mb-6">Recent Uploads</h2>
+            <div className="space-y-4">
+              {recentUploads.map((item) => (
+                <div key={item.id} className="flex items-center justify-between p-5 bg-slate-900/60 backdrop-blur-sm border border-slate-800 rounded-2xl">
+                  <div className="flex items-center gap-4">
+                    <svg className="w-5 h-5 text-slate-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" />
+                    </svg>
+                    <div>
+                      <p className="text-slate-200 font-medium">{item.original_filename || item.metadata?.label || 'Untitled'}</p>
+                      <p className="text-slate-500 text-sm">{new Date(item.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2 px-3 py-1.5 bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 rounded-full text-xs font-medium">
+                    <svg className="w-3.5 h-3.5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    Uploaded
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
 
         {/* Error Message */}
         {error && (

@@ -42,7 +42,6 @@ export default function ProgressPage() {
   const [quarantinedCount, setQuarantinedCount] = useState(() =>
     galaxyCache.profileId === activeProfileId ? galaxyCache.quarantinedCount : 0
   )
-  const [lmsStatus, setLmsStatus] = useState<'no_connection' | 'connected' | null>(null)
   const [hasDueSoonItems, setHasDueSoonItems] = useState(false)
   const [totalTopicCount, setTotalTopicCount] = useState(0)
   const [streakDays, setStreakDays] = useState(0)
@@ -106,65 +105,6 @@ export default function ProgressPage() {
     loadStreak()
   }, [activeProfileId])
 
-  useEffect(() => {
-    async function checkLMS() {
-      if (!activeProfileId) return
-      try {
-        const res = await fetch(`/api/parent/lms/status/${activeProfileId}`)
-        if (res.ok) {
-          const data = await res.json()
-          const canvas = data.connections?.find(
-            (c: any) => c.provider === 'canvas' && c.status === 'active'
-          )
-          setLmsStatus(canvas ? 'connected' : 'no_connection')
-        } else {
-          setLmsStatus('no_connection')
-        }
-      } catch {
-        setLmsStatus('no_connection')
-      }
-    }
-    checkLMS()
-  }, [activeProfileId])
-
-  useEffect(() => {
-    async function triggerAutoSync() {
-      if (!activeProfileId || !user) return
-
-      const syncKey = `lms_sync_triggered_${activeProfileId}`
-      if (sessionStorage.getItem(syncKey)) return
-
-      sessionStorage.setItem(syncKey, 'true')
-
-      try {
-        fetch('/api/internal/sync/trigger', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          credentials: 'include',
-          body: JSON.stringify({ profileId: activeProfileId }),
-        }).then(async () => {
-          if (!activeProfileId) return
-          const [topicsData, quarantinedData] = await Promise.all([
-            getStudyTopicsWithMastery(activeProfileId),
-            getQuarantinedTopicsCount(activeProfileId)
-          ])
-          if (topicsData.length > 0 || quarantinedData > 0) {
-            setTopics(topicsData)
-            setQuarantinedCount(quarantinedData)
-            setTotalTopicCount(topicsData.length + quarantinedData)
-            galaxyCache.topics = topicsData
-            galaxyCache.quarantinedCount = quarantinedData
-          }
-        }).catch((err) => {
-          console.debug('[Progress] Auto-sync failed (non-critical):', err)
-        })
-      } catch (err) {
-        console.debug('[Progress] Auto-sync error (non-critical):', err)
-      }
-    }
-
-    triggerAutoSync()
-  }, [activeProfileId, user])
 
   return (
     <div className="relative w-full h-screen bg-slate-950 overflow-hidden flex flex-col">
@@ -252,7 +192,6 @@ export default function ProgressPage() {
             coursePlanets={coursePlanets}
             studentName={profileSummary.summary?.displayName?.split(' ')[0] || undefined}
             profileId={activeProfileId || undefined}
-            lmsStatus={lmsStatus}
             totalTopicCount={totalTopicCount}
             onDueSoonChange={setHasDueSoonItems}
             onDrillDownChange={setIsGalaxyDrillDown}

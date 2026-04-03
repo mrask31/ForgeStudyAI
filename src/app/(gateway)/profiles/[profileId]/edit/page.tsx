@@ -6,8 +6,6 @@ import Link from 'next/link'
 import { getSupabaseBrowser } from '@/lib/supabase/client'
 import { GraduationCap, BookOpen, ChevronLeft } from 'lucide-react'
 import { getStudentProfile, updateStudentProfile, type StudentProfile } from '@/app/actions/student-profiles'
-import { IntegrationPanel } from '@/components/lms/IntegrationPanel'
-
 export default function EditProfilePage() {
   const router = useRouter()
   const params = useParams()
@@ -262,16 +260,6 @@ export default function EditProfilePage() {
             </div>
           </form>
 
-          {/* School Integrations Section */}
-          <div className="mt-8 pt-8 border-t border-slate-800">
-            <h2 className="text-xl font-semibold text-slate-200 mb-4">
-              School Integrations (LMS)
-            </h2>
-            <IntegrationPanel 
-              studentId={profileId} 
-              studentName={displayName || profile.display_name}
-            />
-          </div>
         </div>
       </div>
     </div>

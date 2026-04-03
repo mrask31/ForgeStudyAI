@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
-import { Loader2, Settings, Link as LinkIcon, Sparkles } from 'lucide-react';
+import { Loader2, Sparkles } from 'lucide-react';
 import { FocusPanel } from './FocusPanel';
 import { DueSoonTray } from './DueSoonTray';
 
@@ -30,7 +30,6 @@ interface ConceptGalaxyProps {
   coursePlanets?: CoursePlanet[];
   studentName?: string;
   profileId?: string;
-  lmsStatus?: 'no_connection' | 'connected' | null;
   totalTopicCount?: number;
   onDueSoonChange?: (hasDueSoon: boolean) => void;
   onTopicsRefresh?: () => void;
@@ -53,7 +52,7 @@ function getMasteryColor(score: number): string {
   return '#64748b';
 }
 
-export function ConceptGalaxy({ topics, coursePlanets, studentName, profileId, lmsStatus, totalTopicCount = 0, onDueSoonChange, onTopicsRefresh, onDrillDownChange }: ConceptGalaxyProps) {
+export function ConceptGalaxy({ topics, coursePlanets, studentName, profileId, totalTopicCount = 0, onDueSoonChange, onTopicsRefresh, onDrillDownChange }: ConceptGalaxyProps) {
   const router = useRouter();
 
   const [expandedCourseId, setExpandedCourseId] = useState<string | null>(null);
@@ -143,47 +142,26 @@ export function ConceptGalaxy({ topics, coursePlanets, studentName, profileId, l
   // Empty state
   if (topics.length === 0 && !hasPlanets) {
     const hasAnyTopicsInDb = totalTopicCount > 0;
-    const showNoConnection = lmsStatus === 'no_connection' && !hasAnyTopicsInDb;
-    const showSyncing = lmsStatus === 'connected' && !hasAnyTopicsInDb;
-    const showLoading = lmsStatus === null && !hasAnyTopicsInDb;
-    const showQuarantineWaiting = hasAnyTopicsInDb;
 
     return (
       <div className="w-full h-full bg-slate-950 flex flex-col items-center justify-center gap-6 px-4">
         <div className="flex flex-col items-center gap-6 max-w-md">
-          {showQuarantineWaiting ? (
+          {hasAnyTopicsInDb ? (
             <>
               <Sparkles className="w-12 h-12 text-indigo-400" />
               <h2 className="text-xl font-semibold text-slate-100 text-center">Your topics are ready to explore!</h2>
-              <p className="text-sm text-slate-400 text-center">{totalTopicCount} topic{totalTopicCount !== 1 ? 's' : ''} synced from Canvas. Tap the button below to start studying.</p>
+              <p className="text-sm text-slate-400 text-center">{totalTopicCount} topic{totalTopicCount !== 1 ? 's' : ''} uploaded. Tap the button below to start studying.</p>
               <button onClick={() => router.push('/tutor')} className="bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl px-6 py-3 w-full font-medium transition-colors">Start Studying</button>
-            </>
-          ) : showLoading ? (
-            <>
-              <Loader2 className="w-10 h-10 text-indigo-400 animate-spin" />
-              <p className="text-sm text-slate-400">Loading your galaxy...</p>
-            </>
-          ) : showNoConnection ? (
-            <>
-              <LinkIcon className="w-12 h-12 text-indigo-400" />
-              <h2 className="text-xl font-semibold text-slate-100 text-center">Your Galaxy is waiting.</h2>
-              <p className="text-sm text-slate-400 text-center">Connect Canvas or Google Classroom in Settings to load your assignments, or upload study materials to get started.</p>
-              <div className="flex flex-col gap-3 w-full">
-                <button onClick={() => window.dispatchEvent(new CustomEvent('open-settings'))} className="bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl px-6 py-3 w-full font-medium transition-colors flex items-center justify-center gap-2"><Settings className="w-4 h-4" />Connect a Classroom in Settings</button>
-                <button onClick={() => router.push('/sources')} className="bg-slate-800 hover:bg-slate-700 border border-slate-600 text-slate-300 rounded-xl px-6 py-3 w-full font-medium transition-all">Upload Materials</button>
-                <button onClick={() => router.push('/tutor')} className="bg-slate-800 hover:bg-slate-700 border border-slate-600 text-slate-300 rounded-xl px-6 py-3 w-full font-medium transition-all">Ask Your Tutor</button>
-              </div>
-            </>
-          ) : showSyncing ? (
-            <>
-              <Loader2 className="w-12 h-12 text-indigo-400 animate-spin" />
-              <h2 className="text-xl font-semibold text-slate-100 text-center">Syncing your assignments...</h2>
-              <p className="text-sm text-slate-400 text-center">We're pulling in your Canvas assignments. This usually takes a few seconds.</p>
             </>
           ) : (
             <>
-              <h2 className="text-xl font-semibold text-slate-100 text-center">No assignments found.</h2>
-              <p className="text-sm text-slate-400 text-center">Check your classroom connection in Settings, or upload study materials to get started.</p>
+              <Sparkles className="w-12 h-12 text-indigo-400" />
+              <h2 className="text-xl font-semibold text-slate-100 text-center">Your Galaxy is waiting.</h2>
+              <p className="text-sm text-slate-400 text-center">Upload study materials to build your Learning Galaxy.</p>
+              <div className="flex flex-col gap-3 w-full">
+                <button onClick={() => router.push('/sources')} className="bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl px-6 py-3 w-full font-medium transition-colors">Upload Materials</button>
+                <button onClick={() => router.push('/tutor')} className="bg-slate-800 hover:bg-slate-700 border border-slate-600 text-slate-300 rounded-xl px-6 py-3 w-full font-medium transition-all">Ask Your Tutor</button>
+              </div>
             </>
           )}
         </div>
