@@ -149,6 +149,7 @@ export async function middleware(request: NextRequest) {
       '/signup',
       '/reset',
       '/reset-password',
+      '/password-updated',
       '/auth/callback',
       '/auth/confirm',
       '/auth/reset',

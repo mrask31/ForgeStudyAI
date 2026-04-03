@@ -112,27 +112,11 @@ export default function ResetPasswordClient() {
     setIsLoading(true)
 
     const { error } = await supabase.auth.updateUser({ password: newPassword })
-
     if (error) {
       setError(error.message)
       setIsLoading(false)
-      return
-    }
-
-    // Bypass React state — directly replace the DOM content
-    // This survives any re-renders triggered by onAuthStateChange
-    const card = document.getElementById('reset-password-card')
-    if (card) {
-      card.innerHTML = `
-        <div style="text-align:center;padding:2rem">
-          <div style="font-size:3rem;margin-bottom:1rem">✓</div>
-          <h2 style="font-weight:bold;margin-bottom:0.5rem">Password updated!</h2>
-          <p style="color:#666;margin-bottom:2rem">Your password has been changed successfully.</p>
-          <a href="/login" style="display:block;background:#0f766e;color:white;padding:0.75rem;border-radius:0.5rem;text-decoration:none;font-weight:500">
-            Sign in with your new password →
-          </a>
-        </div>
-      `
+    } else {
+      window.location.href = '/password-updated'
     }
   }
 
