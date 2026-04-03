@@ -14,10 +14,20 @@ import { chatRateLimiter } from '@/lib/ai/RateLimiter';
 import { handleAPIError, getResponseWithFallback, AIServiceError } from '@/lib/ai/error-handling';
 import { buildSourceMaterial } from '@/lib/ai/lms-context';
 import { trackAPIUsage, calculateClaudeCost } from '@/lib/ai/metrics';
+import OpenAI from 'openai';
 import type {
   ClaudeChatMessage,
   CacheMetrics,
 } from '@/types/dual-ai-orchestration';
+
+// Lazy-initialize OpenAI client for embeddings only
+let openaiClient: OpenAI | null = null;
+function getOpenAIClient(): OpenAI {
+  if (!openaiClient) {
+    openaiClient = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+  }
+  return openaiClient;
+}
 
 export const maxDuration = 60; // Claude streaming can take time
 
@@ -239,13 +249,53 @@ export async function POST(req: NextRequest) {
       topicContext = `${[topicLine, classLabel].filter(Boolean).join(' ')} Use this context in all responses — do not ask the student what class or topic they are working on.\n\n`;
     }
 
+    // Fetch student profile for interests injection
+    let interestsLine = '';
+    if (activeProfileId) {
+      const { data: profileData } = await supabase
+        .from('student_profiles')
+        .select('interests')
+        .eq('id', activeProfileId)
+        .eq('owner_id', user.id)
+        .single();
+      if (profileData?.interests?.trim()) {
+        interestsLine = `Student interests: ${profileData.interests.trim()}. When explaining concepts, naturally use analogies and examples related to these interests where it fits. Don't force it on every response — just when it makes the explanation clearer or more engaging.\n\n`;
+      }
+    }
+
+    // Vault RAG: search student's uploaded study material for relevant context
+    let vaultContext = '';
+    try {
+      const embeddingResponse = await getOpenAIClient().embeddings.create({
+        model: 'text-embedding-3-small',
+        input: latestUserMessage,
+      });
+      const queryEmbedding = embeddingResponse.data?.[0]?.embedding;
+      if (queryEmbedding && Array.isArray(queryEmbedding)) {
+        const { data: vaultChunks } = await supabase.rpc('match_documents', {
+          query_embedding: queryEmbedding,
+          match_threshold: 0.7,
+          match_count: 3,
+          user_id_filter: user.id,
+          filter_active: true,
+        });
+        if (vaultChunks && vaultChunks.length > 0) {
+          vaultContext = `\n\nRelevant material from student's Study Vault:\n${(vaultChunks as Array<{ content?: string }>).map(c => c.content).filter(Boolean).join('\n\n')}\n\nUse this material to ground your Socratic questions and explanations. Reference it naturally — don't quote it directly.\n\n`;
+        }
+      }
+    } catch (vaultErr) {
+      console.warn('[AI Chat Adapter] Vault RAG search failed (non-fatal):', vaultErr);
+    }
+
+    const systemPromptPrefix = interestsLine + vaultContext + topicContext;
+
     // Initialize Claude Service
     const claudeService = new ClaudeService(apiKey);
 
     // Generate streaming response
     const startTime = Date.now();
     const stream = await getResponseWithFallback(
-      () => claudeService.generateResponse(chatHistory, sourceMaterial, true, topicContext),
+      () => claudeService.generateResponse(chatHistory, sourceMaterial, true, systemPromptPrefix),
       'I\'m having trouble connecting to the tutoring service right now. Please try again in a moment.'
     );
     const latencyMs = Date.now() - startTime;
