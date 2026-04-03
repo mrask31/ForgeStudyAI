@@ -15,7 +15,8 @@ export default function EditProfilePage() {
   const [displayName, setDisplayName] = useState('')
   const [band, setBand] = useState<'high' | 'middle' | null>(null)
   const [grade, setGrade] = useState('')
-  const [interests, setInterests] = useState('')
+  const [tags, setTags] = useState<string[]>([])
+  const [tagInput, setTagInput] = useState('')
   const [isLoading, setIsLoading] = useState(true)
   const [isSaving, setIsSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -40,7 +41,11 @@ export default function EditProfilePage() {
         setDisplayName(studentProfile.display_name)
         setBand(studentProfile.grade_band)
         setGrade(studentProfile.grade || '')
-        setInterests(studentProfile.interests || '')
+        setTags(
+          studentProfile.interests
+            ? studentProfile.interests.split(',').map((t: string) => t.trim()).filter(Boolean)
+            : []
+        )
       } catch (err) {
         console.error('[Edit Profile] Failed to load profile:', err)
         router.push('/profiles')
@@ -80,7 +85,7 @@ export default function EditProfilePage() {
         display_name: displayName.trim(),
         grade_band: band,
         grade: grade.trim() || null,
-        interests: interests.trim() || null,
+        interests: tags.length > 0 ? tags.join(', ') : null,
       })
 
       router.push('/profiles')
@@ -219,20 +224,56 @@ export default function EditProfilePage() {
             )}
 
             <div>
-              <label htmlFor="interests" className="block text-sm font-semibold text-slate-200 mb-2">
-                Interests & hobbies (optional)
+              <label className="block text-sm font-semibold text-slate-200 mb-2">
+                What are you into? (optional)
               </label>
-              <p className="text-xs text-slate-400 mb-2">
-                We use this to make examples more engaging for your student.
+              <p className="text-xs text-slate-400 mb-3">
+                Helps your tutor explain things in ways that click for you
               </p>
-              <textarea
-                id="interests"
-                value={interests}
-                onChange={(e) => setInterests(e.target.value)}
-                placeholder="e.g., soccer, space, art, Minecraft, dinosaurs"
-                className="w-full min-h-[120px] px-4 py-3 bg-slate-950 border-2 border-slate-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all text-slate-100 placeholder-slate-500"
-                disabled={isSaving}
-              />
+              {tags.length > 0 && (
+                <div className="flex flex-wrap gap-2 mb-3">
+                  {tags.map((tag) => (
+                    <span
+                      key={tag}
+                      className="flex items-center gap-1 px-3 py-1.5 bg-indigo-500/20 border border-indigo-500/40 rounded-full text-sm text-indigo-300"
+                    >
+                      {tag}
+                      <button
+                        type="button"
+                        onClick={() => setTags(tags.filter((t) => t !== tag))}
+                        disabled={isSaving}
+                        className="ml-1 text-indigo-400 hover:text-indigo-200 transition-colors leading-none"
+                        aria-label={`Remove ${tag}`}
+                      >
+                        ×
+                      </button>
+                    </span>
+                  ))}
+                </div>
+              )}
+              {tags.length < 5 && (
+                <input
+                  type="text"
+                  value={tagInput}
+                  onChange={(e) => setTagInput(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' || e.key === ',') {
+                      e.preventDefault()
+                      const trimmed = tagInput.replace(/,/g, '').trim()
+                      if (trimmed && tags.length < 5 && !tags.includes(trimmed)) {
+                        setTags([...tags, trimmed])
+                      }
+                      setTagInput('')
+                    }
+                  }}
+                  placeholder={tags.length === 0 ? 'e.g. soccer, Minecraft, music, drawing, cooking' : 'Add another...'}
+                  className="w-full px-4 py-3 bg-slate-950 border-2 border-slate-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all text-slate-100 placeholder-slate-500"
+                  disabled={isSaving}
+                />
+              )}
+              <p className="text-xs text-slate-500 mt-2">
+                Press Enter or comma to add &bull; {5 - tags.length} of 5 remaining
+              </p>
             </div>
 
             {error && (
