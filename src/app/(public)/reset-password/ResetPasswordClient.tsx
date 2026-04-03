@@ -1,18 +1,28 @@
 'use client'
 
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { useRouter, useSearchParams } from 'next/navigation'
-import { getSupabaseBrowser } from '@/lib/supabase/client'
+import { createClient } from '@supabase/supabase-js'
 import { Lock, Mail, ArrowRight, Loader2, Eye, EyeOff } from 'lucide-react'
+
+const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+  {
+    auth: {
+      autoRefreshToken: false,
+      persistSession: false,
+      detectSessionInUrl: false,
+    }
+  }
+)
 
 type Status = 'verifying' | 'request' | 'ready' | 'expired' | 'done'
 
 export default function ResetPasswordClient() {
   const searchParams = useSearchParams()
   const router = useRouter()
-  const supabase = useMemo(() => getSupabaseBrowser(), [])
-
   // Determine initial status synchronously from URL params
   const tokenHash = searchParams.get('token_hash')
   const hasToken = !!(tokenHash && searchParams.get('type') === 'recovery')
