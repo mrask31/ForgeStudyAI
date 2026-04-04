@@ -6,8 +6,9 @@ import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import {
   BookOpen, Brain, Lightbulb, Star, Pin, PinOff, Trash2, Loader2,
-  RefreshCw, ArrowRight, GraduationCap, ChevronDown, ChevronRight
+  RefreshCw, ArrowRight, GraduationCap, ChevronDown, ChevronRight, Share2
 } from 'lucide-react'
+import { toast } from 'sonner'
 
 interface PortfolioEntry {
   id: string
@@ -220,12 +221,39 @@ export default function PortfolioPage() {
     <div className="flex-1 overflow-y-auto bg-[#08080F] pb-20 lg:pb-4">
       <div className="max-w-3xl mx-auto px-4 py-6 md:py-10 space-y-6">
         {/* Header */}
-        <div>
-          <h1 className="text-2xl md:text-3xl font-bold text-white">Your Academic Portfolio</h1>
-          <p className="text-slate-400 text-sm mt-1">
-            {studentName} · {gradeBand === 'high' ? 'High School' : 'Middle School'}
-            {grade ? ` · Grade ${grade}` : ''} · {totalSessions} sessions
-          </p>
+        <div className="flex items-start justify-between gap-4">
+          <div>
+            <h1 className="text-2xl md:text-3xl font-bold text-white">Your Academic Portfolio</h1>
+            <p className="text-slate-400 text-sm mt-1">
+              {studentName} · {gradeBand === 'high' ? 'High School' : 'Middle School'}
+              {grade ? ` · Grade ${grade}` : ''} · {totalSessions} sessions
+            </p>
+          </div>
+          {activeProfileId && (
+            <button
+              onClick={async () => {
+                const shareUrl = `${window.location.origin}/api/share/${activeProfileId}`
+                if (navigator.share) {
+                  try {
+                    await navigator.share({
+                      title: `${studentName}'s ForgeStudy Progress`,
+                      text: `Check out my learning progress on ForgeStudy AI!`,
+                      url: shareUrl,
+                    })
+                  } catch {
+                    // User cancelled share
+                  }
+                } else {
+                  await navigator.clipboard.writeText(shareUrl)
+                  toast.success('Share link copied!')
+                }
+              }}
+              className="flex items-center gap-1.5 px-3 py-2 bg-indigo-600/20 border border-indigo-500/30 text-indigo-400 rounded-xl text-xs font-medium hover:bg-indigo-600/30 transition-colors flex-shrink-0"
+            >
+              <Share2 className="w-3.5 h-3.5" />
+              Share
+            </button>
+          )}
         </div>
 
         {/* Mastery Map */}

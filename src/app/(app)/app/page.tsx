@@ -5,10 +5,11 @@ import { useActiveProfileSummary } from '@/hooks/useActiveProfileSummary'
 import { useEffect, useState, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { FileText, MessageSquare, Loader2, Clock, ChevronRight, Plus, Pencil, Trash2, CheckSquare, Square, ArrowRight, CalendarDays } from 'lucide-react'
+import { FileText, MessageSquare, Loader2, Clock, ChevronRight, Plus, Pencil, Trash2, CheckSquare, Square, ArrowRight, CalendarDays, Copy, Check } from 'lucide-react'
 import { PhotoDropButton } from '@/components/homework/PhotoDropButton'
 import { SubjectEntryForm } from '@/components/tutor/SubjectEntryForm'
 import { AddAssignmentModal, type ManualAssignment } from '@/components/assignments/AddAssignmentModal'
+import { getReferralStats } from '@/app/actions/referrals'
 
 interface RecentSession {
   id: string
@@ -70,6 +71,9 @@ export default function HomePage() {
   const [assignments, setAssignments] = useState<ManualAssignment[]>([])
   const [showAddModal, setShowAddModal] = useState(false)
   const [editingAssignment, setEditingAssignment] = useState<ManualAssignment | null>(null)
+  const [referralCode, setReferralCode] = useState<string | null>(null)
+  const [referralCount, setReferralCount] = useState(0)
+  const [referralCopied, setReferralCopied] = useState(false)
 
   const studentName = profileSummary.summary?.displayName?.split(' ')[0] || 'there'
 
@@ -128,6 +132,13 @@ export default function HomePage() {
 
     loadHomeData()
     fetchAssignments()
+
+    // Load referral data
+    getReferralStats().then(stats => {
+      setReferralCode(stats.code)
+      setReferralCount(stats.referralCount)
+    }).catch(() => {})
+
     return () => { cancelled = true }
   }, [activeProfileId, fetchAssignments])
 
@@ -482,6 +493,43 @@ export default function HomePage() {
           </div>
         )}
       </div>
+
+      {/* Referral Card */}
+      {referralCode && (
+        <div className="max-w-3xl mx-auto px-4 pb-4">
+          <div className="bg-slate-900/60 border border-slate-800 rounded-xl p-4">
+            <p className="text-sm font-medium text-white mb-1">
+              📣 Know someone who'd love ForgeStudy?
+            </p>
+            <p className="text-xs text-slate-400 mb-3">
+              Invite a classmate — you both get one month free.
+            </p>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => {
+                  const url = `${window.location.origin}/signup?ref=${referralCode}`
+                  navigator.clipboard.writeText(url).then(() => {
+                    setReferralCopied(true)
+                    setTimeout(() => setReferralCopied(false), 2000)
+                  })
+                }}
+                className="flex items-center gap-1.5 px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg text-xs font-semibold transition-colors"
+              >
+                {referralCopied ? (
+                  <><Check className="w-3.5 h-3.5" /> Copied!</>
+                ) : (
+                  <><Copy className="w-3.5 h-3.5" /> Copy my invite link</>
+                )}
+              </button>
+              {referralCount > 0 && (
+                <span className="text-xs text-slate-500">
+                  You've referred {referralCount} friend{referralCount !== 1 ? 's' : ''}
+                </span>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Add/Edit Assignment Modal */}
       {showAddModal && activeProfileId && (
