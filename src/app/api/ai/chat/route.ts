@@ -312,6 +312,9 @@ export async function POST(req: NextRequest) {
       const encoder = new TextEncoder();
       const decoder = new TextDecoder();
 
+      // Collect full response text for portfolio capture
+      let fullResponseText = '';
+
       const aiDataStream = new ReadableStream({
         async start(controller) {
           const reader = stream.getReader();
@@ -328,7 +331,6 @@ export async function POST(req: NextRequest) {
 
               for (const line of lines) {
                 if (!line.trim()) continue;
-                // Handle both raw JSON objects and SSE "data: {...}" lines
                 const jsonStr = line.startsWith('data: ') ? line.slice(6) : line;
                 if (jsonStr === '[DONE]') continue;
                 try {
@@ -338,6 +340,7 @@ export async function POST(req: NextRequest) {
                     event.delta?.type === 'text_delta' &&
                     typeof event.delta.text === 'string'
                   ) {
+                    fullResponseText += event.delta.text;
                     controller.enqueue(encoder.encode(`0:${JSON.stringify(event.delta.text)}\n`));
                   }
                 } catch {
@@ -356,6 +359,7 @@ export async function POST(req: NextRequest) {
                   event.delta?.type === 'text_delta' &&
                   typeof event.delta.text === 'string'
                 ) {
+                  fullResponseText += event.delta.text;
                   controller.enqueue(encoder.encode(`0:${JSON.stringify(event.delta.text)}\n`));
                 }
               } catch {
@@ -365,6 +369,24 @@ export async function POST(req: NextRequest) {
           } catch (err) {
             controller.error(err);
             return;
+          }
+
+          // Fire-and-forget portfolio capture after stream completes
+          if (activeProfileId && fullResponseText.length > 50) {
+            const captureUrl = new URL('/api/portfolio/capture', req.url);
+            fetch(captureUrl.toString(), {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                profileId: activeProfileId,
+                classId: classId || null,
+                sessionId: chatId || null,
+                userMessage: latestUserMessage?.slice(0, 1000),
+                assistantMessage: fullResponseText.slice(0, 1000),
+              }),
+            }).catch(() => {
+              // Non-critical — don't fail tutor response
+            });
           }
 
           // Send AI SDK finish event

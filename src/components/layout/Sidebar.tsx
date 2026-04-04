@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { usePathname, useSearchParams } from 'next/navigation'
-import { MessageSquare, FileText, Settings, Activity, BookOpen, Shield, Sparkles, Folder, Bookmark, Upload } from 'lucide-react'
+import { MessageSquare, FileText, Settings, Activity, BookOpen, Shield, Sparkles, Folder, Bookmark, Upload, GraduationCap } from 'lucide-react'
 import { getSupabaseBrowser } from '@/lib/supabase/client'
 import HistoryButton from './HistoryButton'
 import { useActiveProfile } from '@/contexts/ActiveProfileContext'
@@ -11,6 +11,7 @@ import { useActiveProfile } from '@/contexts/ActiveProfileContext'
 const NAV_ITEMS = [
   { label: 'Home', href: '/app', icon: Sparkles, type: 'route' as const },
   { label: 'Tutor', href: '/tutor', icon: MessageSquare, type: 'route' as const },
+  { label: 'Portfolio', href: '/portfolio', icon: GraduationCap, type: 'route' as const },
   { label: 'Progress', href: '/progress', icon: Activity, type: 'route' as const },
   { label: 'Saved Sessions', href: '/saved', icon: Bookmark, type: 'route' as const },
   { label: 'Courses', href: '/courses', icon: Folder, type: 'route' as const },
@@ -162,7 +163,8 @@ export default function Sidebar({ onNavigate }: SidebarProps = {}) {
                   (item.href === '/app' && pathname.startsWith('/app')) ||
                   (item.href === '/courses' && pathname.startsWith('/courses')) ||
                   (item.href === '/dictionary' && pathname.startsWith('/dictionary')) ||
-                  (item.href === '/progress' && pathname.startsWith('/progress'))
+                  (item.href === '/progress' && pathname.startsWith('/progress')) ||
+                  (item.href === '/portfolio' && pathname.startsWith('/portfolio'))
               const Icon = item.icon
 
               return (
