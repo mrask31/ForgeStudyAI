@@ -52,6 +52,7 @@ export async function POST(req: NextRequest) {
     const topicTitle = body.topicTitle as string | undefined;
     const classId = body.classId as string | undefined;
     const activeProfileId = body.activeProfileId as string | undefined;
+    const explainMode = body.explainMode as 'simple' | 'standard' | 'advanced' | undefined;
 
     console.log('[AI Chat Adapter] Request:', {
       chatId,
@@ -287,7 +288,15 @@ export async function POST(req: NextRequest) {
       console.warn('[AI Chat Adapter] Vault RAG search failed (non-fatal):', vaultErr);
     }
 
-    const systemPromptPrefix = interestsLine + vaultContext + topicContext;
+    // Explain mode adjustment
+    let explainModeContext = '';
+    if (explainMode === 'simple') {
+      explainModeContext = 'The student has requested simple explanations. Explain at a simple, easy-to-understand level using everyday analogies. Use short sentences and avoid jargon.\n\n';
+    } else if (explainMode === 'advanced') {
+      explainModeContext = 'The student wants a deeper, more technical explanation. Don\'t simplify — go into the details, use proper terminology, and explain the underlying mechanisms.\n\n';
+    }
+
+    const systemPromptPrefix = explainModeContext + interestsLine + vaultContext + topicContext;
 
     // Initialize Claude Service
     const claudeService = new ClaudeService(apiKey);

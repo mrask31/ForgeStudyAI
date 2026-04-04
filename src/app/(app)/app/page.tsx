@@ -253,8 +253,15 @@ export default function HomePage() {
             <p className="text-gray-500 dark:text-slate-400 text-sm mt-1">What are you working on today?</p>
           </div>
           {streakDays > 0 && (
-            <div className="bg-amber-50 dark:bg-slate-900/60 backdrop-blur-md border border-amber-200 dark:border-amber-500/30 rounded-xl px-3 py-1.5">
-              <span className="text-amber-600 dark:text-amber-400 text-sm font-bold">🔥 {streakDays}-day streak</span>
+            <div className="relative group">
+              <div className={`bg-amber-50 dark:bg-slate-900/60 backdrop-blur-md border border-amber-200 dark:border-amber-500/30 rounded-xl px-3 py-1.5 cursor-default ${
+                streakDays >= 7 ? 'shadow-lg shadow-amber-500/20 dark:shadow-amber-500/10 ring-1 ring-amber-300/50 dark:ring-amber-500/20' : ''
+              }`}>
+                <span className="text-amber-600 dark:text-amber-400 text-sm font-bold">🔥 {streakDays}</span>
+              </div>
+              <div className="absolute right-0 top-full mt-2 bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-xs text-slate-300 whitespace-nowrap opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity z-10 shadow-xl">
+                You've studied {streakDays} day{streakDays !== 1 ? 's' : ''} in a row! Keep it up.
+              </div>
             </div>
           )}
         </div>

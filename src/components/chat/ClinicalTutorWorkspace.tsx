@@ -72,6 +72,7 @@ interface ClinicalTutorWorkspaceProps {
   onMessagesChange?: (messages: any[]) => void
   scrollToMessageId?: string
   scrollContainerRef?: React.RefObject<HTMLDivElement>
+  explainMode?: 'simple' | 'standard' | 'advanced'
 }
 
 export default function ClinicalTutorWorkspace({ 
@@ -87,6 +88,7 @@ export default function ClinicalTutorWorkspace({
   onMessagesChange,
   scrollToMessageId,
   scrollContainerRef,
+  explainMode = 'standard',
 }: ClinicalTutorWorkspaceProps) {
   const [customError, setCustomError] = useState('')
   const searchParams = useSearchParams()
@@ -228,10 +230,11 @@ export default function ClinicalTutorWorkspace({
       selectedClassName,
       attachedFileIds,
       activeProfileId,
+      explainMode,
     };
     requestBodyRef.current = body;
     return body;
-  }, [chatId, strictMode, filterMode, selectedDocIds, mode, topicTitle, className, selectedClassName, attachedFiles, activeProfileId, searchParams]);
+  }, [chatId, strictMode, filterMode, selectedDocIds, mode, topicTitle, className, selectedClassName, attachedFiles, activeProfileId, searchParams, explainMode]);
   
   // Absolute API URL to prevent relative path resolution issues with redirects
   const chatApiUrl = typeof window !== 'undefined'

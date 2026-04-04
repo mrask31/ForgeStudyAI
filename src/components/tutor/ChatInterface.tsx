@@ -1,20 +1,31 @@
 'use client'
 
 import { useState, useRef, useEffect } from 'react'
-import { ArrowUp, Paperclip, Calculator } from 'lucide-react'
+import { ArrowUp, Paperclip, Calculator, Camera, Loader2 } from 'lucide-react'
 import { useTutorContext } from './TutorContext'
 import MedicalMathCalculator from './MedicalMathCalculator'
+import { toast } from 'sonner'
+
+export type ExplainMode = 'simple' | 'standard' | 'advanced'
 
 interface ChatInterfaceProps {
-  sessionId?: string // Optional - will be created on first message if missing
+  sessionId?: string
   onSend: (message: string) => Promise<void> | void
-  initialPrompt?: string // For topic/exam prefill - does NOT auto-send
+  initialPrompt?: string
   attachedFiles?: { id: string, name: string, document_type: string | null }[]
   attachedContext?: 'none' | 'syllabus' | 'textbook' | 'mixed'
   isLoading?: boolean
-  messages?: any[] // Optional messages array to check if session is empty
-  onDetach?: (fileId: string) => void // Callback to detach a file
+  messages?: any[]
+  onDetach?: (fileId: string) => void
+  explainMode?: ExplainMode
+  onExplainModeChange?: (mode: ExplainMode) => void
 }
+
+const EXPLAIN_MODES: { key: ExplainMode; label: string }[] = [
+  { key: 'simple', label: 'Simple' },
+  { key: 'standard', label: 'Standard' },
+  { key: 'advanced', label: 'Advanced' },
+]
 
 export default function ChatInterface({
   sessionId,
@@ -24,36 +35,26 @@ export default function ChatInterface({
   attachedContext = 'none',
   isLoading = false,
   messages = [],
-  onDetach
+  onDetach,
+  explainMode = 'standard',
+  onExplainModeChange,
 }: ChatInterfaceProps) {
   const [inputValue, setInputValue] = useState('')
   const [isCalculatorOpen, setIsCalculatorOpen] = useState(false)
+  const [isProcessingPhoto, setIsProcessingPhoto] = useState(false)
   const inputRef = useRef<HTMLTextAreaElement>(null)
+  const fileInputRef = useRef<HTMLInputElement>(null)
   const hasAttachedFiles = attachedFiles.length > 0
   const tutorContext = useTutorContext()
-  // If sessionId exists, assume there might be messages (don't prefill)
-  // If no sessionId, it's a fresh session (safe to prefill)
   const hasMessages = !!sessionId || (messages && messages.length > 0)
 
-  // Debug: Log incoming attachedFiles prop
-  useEffect(() => {
-    console.log('🔍 ChatInterface received files:', {
-      count: attachedFiles.length,
-      files: attachedFiles.map(f => ({ id: f.id, name: f.name, document_type: f.document_type })),
-    });
-  }, [attachedFiles]);
-
-  // Update input when initialPrompt changes, but only if no messages and user hasn't typed
   useEffect(() => {
     if (!hasMessages && initialPrompt && !inputValue) {
       setInputValue(initialPrompt)
-      setTimeout(() => {
-        inputRef.current?.focus()
-      }, 100)
+      setTimeout(() => { inputRef.current?.focus() }, 100)
     }
-  }, [initialPrompt, hasMessages]) // Only depend on initialPrompt and hasMessages - don't depend on inputValue to avoid loops
+  }, [initialPrompt, hasMessages])
 
-  // Auto-resize textarea
   useEffect(() => {
     if (inputRef.current) {
       inputRef.current.style.height = 'auto'
@@ -64,59 +65,103 @@ export default function ChatInterface({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!inputValue.trim() || isLoading) return
-    
+
     const message = inputValue.trim()
-    
+
     if (typeof window !== 'undefined') {
       window.dispatchEvent(new CustomEvent('tutor-scroll-to-bottom', { detail: { behavior: 'smooth' } }))
     }
 
-    // Call onSend and only clear input on success
     try {
       await onSend(message)
-      setInputValue('') // Clear ONLY after successful send
+      setInputValue('')
     } catch (error) {
       console.error('[ChatInterface] Error sending message:', error)
-      // Keep input value on error so user can retry
     }
-    
-    // Refocus input after sending
-    setTimeout(() => {
-      inputRef.current?.focus()
-    }, 100)
+
+    setTimeout(() => { inputRef.current?.focus() }, 100)
   }
 
-  const handleSuggestionClick = async (prompt: string) => {
-    await onSend(prompt)
+  const handlePhotoSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+
+    const validTypes = ['image/jpeg', 'image/png', 'image/webp']
+    if (!validTypes.includes(file.type)) {
+      toast.error('Please upload a JPEG, PNG, or WebP image.')
+      return
+    }
+    if (file.size > 20 * 1024 * 1024) {
+      toast.error('Image must be under 20MB.')
+      return
+    }
+
+    setIsProcessingPhoto(true)
+    toast.info('Extracting text from photo...')
+
+    try {
+      const buffer = await file.arrayBuffer()
+      const base64 = btoa(
+        new Uint8Array(buffer).reduce((data, byte) => data + String.fromCharCode(byte), '')
+      )
+
+      const res = await fetch('/api/ai/extract-image-text', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ base64Image: base64, mimeType: file.type }),
+      })
+
+      if (!res.ok) throw new Error('Failed to extract text')
+
+      const { text } = await res.json()
+      if (!text?.trim()) throw new Error('No text found in image')
+
+      const contextMessage = `The student has uploaded a photo of their assignment. Here is what it contains:\n\n${text}\n\nAcknowledge what you see, ask which part they want to work on first, and begin Socratic tutoring from there.`
+
+      toast.success('Text extracted! Sending to tutor...')
+      await onSend(contextMessage)
+    } catch (error: any) {
+      toast.error(error.message || 'Failed to process photo')
+    } finally {
+      setIsProcessingPhoto(false)
+      if (fileInputRef.current) fileInputRef.current.value = ''
+    }
   }
 
   const getPlaceholderText = () => {
-    if (attachedFiles.length > 0) {
-      return "Ask a question about your uploaded materials..."
-    }
+    if (attachedFiles.length > 0) return "Ask a question about your uploaded materials..."
     return "Ask a question about what you're learning..."
   }
 
   return (
     <div className="flex-shrink-0 pt-3 pb-safe-b relative">
-      {/* Calculator Panel */}
-      <MedicalMathCalculator 
-        isOpen={isCalculatorOpen} 
-        onClose={() => setIsCalculatorOpen(false)} 
+      <MedicalMathCalculator
+        isOpen={isCalculatorOpen}
+        onClose={() => setIsCalculatorOpen(false)}
+      />
+
+      {/* Hidden file input for camera */}
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept="image/jpeg,image/png,image/webp"
+        capture="environment"
+        className="hidden"
+        onChange={handlePhotoSelect}
       />
 
       {/* Context Pills (Above the dock) */}
       {attachedFiles.length > 0 && (
         <div className="flex gap-2 overflow-x-auto px-2 mb-2">
           {attachedFiles.map((file) => (
-            <div 
-              key={file.id} 
+            <div
+              key={file.id}
               className="flex items-center gap-2 rounded-full bg-slate-800/60 border border-slate-600/50 px-3 py-1 text-xs text-slate-300 shadow-sm backdrop-blur-sm transition-all duration-200"
             >
               <span className="truncate max-w-[150px]">{file.name}</span>
               {onDetach && (
-                <button 
-                  onClick={() => onDetach(file.id)} 
+                <button
+                  onClick={() => onDetach(file.id)}
                   className="hover:text-slate-100 transition-colors"
                   aria-label={`Remove ${file.name}`}
                 >
@@ -128,13 +173,33 @@ export default function ChatInterface({
         </div>
       )}
 
+      {/* Explain Mode Chips */}
+      {onExplainModeChange && (
+        <div className="flex gap-1.5 px-2 mb-2">
+          {EXPLAIN_MODES.map((m) => (
+            <button
+              key={m.key}
+              type="button"
+              onClick={() => onExplainModeChange(m.key)}
+              className={`px-3 py-1 rounded-full text-xs font-medium transition-all ${
+                explainMode === m.key
+                  ? 'bg-indigo-600 text-white'
+                  : 'bg-slate-800/60 text-slate-400 hover:text-white hover:bg-slate-700/60'
+              }`}
+            >
+              {m.label}
+            </button>
+          ))}
+        </div>
+      )}
+
       {/* Chat Input Dock */}
-      <form 
+      <form
         onSubmit={handleSubmit}
         className="rounded-full bg-[#1a1a2e] shadow-lg border border-slate-700 px-3 sm:px-4 py-2 flex items-center gap-2 sm:gap-3"
       >
         {/* Paperclip */}
-        <button 
+        <button
           type="button"
           className="rounded-full p-2 text-slate-500 hover:bg-slate-800 hover:text-indigo-400 transition-all duration-200"
           aria-label="Attach file"
@@ -142,14 +207,34 @@ export default function ChatInterface({
           <Paperclip className="h-5 w-5" />
         </button>
 
+        {/* Camera */}
+        <button
+          type="button"
+          onClick={() => fileInputRef.current?.click()}
+          disabled={isProcessingPhoto}
+          className={`rounded-full p-2 transition-all duration-200 ${
+            isProcessingPhoto
+              ? 'text-indigo-400 animate-pulse'
+              : 'text-slate-500 hover:bg-slate-800 hover:text-indigo-400'
+          }`}
+          aria-label="Upload homework photo"
+          title="Take a photo of homework"
+        >
+          {isProcessingPhoto ? (
+            <Loader2 className="h-5 w-5 animate-spin" />
+          ) : (
+            <Camera className="h-5 w-5" />
+          )}
+        </button>
+
         {/* Textarea */}
-        <textarea 
+        <textarea
           ref={inputRef}
           className="flex-1 max-h-32 min-h-[44px] resize-none bg-transparent py-2 text-sm text-slate-100 placeholder:text-slate-500 focus:outline-none"
           placeholder={getPlaceholderText()}
           value={inputValue}
           onChange={(e) => setInputValue(e.target.value)}
-          disabled={isLoading}
+          disabled={isLoading || isProcessingPhoto}
           rows={1}
           onKeyDown={(e) => {
             if (e.key === 'Enter' && !e.shiftKey) {
@@ -179,10 +264,10 @@ export default function ChatInterface({
           <Calculator className="h-5 w-5" />
         </button>
 
-        {/* Send Button - Circular with gradient */}
-        <button 
+        {/* Send Button */}
+        <button
           type="submit"
-          disabled={isLoading || !inputValue.trim()}
+          disabled={isLoading || isProcessingPhoto || !inputValue.trim()}
           className="rounded-full bg-indigo-600 hover:bg-indigo-700 p-2.5 text-white shadow-lg transition-all duration-200 active:scale-95 disabled:opacity-60 disabled:cursor-not-allowed"
           aria-label="Send message"
         >
@@ -192,4 +277,3 @@ export default function ChatInterface({
     </div>
   )
 }
-
