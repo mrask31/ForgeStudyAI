@@ -51,12 +51,20 @@ function getDueDateColor(dueDate: string | null): string {
   return 'text-slate-500 dark:text-slate-400'
 }
 
+interface MasteryScore {
+  classId: string
+  className: string
+  score: number
+  sessionsCount: number
+}
+
 export default function HomePage() {
   const { activeProfileId } = useActiveProfile()
   const profileSummary = useActiveProfileSummary()
   const router = useRouter()
 
   const [recentSessions, setRecentSessions] = useState<RecentSession[]>([])
+  const [masteryScores, setMasteryScores] = useState<MasteryScore[]>([])
   const [streakDays, setStreakDays] = useState(0)
   const [loading, setLoading] = useState(true)
   const [assignments, setAssignments] = useState<ManualAssignment[]>([])
@@ -89,9 +97,10 @@ export default function HomePage() {
     async function loadHomeData() {
       setLoading(true)
       try {
-        const [streakRes, chatsRes] = await Promise.all([
+        const [streakRes, chatsRes, masteryRes] = await Promise.all([
           fetch(`/api/streak?profileId=${activeProfileId}`).catch(() => null),
           fetch('/api/chats/list?includeArchived=false', { credentials: 'include' }).catch(() => null),
+          fetch(`/api/mastery/scores?profileId=${activeProfileId}`, { credentials: 'include' }).catch(() => null),
         ])
 
         if (cancelled) return
@@ -104,6 +113,11 @@ export default function HomePage() {
         if (chatsRes?.ok) {
           const chatsData = await chatsRes.json()
           setRecentSessions((chatsData.chats || []).slice(0, 5))
+        }
+
+        if (masteryRes?.ok) {
+          const masteryData = await masteryRes.json()
+          setMasteryScores(masteryData.scores || [])
         }
       } catch (error) {
         console.error('[Home] Error loading data:', error)
@@ -411,6 +425,31 @@ export default function HomePage() {
           </div>
           <ChevronRight className="w-5 h-5 text-gray-400 dark:text-slate-500" />
         </Link>
+
+        {/* Mastery Scores */}
+        {masteryScores.length > 0 && (
+          <div>
+            <h3 className="text-sm font-semibold text-gray-400 dark:text-slate-400 uppercase tracking-wider mb-3">Mastery</h3>
+            <div className="space-y-2">
+              {masteryScores.map((ms) => (
+                <div key={ms.classId} className="p-3 bg-white dark:bg-slate-900/60 border border-gray-200 dark:border-slate-800 rounded-xl">
+                  <div className="flex items-center justify-between mb-1.5">
+                    <span className="text-sm font-medium text-gray-900 dark:text-white truncate">{ms.className}</span>
+                    <span className="text-sm font-bold text-indigo-600 dark:text-indigo-400 ml-2">{ms.score}</span>
+                  </div>
+                  <div className="w-full h-2 bg-gray-200 dark:bg-slate-800 rounded-full overflow-hidden">
+                    <div
+                      className={`h-full rounded-full transition-all ${
+                        ms.score >= 61 ? 'bg-emerald-500' : ms.score >= 31 ? 'bg-amber-500' : 'bg-red-400'
+                      }`}
+                      style={{ width: `${ms.score}%` }}
+                    />
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
 
         {/* Recent Sessions */}
         {recentSessions.length > 0 && (
