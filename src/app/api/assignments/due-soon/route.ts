@@ -16,18 +16,43 @@ export async function GET(req: Request) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
-  const { data: assignments, error } = await supabase
+  // Fetch synced assignments (LMS)
+  const { data: synced } = await supabase
     .from('synced_assignments')
     .select('id, title, course_name, due_date, study_topic_id')
     .eq('student_id', profileId)
     .not('due_date', 'is', null)
     .order('due_date', { ascending: true })
-    .limit(3);
+    .limit(10);
 
-  if (error) {
-    console.error('[due-soon] Error:', error);
-    return NextResponse.json({ assignments: [] });
-  }
+  // Fetch manual assignments
+  const { data: manual } = await supabase
+    .from('manual_assignments')
+    .select('id, title, course_name, due_date')
+    .eq('profile_id', profileId)
+    .eq('is_complete', false)
+    .not('due_date', 'is', null)
+    .order('due_date', { ascending: true })
+    .limit(10);
 
-  return NextResponse.json({ assignments: assignments || [] });
+  // Merge and sort by due_date, return top 3
+  const syncedItems = (synced || []).map((a) => ({ ...a, source: 'synced' as const }));
+  const manualItems = (manual || []).map((a) => ({
+    id: a.id,
+    title: a.title,
+    course_name: a.course_name,
+    due_date: a.due_date,
+    study_topic_id: null,
+    source: 'manual' as const,
+  }));
+
+  const merged = [...syncedItems, ...manualItems]
+    .sort((a, b) => {
+      if (!a.due_date) return 1;
+      if (!b.due_date) return -1;
+      return new Date(a.due_date).getTime() - new Date(b.due_date).getTime();
+    })
+    .slice(0, 3);
+
+  return NextResponse.json({ assignments: merged });
 }

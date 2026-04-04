@@ -32,6 +32,7 @@ function TutorPageContent() {
   const [isResolving, setIsResolving] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [instantInputValue, setInstantInputValue] = useState('')
+  const [localStoragePrefill, setLocalStoragePrefill] = useState('')
   const [attachedFiles, setAttachedFiles] = useState<{ id: string, name: string, document_type: string | null }[]>([])
   const [isLoadingAttachedFiles, setIsLoadingAttachedFiles] = useState(false)
   const [messages, setMessages] = useState<ChatMessage[]>([])
@@ -781,6 +782,17 @@ function TutorPageContent() {
     }
   }, [resolvedChatId, isResolving])
 
+  // Read prefill from localStorage (set by SubjectEntryForm, ConceptGalaxy, or assignment "Study this")
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+    const prefill = localStorage.getItem('forgestudy-tutor-prefill')
+    if (prefill) {
+      setLocalStoragePrefill(prefill)
+      localStorage.removeItem('forgestudy-tutor-prefill')
+      localStorage.removeItem('forgestudy-tutor-auto-send')
+    }
+  }, [])
+
   // For entry modes, we prefill the input instead of auto-sending.
 
   // ============================================
@@ -909,7 +921,7 @@ function TutorPageContent() {
                   key={`landing-${entryMode ?? 'tutor'}`}
                   sessionId={undefined}
                   onSend={handleInstantStart}
-                  initialPrompt={entryPrompt}
+                  initialPrompt={localStoragePrefill || entryPrompt}
                   attachedFiles={attachedFiles}
                   attachedContext={attachedContext}
                   onDetach={handleDetachFile}
