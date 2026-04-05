@@ -120,7 +120,8 @@ export function ConceptGalaxy({ topics, coursePlanets, studentName, profileId, t
   const handleNodeClick = (item: OrbitItem) => {
     if (item.isPlanet) {
       const courseId = item.id.replace('planet_', '');
-      setExpanded(courseId);
+      // Navigate to Course Workspace
+      router.push(`/courses/${courseId}`);
       return;
     }
     const topic = (expandedPlanet ? expandedPlanet.topics : topics).find(t => t.id === item.id);
@@ -262,6 +263,21 @@ export function ConceptGalaxy({ topics, coursePlanets, studentName, profileId, t
             <div className="absolute -bottom-4 left-1/2 -translate-x-1/2 whitespace-nowrap">
               <span className="text-[10px] text-slate-400">{item.mastery}%</span>
             </div>
+            {/* Quick Study button for planets */}
+            {item.isPlanet && (
+              <div
+                className="absolute -bottom-9 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-opacity"
+                onClick={(e) => {
+                  e.stopPropagation()
+                  const courseId = item.id.replace('planet_', '')
+                  router.push(`/tutor?classId=${courseId}&intent=new_question`)
+                }}
+              >
+                <span className="text-[9px] text-indigo-400 hover:text-indigo-300 font-medium whitespace-nowrap cursor-pointer">
+                  Study Now →
+                </span>
+              </div>
+            )}
           </button>
         );
       })}
