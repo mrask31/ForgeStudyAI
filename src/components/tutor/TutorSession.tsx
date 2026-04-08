@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback, useRef } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { ChevronDown, BookOpenCheck } from 'lucide-react'
 import ClinicalTutorWorkspace from '@/components/chat/ClinicalTutorWorkspace'
-import ChatInterface, { type ExplainMode } from '@/components/tutor/ChatInterface'
+import ChatInterface from '@/components/tutor/ChatInterface'
 import TutorEmptyState from '@/components/tutor/TutorEmptyState'
 import ChatMessageList, { type ChatMessage } from '@/components/tutor/ChatMessageList'
 import { useTutorContext } from '@/components/tutor/TutorContext'
@@ -119,7 +119,6 @@ export default function TutorSession({
   const scrollContainerRef = useRef<HTMLDivElement>(null)
   const bottomRef = useRef<HTMLDivElement>(null)
   const [availableTopics, setAvailableTopics] = useState<NotebookTopic[]>([])
-  const [explainMode, setExplainMode] = useState<ExplainMode>('standard')
   const lastLoadedClassIdRef = useRef<string | undefined>(undefined) // Prevent duplicate loads
   
   // Update localSessionId when prop changes
@@ -662,7 +661,6 @@ export default function TutorSession({
               chatId={sessionId}
               filterMode="mixed"
               mode="tutor"
-              explainMode={explainMode}
               attachedFiles={attachedFiles}
               selectedMessageId={selectedMessageId}
               onSelectMessage={setSelectedMessageId}
@@ -741,10 +739,7 @@ export default function TutorSession({
             onSend={handleSend}
             initialPrompt={undefined}
             attachedFiles={attachedFiles}
-            attachedContext={attachedContext}
             onDetach={onDetachFile}
-            explainMode={explainMode}
-            onExplainModeChange={setExplainMode}
           />
         </div>
       )}

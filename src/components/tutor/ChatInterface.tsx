@@ -1,51 +1,32 @@
 'use client'
 
 import { useState, useRef, useEffect } from 'react'
-import { ArrowUp, Paperclip, Calculator, Camera, Loader2 } from 'lucide-react'
-import { useTutorContext } from './TutorContext'
-import MedicalMathCalculator from './MedicalMathCalculator'
+import { ArrowUp, Camera, Loader2 } from 'lucide-react'
 import { toast } from 'sonner'
-
-export type ExplainMode = 'simple' | 'standard' | 'advanced'
 
 interface ChatInterfaceProps {
   sessionId?: string
   onSend: (message: string) => Promise<void> | void
   initialPrompt?: string
   attachedFiles?: { id: string, name: string, document_type: string | null }[]
-  attachedContext?: 'none' | 'syllabus' | 'textbook' | 'mixed'
   isLoading?: boolean
   messages?: any[]
   onDetach?: (fileId: string) => void
-  explainMode?: ExplainMode
-  onExplainModeChange?: (mode: ExplainMode) => void
 }
-
-const EXPLAIN_MODES: { key: ExplainMode; label: string }[] = [
-  { key: 'simple', label: 'Simple' },
-  { key: 'standard', label: 'Standard' },
-  { key: 'advanced', label: 'Advanced' },
-]
 
 export default function ChatInterface({
   sessionId,
   onSend,
   initialPrompt,
   attachedFiles = [],
-  attachedContext = 'none',
   isLoading = false,
   messages = [],
   onDetach,
-  explainMode = 'standard',
-  onExplainModeChange,
 }: ChatInterfaceProps) {
   const [inputValue, setInputValue] = useState('')
-  const [isCalculatorOpen, setIsCalculatorOpen] = useState(false)
   const [isProcessingPhoto, setIsProcessingPhoto] = useState(false)
   const inputRef = useRef<HTMLTextAreaElement>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
-  const hasAttachedFiles = attachedFiles.length > 0
-  const tutorContext = useTutorContext()
   const hasMessages = !!sessionId || (messages && messages.length > 0)
 
   useEffect(() => {
@@ -128,18 +109,8 @@ export default function ChatInterface({
     }
   }
 
-  const getPlaceholderText = () => {
-    if (attachedFiles.length > 0) return "Ask a question about your uploaded materials..."
-    return "Ask a question about what you're learning..."
-  }
-
   return (
     <div className="flex-shrink-0 pt-3 relative" style={{ paddingBottom: 'max(1rem, env(safe-area-inset-bottom, 0px))' }}>
-      <MedicalMathCalculator
-        isOpen={isCalculatorOpen}
-        onClose={() => setIsCalculatorOpen(false)}
-      />
-
       {/* Hidden file input for camera */}
       <input
         ref={fileInputRef}
@@ -150,63 +121,11 @@ export default function ChatInterface({
         onChange={handlePhotoSelect}
       />
 
-      {/* Context Pills (Above the dock) */}
-      {attachedFiles.length > 0 && (
-        <div className="flex gap-2 overflow-x-auto px-2 mb-2">
-          {attachedFiles.map((file) => (
-            <div
-              key={file.id}
-              className="flex items-center gap-2 rounded-full bg-slate-800/60 border border-slate-600/50 px-3 py-1 text-xs text-slate-300 shadow-sm backdrop-blur-sm transition-all duration-200"
-            >
-              <span className="truncate max-w-[150px]">{file.name}</span>
-              {onDetach && (
-                <button
-                  onClick={() => onDetach(file.id)}
-                  className="hover:text-slate-100 transition-colors"
-                  aria-label={`Remove ${file.name}`}
-                >
-                  ×
-                </button>
-              )}
-            </div>
-          ))}
-        </div>
-      )}
-
-      {/* Explain Mode Chips */}
-      {onExplainModeChange && (
-        <div className="flex gap-1.5 px-2 mb-2">
-          {EXPLAIN_MODES.map((m) => (
-            <button
-              key={m.key}
-              type="button"
-              onClick={() => onExplainModeChange(m.key)}
-              className={`px-3 py-1 rounded-full text-xs font-medium transition-all ${
-                explainMode === m.key
-                  ? 'bg-indigo-600 text-white'
-                  : 'bg-slate-800/60 text-slate-400 hover:text-white hover:bg-slate-700/60'
-              }`}
-            >
-              {m.label}
-            </button>
-          ))}
-        </div>
-      )}
-
       {/* Chat Input Dock */}
       <form
         onSubmit={handleSubmit}
         className="rounded-full bg-[#1a1a2e] shadow-lg border border-slate-700 px-3 sm:px-4 py-2 flex items-center gap-2 sm:gap-3"
       >
-        {/* Paperclip */}
-        <button
-          type="button"
-          className="rounded-full p-2 text-slate-500 hover:bg-slate-800 hover:text-indigo-400 transition-all duration-200"
-          aria-label="Attach file"
-        >
-          <Paperclip className="h-5 w-5" />
-        </button>
-
         {/* Camera */}
         <button
           type="button"
@@ -231,7 +150,7 @@ export default function ChatInterface({
         <textarea
           ref={inputRef}
           className="flex-1 max-h-32 min-h-[44px] resize-none bg-transparent py-2 text-sm text-slate-100 placeholder:text-slate-500 focus:outline-none"
-          placeholder={getPlaceholderText()}
+          placeholder="Ask about what you're learning..."
           value={inputValue}
           onChange={(e) => setInputValue(e.target.value)}
           disabled={isLoading || isProcessingPhoto}
@@ -243,26 +162,6 @@ export default function ChatInterface({
             }
           }}
         />
-
-        {/* Calculator Toggle */}
-        <button
-          type="button"
-          onClick={(e) => {
-            e.preventDefault()
-            e.stopPropagation()
-            setIsCalculatorOpen(!isCalculatorOpen)
-          }}
-          className={`rounded-full p-1.5 sm:p-2 transition-all duration-200 ${
-            isCalculatorOpen
-              ? 'bg-indigo-500/20 text-indigo-400'
-              : 'text-slate-500 hover:bg-slate-800 hover:text-indigo-400'
-          }`}
-          aria-label="Toggle calculator"
-          aria-pressed={isCalculatorOpen}
-          title="Calculator"
-        >
-          <Calculator className="h-5 w-5" />
-        </button>
 
         {/* Send Button */}
         <button
