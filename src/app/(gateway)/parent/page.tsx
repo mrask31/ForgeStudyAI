@@ -238,28 +238,58 @@ export default function ParentDashboardPage() {
         setSubscriptionData(data)
       }
       
-      // Also fetch trial data from profiles table
+      // Also fetch trial/beta data
       const { data: { user } } = await supabase.auth.getUser()
       if (user) {
-        const { data: profile } = await supabase
-          .from('profiles')
-          .select('trial_ends_at, subscription_status')
-          .eq('id', user.id)
+        // Check beta_access table first
+        const { data: betaAccess } = await supabase
+          .from('beta_access')
+          .select('is_beta, beta_expires_at, trial_expires_at')
+          .eq('user_id', user.id)
           .single()
-        
-        if (profile?.trial_ends_at) {
-          const trialEnd = new Date(profile.trial_ends_at)
-          const now = new Date()
-          const daysLeft = Math.ceil((trialEnd.getTime() - now.getTime()) / (1000 * 60 * 60 * 24))
-          
+
+        if (betaAccess?.is_beta && betaAccess.beta_expires_at) {
+          const expiresAt = new Date(betaAccess.beta_expires_at)
+          const daysLeft = Math.ceil((expiresAt.getTime() - Date.now()) / (1000 * 60 * 60 * 24))
           setSubscriptionData(prev => ({
             ...prev,
-            trialEndsAt: profile.trial_ends_at,
+            trialEndsAt: betaAccess.beta_expires_at,
             trialDaysLeft: Math.max(0, daysLeft),
-            status: profile.subscription_status || prev?.status || 'none',
+            status: 'beta',
             subscription: prev?.subscription || null,
             planType: prev?.planType
           }))
+        } else if (betaAccess?.trial_expires_at) {
+          const expiresAt = new Date(betaAccess.trial_expires_at)
+          const daysLeft = Math.ceil((expiresAt.getTime() - Date.now()) / (1000 * 60 * 60 * 24))
+          setSubscriptionData(prev => ({
+            ...prev,
+            trialEndsAt: betaAccess.trial_expires_at,
+            trialDaysLeft: Math.max(0, daysLeft),
+            status: 'trialing',
+            subscription: prev?.subscription || null,
+            planType: prev?.planType
+          }))
+        } else {
+          // Fall back to profiles table
+          const { data: profile } = await supabase
+            .from('profiles')
+            .select('trial_ends_at, subscription_status')
+            .eq('id', user.id)
+            .single()
+
+          if (profile?.trial_ends_at) {
+            const trialEnd = new Date(profile.trial_ends_at)
+            const daysLeft = Math.ceil((trialEnd.getTime() - Date.now()) / (1000 * 60 * 60 * 24))
+            setSubscriptionData(prev => ({
+              ...prev,
+              trialEndsAt: profile.trial_ends_at,
+              trialDaysLeft: Math.max(0, daysLeft),
+              status: profile.subscription_status || prev?.status || 'none',
+              subscription: prev?.subscription || null,
+              planType: prev?.planType
+            }))
+          }
         }
       }
     } catch (error) {
@@ -378,27 +408,39 @@ export default function ParentDashboardPage() {
   }
 
   const subscriptionLabel = useMemo(() => {
-    // Check for trial from profiles table first
+    // Beta member
+    if (subscriptionData?.status === 'beta') {
+      const daysLeft = subscriptionData.trialDaysLeft ?? 0
+      return daysLeft > 0
+        ? `🎓 Beta Member — ${daysLeft} day${daysLeft === 1 ? '' : 's'} remaining — Free`
+        : 'Beta Expired'
+    }
+
+    // Trial user
     if (subscriptionData?.trialEndsAt && subscriptionData?.status === 'trialing') {
       const daysLeft = subscriptionData.trialDaysLeft ?? 0
-      if (daysLeft > 0) {
-        return `Free Trial — ${daysLeft} day${daysLeft === 1 ? '' : 's'} remaining`
-      } else {
-        return 'Trial Expired'
-      }
+      return daysLeft > 0
+        ? `Free Trial — ${daysLeft} day${daysLeft === 1 ? '' : 's'} remaining`
+        : 'Trial Expired'
     }
-    
-    // Fall back to Stripe subscription status
+
+    // Stripe subscription
     if (!subscriptionData?.subscription) return 'Free Preview'
-    if (subscriptionData.subscription.status === 'trialing') return '7-Day Free Trial'
     if (subscriptionData.subscription.status === 'active') return 'Active'
+    if (subscriptionData.subscription.status === 'trialing') return '7-Day Free Trial'
     if (subscriptionData.subscription.status === 'canceled') return 'Canceled'
     return subscriptionData.status || 'Free Preview'
   }, [subscriptionData])
 
+  const isBeta = useMemo(() => {
+    return subscriptionData?.status === 'beta' &&
+           subscriptionData?.trialEndsAt &&
+           new Date(subscriptionData.trialEndsAt) > new Date()
+  }, [subscriptionData])
+
   const isTrialing = useMemo(() => {
-    return subscriptionData?.status === 'trialing' && 
-           subscriptionData?.trialEndsAt && 
+    return (subscriptionData?.status === 'trialing' || subscriptionData?.status === 'beta') &&
+           subscriptionData?.trialEndsAt &&
            new Date(subscriptionData.trialEndsAt) > new Date()
   }, [subscriptionData])
 
@@ -600,12 +642,20 @@ export default function ParentDashboardPage() {
               >
                 Refresh status
               </button>
-              {isTrialing && (
+              {isTrialing && !isBeta && (
                 <Link
                   href="/checkout"
                   className="w-full inline-flex items-center justify-center rounded-lg bg-indigo-600 hover:bg-indigo-700 px-4 py-2 text-sm font-semibold text-white transition-colors"
                 >
                   Upgrade to keep your Galaxy →
+                </Link>
+              )}
+              {isBeta && (
+                <Link
+                  href="/checkout"
+                  className="w-full inline-flex items-center justify-center rounded-lg border border-slate-700 hover:bg-slate-800 px-4 py-2 text-sm font-semibold text-slate-300 transition-colors"
+                >
+                  View subscription plans
                 </Link>
               )}
               {subscriptionData?.subscription?.trialEndDate && !isTrialing && (

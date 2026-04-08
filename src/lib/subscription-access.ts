@@ -5,7 +5,7 @@
  * All gating must use this function.
  */
 
-export const HAS_ACCESS_STATUSES = ['trialing', 'active'] as const;
+export const HAS_ACCESS_STATUSES = ['trialing', 'active', 'beta'] as const;
 
 export function hasSubscriptionAccess(
   status: string | null | undefined,

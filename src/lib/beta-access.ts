@@ -60,11 +60,11 @@ export async function assignBetaAccess(userId: string): Promise<'beta' | 'trial'
       beta_expires_at: new Date(Date.now() + BETA_DAYS * 24 * 60 * 60 * 1000).toISOString(),
     })
 
-    // Also set trial_ends_at on profiles so existing middleware doesn't block
+    // Also set profiles status for backward compat
     await supabase
       .from('profiles')
       .update({
-        subscription_status: 'trialing',
+        subscription_status: 'beta',
         trial_ends_at: new Date(Date.now() + BETA_DAYS * 24 * 60 * 60 * 1000).toISOString(),
       })
       .eq('id', userId)

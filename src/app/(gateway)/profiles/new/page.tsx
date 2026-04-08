@@ -195,7 +195,21 @@ function NewProfileContent() {
 
   // Step 2 → Step 3
   const handleSubjectsNext = () => {
-    if (subjects.length === 0) return
+    // Parse any remaining text in the input (user may have typed without pressing Enter)
+    let finalSubjects = [...subjects]
+    if (subjectInput.trim()) {
+      const remaining = subjectInput
+        .split(',')
+        .map(s => s.trim())
+        .filter(s => s && !finalSubjects.includes(s))
+      finalSubjects = [...finalSubjects, ...remaining].slice(0, 8)
+      setSubjects(finalSubjects)
+      setSubjectInput('')
+    }
+    if (finalSubjects.length === 0) {
+      console.error('[Onboarding] No subjects entered — cannot proceed')
+      return
+    }
     setStep('interests')
   }
 
@@ -496,7 +510,7 @@ function NewProfileContent() {
                   Back
                 </button>
                 <button type="button" onClick={handleSubjectsNext}
-                  disabled={subjects.length === 0}
+                  disabled={subjects.length === 0 && !subjectInput.trim()}
                   className="flex-1 px-6 py-3 bg-primary hover:bg-primary/90 text-primary-foreground rounded-xl font-bold transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-primary/30 flex items-center justify-center gap-2">
                   Continue <ArrowRight className="w-4 h-4" />
                 </button>
