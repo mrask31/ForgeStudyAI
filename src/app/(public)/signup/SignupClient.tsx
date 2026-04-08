@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useCallback, useMemo } from 'react'
+import { useState, useEffect, useCallback, useMemo, useRef } from 'react'
 import { getSupabaseBrowser } from '@/lib/supabase/client'
 import type { AuthChangeEvent, Session } from '@supabase/supabase-js'
 import { useRouter } from 'next/navigation'
@@ -17,6 +17,7 @@ export default function SignupClient() {
   const [message, setMessage] = useState<{ text: string; type: 'error' | 'success' | 'info' } | null>(null)
   const [showSuccess, setShowSuccess] = useState(false)
   const [isVerifying, setIsVerifying] = useState(false)
+  const [betaSpots, setBetaSpots] = useState<number | null>(null)
   const [canResend, setCanResend] = useState(false)
   const [resending, setResending] = useState(false)
   const router = useRouter()
@@ -35,6 +36,11 @@ export default function SignupClient() {
   const appUrl = normalizeAppUrl(process.env.NEXT_PUBLIC_APP_URL)
 
   // Auth guard: if already signed in, go to /profiles
+  // Fetch beta spots remaining
+  useEffect(() => {
+    fetch('/api/beta').then(r => r.json()).then(d => setBetaSpots(d.spotsRemaining ?? null)).catch(() => {})
+  }, [])
+
   useEffect(() => {
     const checkExistingSession = async () => {
       const { data: { session } } = await supabase.auth.getSession()
@@ -690,6 +696,15 @@ export default function SignupClient() {
                   </p>
                 </div>
               </form>
+
+              {/* Beta spots counter */}
+              {betaSpots !== null && betaSpots > 0 && (
+                <div className="mt-4 text-center">
+                  <p className="text-sm text-slate-400">
+                    🎓 <span className="text-[#c9a96e] font-semibold">{betaSpots}</span> of 20 beta spots still available — free for 90 days
+                  </p>
+                </div>
+              )}
 
               {/* Toggle */}
               <div className="mt-6 sm:mt-8 pt-4 sm:pt-6 border-t border-slate-800 text-center">

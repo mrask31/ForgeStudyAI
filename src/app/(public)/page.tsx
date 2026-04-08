@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
+import { LandingBetaBanner } from '@/components/beta/LandingBetaBanner'
 import {
   ArrowRight,
   CheckCircle2,
@@ -72,6 +73,9 @@ export default function HomePage() {
 
   return (
     <div className="min-h-screen bg-slate-950 text-slate-200">
+      {/* Beta Banner — pinned to top */}
+      <LandingBetaBanner />
+
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{

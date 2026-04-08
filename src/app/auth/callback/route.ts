@@ -3,6 +3,7 @@ import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
 import { createClient } from '@supabase/supabase-js'
 import { hasSubscriptionAccess } from '@/lib/subscription-access'
+import { assignBetaAccess } from '@/lib/beta-access'
 
 export async function GET(request: Request) {
   const { searchParams, origin } = new URL(request.url)
@@ -96,6 +97,15 @@ export async function GET(request: Request) {
       console.error('[Auth Callback] Profile upsert error:', profileError.message)
     } else {
       profile = profileData
+    }
+  }
+
+  // Assign beta/trial access for new users
+  if (serviceRoleKey) {
+    try {
+      await assignBetaAccess(user.id)
+    } catch (err) {
+      console.error('[Auth Callback] Beta access assignment failed:', err)
     }
   }
 

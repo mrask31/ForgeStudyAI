@@ -2,6 +2,8 @@
 
 import { useActiveProfile } from '@/contexts/ActiveProfileContext'
 import { useActiveProfileSummary } from '@/hooks/useActiveProfileSummary'
+import { useUser } from '@/contexts/UserContext'
+import { BetaBanner } from '@/components/beta/BetaBanner'
 import { useEffect, useState, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
@@ -61,6 +63,7 @@ interface MasteryScore {
 
 export default function HomePage() {
   const { activeProfileId } = useActiveProfile()
+  const { user } = useUser()
   const profileSummary = useActiveProfileSummary()
   const router = useRouter()
 
@@ -255,6 +258,9 @@ export default function HomePage() {
   return (
     <div className="flex-1 overflow-y-auto bg-[#F9FAFB] dark:bg-[#08080F] pb-20 lg:pb-4">
       <div className="max-w-2xl mx-auto px-4 py-6 md:py-10 space-y-6">
+        {/* Beta/Trial Banner */}
+        <BetaBanner userId={user?.id} />
+
         {/* Header */}
         <div className="flex items-center justify-between">
           <div>

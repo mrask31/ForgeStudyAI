@@ -158,6 +158,7 @@ export async function middleware(request: NextRequest) {
       '/middle',
       '/high',
       '/elementary',
+      '/subscribe',
     ]
     const isPublicRoute = publicRoutes.includes(pathname) || 
                          pathname.startsWith('/auth/') ||
@@ -205,53 +206,59 @@ export async function middleware(request: NextRequest) {
       return response
     }
 
-    // 4. Protected routes (/app/*) require auth + subscription + profile
+    // 4. Protected routes (/app/*) require auth + access (beta/trial/subscription) + profile
     if (isProtectedRoute && supabase) {
-      // 4a. Check subscription status and trial
+      // 4a. Check beta access, trial, or subscription
       try {
         const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY
-        let subscriptionStatus: string | undefined
-        let trialEndsAt: string | null | undefined
-        
-        if (serviceRoleKey) {
-          const adminClient = createClient(supabaseUrl, serviceRoleKey)
-          const { data: profile, error } = await adminClient
-            .from('profiles')
-            .select('subscription_status, trial_ends_at')
-            .eq('id', user.id)
-            .single()
-          
-          if (error) {
-            console.error('[Middleware] Error fetching subscription status:', error)
-            return NextResponse.redirect(new URL('/checkout', request.url))
-          }
-          subscriptionStatus = profile?.subscription_status
-          trialEndsAt = profile?.trial_ends_at
-        } else {
-          const { data: profile, error } = await supabase
-            .from('profiles')
-            .select('subscription_status, trial_ends_at')
-            .eq('id', user.id)
-            .single()
-          
-          if (error) {
-            console.error('[Middleware] Error fetching subscription status:', error)
-            return NextResponse.redirect(new URL('/checkout', request.url))
-          }
-          subscriptionStatus = profile?.subscription_status
-          trialEndsAt = profile?.trial_ends_at
+        const adminClient = serviceRoleKey
+          ? createClient(supabaseUrl, serviceRoleKey)
+          : supabase
+
+        // Check beta_access table first
+        const { data: betaAccess } = await adminClient
+          .from('beta_access')
+          .select('is_beta, beta_expires_at, trial_expires_at')
+          .eq('user_id', user.id)
+          .single()
+
+        let hasAccess = false
+
+        // Beta user with active period
+        if (betaAccess?.is_beta && betaAccess.beta_expires_at &&
+            new Date(betaAccess.beta_expires_at) > new Date()) {
+          hasAccess = true
         }
 
-        // Check if trial is active (trial_ends_at is in the future)
-        const isTrialActive = trialEndsAt && new Date(trialEndsAt) > new Date()
+        // Trial user with active period
+        if (!hasAccess && !betaAccess?.is_beta && betaAccess?.trial_expires_at &&
+            new Date(betaAccess.trial_expires_at) > new Date()) {
+          hasAccess = true
+        }
 
-        // Allow access if subscription is active OR trial is active
-        if (!hasSubscriptionAccess(subscriptionStatus, trialEndsAt) && !isTrialActive) {
-          return NextResponse.redirect(new URL('/checkout', request.url))
+        // Fall back to profiles subscription_status / trial_ends_at
+        if (!hasAccess) {
+          const { data: profile } = await adminClient
+            .from('profiles')
+            .select('subscription_status, trial_ends_at')
+            .eq('id', user.id)
+            .single()
+
+          const subStatus = profile?.subscription_status
+          const trialEndsAt = profile?.trial_ends_at
+          const isTrialActive = trialEndsAt && new Date(trialEndsAt) > new Date()
+
+          if (hasSubscriptionAccess(subStatus, trialEndsAt) || isTrialActive) {
+            hasAccess = true
+          }
+        }
+
+        if (!hasAccess) {
+          return NextResponse.redirect(new URL('/subscribe', request.url))
         }
       } catch (error) {
-        console.error('[Middleware] Subscription check failed:', error)
-        return NextResponse.redirect(new URL('/checkout', request.url))
+        console.error('[Middleware] Access check failed:', error)
+        return NextResponse.redirect(new URL('/subscribe', request.url))
       }
 
       // 4b. Check for active profile
