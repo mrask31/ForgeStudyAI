@@ -3,67 +3,34 @@
 import { useActiveProfile } from '@/contexts/ActiveProfileContext'
 import { useActiveProfileSummary } from '@/hooks/useActiveProfileSummary'
 import { useUser } from '@/contexts/UserContext'
-import { BetaBanner } from '@/components/beta/BetaBanner'
-import { useEffect, useState, useCallback } from 'react'
+import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import Link from 'next/link'
-import { FileText, MessageSquare, Loader2, Clock, ChevronRight, Plus, Pencil, Trash2, CheckSquare, Square, ArrowRight, CalendarDays, Copy, Check } from 'lucide-react'
-import { PhotoDropButton } from '@/components/homework/PhotoDropButton'
-import { SubjectEntryForm } from '@/components/tutor/SubjectEntryForm'
-import { AddAssignmentModal, type ManualAssignment } from '@/components/assignments/AddAssignmentModal'
-import { getReferralStats } from '@/app/actions/referrals'
-import { ConceptGalaxy } from '@/components/galaxy/ConceptGalaxy'
-import { GalaxySkeleton } from '@/components/galaxy/GalaxySkeleton'
-import { SmartCTA } from '@/components/galaxy/SmartCTA'
-import { getStudyTopicsWithMastery, getQuarantinedTopicsCount, getTopicsGroupedByCourse, type CoursePlanet } from '@/app/actions/study-topics'
-import { calculateSmartCTA, type SmartCTAResult } from '@/lib/smart-cta'
+import { Loader2, Plus } from 'lucide-react'
+import { getSupabaseBrowser } from '@/lib/supabase/client'
 
-interface RecentSession {
+interface StudentClass {
   id: string
-  title: string | null
-  session_type: string | null
-  updated_at: string
-  metadata?: {
-    topicTitle?: string
-    classId?: string
-    class_id?: string
-    className?: string
-    selectedClassName?: string
-    entryMode?: string
-    tool?: string
-    [key: string]: any
-  }
-}
-
-function formatDueLabel(dueDate: string | null): string {
-  if (!dueDate) return 'No due date'
-  const now = new Date()
-  const due = new Date(dueDate)
-  const diffMs = due.getTime() - now.getTime()
-  const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24))
-  if (diffDays < 0) return `${Math.abs(diffDays)}d overdue`
-  if (diffDays === 0) return 'Today'
-  if (diffDays === 1) return 'Tomorrow'
-  if (diffDays < 7) {
-    return due.toLocaleDateString('en-US', { weekday: 'long' })
-  }
-  return `In ${diffDays} days`
-}
-
-function getDueDateColor(dueDate: string | null): string {
-  if (!dueDate) return 'text-slate-500 dark:text-slate-500'
-  const diffMs = new Date(dueDate).getTime() - Date.now()
-  const diffDays = diffMs / (1000 * 60 * 60 * 24)
-  if (diffDays < 0) return 'text-red-500 dark:text-red-400'
-  if (diffDays <= 2) return 'text-amber-600 dark:text-amber-400'
-  return 'text-slate-500 dark:text-slate-400'
+  name: string
+  code: string
+  type: string
 }
 
 interface MasteryScore {
   classId: string
-  className: string
   score: number
-  sessionsCount: number
+}
+
+function getTimeGreeting(): string {
+  const h = new Date().getHours()
+  if (h < 12) return 'Good morning'
+  if (h < 17) return 'Good afternoon'
+  return 'Good evening'
+}
+
+function getMasteryDot(score: number | undefined): string {
+  if (!score || score === 0) return 'bg-slate-600' // no sessions
+  if (score >= 61) return 'bg-emerald-500' // strong
+  return 'bg-amber-500' // in progress
 }
 
 export default function HomePage() {
@@ -72,554 +39,153 @@ export default function HomePage() {
   const profileSummary = useActiveProfileSummary()
   const router = useRouter()
 
-  const [recentSessions, setRecentSessions] = useState<RecentSession[]>([])
-  const [masteryScores, setMasteryScores] = useState<MasteryScore[]>([])
-  const [streakDays, setStreakDays] = useState(0)
+  const [classes, setClasses] = useState<StudentClass[]>([])
+  const [masteryMap, setMasteryMap] = useState<Map<string, number>>(new Map())
   const [loading, setLoading] = useState(true)
-  const [assignments, setAssignments] = useState<ManualAssignment[]>([])
-  const [showAddModal, setShowAddModal] = useState(false)
-  const [editingAssignment, setEditingAssignment] = useState<ManualAssignment | null>(null)
-  const [referralCode, setReferralCode] = useState<string | null>(null)
-  const [referralCount, setReferralCount] = useState(0)
-  const [referralCopied, setReferralCopied] = useState(false)
-
-  // Galaxy state
-  const [galaxyTopics, setGalaxyTopics] = useState<any[]>([])
-  const [coursePlanets, setCoursePlanets] = useState<CoursePlanet[]>([])
-  const [smartCTA, setSmartCTA] = useState<SmartCTAResult | null>(null)
-  const [galaxyLoading, setGalaxyLoading] = useState(true)
-  const [totalTopicCount, setTotalTopicCount] = useState(0)
-  const [hasDueSoonItems, setHasDueSoonItems] = useState(false)
+  const [showAddClass, setShowAddClass] = useState(false)
+  const [newClassName, setNewClassName] = useState('')
+  const [adding, setAdding] = useState(false)
 
   const studentName = profileSummary.summary?.displayName?.split(' ')[0] || 'there'
 
-  const fetchAssignments = useCallback(async () => {
-    if (!activeProfileId) return
-    try {
-      const res = await fetch(`/api/manual-assignments?profileId=${activeProfileId}`)
-      if (res.ok) {
-        const data = await res.json()
-        setAssignments(data.assignments || [])
-      }
-    } catch (err) {
-      console.error('[Home] Failed to fetch assignments:', err)
-    }
-  }, [activeProfileId])
-
   useEffect(() => {
-    if (!activeProfileId) {
+    if (!activeProfileId || !user) {
       setLoading(false)
       return
     }
 
-    let cancelled = false
-
-    async function loadHomeData() {
+    async function loadData() {
       setLoading(true)
+      const supabase = getSupabaseBrowser()
+
       try {
-        const [streakRes, chatsRes, masteryRes] = await Promise.all([
-          fetch(`/api/streak?profileId=${activeProfileId}`).catch(() => null),
-          fetch('/api/chats/list?includeArchived=false', { credentials: 'include' }).catch(() => null),
-          fetch(`/api/mastery/scores?profileId=${activeProfileId}`, { credentials: 'include' }).catch(() => null),
-        ])
+        // Fetch classes
+        const { data: classData } = await supabase
+          .from('student_classes')
+          .select('id, name, code, type')
+          .eq('user_id', user!.id)
+          .order('name')
 
-        if (cancelled) return
+        setClasses(classData || [])
 
-        if (streakRes?.ok) {
-          const streakData = await streakRes.json()
-          setStreakDays(streakData.current_streak_days || 0)
+        // Fetch mastery scores
+        const res = await fetch(`/api/mastery/scores?profileId=${activeProfileId}`, { credentials: 'include' })
+        if (res.ok) {
+          const data = await res.json()
+          const map = new Map<string, number>()
+          for (const s of data.scores || []) {
+            map.set(s.classId, s.score)
+          }
+          setMasteryMap(map)
         }
-
-        if (chatsRes?.ok) {
-          const chatsData = await chatsRes.json()
-          setRecentSessions((chatsData.chats || []).slice(0, 5))
-        }
-
-        if (masteryRes?.ok) {
-          const masteryData = await masteryRes.json()
-          setMasteryScores(masteryData.scores || [])
-        }
-      } catch (error) {
-        console.error('[Home] Error loading data:', error)
+      } catch (err) {
+        console.error('[Home] Error loading classes:', err)
       } finally {
-        if (!cancelled) setLoading(false)
+        setLoading(false)
       }
     }
 
-    loadHomeData()
-    fetchAssignments()
+    loadData()
+  }, [activeProfileId, user])
 
-    // Load referral data
-    getReferralStats().then(stats => {
-      setReferralCode(stats.code)
-      setReferralCount(stats.referralCount)
-    }).catch(() => {})
+  const handleAddClass = async () => {
+    if (!newClassName.trim() || !user) return
+    setAdding(true)
+    try {
+      const supabase = getSupabaseBrowser()
+      const { data } = await supabase
+        .from('student_classes')
+        .insert({ user_id: user.id, name: newClassName.trim(), code: '', type: 'other' })
+        .select()
+        .single()
 
-    // Load Galaxy data
-    if (activeProfileId && user) {
-      setGalaxyLoading(true)
-      Promise.all([
-        getStudyTopicsWithMastery(activeProfileId),
-        calculateSmartCTA(user.id, activeProfileId),
-        getQuarantinedTopicsCount(activeProfileId),
-        getTopicsGroupedByCourse(activeProfileId),
-      ]).then(([topicsData, ctaData, quarantinedData, planetsData]) => {
-        setGalaxyTopics(topicsData)
-        setSmartCTA(ctaData)
-        setCoursePlanets(planetsData)
-        setTotalTopicCount(topicsData.length + quarantinedData)
-      }).catch(err => {
-        console.error('[Home] Galaxy load error:', err)
-      }).finally(() => {
-        setGalaxyLoading(false)
-      })
-    } else {
-      setGalaxyLoading(false)
-    }
-
-    return () => { cancelled = true }
-  }, [activeProfileId, user, fetchAssignments])
-
-  const formatTimeAgo = (dateString: string) => {
-    const diffMs = Date.now() - new Date(dateString).getTime()
-    const diffMins = Math.floor(diffMs / 60000)
-    const diffHours = Math.floor(diffMs / 3600000)
-    const diffDays = Math.floor(diffMs / 86400000)
-
-    if (diffMins < 1) return 'Just now'
-    if (diffMins < 60) return `${diffMins}m ago`
-    if (diffHours < 24) return `${diffHours}h ago`
-    if (diffDays < 7) return `${diffDays}d ago`
-    return new Date(dateString).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
-  }
-
-  const formatSessionTitle = (session: RecentSession) => {
-    if (session.title) {
-      const title = session.title.trim()
-      const looksLikeAIResponse =
-        title.length > 60 ||
-        title.startsWith("Here's") ||
-        title.startsWith('Sure') ||
-        title.startsWith('Let me') ||
-        title.startsWith('I can') ||
-        title.startsWith('Great')
-      if (!looksLikeAIResponse) {
-        return title
+      if (data) {
+        setClasses(prev => [...prev, data])
       }
-    }
-
-    const dateStr = new Date(session.updated_at).toLocaleDateString('en-US', {
-      month: 'short',
-      day: 'numeric',
-    })
-
-    const subject =
-      session.metadata?.topicTitle ||
-      session.metadata?.className ||
-      session.metadata?.selectedClassName ||
-      null
-
-    if (subject) {
-      return `${subject} — ${dateStr}`
-    }
-
-    return `Study Session — ${dateStr}`
-  }
-
-  async function handleToggleComplete(assignment: ManualAssignment) {
-    const updated = { ...assignment, is_complete: !assignment.is_complete }
-    setAssignments((prev) => prev.map((a) => a.id === assignment.id ? updated : a))
-    try {
-      await fetch(`/api/manual-assignments/${assignment.id}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ is_complete: updated.is_complete }),
-      })
+      setNewClassName('')
+      setShowAddClass(false)
     } catch {
-      // Revert on error
-      setAssignments((prev) => prev.map((a) => a.id === assignment.id ? assignment : a))
+      // Non-critical
+    } finally {
+      setAdding(false)
     }
   }
-
-  async function handleDelete(id: string) {
-    setAssignments((prev) => prev.filter((a) => a.id !== id))
-    try {
-      await fetch(`/api/manual-assignments/${id}`, { method: 'DELETE' })
-    } catch {
-      fetchAssignments()
-    }
-  }
-
-  function handleStudyThis(assignment: ManualAssignment) {
-    const dueLabel = assignment.due_date
-      ? `due ${formatDueLabel(assignment.due_date)}`
-      : ''
-    const course = assignment.course_name ? ` for ${assignment.course_name}` : ''
-    const prefill = `The student wants help with: "${assignment.title}"${course}${dueLabel ? ', ' + dueLabel : ''}.${assignment.notes ? ` Their notes: ${assignment.notes}` : ''} Start by asking what specifically they want to focus on.`
-
-    localStorage.setItem('forgestudy-tutor-prefill', prefill)
-    localStorage.setItem('forgestudy-tutor-auto-send', 'false')
-    router.push('/tutor?intent=new_question')
-  }
-
-  function handleModalSave(saved: ManualAssignment) {
-    setAssignments((prev) => {
-      const exists = prev.find((a) => a.id === saved.id)
-      if (exists) return prev.map((a) => a.id === saved.id ? saved : a)
-      return [...prev, saved].sort((a, b) => {
-        if (a.is_complete !== b.is_complete) return a.is_complete ? 1 : -1
-        if (!a.due_date && !b.due_date) return 0
-        if (!a.due_date) return 1
-        if (!b.due_date) return -1
-        return new Date(a.due_date).getTime() - new Date(b.due_date).getTime()
-      })
-    })
-    setShowAddModal(false)
-    setEditingAssignment(null)
-  }
-
-  // Split into upcoming and complete
-  const upcomingAssignments = assignments.filter((a) => !a.is_complete)
-  const completedAssignments = assignments.filter((a) => a.is_complete)
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-full bg-[#F9FAFB] dark:bg-[#08080F]">
-        <Loader2 className="w-8 h-8 text-indigo-600 dark:text-indigo-400 animate-spin" />
+      <div className="flex items-center justify-center h-full bg-[#08080F]">
+        <Loader2 className="w-8 h-8 text-indigo-400 animate-spin" />
       </div>
     )
   }
 
   return (
-    <div className="flex-1 overflow-y-auto bg-[#F9FAFB] dark:bg-[#08080F] pb-20 lg:pb-4">
-      {/* Galaxy — centerpiece of the home screen */}
-      {activeProfileId && (
-        <div className="relative w-full h-[50vh] md:h-[55vh] bg-slate-950 flex-shrink-0">
-          {galaxyLoading ? (
-            <GalaxySkeleton />
-          ) : galaxyTopics.length > 0 || coursePlanets.length > 0 ? (
-            <ConceptGalaxy
-              topics={galaxyTopics}
-              coursePlanets={coursePlanets}
-              studentName={profileSummary.summary?.displayName?.split(' ')[0] || undefined}
-              profileId={activeProfileId || undefined}
-              totalTopicCount={totalTopicCount}
-              onDueSoonChange={setHasDueSoonItems}
-              onTopicsRefresh={async () => {
-                if (activeProfileId && user) {
-                  const topicsData = await getStudyTopicsWithMastery(activeProfileId)
-                  setGalaxyTopics(topicsData)
-                }
-              }}
-            />
-          ) : null}
-          {/* Smart CTA overlay */}
-          {smartCTA && !hasDueSoonItems && !galaxyLoading && (
-            <div className="absolute bottom-3 left-1/2 -translate-x-1/2 w-auto z-40">
-              <div className="bg-slate-900/80 backdrop-blur-md border border-slate-700/50 rounded-xl shadow-2xl px-4 py-3">
-                <SmartCTA
-                  label={smartCTA.label}
-                  action={smartCTA.action}
-                  reason={smartCTA.reason}
-                  topicId={smartCTA.topicId}
-                  orbitState={smartCTA.orbitState}
-                  vaultTopicIds={smartCTA.vaultTopicIds}
-                />
-              </div>
-            </div>
-          )}
-        </div>
-      )}
+    <div className="flex-1 overflow-y-auto bg-[#08080F] pb-20 lg:pb-4">
+      <div className="max-w-lg mx-auto px-4 py-8 md:py-12">
+        {/* Greeting */}
+        <h1 className="text-2xl md:text-3xl font-bold text-white mb-8">
+          {getTimeGreeting()}, {studentName} 👋
+        </h1>
 
-      <div className="max-w-2xl mx-auto px-4 py-6 md:py-10 space-y-6">
-        {/* Beta/Trial Banner */}
-        <BetaBanner userId={user?.id} />
-
-        {/* Header */}
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-2xl md:text-3xl font-bold text-gray-900 dark:text-white">
-              Hey {studentName} 👋
-            </h1>
-            <p className="text-gray-500 dark:text-slate-400 text-sm mt-1">What are you working on today?</p>
-          </div>
-          {streakDays > 0 && (
-            <div className="relative group">
-              <div className={`bg-amber-50 dark:bg-slate-900/60 backdrop-blur-md border border-amber-200 dark:border-amber-500/30 rounded-xl px-3 py-1.5 cursor-default ${
-                streakDays >= 7 ? 'shadow-lg shadow-amber-500/20 dark:shadow-amber-500/10 ring-1 ring-amber-300/50 dark:ring-amber-500/20' : ''
-              }`}>
-                <span className="text-amber-600 dark:text-amber-400 text-sm font-bold">🔥 {streakDays}</span>
-              </div>
-              <div className="absolute right-0 top-full mt-2 bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-xs text-slate-300 whitespace-nowrap opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity z-10 shadow-xl">
-                You've studied {streakDays} day{streakDays !== 1 ? 's' : ''} in a row! Keep it up.
-              </div>
-            </div>
-          )}
-        </div>
-
-        {/* Hero: Photo Drop */}
-        <div className="flex items-center gap-4 p-5 md:p-6 bg-gradient-to-br from-indigo-600/10 to-purple-600/10 dark:from-indigo-600/20 dark:to-purple-600/20 border border-indigo-200 dark:border-indigo-500/30 rounded-2xl">
-          <div className="flex-shrink-0">
-            <PhotoDropButton />
-          </div>
-          <div className="text-left">
-            <h2 className="text-lg font-bold text-gray-900 dark:text-white">Take a Photo of Homework</h2>
-            <p className="text-sm text-gray-500 dark:text-slate-400 mt-0.5">
-              Snap a photo and get help in seconds
-            </p>
-          </div>
-        </div>
-
-        {/* Secondary Actions */}
-        <div className="grid grid-cols-2 gap-3">
-          <Link
-            href="/sources"
-            className="flex flex-col items-center gap-2 p-4 bg-white dark:bg-slate-900/60 border border-gray-200 dark:border-slate-800 rounded-xl hover:border-indigo-300 dark:hover:border-indigo-500/30 hover:bg-indigo-50/50 dark:hover:bg-indigo-600/5 transition-all"
-          >
-            <FileText className="w-6 h-6 text-indigo-600 dark:text-indigo-400" />
-            <span className="text-sm font-medium text-gray-900 dark:text-white">Upload Materials</span>
-          </Link>
-          <Link
-            href="/tutor"
-            className="flex flex-col items-center gap-2 p-4 bg-white dark:bg-slate-900/60 border border-gray-200 dark:border-slate-800 rounded-xl hover:border-indigo-300 dark:hover:border-indigo-500/30 hover:bg-indigo-50/50 dark:hover:bg-indigo-600/5 transition-all"
-          >
-            <MessageSquare className="w-6 h-6 text-indigo-600 dark:text-indigo-400" />
-            <span className="text-sm font-medium text-gray-900 dark:text-white">Ask Anything</span>
-          </Link>
-        </div>
-
-        {/* Assignments Section */}
-        <div>
-          <div className="flex items-center justify-between mb-3">
-            <h3 className="text-sm font-semibold text-gray-400 dark:text-slate-400 uppercase tracking-wider flex items-center gap-2">
-              <CalendarDays className="w-4 h-4" />
-              Upcoming Assignments
-            </h3>
-            <button
-              onClick={() => { setEditingAssignment(null); setShowAddModal(true) }}
-              className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-600/10 hover:bg-indigo-100 dark:hover:bg-indigo-600/20 border border-indigo-200 dark:border-indigo-500/30 rounded-lg transition-colors"
-            >
-              <Plus className="w-3.5 h-3.5" />
-              Add Assignment
-            </button>
-          </div>
-
-          {upcomingAssignments.length === 0 && completedAssignments.length === 0 ? (
-            <button
-              onClick={() => { setEditingAssignment(null); setShowAddModal(true) }}
-              className="w-full flex flex-col items-center gap-2 py-8 bg-white dark:bg-slate-900/40 border border-dashed border-gray-200 dark:border-slate-700 rounded-xl text-center hover:border-indigo-300 dark:hover:border-indigo-500/50 transition-colors"
-            >
-              <CalendarDays className="w-8 h-8 text-gray-300 dark:text-slate-600" />
-              <p className="text-sm text-gray-400 dark:text-slate-500">No assignments yet</p>
-              <p className="text-xs text-indigo-500 dark:text-indigo-400 font-medium">+ Add your first assignment</p>
-            </button>
-          ) : (
-            <div className="space-y-2">
-              {upcomingAssignments.map((assignment) => (
-                <div
-                  key={assignment.id}
-                  className="flex items-start gap-3 p-3 bg-white dark:bg-slate-900/60 border border-gray-200 dark:border-slate-800 rounded-xl"
-                >
+        {/* Class Tiles */}
+        {classes.length > 0 ? (
+          <>
+            <div className="grid grid-cols-2 gap-3">
+              {classes.map(cls => {
+                const mastery = masteryMap.get(cls.id)
+                return (
                   <button
-                    onClick={() => handleToggleComplete(assignment)}
-                    className="mt-0.5 flex-shrink-0 text-gray-400 dark:text-slate-500 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors"
-                    title="Mark complete"
+                    key={cls.id}
+                    onClick={() => router.push(`/tutor?classId=${cls.id}&className=${encodeURIComponent(cls.name)}&intent=new_question`)}
+                    className="group p-5 bg-slate-900/60 border border-slate-800 rounded-2xl text-left hover:border-indigo-500/40 hover:bg-slate-900/80 transition-all active:scale-[0.98]"
                   >
-                    <Square className="w-4 h-4" />
+                    <div className="flex items-center gap-2 mb-1">
+                      <div className={`w-2.5 h-2.5 rounded-full ${getMasteryDot(mastery)}`} />
+                    </div>
+                    <h2 className="text-base font-semibold text-white leading-tight">
+                      {cls.name}
+                    </h2>
                   </button>
-
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium text-gray-900 dark:text-white truncate">{assignment.title}</p>
-                    <div className="flex items-center gap-2 mt-0.5 flex-wrap">
-                      {assignment.course_name && (
-                        <span className="text-xs text-gray-500 dark:text-slate-400">{assignment.course_name}</span>
-                      )}
-                      {assignment.course_name && assignment.due_date && (
-                        <span className="text-xs text-gray-300 dark:text-slate-700">·</span>
-                      )}
-                      {assignment.due_date && (
-                        <span className={`text-xs font-medium ${getDueDateColor(assignment.due_date)}`}>
-                          {formatDueLabel(assignment.due_date)}
-                        </span>
-                      )}
-                    </div>
-                  </div>
-
-                  <div className="flex items-center gap-1 flex-shrink-0">
-                    <button
-                      onClick={() => handleStudyThis(assignment)}
-                      className="flex items-center gap-1 px-2 py-1 text-xs font-medium text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-600/10 hover:bg-indigo-100 dark:hover:bg-indigo-600/20 rounded-lg transition-colors"
-                      title="Study this"
-                    >
-                      Study
-                      <ArrowRight className="w-3 h-3" />
-                    </button>
-                    <button
-                      onClick={() => { setEditingAssignment(assignment); setShowAddModal(true) }}
-                      className="p-1.5 text-gray-400 dark:text-slate-500 hover:text-gray-700 dark:hover:text-slate-300 rounded-lg hover:bg-gray-100 dark:hover:bg-slate-800 transition-colors"
-                      title="Edit"
-                    >
-                      <Pencil className="w-3.5 h-3.5" />
-                    </button>
-                    <button
-                      onClick={() => handleDelete(assignment.id)}
-                      className="p-1.5 text-gray-400 dark:text-slate-500 hover:text-red-500 dark:hover:text-red-400 rounded-lg hover:bg-red-50 dark:hover:bg-red-500/10 transition-colors"
-                      title="Delete"
-                    >
-                      <Trash2 className="w-3.5 h-3.5" />
-                    </button>
-                  </div>
-                </div>
-              ))}
-
-              {/* Completed assignments */}
-              {completedAssignments.length > 0 && (
-                <div className="space-y-2 mt-1">
-                  <p className="text-xs text-gray-400 dark:text-slate-600 px-1">Completed</p>
-                  {completedAssignments.map((assignment) => (
-                    <div
-                      key={assignment.id}
-                      className="flex items-start gap-3 p-3 bg-gray-50 dark:bg-slate-900/30 border border-gray-100 dark:border-slate-800/50 rounded-xl opacity-60"
-                    >
-                      <button
-                        onClick={() => handleToggleComplete(assignment)}
-                        className="mt-0.5 flex-shrink-0 text-indigo-500 dark:text-indigo-500 hover:text-indigo-700 dark:hover:text-indigo-300 transition-colors"
-                        title="Mark incomplete"
-                      >
-                        <CheckSquare className="w-4 h-4" />
-                      </button>
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium text-gray-500 dark:text-slate-500 line-through truncate">{assignment.title}</p>
-                        {assignment.course_name && (
-                          <p className="text-xs text-gray-400 dark:text-slate-600">{assignment.course_name}</p>
-                        )}
-                      </div>
-                      <button
-                        onClick={() => handleDelete(assignment.id)}
-                        className="p-1.5 text-gray-300 dark:text-slate-700 hover:text-red-400 rounded-lg transition-colors"
-                        title="Delete"
-                      >
-                        <Trash2 className="w-3.5 h-3.5" />
-                      </button>
-                    </div>
-                  ))}
-                </div>
-              )}
+                )
+              })}
             </div>
-          )}
-        </div>
-
-        {/* Subject Entry Form */}
-        <SubjectEntryForm />
-
-        {/* My Progress link */}
-        <Link
-          href="/progress"
-          className="flex items-center justify-between p-4 bg-white dark:bg-slate-900/60 border border-gray-200 dark:border-slate-800 rounded-xl hover:border-indigo-300 dark:hover:border-indigo-500/30 transition-all"
-        >
-          <div>
-            <h3 className="text-sm font-semibold text-gray-900 dark:text-white">My Progress</h3>
-            <p className="text-xs text-gray-500 dark:text-slate-400 mt-0.5">Explore your Learning Galaxy</p>
-          </div>
-          <ChevronRight className="w-5 h-5 text-gray-400 dark:text-slate-500" />
-        </Link>
-
-        {/* Mastery Scores */}
-        {masteryScores.length > 0 && (
-          <div>
-            <h3 className="text-sm font-semibold text-gray-400 dark:text-slate-400 uppercase tracking-wider mb-3">Mastery</h3>
-            <div className="space-y-2">
-              {masteryScores.map((ms) => (
-                <div key={ms.classId} className="p-3 bg-white dark:bg-slate-900/60 border border-gray-200 dark:border-slate-800 rounded-xl">
-                  <div className="flex items-center justify-between mb-1.5">
-                    <span className="text-sm font-medium text-gray-900 dark:text-white truncate">{ms.className}</span>
-                    <span className="text-sm font-bold text-indigo-600 dark:text-indigo-400 ml-2">{ms.score}</span>
-                  </div>
-                  <div className="w-full h-2 bg-gray-200 dark:bg-slate-800 rounded-full overflow-hidden">
-                    <div
-                      className={`h-full rounded-full transition-all ${
-                        ms.score >= 61 ? 'bg-emerald-500' : ms.score >= 31 ? 'bg-amber-500' : 'bg-red-400'
-                      }`}
-                      style={{ width: `${ms.score}%` }}
-                    />
-                  </div>
-                </div>
-              ))}
-            </div>
+            <p className="text-center text-xs text-slate-600 mt-4">Tap a class to start studying</p>
+          </>
+        ) : (
+          <div className="text-center py-12">
+            <p className="text-slate-400 mb-4">No classes yet. Add your first class to get started.</p>
           </div>
         )}
 
-        {/* Recent Sessions */}
-        {recentSessions.length > 0 && (
-          <div>
-            <h3 className="text-sm font-semibold text-gray-400 dark:text-slate-400 uppercase tracking-wider mb-3">Recent Sessions</h3>
-            <div className="space-y-2">
-              {recentSessions.map((session) => (
-                <button
-                  key={session.id}
-                  onClick={() => router.push(`/tutor?sessionId=${session.id}`)}
-                  className="w-full flex items-center gap-3 p-3 bg-white dark:bg-slate-900/60 border border-gray-200 dark:border-slate-800 rounded-xl hover:border-indigo-300 dark:hover:border-indigo-500/30 hover:bg-indigo-50/50 dark:hover:bg-indigo-600/5 transition-all text-left"
-                >
-                  <Clock className="w-4 h-4 text-gray-400 dark:text-slate-500 flex-shrink-0" />
-                  <div className="min-w-0 flex-1">
-                    <p className="text-sm font-medium text-gray-900 dark:text-white truncate">
-                      {formatSessionTitle(session)}
-                    </p>
-                    <p className="text-xs text-gray-400 dark:text-slate-500">{formatTimeAgo(session.updated_at)}</p>
-                  </div>
-                </button>
-              ))}
-            </div>
+        {/* Add a class */}
+        {showAddClass ? (
+          <div className="mt-6 flex gap-2">
+            <input
+              type="text"
+              value={newClassName}
+              onChange={e => setNewClassName(e.target.value)}
+              placeholder="Class name"
+              autoFocus
+              onKeyDown={e => { if (e.key === 'Enter') handleAddClass() }}
+              className="flex-1 px-4 py-2.5 bg-slate-900 border border-slate-700 rounded-xl text-white text-sm placeholder-slate-500 focus:outline-none focus:border-indigo-500"
+            />
+            <button onClick={handleAddClass} disabled={adding || !newClassName.trim()}
+              className="px-4 py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl text-sm font-semibold transition-colors disabled:opacity-50">
+              {adding ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Add'}
+            </button>
+            <button onClick={() => { setShowAddClass(false); setNewClassName('') }}
+              className="px-3 py-2.5 text-slate-500 hover:text-white text-sm transition-colors">
+              Cancel
+            </button>
           </div>
+        ) : (
+          <button onClick={() => setShowAddClass(true)}
+            className="mt-6 flex items-center gap-1.5 text-sm text-slate-500 hover:text-indigo-400 transition-colors mx-auto">
+            <Plus className="w-4 h-4" />
+            Add another class
+          </button>
         )}
       </div>
-
-      {/* Referral Card */}
-      {referralCode && (
-        <div className="max-w-3xl mx-auto px-4 pb-4">
-          <div className="bg-slate-900/60 border border-slate-800 rounded-xl p-4">
-            <p className="text-sm font-medium text-white mb-1">
-              📣 Know someone who'd love ForgeStudy?
-            </p>
-            <p className="text-xs text-slate-400 mb-3">
-              Invite a classmate — you both get one month free.
-            </p>
-            <div className="flex items-center gap-2">
-              <button
-                onClick={() => {
-                  const url = `${window.location.origin}/signup?ref=${referralCode}`
-                  navigator.clipboard.writeText(url).then(() => {
-                    setReferralCopied(true)
-                    setTimeout(() => setReferralCopied(false), 2000)
-                  })
-                }}
-                className="flex items-center gap-1.5 px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg text-xs font-semibold transition-colors"
-              >
-                {referralCopied ? (
-                  <><Check className="w-3.5 h-3.5" /> Copied!</>
-                ) : (
-                  <><Copy className="w-3.5 h-3.5" /> Copy my invite link</>
-                )}
-              </button>
-              {referralCount > 0 && (
-                <span className="text-xs text-slate-500">
-                  You've referred {referralCount} friend{referralCount !== 1 ? 's' : ''}
-                </span>
-              )}
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Add/Edit Assignment Modal */}
-      {showAddModal && activeProfileId && (
-        <AddAssignmentModal
-          profileId={activeProfileId}
-          editing={editingAssignment}
-          onSave={handleModalSave}
-          onClose={() => { setShowAddModal(false); setEditingAssignment(null) }}
-        />
-      )}
     </div>
   )
 }
