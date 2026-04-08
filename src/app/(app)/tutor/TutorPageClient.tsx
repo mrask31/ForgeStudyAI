@@ -923,9 +923,7 @@ function TutorPageContent() {
                   onSend={handleInstantStart}
                   initialPrompt={localStoragePrefill || entryPrompt}
                   attachedFiles={attachedFiles}
-                  attachedContext={attachedContext}
                   onDetach={handleDetachFile}
-                  messages={[]}
                 />
               </div>
             </>
