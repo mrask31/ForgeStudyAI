@@ -122,18 +122,31 @@ export default function HomePage() {
             ForgeStudy is the AI tutor that refuses to give the answer. It forces your child to think — and mathematically guarantees they'll remember.
           </p>
 
-          {/* CTA Buttons */}
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-16">
+          {/* Split Entry Point */}
+          <p className="text-lg text-slate-500 uppercase tracking-wider font-semibold mb-6">Who is ForgeStudy for?</p>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 max-w-2xl mx-auto mb-16">
             <Link
-              href="/signup"
-              className="px-8 py-4 bg-indigo-600 hover:bg-indigo-500 text-white rounded-full font-medium text-lg transition-all shadow-[0_0_30px_rgba(99,102,241,0.3)] hover:shadow-[0_0_40px_rgba(99,102,241,0.4)] flex items-center gap-2"
+              href="/signup?flow=parent"
+              className="group p-6 bg-slate-900/60 border border-slate-700 hover:border-indigo-500/50 rounded-2xl text-left transition-all hover:shadow-[0_0_30px_rgba(99,102,241,0.15)]"
             >
-              Start Their Galaxy — Free Trial
-              <ArrowRight className="w-5 h-5" />
+              <span className="text-3xl mb-3 block">👨‍👩‍👧</span>
+              <h3 className="text-lg font-bold text-slate-100 mb-1">I'm a Parent</h3>
+              <p className="text-sm text-slate-400">I'm setting up ForgeStudy for my child</p>
+              <span className="mt-3 inline-flex items-center gap-1 text-indigo-400 text-sm font-semibold group-hover:gap-2 transition-all">
+                Get started <ArrowRight className="w-4 h-4" />
+              </span>
             </Link>
-            <button className="px-8 py-4 bg-slate-900/60 backdrop-blur-md border border-slate-700 hover:border-indigo-500/50 text-slate-200 rounded-full font-medium text-lg transition-all">
-              See how it works
-            </button>
+            <Link
+              href="/signup?flow=student"
+              className="group p-6 bg-slate-900/60 border border-slate-700 hover:border-indigo-500/50 rounded-2xl text-left transition-all hover:shadow-[0_0_30px_rgba(99,102,241,0.15)]"
+            >
+              <span className="text-3xl mb-3 block">🎓</span>
+              <h3 className="text-lg font-bold text-slate-100 mb-1">I'm a Student</h3>
+              <p className="text-sm text-slate-400">I'm in grades 9-12 and ready to start studying</p>
+              <span className="mt-3 inline-flex items-center gap-1 text-indigo-400 text-sm font-semibold group-hover:gap-2 transition-all">
+                Get started <ArrowRight className="w-4 h-4" />
+              </span>
+            </Link>
           </div>
 
           {/* Hero Visual - Video Placeholder */}
