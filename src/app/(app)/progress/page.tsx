@@ -1,233 +1,193 @@
 'use client'
 
-import { Sparkles, Share2 } from 'lucide-react'
-import { toast } from 'sonner'
 import { useActiveProfile } from '@/contexts/ActiveProfileContext'
-import { ConceptGalaxy } from '@/components/galaxy/ConceptGalaxy'
-import { GalaxyLegend } from '@/components/galaxy/GalaxyLegend'
-import { SmartCTA } from '@/components/galaxy/SmartCTA'
-import { DecontaminationBanner } from '@/components/galaxy/DecontaminationBanner'
-import { useEffect, useState, useCallback } from 'react'
-import { getStudyTopicsWithMastery, getQuarantinedTopicsCount, getTopicsGroupedByCourse, type CoursePlanet } from '@/app/actions/study-topics'
-import { calculateSmartCTA, type SmartCTAResult } from '@/lib/smart-cta'
-import { useUser } from '@/contexts/UserContext'
-import Link from 'next/link'
-import { PhotoDropButton } from '@/components/homework/PhotoDropButton'
-import { GalaxySkeleton } from '@/components/galaxy/GalaxySkeleton'
-import { HelperChips } from '@/components/galaxy/HelperChips'
 import { useActiveProfileSummary } from '@/hooks/useActiveProfileSummary'
+import { useUser } from '@/contexts/UserContext'
+import { useEffect, useState } from 'react'
+import { useRouter } from 'next/navigation'
+import Link from 'next/link'
+import {
+  Loader2, TrendingUp, Clock, BookOpen, Lightbulb, Star,
+  GraduationCap, Brain, ChevronRight
+} from 'lucide-react'
 
-// Module-level cache survives component unmount/remount during client-side navigation
-const galaxyCache: {
-  profileId: string | null
-  topics: any[]
-  smartCTA: SmartCTAResult | null
-  quarantinedCount: number
-  coursePlanets: CoursePlanet[]
-} = { profileId: null, topics: [], smartCTA: null, quarantinedCount: 0, coursePlanets: [] }
+interface MasteryScore {
+  classId: string
+  className: string
+  classType: string
+  score: number
+  sessionsCount: number
+  lastUpdated: string
+}
+
+interface PortfolioEntry {
+  id: string
+  type: string
+  title: string
+  content: string | null
+  created_at: string
+  student_classes?: { name: string } | null
+}
+
+interface RecentSession {
+  id: string
+  title: string | null
+  updated_at: string
+}
+
+function getTypeIcon(type: string) {
+  switch (type) {
+    case 'insight': return <Lightbulb className="w-4 h-4 text-amber-400" />
+    case 'essay_idea': return <BookOpen className="w-4 h-4 text-indigo-400" />
+    case 'strength': return <Star className="w-4 h-4 text-emerald-400" />
+    case 'achievement': return <GraduationCap className="w-4 h-4 text-purple-400" />
+    default: return <Brain className="w-4 h-4 text-slate-400" />
+  }
+}
 
 export default function ProgressPage() {
   const { activeProfileId } = useActiveProfile()
   const { user } = useUser()
   const profileSummary = useActiveProfileSummary()
-  const [topics, setTopics] = useState<any[]>(() =>
-    galaxyCache.profileId === activeProfileId ? galaxyCache.topics : []
-  )
-  const [loading, setLoading] = useState(() =>
-    galaxyCache.profileId === activeProfileId && (galaxyCache.topics.length > 0 || galaxyCache.coursePlanets.length > 0) ? false : true
-  )
-  const [smartCTA, setSmartCTA] = useState<SmartCTAResult | null>(() =>
-    galaxyCache.profileId === activeProfileId ? galaxyCache.smartCTA : null
-  )
-  const [quarantinedCount, setQuarantinedCount] = useState(() =>
-    galaxyCache.profileId === activeProfileId ? galaxyCache.quarantinedCount : 0
-  )
-  const [hasDueSoonItems, setHasDueSoonItems] = useState(false)
-  const [totalTopicCount, setTotalTopicCount] = useState(0)
-  const [streakDays, setStreakDays] = useState(0)
-  const [coursePlanets, setCoursePlanets] = useState<CoursePlanet[]>(() =>
-    galaxyCache.profileId === activeProfileId ? galaxyCache.coursePlanets : []
-  )
-  const [isGalaxyDrillDown, setIsGalaxyDrillDown] = useState(false)
+  const router = useRouter()
+
+  const [masteryScores, setMasteryScores] = useState<MasteryScore[]>([])
+  const [portfolio, setPortfolio] = useState<PortfolioEntry[]>([])
+  const [recentSessions, setRecentSessions] = useState<RecentSession[]>([])
+  const [loading, setLoading] = useState(true)
+
+  const studentName = profileSummary.summary?.displayName?.split(' ')[0] || 'Student'
 
   useEffect(() => {
-    async function loadData() {
-      if (!activeProfileId || !user) {
-        if (!activeProfileId && !user) return
-        setLoading(false)
-        return
-      }
-
-      if (galaxyCache.profileId !== activeProfileId || (galaxyCache.topics.length === 0 && galaxyCache.coursePlanets.length === 0)) {
-        setLoading(true)
-      }
-
-      try {
-        const [topicsData, ctaData, quarantinedData, planetsData] = await Promise.all([
-          getStudyTopicsWithMastery(activeProfileId),
-          calculateSmartCTA(user.id, activeProfileId),
-          getQuarantinedTopicsCount(activeProfileId),
-          getTopicsGroupedByCourse(activeProfileId),
-        ])
-        setTopics(topicsData)
-        setSmartCTA(ctaData)
-        setQuarantinedCount(quarantinedData)
-        setCoursePlanets(planetsData)
-        setTotalTopicCount(topicsData.length + quarantinedData)
-        galaxyCache.profileId = activeProfileId
-        galaxyCache.topics = topicsData
-        galaxyCache.smartCTA = ctaData
-        galaxyCache.quarantinedCount = quarantinedData
-        galaxyCache.coursePlanets = planetsData
-      } catch (error) {
-        console.error('[Progress] Error loading data:', error)
-      } finally {
-        setLoading(false)
-      }
+    if (!activeProfileId) {
+      setLoading(false)
+      return
     }
 
-    loadData()
-  }, [activeProfileId, user])
-
-  useEffect(() => {
-    async function loadStreak() {
-      if (!activeProfileId) return
-      try {
-        const res = await fetch(`/api/streak?profileId=${activeProfileId}`)
-        if (res.ok) {
-          const data = await res.json()
-          setStreakDays(data.current_streak_days || 0)
-        }
-      } catch {
-        // Non-critical
-      }
-    }
-    loadStreak()
+    setLoading(true)
+    Promise.all([
+      fetch(`/api/mastery/scores?profileId=${activeProfileId}`, { credentials: 'include' }).then(r => r.ok ? r.json() : { scores: [] }),
+      fetch(`/api/portfolio?profileId=${activeProfileId}`, { credentials: 'include' }).then(r => r.ok ? r.json() : { entries: [] }),
+      fetch('/api/chats/list?includeArchived=false', { credentials: 'include' }).then(r => r.ok ? r.json() : { chats: [] }),
+    ]).then(([masteryData, portfolioData, chatsData]) => {
+      setMasteryScores(masteryData.scores || [])
+      setPortfolio((portfolioData.entries || []).slice(0, 8))
+      setRecentSessions((chatsData.chats || []).slice(0, 10))
+    }).catch(err => {
+      console.error('[Progress] Error loading data:', err)
+    }).finally(() => {
+      setLoading(false)
+    })
   }, [activeProfileId])
 
+  const totalSessions = masteryScores.reduce((sum, s) => sum + s.sessionsCount, 0)
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-full bg-[#08080F]">
+        <Loader2 className="w-8 h-8 text-indigo-400 animate-spin" />
+      </div>
+    )
+  }
 
   return (
-    <div className="relative w-full h-screen bg-slate-950 overflow-hidden flex flex-col">
-      {/* Decontamination Banner - Floating at top */}
-      {quarantinedCount > 0 && (
-        <div className="absolute top-4 md:top-6 left-1/2 -translate-x-1/2 z-50 px-4 w-full max-w-md">
-          <DecontaminationBanner quarantinedCount={quarantinedCount} />
+    <div className="flex-1 overflow-y-auto bg-[#08080F] pb-20 lg:pb-4">
+      <div className="max-w-3xl mx-auto px-4 py-6 md:py-10 space-y-6">
+        {/* Header */}
+        <div>
+          <h1 className="text-2xl md:text-3xl font-bold text-white">Progress</h1>
+          <p className="text-slate-400 text-sm mt-1">
+            {studentName} · {totalSessions} total sessions
+          </p>
         </div>
-      )}
 
-      {/* Streak Badge - Top left on mobile, inside HUD on desktop */}
-      {streakDays > 0 && (
-        <div className="md:hidden absolute top-4 left-3 z-40">
-          <div className="bg-slate-900/60 backdrop-blur-md border border-amber-500/30 rounded-xl px-3 py-1.5 shadow-lg">
-            <span className="text-amber-400 text-sm font-bold">🔥 {streakDays} day streak</span>
-          </div>
-        </div>
-      )}
-
-      {/* Top Left HUD - Title & Legend */}
-      <div className={`hidden md:block absolute top-4 left-4 z-50 pointer-events-auto bg-slate-900/80 backdrop-blur-md border border-slate-700/50 rounded-xl shadow-2xl p-4 max-w-[240px] ${isGalaxyDrillDown ? 'md:hidden' : ''}`}>
-        <div className="flex items-center gap-2 mb-2">
-          <Sparkles className="w-5 h-5 text-indigo-400" />
-          <h1 className="text-lg font-bold text-white">
-            Your Galaxy
-          </h1>
-          {streakDays > 0 && (
-            <span className="ml-auto text-amber-400 text-xs font-bold whitespace-nowrap">🔥 {streakDays}d</span>
-          )}
-        </div>
-        <GalaxyLegend />
-        {activeProfileId && (
-          <button
-            onClick={() => {
-              const url = `${window.location.origin}/share/${activeProfileId}`;
-              navigator.clipboard.writeText(url).then(() => {
-                toast.success('Share link copied to clipboard!');
-              }).catch(() => {
-                toast.error('Failed to copy link');
-              });
-            }}
-            className="mt-3 inline-flex items-center gap-2 px-4 py-2 bg-indigo-600/20 hover:bg-indigo-600/30 border border-indigo-500/30 rounded-lg text-sm font-medium text-indigo-300 transition-colors"
-          >
-            <Share2 className="w-4 h-4" />
-            Share Progress
-          </button>
-        )}
-      </div>
-
-      {/* Helper Chips (desktop) - floating over canvas */}
-      {!loading && topics.length > 0 && !isGalaxyDrillDown && (
-        <div className="hidden md:block absolute bottom-24 left-1/2 -translate-x-1/2 z-30">
-          <HelperChips topics={topics} profileId={activeProfileId} />
-        </div>
-      )}
-
-      {/* Top Right HUD - Upload + Photo Drop */}
-      <div className="absolute top-4 md:top-6 right-2 md:right-6 z-40 pointer-events-auto flex items-center gap-1.5 md:gap-2">
-        <PhotoDropButton />
-        <Link
-          href="/sources"
-          className="inline-flex items-center gap-1.5 md:gap-2 px-3 md:px-6 py-2 md:py-3 min-h-[44px] bg-slate-900/40 backdrop-blur-md border border-slate-700/50 rounded-xl shadow-2xl text-white text-xs md:text-base font-semibold hover:bg-slate-800/60 transition-all"
-        >
-          <Sparkles className="w-4 h-4 md:w-5 md:h-5 flex-shrink-0" />
-          <span className="hidden sm:inline">Upload Materials</span>
-          <span className="sm:hidden">Upload</span>
-        </Link>
-      </div>
-
-      {/* Galaxy Canvas */}
-      <div className="w-full h-[60vh] flex-shrink-0 md:flex-1 md:h-full relative">
-        {!activeProfileId ? (
-          <div className="flex items-center justify-center h-full px-4">
-            <div className="bg-slate-900/60 backdrop-blur-md border border-slate-700/50 rounded-xl shadow-2xl p-6 md:p-8 max-w-md text-center">
-              <p className="text-amber-300 text-sm">
-                Choose a student profile to see your learning galaxy.
-              </p>
+        {/* Mastery Scores */}
+        {masteryScores.length > 0 ? (
+          <div>
+            <h2 className="text-sm font-semibold text-slate-400 uppercase tracking-wider mb-3">Mastery Scores</h2>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              {masteryScores.map((ms) => (
+                <Link
+                  key={ms.classId}
+                  href={`/courses/${ms.classId}`}
+                  className="p-4 bg-slate-900/60 border border-slate-800 rounded-xl hover:border-indigo-500/30 transition-all"
+                >
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-sm font-medium text-white truncate">{ms.className}</span>
+                    <span className="text-lg font-bold text-indigo-400 ml-2">{ms.score}</span>
+                  </div>
+                  <div className="w-full h-2.5 bg-slate-800 rounded-full overflow-hidden mb-2">
+                    <div
+                      className={`h-full rounded-full transition-all ${
+                        ms.score >= 61 ? 'bg-emerald-500' : ms.score >= 31 ? 'bg-amber-500' : 'bg-red-400'
+                      }`}
+                      style={{ width: `${ms.score}%` }}
+                    />
+                  </div>
+                  <p className="text-xs text-slate-500">{ms.sessionsCount} sessions</p>
+                </Link>
+              ))}
             </div>
           </div>
-        ) : loading ? (
-          <GalaxySkeleton />
         ) : (
-          <ConceptGalaxy
-            topics={topics}
-            coursePlanets={coursePlanets}
-            studentName={profileSummary.summary?.displayName?.split(' ')[0] || undefined}
-            profileId={activeProfileId || undefined}
-            totalTopicCount={totalTopicCount}
-            onDueSoonChange={setHasDueSoonItems}
-            onDrillDownChange={setIsGalaxyDrillDown}
-            onTopicsRefresh={async () => {
-              if (activeProfileId && user) {
-                const topicsData = await getStudyTopicsWithMastery(activeProfileId);
-                setTopics(topicsData);
-                galaxyCache.topics = topicsData;
-              }
-            }}
-          />
+          <div className="text-center py-8 text-slate-500">
+            <TrendingUp className="w-10 h-10 mx-auto mb-3 opacity-30" />
+            <p className="text-sm">No mastery scores yet. Start studying to track your progress.</p>
+          </div>
+        )}
+
+        {/* Portfolio Highlights */}
+        {portfolio.length > 0 && (
+          <div>
+            <div className="flex items-center justify-between mb-3">
+              <h2 className="text-sm font-semibold text-slate-400 uppercase tracking-wider">Portfolio Highlights</h2>
+              <Link href="/portfolio" className="text-xs text-indigo-400 hover:text-indigo-300 font-medium transition-colors">
+                View all →
+              </Link>
+            </div>
+            <div className="space-y-2">
+              {portfolio.map((entry) => (
+                <div key={entry.id} className="flex items-start gap-3 p-3 bg-slate-900/60 border border-slate-800 rounded-xl">
+                  <div className="mt-0.5">{getTypeIcon(entry.type)}</div>
+                  <div className="min-w-0">
+                    <p className="text-sm font-medium text-white">{entry.title}</p>
+                    {entry.content && <p className="text-xs text-slate-400 mt-0.5 line-clamp-1">{entry.content}</p>}
+                    <p className="text-xs text-slate-500 mt-0.5">
+                      {entry.student_classes?.name && `${entry.student_classes.name} · `}
+                      {new Date(entry.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                    </p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Recent Sessions */}
+        {recentSessions.length > 0 && (
+          <div>
+            <h2 className="text-sm font-semibold text-slate-400 uppercase tracking-wider mb-3">Session History</h2>
+            <div className="space-y-2">
+              {recentSessions.map((session) => (
+                <button
+                  key={session.id}
+                  onClick={() => router.push(`/tutor?sessionId=${session.id}`)}
+                  className="w-full flex items-center gap-3 p-3 bg-slate-900/60 border border-slate-800 rounded-xl hover:border-indigo-500/30 transition-all text-left"
+                >
+                  <Clock className="w-4 h-4 text-slate-500 flex-shrink-0" />
+                  <div className="min-w-0 flex-1">
+                    <p className="text-sm text-white truncate">{session.title || 'Untitled session'}</p>
+                    <p className="text-xs text-slate-500">
+                      {new Date(session.updated_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                    </p>
+                  </div>
+                  <ChevronRight className="w-4 h-4 text-slate-600 flex-shrink-0" />
+                </button>
+              ))}
+            </div>
+          </div>
         )}
       </div>
-
-      {/* Helper Chips (mobile) */}
-      {!loading && topics.length > 0 && !isGalaxyDrillDown && (
-        <div className="md:hidden flex-shrink-0 flex flex-wrap justify-center gap-2 px-4 py-3 bg-slate-950">
-          <HelperChips topics={topics} profileId={activeProfileId} />
-        </div>
-      )}
-
-      {/* Bottom Center HUD - Smart CTA */}
-      {smartCTA && !hasDueSoonItems && (
-        <div className="fixed md:absolute bottom-0 md:bottom-8 left-0 md:left-1/2 md:-translate-x-1/2 w-full md:w-auto z-40">
-          <div className="bg-slate-900/90 md:bg-slate-900/40 backdrop-blur-md border-t md:border border-slate-700/50 rounded-t-xl md:rounded-xl shadow-2xl p-4 md:p-6">
-            <SmartCTA
-              label={smartCTA.label}
-              action={smartCTA.action}
-              reason={smartCTA.reason}
-              topicId={smartCTA.topicId}
-              orbitState={smartCTA.orbitState}
-              vaultTopicIds={smartCTA.vaultTopicIds}
-            />
-          </div>
-        </div>
-      )}
     </div>
   )
 }

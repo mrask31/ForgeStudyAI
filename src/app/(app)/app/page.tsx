@@ -12,6 +12,11 @@ import { PhotoDropButton } from '@/components/homework/PhotoDropButton'
 import { SubjectEntryForm } from '@/components/tutor/SubjectEntryForm'
 import { AddAssignmentModal, type ManualAssignment } from '@/components/assignments/AddAssignmentModal'
 import { getReferralStats } from '@/app/actions/referrals'
+import { ConceptGalaxy } from '@/components/galaxy/ConceptGalaxy'
+import { GalaxySkeleton } from '@/components/galaxy/GalaxySkeleton'
+import { SmartCTA } from '@/components/galaxy/SmartCTA'
+import { getStudyTopicsWithMastery, getQuarantinedTopicsCount, getTopicsGroupedByCourse, type CoursePlanet } from '@/app/actions/study-topics'
+import { calculateSmartCTA, type SmartCTAResult } from '@/lib/smart-cta'
 
 interface RecentSession {
   id: string
@@ -78,6 +83,14 @@ export default function HomePage() {
   const [referralCount, setReferralCount] = useState(0)
   const [referralCopied, setReferralCopied] = useState(false)
 
+  // Galaxy state
+  const [galaxyTopics, setGalaxyTopics] = useState<any[]>([])
+  const [coursePlanets, setCoursePlanets] = useState<CoursePlanet[]>([])
+  const [smartCTA, setSmartCTA] = useState<SmartCTAResult | null>(null)
+  const [galaxyLoading, setGalaxyLoading] = useState(true)
+  const [totalTopicCount, setTotalTopicCount] = useState(0)
+  const [hasDueSoonItems, setHasDueSoonItems] = useState(false)
+
   const studentName = profileSummary.summary?.displayName?.split(' ')[0] || 'there'
 
   const fetchAssignments = useCallback(async () => {
@@ -142,8 +155,30 @@ export default function HomePage() {
       setReferralCount(stats.referralCount)
     }).catch(() => {})
 
+    // Load Galaxy data
+    if (activeProfileId && user) {
+      setGalaxyLoading(true)
+      Promise.all([
+        getStudyTopicsWithMastery(activeProfileId),
+        calculateSmartCTA(user.id, activeProfileId),
+        getQuarantinedTopicsCount(activeProfileId),
+        getTopicsGroupedByCourse(activeProfileId),
+      ]).then(([topicsData, ctaData, quarantinedData, planetsData]) => {
+        setGalaxyTopics(topicsData)
+        setSmartCTA(ctaData)
+        setCoursePlanets(planetsData)
+        setTotalTopicCount(topicsData.length + quarantinedData)
+      }).catch(err => {
+        console.error('[Home] Galaxy load error:', err)
+      }).finally(() => {
+        setGalaxyLoading(false)
+      })
+    } else {
+      setGalaxyLoading(false)
+    }
+
     return () => { cancelled = true }
-  }, [activeProfileId, fetchAssignments])
+  }, [activeProfileId, user, fetchAssignments])
 
   const formatTimeAgo = (dateString: string) => {
     const diffMs = Date.now() - new Date(dateString).getTime()
@@ -257,6 +292,45 @@ export default function HomePage() {
 
   return (
     <div className="flex-1 overflow-y-auto bg-[#F9FAFB] dark:bg-[#08080F] pb-20 lg:pb-4">
+      {/* Galaxy — centerpiece of the home screen */}
+      {activeProfileId && (
+        <div className="relative w-full h-[50vh] md:h-[55vh] bg-slate-950 flex-shrink-0">
+          {galaxyLoading ? (
+            <GalaxySkeleton />
+          ) : galaxyTopics.length > 0 || coursePlanets.length > 0 ? (
+            <ConceptGalaxy
+              topics={galaxyTopics}
+              coursePlanets={coursePlanets}
+              studentName={profileSummary.summary?.displayName?.split(' ')[0] || undefined}
+              profileId={activeProfileId || undefined}
+              totalTopicCount={totalTopicCount}
+              onDueSoonChange={setHasDueSoonItems}
+              onTopicsRefresh={async () => {
+                if (activeProfileId && user) {
+                  const topicsData = await getStudyTopicsWithMastery(activeProfileId)
+                  setGalaxyTopics(topicsData)
+                }
+              }}
+            />
+          ) : null}
+          {/* Smart CTA overlay */}
+          {smartCTA && !hasDueSoonItems && !galaxyLoading && (
+            <div className="absolute bottom-3 left-1/2 -translate-x-1/2 w-auto z-40">
+              <div className="bg-slate-900/80 backdrop-blur-md border border-slate-700/50 rounded-xl shadow-2xl px-4 py-3">
+                <SmartCTA
+                  label={smartCTA.label}
+                  action={smartCTA.action}
+                  reason={smartCTA.reason}
+                  topicId={smartCTA.topicId}
+                  orbitState={smartCTA.orbitState}
+                  vaultTopicIds={smartCTA.vaultTopicIds}
+                />
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+
       <div className="max-w-2xl mx-auto px-4 py-6 md:py-10 space-y-6">
         {/* Beta/Trial Banner */}
         <BetaBanner userId={user?.id} />

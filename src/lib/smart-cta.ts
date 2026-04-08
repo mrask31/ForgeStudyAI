@@ -30,7 +30,7 @@ export async function calculateSmartCTA(
   
   if (ghostNodes && ghostNodes.length > 0) {
     return {
-      label: `🔐 Review ${ghostNodes.length} Fading Memor${ghostNodes.length !== 1 ? 'ies' : 'y'}`,
+      label: `Review ${ghostNodes.length} fading topic${ghostNodes.length !== 1 ? 's' : ''}`,
       action: `/vault/session`, // Will be handled by SmartCTA to create session first
       reason: 'vault',
       priority: 0, // HIGHEST PRIORITY
@@ -71,7 +71,7 @@ export async function calculateSmartCTA(
   if (quarantinedTopics && quarantinedTopics.length > 0) {
     const topic = quarantinedTopics[0];
     return {
-      label: `Unpack New Mission: ${topic.title}`,
+      label: `${topic.title} — new. Start now →`,
       action: `/tutor?topicId=${topic.id}&topicTitle=${encodeURIComponent(topic.title)}`,
       reason: 'quarantine',
       priority: 2,
@@ -93,7 +93,9 @@ export async function calculateSmartCTA(
   if (lowMasteryTopics && lowMasteryTopics.length > 0) {
     const topic = lowMasteryTopics[0];
     return {
-      label: `Forge ${topic.title} Understanding`,
+      label: topic.mastery_score === 0
+        ? `${topic.title} — no sessions yet. Start now →`
+        : `Start studying ${topic.title} →`,
       action: `/tutor?topicId=${topic.id}&topicTitle=${encodeURIComponent(topic.title)}`,
       reason: 'low_mastery',
       priority: 3,
@@ -120,7 +122,7 @@ export async function calculateSmartCTA(
     
     if (daysSinceReview >= 7) {
       return {
-        label: `Review ${topic.title}`,
+        label: `Review ${topic.title} →`,
         action: `/tutor?topicId=${topic.id}&topicTitle=${encodeURIComponent(topic.title)}`,
         reason: 'decay',
         priority: 4,
@@ -132,7 +134,7 @@ export async function calculateSmartCTA(
   
   // 5. Default: Start new topic
   return {
-    label: 'Start Studying',
+    label: 'Start studying →',
     action: '/tutor',
     reason: 'new',
     priority: 5,
