@@ -2,36 +2,24 @@
 
 import { usePathname } from 'next/navigation'
 import Link from 'next/link'
-import { Home, MessageSquare, BarChart3, Settings } from 'lucide-react'
+import { Home, BarChart3, User } from 'lucide-react'
 
 const TABS = [
-  { label: 'Home', href: '/app', icon: Home },
-  { label: 'Tutor', href: '/tutor', icon: MessageSquare },
+  { label: 'Study', href: '/app', icon: Home },
   { label: 'Progress', href: '/progress', icon: BarChart3 },
-  { label: 'Settings', href: '__settings__', icon: Settings },
+  { label: 'Me', href: '/me', icon: User },
 ] as const
 
 export function BottomTabBar() {
   const pathname = usePathname()
 
   return (
-    <nav className="lg:hidden fixed bottom-0 left-0 right-0 z-50 bg-white/95 dark:bg-slate-900/95 backdrop-blur-xl border-t border-gray-200 dark:border-slate-800" style={{ paddingBottom: 'max(0.5rem, env(safe-area-inset-bottom, 0px))' }}>
-      <div className="flex items-center justify-around px-2 py-1">
+    <nav
+      className="lg:hidden fixed bottom-0 left-0 right-0 z-50 bg-slate-900/95 backdrop-blur-xl border-t border-slate-800"
+      style={{ paddingBottom: 'max(0.5rem, env(safe-area-inset-bottom, 0px))' }}
+    >
+      <div className="flex items-center justify-around px-2 py-1.5">
         {TABS.map((tab) => {
-          if (tab.href === '__settings__') {
-            const Icon = tab.icon
-            return (
-              <button
-                key={tab.label}
-                onClick={() => window.dispatchEvent(new Event('open-settings-drawer'))}
-                className="flex flex-col items-center gap-0.5 px-3 py-2 min-w-[64px] text-gray-400 dark:text-slate-500 hover:text-gray-600 dark:hover:text-slate-300 transition-colors"
-              >
-                <Icon className="w-5 h-5" />
-                <span className="text-[10px] font-medium">{tab.label}</span>
-              </button>
-            )
-          }
-
           const isActive =
             tab.href === '/app'
               ? pathname === '/app'
@@ -43,10 +31,10 @@ export function BottomTabBar() {
             <Link
               key={tab.label}
               href={tab.href}
-              className={`flex flex-col items-center gap-0.5 px-3 py-2 min-w-[64px] transition-colors ${
+              className={`flex flex-col items-center gap-0.5 px-4 py-1.5 min-w-[64px] transition-colors ${
                 isActive
-                  ? 'text-indigo-600 dark:text-indigo-400'
-                  : 'text-gray-400 dark:text-slate-500 hover:text-gray-600 dark:hover:text-slate-300'
+                  ? 'text-indigo-400'
+                  : 'text-slate-500 hover:text-slate-300'
               }`}
             >
               <Icon className="w-5 h-5" />
