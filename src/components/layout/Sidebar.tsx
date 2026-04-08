@@ -3,21 +3,15 @@
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { usePathname, useSearchParams } from 'next/navigation'
-import { MessageSquare, FileText, Settings, Activity, BookOpen, Shield, Sparkles, Folder, Bookmark, Upload, GraduationCap } from 'lucide-react'
+import { Settings, Shield, Sparkles, BarChart3, User } from 'lucide-react'
 import { getSupabaseBrowser } from '@/lib/supabase/client'
 import HistoryButton from './HistoryButton'
 import { useActiveProfile } from '@/contexts/ActiveProfileContext'
 
 const NAV_ITEMS = [
-  { label: 'Home', href: '/app', icon: Sparkles, type: 'route' as const },
-  { label: 'Tutor', href: '/tutor', icon: MessageSquare, type: 'route' as const },
-  { label: 'Portfolio', href: '/portfolio', icon: GraduationCap, type: 'route' as const },
-  { label: 'Progress', href: '/progress', icon: Activity, type: 'route' as const },
-  { label: 'Saved Sessions', href: '/saved', icon: Bookmark, type: 'route' as const },
-  { label: 'Courses', href: '/courses', icon: Folder, type: 'route' as const },
-  { label: 'Study Vault', href: '/vault', icon: Upload, type: 'route' as const },
-  { label: 'Sources', href: '/sources', icon: FileText, type: 'route' as const },
-  { label: 'Vocabulary Bank', href: '/dictionary', icon: BookOpen, type: 'route' as const },
+  { label: 'Study', href: '/app', icon: Sparkles, type: 'route' as const },
+  { label: 'Progress', href: '/progress', icon: BarChart3, type: 'route' as const },
+  { label: 'Me', href: '/me', icon: User, type: 'route' as const },
 ] as const
 
 interface SidebarProps {
@@ -121,7 +115,7 @@ export default function Sidebar({ onNavigate }: SidebarProps = {}) {
           {/* Logo or Brand with Icon */}
           <div className="flex items-center gap-2.5">
             <div className="w-2 h-2 rounded-full bg-indigo-400"></div>
-            <span className="text-xl font-bold text-gray-900 dark:text-white tracking-tight">ForgeStudy Platform</span>
+            <span className="text-xl font-bold text-gray-900 dark:text-white tracking-tight">ForgeStudy</span>
           </div>
         </div>
         
@@ -160,11 +154,9 @@ export default function Sidebar({ onNavigate }: SidebarProps = {}) {
                 ? isTutorActive
                 : pathname === item.href ||
                   pathname.startsWith(item.href + '/') ||
-                  (item.href === '/app' && pathname.startsWith('/app')) ||
-                  (item.href === '/courses' && pathname.startsWith('/courses')) ||
-                  (item.href === '/dictionary' && pathname.startsWith('/dictionary')) ||
+                  (item.href === '/app' && pathname === '/app') ||
                   (item.href === '/progress' && pathname.startsWith('/progress')) ||
-                  (item.href === '/portfolio' && pathname.startsWith('/portfolio'))
+                  (item.href === '/me' && pathname.startsWith('/me'))
               const Icon = item.icon
 
               return (

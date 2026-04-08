@@ -41,7 +41,7 @@ export function AppShell({ children, variant = 'app' }: AppShellProps) {
               <div className="flex items-center gap-2.5">
                 <div className="w-2 h-2 rounded-full bg-indigo-400"></div>
                 <span className="text-lg font-bold text-white tracking-tight">
-                  ForgeStudy Platform
+                  ForgeStudy
                 </span>
               </div>
               <div className="w-10"></div>
