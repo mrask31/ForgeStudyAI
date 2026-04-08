@@ -95,10 +95,10 @@ export async function POST(req: Request) {
     // Map plan+billing to Stripe price IDs if priceId not provided directly
     if (!priceId && plan) {
       const STRIPE_PRICES: Record<string, string | undefined> = {
-        individual_monthly: process.env.STRIPE_INDIVIDUAL_MONTHLY_PRICE_ID,
-        individual_annual: process.env.STRIPE_INDIVIDUAL_ANNUAL_PRICE_ID,
-        family_monthly: process.env.STRIPE_FAMILY_MONTHLY_PRICE_ID,
-        family_annual: process.env.STRIPE_FAMILY_ANNUAL_PRICE_ID,
+        individual_monthly: process.env.NEXT_PUBLIC_STRIPE_PRICE_INDIVIDUAL_MONTHLY,
+        individual_annual: process.env.NEXT_PUBLIC_STRIPE_PRICE_INDIVIDUAL_ANNUAL,
+        family_monthly: process.env.NEXT_PUBLIC_STRIPE_PRICE_FAMILY_MONTHLY,
+        family_annual: process.env.NEXT_PUBLIC_STRIPE_PRICE_FAMILY_ANNUAL,
       }
       const key = `${plan}_${billing || 'monthly'}`
       priceId = STRIPE_PRICES[key]
