@@ -5,44 +5,16 @@ import { useActiveProfileSummary } from '@/hooks/useActiveProfileSummary'
 import { useUser } from '@/contexts/UserContext'
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import Link from 'next/link'
-import {
-  Loader2, TrendingUp, Clock, BookOpen, Lightbulb, Star,
-  GraduationCap, Brain, ChevronRight
-} from 'lucide-react'
+import { Loader2 } from 'lucide-react'
+import { ConceptGalaxy } from '@/components/galaxy/ConceptGalaxy'
+import { GalaxySkeleton } from '@/components/galaxy/GalaxySkeleton'
+import { getStudyTopicsWithMastery, getQuarantinedTopicsCount, getTopicsGroupedByCourse, type CoursePlanet } from '@/app/actions/study-topics'
 
 interface MasteryScore {
   classId: string
   className: string
-  classType: string
   score: number
   sessionsCount: number
-  lastUpdated: string
-}
-
-interface PortfolioEntry {
-  id: string
-  type: string
-  title: string
-  content: string | null
-  created_at: string
-  student_classes?: { name: string } | null
-}
-
-interface RecentSession {
-  id: string
-  title: string | null
-  updated_at: string
-}
-
-function getTypeIcon(type: string) {
-  switch (type) {
-    case 'insight': return <Lightbulb className="w-4 h-4 text-amber-400" />
-    case 'essay_idea': return <BookOpen className="w-4 h-4 text-indigo-400" />
-    case 'strength': return <Star className="w-4 h-4 text-emerald-400" />
-    case 'achievement': return <GraduationCap className="w-4 h-4 text-purple-400" />
-    default: return <Brain className="w-4 h-4 text-slate-400" />
-  }
 }
 
 export default function ProgressPage() {
@@ -51,38 +23,49 @@ export default function ProgressPage() {
   const profileSummary = useActiveProfileSummary()
   const router = useRouter()
 
+  const [streakDays, setStreakDays] = useState(0)
   const [masteryScores, setMasteryScores] = useState<MasteryScore[]>([])
-  const [portfolio, setPortfolio] = useState<PortfolioEntry[]>([])
-  const [recentSessions, setRecentSessions] = useState<RecentSession[]>([])
+  const [galaxyTopics, setGalaxyTopics] = useState<any[]>([])
+  const [coursePlanets, setCoursePlanets] = useState<CoursePlanet[]>([])
+  const [totalTopicCount, setTotalTopicCount] = useState(0)
+  const [galaxyLoading, setGalaxyLoading] = useState(true)
   const [loading, setLoading] = useState(true)
 
   const studentName = profileSummary.summary?.displayName?.split(' ')[0] || 'Student'
 
   useEffect(() => {
-    if (!activeProfileId) {
+    if (!activeProfileId || !user) {
       setLoading(false)
+      setGalaxyLoading(false)
       return
     }
 
+    // Load mastery + streak
     setLoading(true)
     Promise.all([
       fetch(`/api/mastery/scores?profileId=${activeProfileId}`, { credentials: 'include' }).then(r => r.ok ? r.json() : { scores: [] }),
-      fetch(`/api/portfolio?profileId=${activeProfileId}`, { credentials: 'include' }).then(r => r.ok ? r.json() : { entries: [] }),
-      fetch('/api/chats/list?includeArchived=false', { credentials: 'include' }).then(r => r.ok ? r.json() : { chats: [] }),
-    ]).then(([masteryData, portfolioData, chatsData]) => {
+      fetch(`/api/streak?profileId=${activeProfileId}`).then(r => r.ok ? r.json() : { current_streak_days: 0 }).catch(() => ({ current_streak_days: 0 })),
+    ]).then(([masteryData, streakData]) => {
       setMasteryScores(masteryData.scores || [])
-      setPortfolio((portfolioData.entries || []).slice(0, 8))
-      setRecentSessions((chatsData.chats || []).slice(0, 10))
+      setStreakDays(streakData.current_streak_days || 0)
+    }).finally(() => setLoading(false))
+
+    // Load Galaxy data
+    setGalaxyLoading(true)
+    Promise.all([
+      getStudyTopicsWithMastery(activeProfileId),
+      getQuarantinedTopicsCount(activeProfileId),
+      getTopicsGroupedByCourse(activeProfileId),
+    ]).then(([topicsData, quarantinedData, planetsData]) => {
+      setGalaxyTopics(topicsData)
+      setCoursePlanets(planetsData)
+      setTotalTopicCount(topicsData.length + quarantinedData)
     }).catch(err => {
-      console.error('[Progress] Error loading data:', err)
-    }).finally(() => {
-      setLoading(false)
-    })
-  }, [activeProfileId])
+      console.error('[Progress] Galaxy load error:', err)
+    }).finally(() => setGalaxyLoading(false))
+  }, [activeProfileId, user])
 
-  const totalSessions = masteryScores.reduce((sum, s) => sum + s.sessionsCount, 0)
-
-  if (loading) {
+  if (loading && galaxyLoading) {
     return (
       <div className="flex items-center justify-center h-full bg-[#08080F]">
         <Loader2 className="w-8 h-8 text-indigo-400 animate-spin" />
@@ -92,102 +75,69 @@ export default function ProgressPage() {
 
   return (
     <div className="flex-1 overflow-y-auto bg-[#08080F] pb-20 lg:pb-4">
-      <div className="max-w-3xl mx-auto px-4 py-6 md:py-10 space-y-6">
-        {/* Header */}
-        <div>
-          <h1 className="text-2xl md:text-3xl font-bold text-white">Progress</h1>
-          <p className="text-slate-400 text-sm mt-1">
-            {studentName} · {totalSessions} total sessions
-          </p>
+      {/* Streak Badge */}
+      {streakDays > 0 && (
+        <div className="flex justify-center pt-4">
+          <div className="bg-slate-900/60 border border-amber-500/30 rounded-xl px-4 py-1.5">
+            <span className="text-amber-400 text-sm font-bold">🔥 {streakDays} day streak</span>
+          </div>
         </div>
+      )}
 
-        {/* Mastery Scores */}
-        {masteryScores.length > 0 ? (
-          <div>
-            <h2 className="text-sm font-semibold text-slate-400 uppercase tracking-wider mb-3">Mastery Scores</h2>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              {masteryScores.map((ms) => (
-                <Link
-                  key={ms.classId}
-                  href={`/courses/${ms.classId}`}
-                  className="p-4 bg-slate-900/60 border border-slate-800 rounded-xl hover:border-indigo-500/30 transition-all"
-                >
-                  <div className="flex items-center justify-between mb-2">
-                    <span className="text-sm font-medium text-white truncate">{ms.className}</span>
-                    <span className="text-lg font-bold text-indigo-400 ml-2">{ms.score}</span>
-                  </div>
-                  <div className="w-full h-2.5 bg-slate-800 rounded-full overflow-hidden mb-2">
-                    <div
-                      className={`h-full rounded-full transition-all ${
-                        ms.score >= 61 ? 'bg-emerald-500' : ms.score >= 31 ? 'bg-amber-500' : 'bg-red-400'
-                      }`}
-                      style={{ width: `${ms.score}%` }}
-                    />
-                  </div>
-                  <p className="text-xs text-slate-500">{ms.sessionsCount} sessions</p>
-                </Link>
-              ))}
-            </div>
-          </div>
+      {/* Galaxy Visualization */}
+      <div className="relative w-full h-[50vh] md:h-[55vh]">
+        {galaxyLoading ? (
+          <GalaxySkeleton />
+        ) : galaxyTopics.length > 0 || coursePlanets.length > 0 ? (
+          <ConceptGalaxy
+            topics={galaxyTopics}
+            coursePlanets={coursePlanets}
+            studentName={studentName}
+            profileId={activeProfileId || undefined}
+            totalTopicCount={totalTopicCount}
+            onTopicsRefresh={async () => {
+              if (activeProfileId && user) {
+                const topicsData = await getStudyTopicsWithMastery(activeProfileId)
+                setGalaxyTopics(topicsData)
+              }
+            }}
+          />
         ) : (
-          <div className="text-center py-8 text-slate-500">
-            <TrendingUp className="w-10 h-10 mx-auto mb-3 opacity-30" />
-            <p className="text-sm">No mastery scores yet. Start studying to track your progress.</p>
-          </div>
-        )}
-
-        {/* Portfolio Highlights */}
-        {portfolio.length > 0 && (
-          <div>
-            <div className="flex items-center justify-between mb-3">
-              <h2 className="text-sm font-semibold text-slate-400 uppercase tracking-wider">Portfolio Highlights</h2>
-              <Link href="/portfolio" className="text-xs text-indigo-400 hover:text-indigo-300 font-medium transition-colors">
-                View all →
-              </Link>
-            </div>
-            <div className="space-y-2">
-              {portfolio.map((entry) => (
-                <div key={entry.id} className="flex items-start gap-3 p-3 bg-slate-900/60 border border-slate-800 rounded-xl">
-                  <div className="mt-0.5">{getTypeIcon(entry.type)}</div>
-                  <div className="min-w-0">
-                    <p className="text-sm font-medium text-white">{entry.title}</p>
-                    {entry.content && <p className="text-xs text-slate-400 mt-0.5 line-clamp-1">{entry.content}</p>}
-                    <p className="text-xs text-slate-500 mt-0.5">
-                      {entry.student_classes?.name && `${entry.student_classes.name} · `}
-                      {new Date(entry.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
-                    </p>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {/* Recent Sessions */}
-        {recentSessions.length > 0 && (
-          <div>
-            <h2 className="text-sm font-semibold text-slate-400 uppercase tracking-wider mb-3">Session History</h2>
-            <div className="space-y-2">
-              {recentSessions.map((session) => (
-                <button
-                  key={session.id}
-                  onClick={() => router.push(`/tutor?sessionId=${session.id}`)}
-                  className="w-full flex items-center gap-3 p-3 bg-slate-900/60 border border-slate-800 rounded-xl hover:border-indigo-500/30 transition-all text-left"
-                >
-                  <Clock className="w-4 h-4 text-slate-500 flex-shrink-0" />
-                  <div className="min-w-0 flex-1">
-                    <p className="text-sm text-white truncate">{session.title || 'Untitled session'}</p>
-                    <p className="text-xs text-slate-500">
-                      {new Date(session.updated_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
-                    </p>
-                  </div>
-                  <ChevronRight className="w-4 h-4 text-slate-600 flex-shrink-0" />
-                </button>
-              ))}
-            </div>
+          <div className="flex items-center justify-center h-full">
+            <p className="text-slate-500 text-sm">Start studying to build your Galaxy.</p>
           </div>
         )}
       </div>
+
+      {/* Mastery List */}
+      {masteryScores.length > 0 && (
+        <div className="max-w-lg mx-auto px-4 py-6 space-y-3">
+          <h2 className="text-sm font-semibold text-slate-400 uppercase tracking-wider">Mastery</h2>
+          {masteryScores.map((ms) => (
+            <button
+              key={ms.classId}
+              onClick={() => router.push(`/tutor?classId=${ms.classId}&intent=new_question`)}
+              className="w-full flex items-center justify-between p-3 bg-slate-900/60 border border-slate-800 rounded-xl hover:border-indigo-500/30 transition-all text-left"
+            >
+              <div>
+                <p className="text-sm font-medium text-white">{ms.className}</p>
+                <p className="text-xs text-slate-500">{ms.sessionsCount} sessions</p>
+              </div>
+              <div className="flex items-center gap-2">
+                <div className="w-16 h-2 bg-slate-800 rounded-full overflow-hidden">
+                  <div
+                    className={`h-full rounded-full ${
+                      ms.score >= 61 ? 'bg-emerald-500' : ms.score >= 31 ? 'bg-amber-500' : 'bg-red-400'
+                    }`}
+                    style={{ width: `${ms.score}%` }}
+                  />
+                </div>
+                <span className="text-sm font-bold text-indigo-400 w-8 text-right">{ms.score}</span>
+              </div>
+            </button>
+          ))}
+        </div>
+      )}
     </div>
   )
 }
