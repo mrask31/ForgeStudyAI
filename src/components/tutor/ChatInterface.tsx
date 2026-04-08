@@ -134,7 +134,7 @@ export default function ChatInterface({
   }
 
   return (
-    <div className="flex-shrink-0 pt-3 pb-safe-b relative">
+    <div className="flex-shrink-0 pt-3 relative" style={{ paddingBottom: 'max(1rem, env(safe-area-inset-bottom, 0px))' }}>
       <MedicalMathCalculator
         isOpen={isCalculatorOpen}
         onClose={() => setIsCalculatorOpen(false)}

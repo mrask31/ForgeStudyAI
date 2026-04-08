@@ -15,7 +15,20 @@ function getOpenAIClient(): OpenAI {
   return openaiClient;
 }
 
-export const runtime = 'nodejs'; 
+export const runtime = 'nodejs';
+
+/** Split text into word-based chunks with overlap to stay under embedding model's 8192 token limit */
+function chunkText(text: string, maxWords = 700, overlapWords = 50): string[] {
+  const words = text.split(/\s+/)
+  const chunks: string[] = []
+  let i = 0
+  while (i < words.length) {
+    const chunk = words.slice(i, i + maxWords).join(' ')
+    chunks.push(chunk)
+    i += maxWords - overlapWords
+  }
+  return chunks.filter(c => c.trim().length > 0)
+}
 
 export async function POST(req: Request) {
   try {
@@ -73,14 +86,10 @@ export async function POST(req: Request) {
 
     console.log(`[API] Processing ${text.length} chars for User: ${user.id}`);
 
-    // 3. Chunk Text
-    // Split by double newlines or periods to get reasonable chunks
-    const rawChunks = text.split(/\n\s*\n/);
-    const chunks = rawChunks
-        .filter((chunk: string) => chunk.length > 50) 
-        .map((chunk: string) => chunk.trim());
+    // 3. Chunk Text — word-based with overlap to stay under embedding model's 8192 token limit
+    const chunks = chunkText(text)
 
-    console.log(`[API] Generated ${chunks.length} chunks. Embedding now...`);
+    console.log(`[API] Generated ${chunks.length} chunks (word-based, ~700 words each). Embedding now...`);
 
     // 4. Generate file_key for this upload (durable file-level identifier)
     // Format: user_id:filename:date (YYYY-MM-DD)
