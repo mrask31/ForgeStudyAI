@@ -14,14 +14,18 @@ import { Accordion } from '@/components/ui/accordion'
 
 export default function HomePage() {
   const [billingPeriod, setBillingPeriod] = useState<'monthly' | 'annual'>('monthly')
+  const [betaSpots, setBetaSpots] = useState<number | null>(null)
   
   useEffect(() => {
     if (typeof window === 'undefined') return
     const params = new URLSearchParams(window.location.search)
-    if (!params.has('code')) return
-    const targetUrl = new URL('/auth/callback', window.location.origin)
-    targetUrl.search = params.toString()
-    window.location.replace(targetUrl.toString())
+    if (params.has('code')) {
+      const targetUrl = new URL('/auth/callback', window.location.origin)
+      targetUrl.search = params.toString()
+      window.location.replace(targetUrl.toString())
+      return
+    }
+    fetch('/api/beta').then(r => r.json()).then(d => setBetaSpots(d.spotsRemaining ?? null)).catch(() => {})
   }, [])
 
   const faqItems = [
@@ -157,6 +161,95 @@ export default function HomePage() {
               <p className="text-slate-400 text-lg">Full walkthrough coming soon</p>
             </div>
           </div>
+        </div>
+      </section>
+
+      {/* Pricing Section */}
+      <section id="pricing" className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
+        <h2 className="text-3xl md:text-4xl font-bold text-center text-slate-100 mb-4">Simple pricing</h2>
+        <p className="text-center text-slate-400 mb-8">Start free. Upgrade when you're ready.</p>
+
+        {/* Monthly/Annual Toggle */}
+        <div className="flex items-center justify-center gap-3 mb-10">
+          <button onClick={() => setBillingPeriod('monthly')} className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${billingPeriod === 'monthly' ? 'bg-indigo-600 text-white' : 'text-slate-400 hover:text-white'}`}>Monthly</button>
+          <button onClick={() => setBillingPeriod('annual')} className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${billingPeriod === 'annual' ? 'bg-indigo-600 text-white' : 'text-slate-400 hover:text-white'}`}>
+            Annual <span className="text-xs text-emerald-400 ml-1">Save up to 30%</span>
+          </button>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-5xl mx-auto">
+          {/* Student Plan */}
+          <div className="bg-slate-900/60 border border-slate-700 rounded-2xl p-6 flex flex-col">
+            <div className="mb-4">
+              <span className="text-2xl">👤</span>
+              <h3 className="text-lg font-bold text-white mt-2">Student</h3>
+              <p className="text-xs text-slate-400">Grades 9–12 · 1 student</p>
+            </div>
+            <div className="mb-6">
+              <span className="text-3xl font-bold text-white">{billingPeriod === 'monthly' ? '$14.99' : '$129.99'}</span>
+              <span className="text-slate-400 text-sm">/{billingPeriod === 'monthly' ? 'mo' : 'yr'}</span>
+              {billingPeriod === 'annual' && <p className="text-xs text-emerald-400 mt-1">Save 28%</p>}
+            </div>
+            <ul className="space-y-2 text-sm text-slate-300 mb-6 flex-1">
+              <li>✓ Unlimited tutor sessions</li>
+              <li>✓ Study Vault</li>
+              <li>✓ Mastery tracking</li>
+              <li>✓ Academic Portfolio</li>
+              <li>✓ College Prep tools</li>
+            </ul>
+            <Link href={`/signup?flow=student&plan=individual&billing=${billingPeriod}`} className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl font-semibold text-sm transition-colors">
+              Get Started <ArrowRight className="w-4 h-4" />
+            </Link>
+          </div>
+
+          {/* Family Plan — Most Popular */}
+          <div className="bg-slate-900/60 border-2 border-[#c9a96e]/50 rounded-2xl p-6 flex flex-col relative shadow-[0_0_30px_rgba(201,169,110,0.1)]">
+            <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-[#c9a96e] text-[#08080F] text-xs font-bold px-3 py-1 rounded-full">Most Popular</div>
+            <div className="mb-4">
+              <span className="text-2xl">👨‍👩‍👧‍👦</span>
+              <h3 className="text-lg font-bold text-white mt-2">Family</h3>
+              <p className="text-xs text-slate-400">Grades 6–12 · Up to 4 students</p>
+            </div>
+            <div className="mb-6">
+              <span className="text-3xl font-bold text-white">{billingPeriod === 'monthly' ? '$29.99' : '$249.99'}</span>
+              <span className="text-slate-400 text-sm">/{billingPeriod === 'monthly' ? 'mo' : 'yr'}</span>
+              {billingPeriod === 'annual' && <p className="text-xs text-emerald-400 mt-1">Save 30%</p>}
+            </div>
+            <ul className="space-y-2 text-sm text-slate-300 mb-6 flex-1">
+              <li>✓ Everything in Student</li>
+              <li>✓ Up to 4 student profiles</li>
+              <li>✓ Parent dashboard</li>
+              <li>✓ Weekly progress emails</li>
+              <li>✓ Teacher CC on summaries</li>
+            </ul>
+            <Link href={`/signup?flow=parent&plan=family&billing=${billingPeriod}`} className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-[#c9a96e] hover:bg-[#d4b87a] text-[#08080F] rounded-xl font-bold text-sm transition-colors">
+              Get Started <ArrowRight className="w-4 h-4" />
+            </Link>
+          </div>
+
+          {/* Beta Card */}
+          {betaSpots !== null && betaSpots > 0 && (
+            <div className="bg-slate-900/60 border border-indigo-500/30 rounded-2xl p-6 flex flex-col">
+              <div className="mb-4">
+                <span className="text-2xl">🎓</span>
+                <h3 className="text-lg font-bold text-white mt-2">Free Beta</h3>
+                <p className="text-xs text-slate-400">First 20 signups only</p>
+              </div>
+              <div className="mb-6">
+                <span className="text-3xl font-bold text-white">FREE</span>
+                <span className="text-slate-400 text-sm"> for 90 days</span>
+                <p className="text-xs text-slate-500 mt-1">No credit card required</p>
+              </div>
+              <div className="mb-6 flex-1">
+                <p className="text-sm font-medium text-indigo-400">
+                  {betaSpots <= 5 ? '⚡' : ''} {betaSpots} of 20 spots remaining
+                </p>
+              </div>
+              <Link href="/signup?flow=parent" className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl font-semibold text-sm transition-colors">
+                Claim Your Spot <ArrowRight className="w-4 h-4" />
+              </Link>
+            </div>
+          )}
         </div>
       </section>
 

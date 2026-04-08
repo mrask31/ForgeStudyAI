@@ -87,9 +87,27 @@ export async function POST(req: Request) {
         .eq('id', user.id)
     }
 
-    // 3. Get price ID from request body
+    // 3. Get price ID from request body — supports direct priceId or plan+billing combo
     const body = await req.json()
-    const { priceId } = body
+    let { priceId } = body
+    const { plan, billing } = body
+
+    // Map plan+billing to Stripe price IDs if priceId not provided directly
+    if (!priceId && plan) {
+      const STRIPE_PRICES: Record<string, string | undefined> = {
+        individual_monthly: process.env.STRIPE_INDIVIDUAL_MONTHLY_PRICE_ID,
+        individual_annual: process.env.STRIPE_INDIVIDUAL_ANNUAL_PRICE_ID,
+        family_monthly: process.env.STRIPE_FAMILY_MONTHLY_PRICE_ID,
+        family_annual: process.env.STRIPE_FAMILY_ANNUAL_PRICE_ID,
+      }
+      const key = `${plan}_${billing || 'monthly'}`
+      priceId = STRIPE_PRICES[key]
+
+      if (!priceId) {
+        console.error('[Stripe Checkout] No price ID for plan:', key)
+        return NextResponse.json({ error: `No price configured for ${key}` }, { status: 400 })
+      }
+    }
 
     console.log('[Stripe Checkout] Request received:', { 
       userId: user.id, 
