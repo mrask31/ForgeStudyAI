@@ -203,7 +203,10 @@ export default function FlowSignup({ flow }: FlowSignupProps) {
       <div className="min-h-screen bg-slate-950 flex items-center justify-center px-4 py-12">
         <div className="w-full max-w-md">
           <div className="text-center mb-8">
-            <Link href="/" className="text-indigo-400 text-sm font-medium">← Back to ForgeStudy</Link>
+            <Link href="/" className="inline-flex items-center gap-2 text-lg font-bold text-white hover:text-indigo-400 transition-colors">
+              <div className="w-2 h-2 rounded-full bg-indigo-400" />
+              ForgeStudy
+            </Link>
           </div>
 
           <div className="bg-slate-900/60 border border-slate-800 rounded-2xl p-6 sm:p-8">
@@ -357,7 +360,10 @@ export default function FlowSignup({ flow }: FlowSignupProps) {
     <div className="min-h-screen bg-slate-950 flex items-center justify-center px-4 py-12">
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
-          <Link href="/" className="text-indigo-400 text-sm font-medium">← Back to ForgeStudy</Link>
+          <Link href="/" className="inline-flex items-center gap-2 text-lg font-bold text-white hover:text-indigo-400 transition-colors">
+              <div className="w-2 h-2 rounded-full bg-indigo-400" />
+              ForgeStudy
+            </Link>
         </div>
 
         <div className="bg-slate-900/60 border border-slate-800 rounded-2xl p-6 sm:p-8">

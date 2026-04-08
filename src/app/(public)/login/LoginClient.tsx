@@ -215,7 +215,16 @@ export default function LoginClient() {
   }
 
   return (
-    <div className="min-h-[calc(100dvh-4rem)] bg-slate-950 flex">
+    <div className="min-h-screen bg-slate-950">
+      {/* Minimal header */}
+      <div className="px-4 sm:px-6 lg:px-8 py-4">
+        <Link href="/" className="inline-flex items-center gap-2 text-lg font-bold text-white hover:text-indigo-400 transition-colors">
+          <div className="w-2 h-2 rounded-full bg-indigo-400" />
+          ForgeStudy
+        </Link>
+      </div>
+
+      <div className="flex min-h-[calc(100dvh-4rem)]">
       <div className="grid grid-cols-1 md:grid-cols-2 min-h-[calc(100dvh-4rem)] w-full">
         {/* Left Column - Context Area */}
         <div className="bg-slate-900 md:border-r border-slate-800 flex flex-col justify-center p-8 md:p-16 w-full">
@@ -419,6 +428,7 @@ export default function LoginClient() {
             </div>
           </div>
         </div>
+      </div>
       </div>
     </div>
   )
