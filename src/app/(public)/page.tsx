@@ -136,6 +136,7 @@ export default function HomePage() {
               <span className="text-3xl mb-3 block">👨‍👩‍👧</span>
               <h3 className="text-lg font-bold text-slate-100 mb-1">I'm a Parent</h3>
               <p className="text-sm text-slate-400">I'm setting up ForgeStudy for my child</p>
+              <p className="text-xs text-slate-500 mt-1">Family plan from $29.99/mo · up to 4 students</p>
               <span className="mt-3 inline-flex items-center gap-1 text-indigo-400 text-sm font-semibold group-hover:gap-2 transition-all">
                 Get started <ArrowRight className="w-4 h-4" />
               </span>
@@ -147,6 +148,7 @@ export default function HomePage() {
               <span className="text-3xl mb-3 block">🎓</span>
               <h3 className="text-lg font-bold text-slate-100 mb-1">I'm a Student</h3>
               <p className="text-sm text-slate-400">I'm in grades 9-12 and ready to start studying</p>
+              <p className="text-xs text-slate-500 mt-1">Student plan from $14.99/mo · 1 student</p>
               <span className="mt-3 inline-flex items-center gap-1 text-indigo-400 text-sm font-semibold group-hover:gap-2 transition-all">
                 Get started <ArrowRight className="w-4 h-4" />
               </span>

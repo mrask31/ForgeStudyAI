@@ -25,6 +25,7 @@ export default function FlowSignup({ flow }: FlowSignupProps) {
   // Shared state
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
+  const [confirmPassword, setConfirmPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -78,8 +79,11 @@ export default function FlowSignup({ flow }: FlowSignupProps) {
     if (error) setError(error.message)
   }
 
+  const passwordsMatch = password === confirmPassword
+  const showPasswordMismatch = confirmPassword.length > 0 && !passwordsMatch
+
   const handleEmailSignup = async () => {
-    if (!email.trim() || !password.trim()) return
+    if (!email.trim() || !password.trim() || !passwordsMatch) return
     setLoading(true)
     setError(null)
 
@@ -228,7 +232,12 @@ export default function FlowSignup({ flow }: FlowSignupProps) {
                       {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                     </button>
                   </div>
-                  <button onClick={handleEmailSignup} disabled={loading || !email.trim() || !password.trim()}
+                  <div>
+                    <input type={showPassword ? 'text' : 'password'} placeholder="Confirm password" value={confirmPassword} onChange={e => setConfirmPassword(e.target.value)}
+                      className={`w-full px-4 py-3 bg-slate-950 border rounded-xl text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500 ${showPasswordMismatch ? 'border-red-500' : 'border-slate-700'}`} />
+                    {showPasswordMismatch && <p className="text-xs text-red-400 mt-1">Passwords don't match</p>}
+                  </div>
+                  <button onClick={handleEmailSignup} disabled={loading || !email.trim() || !password.trim() || !passwordsMatch || !confirmPassword}
                     className="w-full px-4 py-3 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl font-semibold transition-colors disabled:opacity-50 flex items-center justify-center gap-2">
                     {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <>Continue <ArrowRight className="w-4 h-4" /></>}
                   </button>
@@ -448,7 +457,12 @@ export default function FlowSignup({ flow }: FlowSignupProps) {
                     {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                   </button>
                 </div>
-                <button onClick={handleEmailSignup} disabled={loading || !email.trim() || !password.trim() || !studentName.trim()}
+                <div>
+                  <input type={showPassword ? 'text' : 'password'} placeholder="Confirm password" value={confirmPassword} onChange={e => setConfirmPassword(e.target.value)}
+                    className={`w-full px-4 py-3 bg-slate-950 border rounded-xl text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500 ${showPasswordMismatch ? 'border-red-500' : 'border-slate-700'}`} />
+                  {showPasswordMismatch && <p className="text-xs text-red-400 mt-1">Passwords don't match</p>}
+                </div>
+                <button onClick={handleEmailSignup} disabled={loading || !email.trim() || !password.trim() || !studentName.trim() || !passwordsMatch || !confirmPassword}
                   className="w-full px-4 py-3 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl font-semibold transition-colors disabled:opacity-50 flex items-center justify-center gap-2">
                   {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <>Continue <ArrowRight className="w-4 h-4" /></>}
                 </button>
