@@ -199,6 +199,7 @@ export default function ParentDashboardPage() {
   const [studentPinValue, setStudentPinValue] = useState('')
   const [studentPinError, setStudentPinError] = useState<string | null>(null)
   const [isStudentPinBusy, setIsStudentPinBusy] = useState(false)
+  const [todaySummaries, setTodaySummaries] = useState<any[]>([])
 
   const supabase = useMemo(
     () =>
@@ -310,6 +311,12 @@ export default function ParentDashboardPage() {
     if (!isUnlocked) return
     loadProfiles()
     loadSubscription()
+
+    // Load today's session summaries
+    fetch('/api/sessions/summary', { credentials: 'include' })
+      .then(r => r.ok ? r.json() : { summaries: [] })
+      .then(d => setTodaySummaries(d.summaries || []))
+      .catch(() => {})
   }, [isUnlocked])
 
   const unlockSession = () => {
@@ -613,6 +620,33 @@ export default function ParentDashboardPage() {
           >
             Reset parent PIN
           </button>
+        </div>
+
+        {/* Today's Activity */}
+        <div className="mb-6 rounded-2xl border border-slate-700/50 bg-slate-900/60 backdrop-blur-xl p-6 shadow-xl">
+          <h2 className="text-lg font-semibold text-slate-100 mb-4">📖 Today's Activity</h2>
+          {todaySummaries.length > 0 ? (
+            <div className="space-y-3">
+              {todaySummaries.map((s: any) => (
+                <div key={s.id} className="p-3 bg-slate-800/40 rounded-xl">
+                  <div className="flex items-center gap-2 text-xs text-slate-400 mb-1">
+                    <span className="font-medium text-indigo-400">{s.className}</span>
+                    <span>·</span>
+                    <span>{new Date(s.createdAt).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })}</span>
+                    {s.durationMinutes && <><span>·</span><span>{s.durationMinutes} min</span></>}
+                  </div>
+                  <p className="text-sm text-slate-300">{s.summary}</p>
+                  {s.masteryBefore != null && s.masteryAfter != null && (
+                    <p className="text-xs text-slate-500 mt-1">
+                      Mastery: {s.masteryBefore} → {s.masteryAfter} {s.masteryAfter > s.masteryBefore ? '↑' : ''}
+                    </p>
+                  )}
+                </div>
+              ))}
+            </div>
+          ) : (
+            <p className="text-sm text-slate-500">No study sessions yet today.</p>
+          )}
         </div>
 
         <div className="grid gap-6 md:grid-cols-2">
