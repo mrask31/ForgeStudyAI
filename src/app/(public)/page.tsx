@@ -5,7 +5,6 @@ import Link from 'next/link'
 import { LandingBetaBanner } from '@/components/beta/LandingBetaBanner'
 import {
   ArrowRight,
-  CheckCircle2,
   Sparkles,
   Zap,
   Shield,
@@ -13,7 +12,6 @@ import {
 import { Accordion } from '@/components/ui/accordion'
 
 export default function HomePage() {
-  const [billingPeriod, setBillingPeriod] = useState<'monthly' | 'annual'>('monthly')
   const [betaSpots, setBetaSpots] = useState<number | null>(null)
   
   useEffect(() => {
@@ -168,103 +166,6 @@ export default function HomePage() {
             </Link>
           </p>
 
-          {/* Hero Visual - Video Placeholder */}
-          <div className="w-full max-w-6xl min-h-[400px] mx-auto mt-12 rounded-2xl border border-indigo-500/20 shadow-[0_0_50px_rgba(99,102,241,0.2)] bg-slate-900/60 backdrop-blur overflow-hidden flex items-center justify-center">
-            <div className="text-center px-8 py-16">
-              <Sparkles className="w-16 h-16 text-indigo-400 mx-auto mb-6" />
-              <h3 className="text-2xl font-bold text-slate-100 mb-3">See ForgeStudy in Action</h3>
-              <p className="text-slate-400 text-lg">Full walkthrough coming soon</p>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Pricing Section */}
-      <section id="pricing" className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
-        <h2 className="text-3xl md:text-4xl font-bold text-center text-slate-100 mb-4">Simple pricing</h2>
-        <p className="text-center text-slate-400 mb-8">Start free. Upgrade when you're ready.</p>
-
-        {/* Monthly/Annual Toggle */}
-        <div className="flex items-center justify-center gap-3 mb-10">
-          <button onClick={() => setBillingPeriod('monthly')} className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${billingPeriod === 'monthly' ? 'bg-indigo-600 text-white' : 'text-slate-400 hover:text-white'}`}>Monthly</button>
-          <button onClick={() => setBillingPeriod('annual')} className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${billingPeriod === 'annual' ? 'bg-indigo-600 text-white' : 'text-slate-400 hover:text-white'}`}>
-            Annual <span className="text-xs text-emerald-400 ml-1">Save up to 30%</span>
-          </button>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-5xl mx-auto">
-          {/* Student Plan */}
-          <div className="bg-slate-900/60 border border-slate-700 rounded-2xl p-6 flex flex-col">
-            <div className="mb-4">
-              <span className="text-2xl">👤</span>
-              <h3 className="text-lg font-bold text-white mt-2">Student</h3>
-              <p className="text-xs text-slate-400">Grades 6–12 · 1 student</p>
-            </div>
-            <div className="mb-6">
-              <span className="text-3xl font-bold text-white">{billingPeriod === 'monthly' ? '$14.99' : '$129.99'}</span>
-              <span className="text-slate-400 text-sm">/{billingPeriod === 'monthly' ? 'mo' : 'yr'}</span>
-              {billingPeriod === 'annual' && <p className="text-xs text-emerald-400 mt-1">Save 28%</p>}
-            </div>
-            <ul className="space-y-2 text-sm text-slate-300 mb-6 flex-1">
-              <li>✓ Unlimited tutor sessions</li>
-              <li>✓ Study Vault</li>
-              <li>✓ Mastery tracking</li>
-              <li>✓ Academic Portfolio</li>
-              <li>✓ College Prep tools</li>
-            </ul>
-            <Link href={`/signup?flow=student&plan=individual&billing=${billingPeriod}`} className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl font-semibold text-sm transition-colors">
-              Get Started <ArrowRight className="w-4 h-4" />
-            </Link>
-          </div>
-
-          {/* Family Plan — Most Popular */}
-          <div className="bg-slate-900/60 border-2 border-[#c9a96e]/50 rounded-2xl p-6 flex flex-col relative shadow-[0_0_30px_rgba(201,169,110,0.1)]">
-            <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-[#c9a96e] text-[#08080F] text-xs font-bold px-3 py-1 rounded-full">Most Popular</div>
-            <div className="mb-4">
-              <span className="text-2xl">👨‍👩‍👧‍👦</span>
-              <h3 className="text-lg font-bold text-white mt-2">Family</h3>
-              <p className="text-xs text-slate-400">Grades 6–12 · Up to 4 students</p>
-            </div>
-            <div className="mb-6">
-              <span className="text-3xl font-bold text-white">{billingPeriod === 'monthly' ? '$29.99' : '$249.99'}</span>
-              <span className="text-slate-400 text-sm">/{billingPeriod === 'monthly' ? 'mo' : 'yr'}</span>
-              {billingPeriod === 'annual' && <p className="text-xs text-emerald-400 mt-1">Save 30%</p>}
-            </div>
-            <ul className="space-y-2 text-sm text-slate-300 mb-6 flex-1">
-              <li>✓ Everything in Student</li>
-              <li>✓ Up to 4 student profiles</li>
-              <li>✓ Parent dashboard</li>
-              <li>✓ Weekly progress emails</li>
-              <li>✓ Teacher CC on summaries</li>
-            </ul>
-            <Link href={`/signup?flow=parent&plan=family&billing=${billingPeriod}`} className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-[#c9a96e] hover:bg-[#d4b87a] text-[#08080F] rounded-xl font-bold text-sm transition-colors">
-              Get Started <ArrowRight className="w-4 h-4" />
-            </Link>
-          </div>
-
-          {/* Beta Card */}
-          {betaSpots !== null && betaSpots > 0 && (
-            <div className="bg-slate-900/60 border border-indigo-500/30 rounded-2xl p-6 flex flex-col">
-              <div className="mb-4">
-                <span className="text-2xl">🎓</span>
-                <h3 className="text-lg font-bold text-white mt-2">Free Beta</h3>
-                <p className="text-xs text-slate-400">First 20 signups only</p>
-              </div>
-              <div className="mb-6">
-                <span className="text-3xl font-bold text-white">FREE</span>
-                <span className="text-slate-400 text-sm"> for 90 days</span>
-                <p className="text-xs text-slate-500 mt-1">No credit card required</p>
-              </div>
-              <div className="mb-6 flex-1">
-                <p className="text-sm font-medium text-indigo-400">
-                  {betaSpots <= 5 ? '⚡' : ''} {betaSpots} of 20 spots remaining
-                </p>
-              </div>
-              <Link href="/signup?flow=parent" className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl font-semibold text-sm transition-colors">
-                Claim Your Spot <ArrowRight className="w-4 h-4" />
-              </Link>
-            </div>
-          )}
         </div>
       </section>
 
@@ -376,142 +277,6 @@ export default function HomePage() {
               ForgeStudy cannot write your child's essay. It is architecturally impossible.
             </p>
           </div>
-        </div>
-      </section>
-
-      {/* Pricing */}
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-24">
-        <div className="text-center mb-16">
-          <h2 className="text-4xl md:text-5xl font-bold text-slate-100 mb-4">
-            Simple pricing for individuals and families
-          </h2>
-        </div>
-
-        {/* Billing Period Toggle */}
-        <div className="flex justify-center mb-12">
-          <div className="inline-flex items-center gap-2 bg-slate-900/60 backdrop-blur-md border border-slate-800 rounded-2xl p-1.5">
-            <button
-              onClick={() => setBillingPeriod('monthly')}
-              className={`px-6 py-2.5 rounded-xl text-sm font-semibold transition-all duration-200 ${
-                billingPeriod === 'monthly'
-                  ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-500/30'
-                  : 'text-slate-400 hover:text-slate-200'
-              }`}
-            >
-              Monthly
-            </button>
-            <button
-              onClick={() => setBillingPeriod('annual')}
-              className={`px-6 py-2.5 rounded-xl text-sm font-semibold transition-all duration-200 ${
-                billingPeriod === 'annual'
-                  ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-500/30'
-                  : 'text-slate-400 hover:text-slate-200'
-              }`}
-            >
-              Annual
-            </button>
-          </div>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl mx-auto">
-          {/* Individual Plan */}
-          <div className="bg-slate-900/40 backdrop-blur-md border border-slate-800 rounded-2xl p-8 shadow-xl">
-            <div className="text-center mb-6">
-              <h3 className="text-2xl font-bold text-slate-100 mb-3">Individual Plan</h3>
-              <div className="mb-2">
-                {billingPeriod === 'monthly' ? (
-                  <>
-                    <span className="text-5xl font-bold text-slate-100">$14.99</span>
-                    <span className="text-lg text-slate-400 ml-1">/ month</span>
-                  </>
-                ) : (
-                  <>
-                    <span className="text-5xl font-bold text-slate-100">$129.99</span>
-                    <span className="text-lg text-slate-400 ml-1">/ year</span>
-                  </>
-                )}
-              </div>
-              {billingPeriod === 'monthly' ? (
-                <p className="text-sm text-indigo-400 font-semibold mb-1">Annual: $129.99 / year</p>
-              ) : (
-                <p className="text-sm text-indigo-400 font-semibold mb-1">Save 28% — 12 months for the price of 9</p>
-              )}
-            </div>
-            <div className="space-y-3 mb-8">
-              <div className="flex items-start gap-3">
-                <CheckCircle2 className="w-5 h-5 text-indigo-400 flex-shrink-0 mt-0.5" />
-                <span className="text-slate-300 text-sm">1 student profile</span>
-              </div>
-              <div className="flex items-start gap-3">
-                <CheckCircle2 className="w-5 h-5 text-indigo-400 flex-shrink-0 mt-0.5" />
-                <span className="text-slate-300 text-sm">Step-by-step homework help</span>
-              </div>
-              <div className="flex items-start gap-3">
-                <CheckCircle2 className="w-5 h-5 text-indigo-400 flex-shrink-0 mt-0.5" />
-                <span className="text-slate-300 text-sm">Personalized readiness dashboard</span>
-              </div>
-            </div>
-            <Link
-              href="/signup"
-              className="block w-full px-6 py-3.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl font-semibold text-center transition-all duration-200 shadow-lg shadow-indigo-500/20"
-            >
-              Get Started
-            </Link>
-          </div>
-
-          {/* Family Plan - Most Popular */}
-          <div className="bg-slate-900/60 backdrop-blur-md border-2 border-indigo-500 rounded-2xl p-8 shadow-[0_0_30px_rgba(99,102,241,0.2)] relative">
-            <div className="absolute -top-3 left-1/2 -translate-x-1/2">
-              <span className="bg-indigo-600 text-white text-xs px-3 py-1 rounded-full font-semibold shadow-lg">
-                Most Popular
-              </span>
-            </div>
-            <div className="text-center mb-6 mt-2">
-              <h3 className="text-2xl font-bold text-slate-100 mb-3">Family Plan</h3>
-              <div className="mb-2">
-                {billingPeriod === 'monthly' ? (
-                  <>
-                    <span className="text-5xl font-bold text-slate-100">$29.99</span>
-                    <span className="text-lg text-slate-400 ml-1">/ month</span>
-                  </>
-                ) : (
-                  <>
-                    <span className="text-5xl font-bold text-slate-100">$249.99</span>
-                    <span className="text-lg text-slate-400 ml-1">/ year</span>
-                  </>
-                )}
-              </div>
-              {billingPeriod === 'monthly' ? (
-                <p className="text-sm text-indigo-400 font-semibold mb-1">Annual: $249.99 / year</p>
-              ) : (
-                <p className="text-sm text-indigo-400 font-semibold mb-1">Save 28% — 12 months for the price of 9</p>
-              )}
-            </div>
-            <div className="space-y-3 mb-8">
-              <div className="flex items-start gap-3">
-                <CheckCircle2 className="w-5 h-5 text-indigo-400 flex-shrink-0 mt-0.5" />
-                <span className="text-slate-300 text-sm">Up to 4 student profiles</span>
-              </div>
-              <div className="flex items-start gap-3">
-                <CheckCircle2 className="w-5 h-5 text-indigo-400 flex-shrink-0 mt-0.5" />
-                <span className="text-slate-300 text-sm">One parent account</span>
-              </div>
-              <div className="flex items-start gap-3">
-                <CheckCircle2 className="w-5 h-5 text-indigo-400 flex-shrink-0 mt-0.5" />
-                <span className="text-slate-300 text-sm">Easy profile switching</span>
-              </div>
-            </div>
-            <Link
-              href="/signup"
-              className="block w-full px-6 py-3.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl font-semibold text-center transition-all duration-200 shadow-lg shadow-indigo-500/20"
-            >
-              Get Started
-            </Link>
-          </div>
-        </div>
-
-        <div className="text-center mt-8">
-          <p className="text-sm text-slate-500">Cancel anytime</p>
         </div>
       </section>
 

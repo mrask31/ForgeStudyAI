@@ -1,6 +1,14 @@
+import Link from 'next/link'
+
 export default function PrivacyPage() {
   return (
     <div className="min-h-screen bg-slate-50">
+      <div className="px-4 sm:px-6 lg:px-8 py-4 border-b border-slate-200">
+        <Link href="/" className="inline-flex items-center gap-2 text-lg font-bold text-slate-900 hover:text-indigo-600 transition-colors">
+          <div className="w-2 h-2 rounded-full bg-indigo-400" />
+          ForgeStudy
+        </Link>
+      </div>
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
         <h1 className="text-4xl font-semibold text-slate-900 mb-4">Privacy Policy</h1>
         <p className="text-sm text-slate-500 mb-8">Last updated: December 15, 2024</p>
@@ -83,7 +91,7 @@ export default function PrivacyPage() {
               <li>• Improve our AI models through training and refinement</li>
             </ul>
             <p className="text-slate-600 leading-relaxed mb-4">
-              <strong>Third-Party AI Provider:</strong> We use OpenAI's API services (including GPT-4 and related models) to power our AI tutoring features. When students interact with ForgeStudy Platform, their messages, uploaded materials, and learning data are shared with OpenAI solely to generate educational responses and support learning. OpenAI's use of your data is governed by their privacy policy and data processing terms. For more information, please review OpenAI's Privacy Policy at <a href="https://openai.com/privacy" target="_blank" rel="noopener noreferrer" className="text-teal-600 hover:text-teal-700 hover:underline">openai.com/privacy</a>.
+              <strong>Third-Party AI Provider:</strong> We use Anthropic's Claude API to power our AI tutoring features. When students interact with ForgeStudy Platform, their messages, uploaded materials, and learning data are shared with Anthropic solely to generate educational responses and support learning. Anthropic's use of your data is governed by their privacy policy and data processing terms. For more information, please review Anthropic's Privacy Policy at <a href="https://www.anthropic.com/privacy" target="_blank" rel="noopener noreferrer" className="text-teal-600 hover:text-teal-700 hover:underline">anthropic.com/privacy</a>.
             </p>
             <p className="text-slate-600 leading-relaxed">
               We implement appropriate safeguards and contractual protections to protect your data during AI processing, but you acknowledge that data shared with third-party AI providers is subject to their privacy practices.

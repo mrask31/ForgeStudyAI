@@ -1,6 +1,14 @@
+import Link from 'next/link'
+
 export default function TermsPage() {
   return (
     <div className="min-h-screen bg-slate-50">
+      <div className="px-4 sm:px-6 lg:px-8 py-4 border-b border-slate-200">
+        <Link href="/" className="inline-flex items-center gap-2 text-lg font-bold text-slate-900 hover:text-indigo-600 transition-colors">
+          <div className="w-2 h-2 rounded-full bg-indigo-400" />
+          ForgeStudy
+        </Link>
+      </div>
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
         <h1 className="text-4xl font-semibold text-slate-900 mb-4">Terms of Service</h1>
         <p className="text-sm text-slate-500 mb-8">Last updated: December 15, 2024</p>
@@ -196,10 +204,10 @@ export default function TermsPage() {
           <section>
             <h2 className="text-2xl font-semibold text-slate-900 mb-4">13. Subscription, Billing, and Cancellation</h2>
             <p className="text-slate-600 leading-relaxed mb-4">
-              ForgeStudy Platform offers monthly subscription plans with a 7-day free trial period. By subscribing, you agree to the following:
+              ForgeStudy Platform offers monthly and annual subscription plans with a free trial or beta access period. By subscribing, you agree to the following:
             </p>
             <ul className="space-y-2 text-slate-600 leading-relaxed mb-4 ml-4">
-              <li>• <strong>Free Trial:</strong> Your subscription begins with a 7-day free trial. You will not be charged during the trial period, and you can cancel anytime during the trial without being charged.</li>
+              <li>• <strong>Free Trial &amp; Beta Access:</strong> Beta users (first 20 signups) receive 90 days of free access with no credit card required. All other users receive a 7-day free trial. You will not be charged during either period.</li>
               <li>• <strong>Automatic Billing:</strong> After the trial period ends, your subscription will automatically renew monthly and you will be charged the subscription fee unless you cancel before the trial ends.</li>
               <li>• <strong>Cancellation:</strong> You may cancel your subscription at any time through your account settings or by contacting us at <a href="mailto:support@forgestudyai.com" className="text-teal-600 hover:text-teal-700 hover:underline">support@forgestudyai.com</a>. When you cancel, your subscription will remain active until the end of your current billing period, and you will continue to have access until that time. You will not be charged for subsequent billing periods after cancellation.</li>
               <li>• <strong>No Refunds:</strong> Subscription fees are non-refundable after the free trial period ends, except as required by law. We do not provide refunds for partial subscription periods or unused portions of your subscription.</li>

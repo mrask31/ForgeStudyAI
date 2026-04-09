@@ -80,7 +80,7 @@ export default function PublicLayout({ children }: { children: React.ReactNode }
               </a>
             </div>
             <div className="text-slate-500 text-center sm:text-right">
-              <p>© 2025 MJR Intelligence Group LLC</p>
+              <p>© 2026 MJR Intelligence Group LLC</p>
             </div>
           </div>
         </div>
