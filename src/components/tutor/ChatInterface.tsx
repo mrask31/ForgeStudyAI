@@ -128,8 +128,33 @@ export default function ChatInterface({
     }
   }
 
+  const showOpenerChips = !hasMessages && !inputValue.trim()
+
+  const OPENER_CHIPS = [
+    { emoji: '📚', label: 'I have homework due', message: "I have some homework due and need help working through it." },
+    { emoji: '😕', label: "I'm confused about something", message: "I'm confused about something we covered and need help understanding it." },
+    { emoji: '📝', label: 'I have a test coming up', message: "I have a test coming up and want to make sure I'm ready." },
+  ]
+
   return (
     <div className="flex-shrink-0 pt-3 relative" style={{ paddingBottom: 'max(1rem, env(safe-area-inset-bottom, 0px))' }}>
+      {/* Session Opener Chips — fresh sessions only */}
+      {showOpenerChips && (
+        <div className="px-2 mb-3 space-y-2">
+          <p className="text-xs text-slate-500 text-center mb-2">What are you working on today?</p>
+          {OPENER_CHIPS.map((chip) => (
+            <button
+              key={chip.label}
+              onClick={() => onSend(chip.message)}
+              className="w-full flex items-center gap-3 px-4 py-3.5 bg-slate-800/60 border border-slate-700/50 rounded-xl text-left hover:bg-indigo-600/10 hover:border-indigo-500/30 transition-all min-h-[52px]"
+            >
+              <span className="text-lg">{chip.emoji}</span>
+              <span className="text-sm font-medium text-slate-200">{chip.label}</span>
+            </button>
+          ))}
+        </div>
+      )}
+
       {/* Hidden file input for camera */}
       <input
         ref={fileInputRef}
