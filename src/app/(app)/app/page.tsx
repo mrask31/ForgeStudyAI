@@ -13,6 +13,7 @@ interface StudentClass {
   name: string
   code: string
   type: string
+  next_test_date: string | null
 }
 
 interface MasteryScore {
@@ -62,7 +63,7 @@ export default function HomePage() {
         // Fetch classes
         const { data: classData } = await supabase
           .from('student_classes')
-          .select('id, name, code, type')
+          .select('id, name, code, type, next_test_date')
           .eq('user_id', user!.id)
           .order('name')
 
@@ -133,19 +134,48 @@ export default function HomePage() {
             <div className="grid grid-cols-2 gap-3">
               {classes.map(cls => {
                 const mastery = masteryMap.get(cls.id)
+
+                // Post-test check: test date within past 48 hours
+                const isPostTest = cls.next_test_date && (() => {
+                  const diff = Date.now() - new Date(cls.next_test_date!).getTime()
+                  return diff > 0 && diff < 48 * 60 * 60 * 1000
+                })()
+
+                const handleTestFeedback = async (good: boolean) => {
+                  const supabase = (await import('@/lib/supabase/client')).getSupabaseBrowser()
+                  await supabase.from('student_classes').update({ next_test_date: null }).eq('id', cls.id)
+                  if (good) {
+                    setClasses(prev => prev.map(c => c.id === cls.id ? { ...c, next_test_date: null } : c))
+                  } else {
+                    localStorage.setItem('forgestudy-tutor-prefill', `I just got my ${cls.name} test back and it didn't go well. Can we figure out what I missed?`)
+                    localStorage.setItem('forgestudy-tutor-auto-send', 'true')
+                    router.push(`/tutor?classId=${cls.id}&className=${encodeURIComponent(cls.name)}&intent=new_question`)
+                  }
+                }
+
                 return (
-                  <button
-                    key={cls.id}
-                    onClick={() => router.push(`/tutor?classId=${cls.id}&className=${encodeURIComponent(cls.name)}&intent=new_question`)}
-                    className="group p-5 bg-slate-900/60 border border-slate-800 rounded-2xl text-left hover:border-indigo-500/40 hover:bg-slate-900/80 transition-all active:scale-[0.98]"
-                  >
-                    <div className="flex items-center gap-2 mb-1">
-                      <div className={`w-2.5 h-2.5 rounded-full ${getMasteryDot(mastery)}`} />
-                    </div>
-                    <h2 className="text-base font-semibold text-white leading-tight">
-                      {cls.name}
-                    </h2>
-                  </button>
+                  <div key={cls.id} className="relative">
+                    <button
+                      onClick={() => !isPostTest && router.push(`/tutor?classId=${cls.id}&className=${encodeURIComponent(cls.name)}&intent=new_question`)}
+                      className={`w-full group p-5 bg-slate-900/60 border border-slate-800 rounded-2xl text-left hover:border-indigo-500/40 hover:bg-slate-900/80 transition-all active:scale-[0.98] ${isPostTest ? 'pointer-events-none' : ''}`}
+                    >
+                      <div className="flex items-center gap-2 mb-1">
+                        <div className={`w-2.5 h-2.5 rounded-full ${isPostTest ? 'bg-amber-400 animate-pulse' : getMasteryDot(mastery)}`} />
+                      </div>
+                      <h2 className="text-base font-semibold text-white leading-tight">
+                        {cls.name}
+                      </h2>
+                    </button>
+                    {isPostTest && (
+                      <div className="mt-1.5 flex items-center justify-between px-2">
+                        <span className="text-[11px] text-slate-400">How'd your test go?</span>
+                        <div className="flex gap-2">
+                          <button onClick={() => handleTestFeedback(true)} className="text-base hover:scale-125 transition-transform">😊</button>
+                          <button onClick={() => handleTestFeedback(false)} className="text-base hover:scale-125 transition-transform">😟</button>
+                        </div>
+                      </div>
+                    )}
+                  </div>
                 )
               })}
             </div>
