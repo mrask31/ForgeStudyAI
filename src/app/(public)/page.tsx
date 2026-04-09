@@ -126,34 +126,47 @@ export default function HomePage() {
             ForgeStudy is the AI tutor that refuses to give the answer. It forces your child to think — and mathematically guarantees they'll remember.
           </p>
 
-          {/* Split Entry Point */}
-          <p className="text-lg text-slate-500 uppercase tracking-wider font-semibold mb-6">Who is ForgeStudy for?</p>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 max-w-2xl mx-auto mb-16">
+          {/* Plan-First Split */}
+          <p className="text-lg text-slate-500 uppercase tracking-wider font-semibold mb-8">Choose your plan</p>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 max-w-2xl mx-auto mb-6">
+            {/* 1 Student */}
             <Link
-              href="/signup?flow=parent"
+              href="/signup?flow=parent&plan=individual"
               className="group p-6 bg-slate-900/60 border border-slate-700 hover:border-indigo-500/50 rounded-2xl text-left transition-all hover:shadow-[0_0_30px_rgba(99,102,241,0.15)]"
             >
-              <span className="text-3xl mb-3 block">👨‍👩‍👧</span>
-              <h3 className="text-lg font-bold text-slate-100 mb-1">I'm a Parent</h3>
-              <p className="text-sm text-slate-400">I'm setting up ForgeStudy for my child</p>
-              <p className="text-xs text-slate-500 mt-1">Family plan from $29.99/mo · up to 4 students</p>
-              <span className="mt-3 inline-flex items-center gap-1 text-indigo-400 text-sm font-semibold group-hover:gap-2 transition-all">
-                Get started <ArrowRight className="w-4 h-4" />
+              <span className="text-2xl mb-2 block">👤</span>
+              <h3 className="text-lg font-bold text-slate-100 mb-0.5">1 Student</h3>
+              <p className="text-xs text-slate-400 mb-4">Grades 6–12 · One student, one account</p>
+              <p className="text-2xl font-bold text-white mb-0.5">$14.99<span className="text-sm font-normal text-slate-400">/mo</span></p>
+              <p className="text-xs text-slate-500 mb-5">or $129.99/yr</p>
+              <span className="inline-flex items-center gap-1.5 px-5 py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl text-sm font-semibold transition-colors group-hover:gap-2">
+                Get Started <ArrowRight className="w-4 h-4" />
               </span>
             </Link>
+
+            {/* Up to 4 Students */}
             <Link
-              href="/signup?flow=student"
-              className="group p-6 bg-slate-900/60 border border-slate-700 hover:border-indigo-500/50 rounded-2xl text-left transition-all hover:shadow-[0_0_30px_rgba(99,102,241,0.15)]"
+              href="/signup?flow=parent&plan=family"
+              className="group relative p-6 bg-slate-900/60 border-2 border-[#c9a96e]/50 hover:border-[#c9a96e]/80 rounded-2xl text-left transition-all hover:shadow-[0_0_30px_rgba(201,169,110,0.15)]"
             >
-              <span className="text-3xl mb-3 block">🎓</span>
-              <h3 className="text-lg font-bold text-slate-100 mb-1">I'm a Student</h3>
-              <p className="text-sm text-slate-400">I'm in grades 9-12 and ready to start studying</p>
-              <p className="text-xs text-slate-500 mt-1">Student plan from $14.99/mo · 1 student</p>
-              <span className="mt-3 inline-flex items-center gap-1 text-indigo-400 text-sm font-semibold group-hover:gap-2 transition-all">
-                Get started <ArrowRight className="w-4 h-4" />
+              <div className="absolute -top-3 right-4 bg-[#c9a96e] text-[#08080F] text-[10px] font-bold px-2.5 py-0.5 rounded-full">Most Popular</div>
+              <span className="text-2xl mb-2 block">👨‍👩‍👧‍👦</span>
+              <h3 className="text-lg font-bold text-slate-100 mb-0.5">Up to 4 Students</h3>
+              <p className="text-xs text-slate-400 mb-4">Grades 6–12 · One account, multiple kids</p>
+              <p className="text-2xl font-bold text-white mb-0.5">$29.99<span className="text-sm font-normal text-slate-400">/mo</span></p>
+              <p className="text-xs text-slate-500 mb-5">or $249.99/yr</p>
+              <span className="inline-flex items-center gap-1.5 px-5 py-2.5 bg-[#c9a96e] hover:bg-[#d4b87a] text-[#08080F] rounded-xl text-sm font-bold transition-colors group-hover:gap-2">
+                Get Started <ArrowRight className="w-4 h-4" />
               </span>
             </Link>
           </div>
+
+          <p className="text-sm text-slate-500 text-center mb-16">
+            Are you a high schooler signing up yourself?{' '}
+            <Link href="/signup?flow=student&plan=individual" className="text-indigo-400 hover:text-indigo-300 font-medium">
+              Start here →
+            </Link>
+          </p>
 
           {/* Hero Visual - Video Placeholder */}
           <div className="w-full max-w-6xl min-h-[400px] mx-auto mt-12 rounded-2xl border border-indigo-500/20 shadow-[0_0_50px_rgba(99,102,241,0.2)] bg-slate-900/60 backdrop-blur overflow-hidden flex items-center justify-center">
@@ -185,7 +198,7 @@ export default function HomePage() {
             <div className="mb-4">
               <span className="text-2xl">👤</span>
               <h3 className="text-lg font-bold text-white mt-2">Student</h3>
-              <p className="text-xs text-slate-400">Grades 9–12 · 1 student</p>
+              <p className="text-xs text-slate-400">Grades 6–12 · 1 student</p>
             </div>
             <div className="mb-6">
               <span className="text-3xl font-bold text-white">{billingPeriod === 'monthly' ? '$14.99' : '$129.99'}</span>
