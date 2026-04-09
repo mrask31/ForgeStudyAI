@@ -28,8 +28,8 @@ export async function GET(req: Request) {
       .order('created_at', { ascending: false })
 
     if (error) {
-      console.error('[Portfolio] Fetch error:', error)
-      return NextResponse.json({ error: 'Failed to fetch portfolio' }, { status: 500 })
+      console.warn('[Portfolio] Query error (returning empty):', error.message)
+      return NextResponse.json({ entries: [] })
     }
 
     return NextResponse.json({ entries: entries || [] })

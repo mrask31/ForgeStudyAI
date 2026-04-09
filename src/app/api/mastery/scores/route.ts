@@ -35,8 +35,9 @@ export async function GET(req: Request) {
       .order('score', { ascending: false })
 
     if (error) {
-      console.error('[Mastery Scores] Error:', error)
-      return NextResponse.json({ error: 'Failed to fetch scores' }, { status: 500 })
+      // Table may not exist yet (migration not applied) — return empty gracefully
+      console.warn('[Mastery Scores] Query error (returning empty):', error.message)
+      return NextResponse.json({ scores: [] })
     }
 
     const formatted = (scores || []).map((s: any) => ({

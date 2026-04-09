@@ -20,10 +20,16 @@ export async function GET() {
       auth: { autoRefreshToken: false, persistSession: false }
     })
 
-    const { count } = await supabase
+    const { count, error } = await supabase
       .from('beta_access')
       .select('*', { count: 'exact', head: true })
       .eq('is_beta', true)
+
+    if (error) {
+      // Table may not exist yet — return full spots available
+      console.warn('[Beta] Query error:', error.message)
+      return NextResponse.json({ spotsRemaining: 20, total: 20 })
+    }
 
     const spotsRemaining = Math.max(0, 20 - (count ?? 0))
     return NextResponse.json({ spotsRemaining, total: 20 })
