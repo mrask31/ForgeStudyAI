@@ -157,14 +157,22 @@ export async function POST(req: NextRequest) {
       content: msg.content,
     }));
 
-    // Look up class name from classId for richer context
+    // Look up class name and test date from classId
     let resolvedClassName: string | undefined;
+    let testDateContext = '';
     if (classId) {
       const { data: classRow } = await supabase
         .from('student_classes')
-        .select('name, code')
+        .select('name, code, next_test_date')
         .eq('id', classId)
         .single();
+      if (classRow?.next_test_date) {
+        const testDate = new Date(classRow.next_test_date);
+        const daysUntil = Math.ceil((testDate.getTime() - Date.now()) / (1000 * 60 * 60 * 24));
+        if (daysUntil > 0 && daysUntil <= 14) {
+          testDateContext = `The student has a test on ${classRow.name || 'this subject'} on ${testDate.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })} — ${daysUntil} day${daysUntil !== 1 ? 's' : ''} from now. Keep sessions focused on exam preparation.\n\n`;
+        }
+      }
       if (classRow) {
         resolvedClassName = classRow.code ? `${classRow.code} — ${classRow.name}` : classRow.name;
       }
@@ -335,7 +343,7 @@ ALWAYS:
 `;
     }
 
-    const systemPromptPrefix = essayModeContext + explainModeContext + interestsLine + vaultContext + topicContext;
+    const systemPromptPrefix = essayModeContext + explainModeContext + testDateContext + interestsLine + vaultContext + topicContext;
 
     // Initialize Claude Service
     const claudeService = new ClaudeService(apiKey);
