@@ -740,6 +740,7 @@ export default function TutorSession({
             initialPrompt={undefined}
             attachedFiles={attachedFiles}
             onDetach={onDetachFile}
+            gradeBand={gradeBand || activeProfileSummary?.gradeBand}
           />
         </div>
       )}

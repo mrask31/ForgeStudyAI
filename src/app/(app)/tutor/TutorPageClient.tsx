@@ -924,6 +924,7 @@ function TutorPageContent() {
                   initialPrompt={localStoragePrefill || entryPrompt}
                   attachedFiles={attachedFiles}
                   onDetach={handleDetachFile}
+                  gradeBand={activeProfileSummary?.gradeBand as 'middle' | 'high' | undefined}
                 />
               </div>
             </>

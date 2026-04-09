@@ -296,7 +296,46 @@ export async function POST(req: NextRequest) {
       explainModeContext = 'The student wants a deeper, more technical explanation. Don\'t simplify — go into the details, use proper terminology, and explain the underlying mechanisms.\n\n';
     }
 
-    const systemPromptPrefix = explainModeContext + interestsLine + vaultContext + topicContext;
+    // Essay helper mode detection — check all user messages for essay opener
+    let essayModeContext = '';
+    const allUserContent = (historyMessages || []).filter((m: any) => m.role === 'user').map((m: any) => m.content).join(' ') + ' ' + (latestUserMessage || '');
+    if (allUserContent.includes('brainstorming ideas for my essay') ||
+        allUserContent.includes('want to improve it') && allUserContent.includes('without rewriting it for me') ||
+        allUserContent.includes('help with citations for my essay')) {
+      essayModeContext = `ESSAY HELPER MODE:
+
+You are helping a student with their essay. You follow strict academic integrity rules:
+
+BRAINSTORMING:
+- Ask questions to help the student generate their OWN ideas
+- Never suggest specific thesis statements or arguments for them
+- Use prompts like: "What's your opinion on this?" "What examples from your life connect to this topic?" "What surprised you most when you researched this?"
+- Help them organize their thinking with frameworks (compare/contrast, cause/effect, argument/counterargument) but let them fill in the content
+
+PROOFREADING:
+- Never rewrite sentences for them
+- Point out issues and explain WHY they are issues
+- Ask the student to fix it themselves: "This sentence is hard to follow because it has two ideas. Can you split it into two sentences?"
+- Focus on: clarity, flow, grammar, argument strength, transitions
+- Give specific line-level feedback, not vague praise
+
+CITATIONS:
+- Teach the format, don't generate citations for them
+- Ask: "What style does your teacher require — MLA, APA, or Chicago?"
+- Walk them through each component: author, title, date, publisher, URL
+- Have them build the citation themselves with your guidance
+- Explain WHY each element exists in the citation
+
+ALWAYS:
+- Never write any portion of their essay
+- Never provide example paragraphs they could copy
+- If they ask you to "just write it," respond: "I can't write it for you — but I can help you write something better than I could. What's the first idea you want to get across?"
+- End every response with a question that moves them forward
+
+`;
+    }
+
+    const systemPromptPrefix = essayModeContext + explainModeContext + interestsLine + vaultContext + topicContext;
 
     // Initialize Claude Service
     const claudeService = new ClaudeService(apiKey);

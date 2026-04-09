@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useRef, useEffect } from 'react'
-import { ArrowUp, Camera, Loader2 } from 'lucide-react'
+import { ArrowUp, Camera, Loader2, PenLine, X, Lightbulb, Search, BookOpen } from 'lucide-react'
 import { toast } from 'sonner'
 
 interface ChatInterfaceProps {
@@ -12,7 +12,14 @@ interface ChatInterfaceProps {
   isLoading?: boolean
   messages?: any[]
   onDetach?: (fileId: string) => void
+  gradeBand?: 'middle' | 'high'
 }
+
+const ESSAY_OPTIONS = [
+  { key: 'brainstorm', icon: Lightbulb, label: 'Brainstorm ideas', message: "I need help brainstorming ideas for my essay. Can you help me think through some angles?" },
+  { key: 'proofread', icon: Search, label: 'Proofread my writing', message: "I've written something and want to improve it. I'll paste it in — can you help me make it better without rewriting it for me?" },
+  { key: 'citations', icon: BookOpen, label: 'Help with citations', message: "I need help with citations for my essay. Can you walk me through how to cite my sources correctly?" },
+] as const
 
 export default function ChatInterface({
   sessionId,
@@ -22,12 +29,15 @@ export default function ChatInterface({
   isLoading = false,
   messages = [],
   onDetach,
+  gradeBand,
 }: ChatInterfaceProps) {
   const [inputValue, setInputValue] = useState('')
   const [isProcessingPhoto, setIsProcessingPhoto] = useState(false)
+  const [showEssayMenu, setShowEssayMenu] = useState(false)
   const inputRef = useRef<HTMLTextAreaElement>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
   const hasMessages = !!sessionId || (messages && messages.length > 0)
+  const isHighSchool = gradeBand === 'high'
 
   useEffect(() => {
     if (!hasMessages && initialPrompt && !inputValue) {
@@ -61,6 +71,15 @@ export default function ChatInterface({
     }
 
     setTimeout(() => { inputRef.current?.focus() }, 100)
+  }
+
+  const handleEssayOption = async (message: string) => {
+    setShowEssayMenu(false)
+    try {
+      await onSend(message)
+    } catch (error) {
+      console.error('[ChatInterface] Error sending essay message:', error)
+    }
   }
 
   const handlePhotoSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -120,6 +139,51 @@ export default function ChatInterface({
         className="hidden"
         onChange={handlePhotoSelect}
       />
+
+      {/* Essay Help Menu */}
+      {showEssayMenu && (
+        <div className="absolute bottom-full left-0 right-0 mb-2 px-2">
+          <div className="bg-slate-900 border border-slate-700 rounded-xl shadow-2xl p-3 space-y-1.5">
+            <div className="flex items-center justify-between mb-1">
+              <span className="text-xs font-semibold text-slate-400">✏️ Essay Help</span>
+              <button onClick={() => setShowEssayMenu(false)} className="p-1 text-slate-500 hover:text-white">
+                <X className="w-3.5 h-3.5" />
+              </button>
+            </div>
+            {ESSAY_OPTIONS.map((opt) => {
+              const Icon = opt.icon
+              return (
+                <button
+                  key={opt.key}
+                  onClick={() => handleEssayOption(opt.message)}
+                  className="w-full flex items-center gap-2.5 px-3 py-2.5 text-left text-sm text-slate-200 hover:bg-indigo-600/20 rounded-lg transition-colors"
+                >
+                  <Icon className="w-4 h-4 text-indigo-400 flex-shrink-0" />
+                  {opt.label}
+                </button>
+              )
+            })}
+          </div>
+        </div>
+      )}
+
+      {/* Essay Help chip (grades 9-12 only) */}
+      {isHighSchool && (
+        <div className="flex gap-1.5 px-2 mb-2">
+          <button
+            type="button"
+            onClick={() => setShowEssayMenu(!showEssayMenu)}
+            className={`flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium transition-all ${
+              showEssayMenu
+                ? 'bg-indigo-600 text-white'
+                : 'bg-slate-800/60 text-slate-400 hover:text-white hover:bg-slate-700/60'
+            }`}
+          >
+            <PenLine className="w-3.5 h-3.5" />
+            Essay Help
+          </button>
+        </div>
+      )}
 
       {/* Chat Input Dock */}
       <form
