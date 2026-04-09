@@ -203,8 +203,13 @@ export default function ChatMessageList({
                 }}
               >
                 {/* Document Content — with Desmos graph detection */}
+                {(() => {
+                  const hasReadyToGo = m.content.includes('READY_TO_GO')
+                  const displayContent = hasReadyToGo ? m.content.replace(/\n?READY_TO_GO\n?/g, '').trim() : m.content
+                  return (
+                    <>
                 <div className="prose prose-slate prose-sm sm:prose-lg max-w-full sm:max-w-3xl overflow-x-hidden break-words">
-                  {parseDesmosMarkers(m.content).map((segment, segIdx) =>
+                  {parseDesmosMarkers(displayContent).map((segment, segIdx) =>
                     segment.type === 'desmos' ? (
                       <DesmosEmbed key={`desmos-${segIdx}`} equation={segment.value} />
                     ) : (
@@ -355,6 +360,20 @@ export default function ChatMessageList({
                     )}
                   </div>
                 </div>
+                {hasReadyToGo && (
+                  <button
+                    onClick={() => {
+                      // Navigate back to home — session is complete
+                      window.location.href = '/app'
+                    }}
+                    className="mt-4 w-full flex items-center justify-center gap-2 px-4 py-3 bg-emerald-600/20 border border-emerald-500/30 text-emerald-400 rounded-xl font-semibold text-sm hover:bg-emerald-600/30 transition-colors"
+                  >
+                    ✓ I'm ready — close session
+                  </button>
+                )}
+                    </>
+                  )
+                })()}
               </article>
             </div>
           )
