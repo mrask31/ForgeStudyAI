@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { ArrowRight, Loader2, Eye, EyeOff, Share2, Plus } from 'lucide-react'
@@ -30,6 +30,11 @@ export default function FlowSignup({ flow }: FlowSignupProps) {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [accountCreated, setAccountCreated] = useState(false)
+  const [betaSpots, setBetaSpots] = useState<number | null>(null)
+
+  useEffect(() => {
+    fetch('/api/beta').then(r => r.json()).then(d => setBetaSpots(d.spotsRemaining ?? 0)).catch(() => setBetaSpots(0))
+  }, [])
 
   // Parent flow state
   const [parentStep, setParentStep] = useState<ParentStep>('account')
@@ -57,6 +62,32 @@ export default function FlowSignup({ flow }: FlowSignupProps) {
   const allGrades = flow === 'parent' ? [...grades6to8, ...grades9to12] : grades9to12
 
   const maxChildren = plan === 'family' ? 4 : 1
+
+  const isBeta = betaSpots !== null && betaSpots > 0
+  const planLabel = plan === 'family' ? 'Family plan (up to 4 students)' : '1 Student plan'
+  const planPrice = plan === 'family' ? '$29.99/mo' : '$14.99/mo'
+
+  const SignupBanner = () => {
+    if (betaSpots === null) return null
+    return (
+      <div className="mb-5 space-y-2">
+        {isBeta ? (
+          <div className="bg-[#c9a96e]/10 border border-[#c9a96e]/30 rounded-xl p-3.5">
+            <p className="text-sm font-semibold text-[#c9a96e]">🎓 Beta offer — {betaSpots} of 20 spots left</p>
+            <p className="text-xs text-[#c9a96e]/70 mt-0.5">You're getting 90 days completely free. No credit card required.</p>
+          </div>
+        ) : (
+          <div className="bg-slate-800/50 border border-slate-700/50 rounded-xl p-3.5">
+            <p className="text-sm font-medium text-slate-300">✓ Free for 7 days — no credit card required</p>
+            <p className="text-xs text-slate-500 mt-0.5">After your trial, plans start at $14.99/mo.</p>
+          </div>
+        )}
+        <p className="text-xs text-slate-500 px-1">
+          📋 {isBeta ? `${planLabel} · Free for 90 days during beta` : `${planLabel} · ${planPrice} after trial`}
+        </p>
+      </div>
+    )
+  }
 
   const GoogleButton = ({ label }: { label: string }) => (
     <button onClick={handleGoogleAuth} className="w-full flex items-center justify-center gap-3 px-4 py-3 bg-white hover:bg-gray-50 text-gray-900 font-medium rounded-xl transition-colors border border-gray-300 mb-4">
@@ -218,7 +249,8 @@ export default function FlowSignup({ flow }: FlowSignupProps) {
             {parentStep === 'account' && (
               <>
                 <h1 className="text-2xl font-bold text-white mb-1">Create your parent account</h1>
-                <p className="text-sm text-slate-400 mb-6">You'll manage your child's learning from here.</p>
+                <p className="text-sm text-slate-400 mb-5">You'll manage your child's learning from here.</p>
+                <SignupBanner />
                 {error && <p className="text-sm text-red-400 bg-red-900/20 border border-red-800/50 rounded-lg p-3 mb-4">{error}</p>}
                 <GoogleButton label="Continue with Google" />
                 <OrDivider />
@@ -441,7 +473,8 @@ export default function FlowSignup({ flow }: FlowSignupProps) {
           {studentStep === 'account' && (
             <>
               <h1 className="text-2xl font-bold text-white mb-1">Let's get you set up</h1>
-              <p className="text-sm text-slate-400 mb-6">Quick — this takes 30 seconds.</p>
+              <p className="text-sm text-slate-400 mb-5">Quick — this takes 30 seconds.</p>
+              <SignupBanner />
               {error && <p className="text-sm text-red-400 bg-red-900/20 border border-red-800/50 rounded-lg p-3 mb-4">{error}</p>}
               <GoogleButton label="Continue with Google" />
               <OrDivider />
