@@ -1,7 +1,6 @@
-import { NextResponse } from 'next/server'
+import { NextRequest, NextResponse } from 'next/server'
 import Stripe from 'stripe'
 import { createClient } from '@supabase/supabase-js'
-import { headers } from 'next/headers'
 
 // Lazy initialization function for Stripe client
 // This prevents Stripe from being initialized during build time
@@ -15,7 +14,7 @@ function getStripeClient(): Stripe {
 export const dynamic = 'force-dynamic'
 
 // This endpoint handles Stripe webhooks to update subscription status
-export async function POST(req: Request) {
+export async function POST(req: NextRequest) {
   try {
     // Check if Stripe secret key is configured
     if (!process.env.STRIPE_SECRET_KEY) {
@@ -26,8 +25,9 @@ export async function POST(req: Request) {
       )
     }
 
+    // Read raw body as text — MUST NOT use req.json() for Stripe signature verification
     const body = await req.text()
-    const signature = headers().get('stripe-signature')
+    const signature = req.headers.get('stripe-signature')
 
     if (!signature) {
       console.error('[Stripe Webhook] Missing stripe-signature header')
