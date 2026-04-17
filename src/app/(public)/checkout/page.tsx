@@ -269,7 +269,7 @@ function CheckoutContent() {
             )}
           </button>
           <p className="text-xs text-slate-500 mt-3">
-            7-day free trial · Cancel anytime
+            14-day free trial · No credit card required
           </p>
         </div>
       </div>

@@ -147,6 +147,9 @@ export async function middleware(request: NextRequest) {
       '/',
       '/login',
       '/signup',
+      '/founding',
+      '/subscribe',
+      '/pricing',
       '/reset',
       '/reset-password',
       '/password-updated',
@@ -230,26 +233,38 @@ export async function middleware(request: NextRequest) {
           hasAccess = true
         }
 
-        // Trial user with active period
+        // Trial user with active period (from beta_access table)
         if (!hasAccess && !betaAccess?.is_beta && betaAccess?.trial_expires_at &&
             new Date(betaAccess.trial_expires_at) > new Date()) {
           hasAccess = true
         }
 
-        // Fall back to profiles subscription_status / trial_ends_at
+        // Fall back to profiles subscription_status / trial_ends_at / founding_tier
         if (!hasAccess) {
           const { data: profile } = await adminClient
             .from('profiles')
-            .select('subscription_status, trial_ends_at')
+            .select('subscription_status, trial_ends_at, founding_tier')
             .eq('id', user.id)
             .single()
 
           const subStatus = profile?.subscription_status
           const trialEndsAt = profile?.trial_ends_at
+          const foundingTier = profile?.founding_tier
           const isTrialActive = trialEndsAt && new Date(trialEndsAt) > new Date()
 
           if (hasSubscriptionAccess(subStatus, trialEndsAt) || isTrialActive) {
             hasAccess = true
+          }
+
+          if (!hasAccess) {
+            // Redirect to /subscribe with context
+            const subscribeUrl = new URL('/subscribe', request.url)
+            if (foundingTier === 'founding') {
+              subscribeUrl.searchParams.set('from', 'founding')
+            } else {
+              subscribeUrl.searchParams.set('from', 'trial')
+            }
+            return NextResponse.redirect(subscribeUrl)
           }
         }
 

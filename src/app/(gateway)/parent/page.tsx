@@ -433,8 +433,8 @@ export default function ParentDashboardPage() {
 
     // Stripe subscription
     if (!subscriptionData?.subscription) return 'Free Preview'
+    if (subscriptionData.subscription.status === 'trialing') return '14-Day Free Trial'
     if (subscriptionData.subscription.status === 'active') return 'Active'
-    if (subscriptionData.subscription.status === 'trialing') return '7-Day Free Trial'
     if (subscriptionData.subscription.status === 'canceled') return 'Canceled'
     return subscriptionData.status || 'Free Preview'
   }, [subscriptionData])

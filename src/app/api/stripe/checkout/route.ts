@@ -144,23 +144,19 @@ export async function POST(req: Request) {
 
     console.log('[Stripe Checkout] Using app URL:', appUrl)
     
-    // 5. Create Stripe Checkout Session with 7-day free trial
-    // Note: Stripe will start a 7-day trial and only charge after the trial ends
-    // payment_method_collection: 'always' ensures users must provide payment info upfront
-    // allow_promotion_codes: true enables coupon/promo code entry in the checkout form
+    // 5. Create Stripe Checkout Session
+    // Trial period is handled by the profiles table (14-day or 90-day Founding)
+    // Users arriving here have already consumed their trial — no Stripe trial needed
     const session = await stripe.checkout.sessions.create({
       mode: 'subscription',
       line_items: [
         {
-          price: priceId, // e.g. monthly / semester / annual price ID from Stripe
+          price: priceId,
           quantity: 1,
         },
       ],
-      subscription_data: {
-        trial_period_days: 7,
-      },
-      payment_method_collection: 'always', // Require payment method even during trial
-      allow_promotion_codes: true, // Enable coupon/promo code entry field
+      payment_method_collection: 'always',
+      allow_promotion_codes: true,
       success_url: new URL('/billing/success', appUrl).toString() +
         '?session_id={CHECKOUT_SESSION_ID}',
       cancel_url: new URL('/billing/cancel', appUrl).toString(),

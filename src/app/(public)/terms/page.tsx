@@ -204,10 +204,10 @@ export default function TermsPage() {
           <section>
             <h2 className="text-2xl font-semibold text-slate-900 mb-4">13. Subscription, Billing, and Cancellation</h2>
             <p className="text-slate-600 leading-relaxed mb-4">
-              ForgeStudy Platform offers monthly and annual subscription plans with a free trial or beta access period. By subscribing, you agree to the following:
+              ForgeStudy Platform offers monthly and annual subscription plans with a free trial period. No credit card is required to start your trial. By subscribing, you agree to the following:
             </p>
             <ul className="space-y-2 text-slate-600 leading-relaxed mb-4 ml-4">
-              <li>• <strong>Free Trial &amp; Beta Access:</strong> Beta users (first 20 signups) receive 90 days of free access with no credit card required. All other users receive a 7-day free trial. You will not be charged during either period.</li>
+              <li>• <strong>Free Trial &amp; Founding Families:</strong> Founding Families members (first 20 signups) receive 90 days of free access with no credit card required. All other users receive a 14-day free trial with no credit card required. You will not be charged during either period. At the end of the trial, you may choose to subscribe or your access will simply pause — we do not auto-charge.</li>
               <li>• <strong>Automatic Billing:</strong> After the trial period ends, your subscription will automatically renew monthly and you will be charged the subscription fee unless you cancel before the trial ends.</li>
               <li>• <strong>Cancellation:</strong> You may cancel your subscription at any time through your account settings or by contacting us at <a href="mailto:support@forgestudyai.com" className="text-teal-600 hover:text-teal-700 hover:underline">support@forgestudyai.com</a>. When you cancel, your subscription will remain active until the end of your current billing period, and you will continue to have access until that time. You will not be charged for subsequent billing periods after cancellation.</li>
               <li>• <strong>No Refunds:</strong> Subscription fees are non-refundable after the free trial period ends, except as required by law. We do not provide refunds for partial subscription periods or unused portions of your subscription.</li>

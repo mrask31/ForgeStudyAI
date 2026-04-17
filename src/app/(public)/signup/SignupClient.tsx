@@ -19,6 +19,7 @@ export default function SignupClient() {
   const [isVerifying, setIsVerifying] = useState(false)
   const [betaSpots, setBetaSpots] = useState<number | null>(null)
   const [canResend, setCanResend] = useState(false)
+  const [foundingFullBanner, setFoundingFullBanner] = useState(false)
   const [resending, setResending] = useState(false)
   const router = useRouter()
 
@@ -68,6 +69,9 @@ export default function SignupClient() {
       const ref = params.get('ref')
       if (ref) {
         localStorage.setItem('forgestudy-referral-code', ref.toUpperCase().trim())
+      }
+      if (params.get('founding') === 'full') {
+        setFoundingFullBanner(true)
       }
     }
   }, [])
@@ -615,6 +619,14 @@ export default function SignupClient() {
                 <div className="flex-1 h-px bg-slate-800"></div>
               </div>
 
+              {foundingFullBanner && (
+                <div className="bg-amber-900/30 border border-amber-700/50 rounded-lg p-3 mb-4 flex items-center justify-between">
+                  <p className="text-amber-200 text-sm">
+                    Founding Families is full — start your 14-day free trial (also no credit card).
+                  </p>
+                  <button onClick={() => setFoundingFullBanner(false)} className="text-amber-400 hover:text-amber-200 text-lg ml-2">×</button>
+                </div>
+              )}
               <form onSubmit={handleSignup} className="space-y-4 sm:space-y-5">
                 <div className="space-y-4">
                   <div className="relative">
