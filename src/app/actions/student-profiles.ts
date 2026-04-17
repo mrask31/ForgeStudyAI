@@ -257,6 +257,53 @@ export async function createStudentProfile(data: {
           parentName: parentName,
         }
       )
+
+      // Seed standard trial lifecycle emails (day 1, 7, 13, 14)
+      // Only for non-founding users — founding users get their own lifecycle from the founding signup form
+      try {
+        const { data: userProfile } = await supabase
+          .from('profiles')
+          .select('founding_tier')
+          .eq('id', user.id)
+          .single()
+
+        if (!userProfile?.founding_tier) {
+          const now = new Date()
+          const emailMeta = { parent_first_name: parentName || 'there', student_first_name: profile.display_name }
+          await supabase.from('email_events').insert([
+            {
+              user_id: user.id,
+              template_slug: 'standard_day_1',
+              status: 'queued',
+              scheduled_for: now.toISOString(),
+              metadata: emailMeta,
+            },
+            {
+              user_id: user.id,
+              template_slug: 'trial_day_7',
+              status: 'queued',
+              scheduled_for: new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000).toISOString(),
+              metadata: emailMeta,
+            },
+            {
+              user_id: user.id,
+              template_slug: 'trial_day_13',
+              status: 'queued',
+              scheduled_for: new Date(now.getTime() + 13 * 24 * 60 * 60 * 1000).toISOString(),
+              metadata: emailMeta,
+            },
+            {
+              user_id: user.id,
+              template_slug: 'trial_day_14',
+              status: 'queued',
+              scheduled_for: new Date(now.getTime() + 14 * 24 * 60 * 60 * 1000).toISOString(),
+              metadata: emailMeta,
+            },
+          ])
+        }
+      } catch (err) {
+        console.error('[Student Profiles] Trial email seeding failed (non-fatal):', err)
+      }
     } catch (err) {
       // Log but don't throw - email event failure should not prevent profile creation
       console.error('[Student Profiles] Error enqueueing email event (non-fatal):', err)

@@ -184,6 +184,21 @@ export async function POST(req: NextRequest) {
           subscriptionId,
           updatedProfile: updatedProfile?.[0]
         })
+
+        // Insert subscription_confirmation email event
+        try {
+          await supabase.from('email_events').insert({
+            user_id: userId,
+            template_slug: 'subscription_confirmation',
+            status: 'queued',
+            scheduled_for: new Date().toISOString(),
+            metadata: { source: 'stripe_checkout_completed' },
+          })
+          console.log('[Stripe Webhook] Queued subscription_confirmation email for:', userId)
+        } catch (emailErr) {
+          console.error('[Stripe Webhook] Failed to queue subscription_confirmation (non-fatal):', emailErr)
+        }
+
         break
       }
 

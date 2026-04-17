@@ -81,19 +81,44 @@ export function FoundingSignupForm() {
         return
       }
 
-      // 3. Schedule founding welcome email
+      // 3. Schedule founding lifecycle emails (day 1, 30, 88, 90)
       try {
-        await supabase.from('email_events').insert({
-          user_id: authData.user.id,
-          template_slug: 'founding_day_1',
-          status: 'queued',
-          scheduled_for: new Date().toISOString(),
-          metadata: {
-            parent_first_name: name,
-            slot_number: result.slot_number,
-            email,
+        const now = new Date()
+        const emailMeta = {
+          parent_first_name: name,
+          founding_signup_number: result.slot_number,
+          email,
+        }
+        await supabase.from('email_events').insert([
+          {
+            user_id: authData.user.id,
+            template_slug: 'founding_day_1',
+            status: 'queued',
+            scheduled_for: now.toISOString(),
+            metadata: emailMeta,
           },
-        })
+          {
+            user_id: authData.user.id,
+            template_slug: 'founding_day_30',
+            status: 'queued',
+            scheduled_for: new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000).toISOString(),
+            metadata: emailMeta,
+          },
+          {
+            user_id: authData.user.id,
+            template_slug: 'founding_day_88',
+            status: 'queued',
+            scheduled_for: new Date(now.getTime() + 88 * 24 * 60 * 60 * 1000).toISOString(),
+            metadata: emailMeta,
+          },
+          {
+            user_id: authData.user.id,
+            template_slug: 'founding_day_90',
+            status: 'queued',
+            scheduled_for: new Date(now.getTime() + 90 * 24 * 60 * 60 * 1000).toISOString(),
+            metadata: emailMeta,
+          },
+        ])
       } catch {
         // Don't fail signup if email scheduling fails
         console.error('[Founding] Email scheduling failed')
